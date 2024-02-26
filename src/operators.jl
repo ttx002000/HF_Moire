@@ -312,7 +312,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
   HF_eigenvector=Vector{Any}(undef,Nq^2)
 
  
-  for jk in 1:Nq^2
+  Threads.@threads for jk in 1:Nq^2
     Fk = FockMatrix[jk]
     for jk1 in 1:Nq^2
         dmk = input_DensityMatrix[jk1]
@@ -338,7 +338,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
   
 
 
-  for jk in 1:Nq^2
+  Threads.@threads for jk in 1:Nq^2
       for dg in keys(loop_dic)
           CoulH1=Coulomb(dg,T1,T2)
           for gg2 in keys(loop_dic[dg])          
@@ -531,8 +531,6 @@ function Construct_HFmatrix(loop_dic::Dict{Vector{Int},Any},pathpointindex::Int6
     end    
  
 
-
- 
 
  return  constq*(HartreeMatrix-FockMatrix)
 end
