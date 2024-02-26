@@ -1,6 +1,6 @@
 
 
-function submit_job(filepath, dirpath, job_prefix,sectorindex; nodes=1, ntasks=1, time="00:120:00", cpus_per_task=1, mem=64, partition="owners,simes")
+function submit_job(filepath, dirpath, job_prefix,arguments,trytimes; nodes=1, ntasks=1, time="00:120:00", cpus_per_task=1, mem=64, partition="owners,simes")
     outpath = joinpath(dirpath, "out")
     slurmpath = joinpath(dirpath, "slurmfiles")# Why is there a job_prefix semicolon there?
     mkpath(outpath)
