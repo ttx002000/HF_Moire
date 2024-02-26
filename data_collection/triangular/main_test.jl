@@ -7,32 +7,29 @@ using CSV,DataFrames
 
 include("../../src/operators.jl")
 
-args=parse.(Int64,ARGS)
-flux=args[2]
-epsilon=args[3]
-
-Nx=5;
-Ny=6;
-Nparticle=10;
-onebodyreal = CSV.read(joinpath(@__DIR__, "data_input/onebodyreal$(flux)_e$(epsilon).csv"), DataFrame, header=false)
-onebodyimag = CSV.read(joinpath(@__DIR__, "data_input/onebodyimag$(flux)_e$(epsilon).csv"), DataFrame, header=false)
-onebodymatrix=Matrix(onebodyreal) .+ (im*Matrix(onebodyimag))
-
-twobodyreal = CSV.read(joinpath(@__DIR__, "data_input/twobodyreal$(flux)_e$(epsilon).csv"), DataFrame, header=false)
-twobodyimag = CSV.read(joinpath(@__DIR__, "data_input/twobodyimag$(flux)_e$(epsilon).csv"), DataFrame, header=false)
-twobodymatrix=Matrix(twobodyreal) .+ (im*Matrix(twobodyimag))
+args=parse.(Float64,ARGS)
+flux=args[1]*π
+V0=args[2]
+ϕ=args[3]/180*π
+Nq=Int(args[4]);
+scale=args[5];
+constq=args[6]/Nq^2
+trytimes=Int(args[7])
 
 
-(reduced_Vcol,reduced_Vcoor,eigenvalue_single,allowedq)=convertdata(onebodymatrix,twobodymatrix,Nx,Ny,Nparticle)
-(MB_state_can, MB_state_integer)=Construct_MBstate(Nx,Ny,Nparticle,allowedq);
-state_can=MB_state_can[args[1]]
-state_integer=MB_state_integer[args[1]]
-MB_state_can=nothing
-MB_state_integer=nothing
+overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(flux,V0,ϕ,scale,Nq)
+NoHFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,initial_DensityMatrix)
+ 
+for ja in 1:Nq^2
+    A=randn(ComplexF64,length(wave),length(wave))
+    initial_DensityMatrix[ja]=initial_DensityMatrix[ja]+(A+A')*0.001
+end
 
-values=Construct_Manybodymatrix(reduced_Vcol,reduced_Vcoor,state_can,state_integer,eigenvalue_single)
+DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue=iteration_loop(initial_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,constq,overlapmatrix)
+HFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatrix[1])
 
+chern,Flink,chern_single,Flink_single=triangle_chern(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq)
 
-jldsave(joinpath(@__DIR__, "data_output/eigenvalue$(args[1])sector_ep$(epsilon)flux$(flux).jld2"),values=values)
+jldsave(joinpath(@__DIR__, "data_output/$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])ϕ$(args[5])scale$(args[6])constq_$(args[7])try.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity)
 
 

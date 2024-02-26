@@ -7,10 +7,17 @@ include("submit_job.jl")
 filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "flux_threading"
 
+flux=3*π
+V0=0.5*exp(π/2)
+ϕ=0.0
+Nq=3;
+scale=1.0;
+constq=0.1/Nq^2
 
-Nx=5;
-Ny=6;
 
-for ja in 1:Nx*Ny
-     submit_job(filepath, @__DIR__, job_prefix,ja; time="120:00")
+
+
+arguments=[flux,V0,ϕ,Nq,scale,constq]
+for ja in 1:5
+     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="120:00")
 end

@@ -7,10 +7,15 @@ function submit_job(filepath, dirpath, job_prefix,sectorindex; nodes=1, ntasks=1
     mkpath(slurmpath)
 
  
-    
+    flux=arguments[1]
+    V0=arguments[2]
+    ϕ=arguments[3]
+    Nq=arguments[4];
+    scale=arguments[5];
+    constq=arguments[6];
+ 
 
-    name = "$(sectorindex)momentumsecotr"
-
+    name = "$(Nq)Nq$(flux)flux$(V_0)V0$(ϕ)ϕ$(scale)scale$(constq)constq"
     filestr = """#!/bin/bash
     #SBATCH --job-name=$(job_prefix*"_"*name)
     #SBATCH --partition=$partition
@@ -33,7 +38,7 @@ function submit_job(filepath, dirpath, job_prefix,sectorindex; nodes=1, ntasks=1
     export JULIA_NUM_THREADS=\$SLURM_CPUS_ON_NODE
 
     # run the script
-    julia $filepath $sectorindex"""
+    julia $filepath $flux $V0 $ϕ $Nq $scale $constq $(Float64(trytimes))"""
 
     open("$slurmpath/$(name).slurm", "w") do io
         write(io, filestr)
