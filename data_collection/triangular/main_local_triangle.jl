@@ -1,6 +1,6 @@
 include("../../src/operators.jl")
 flux=3*π
-V0=0.5*exp(π/2)
+V0=0.5
 ϕ=0.0
 Nq=3;
 scale=1.0;

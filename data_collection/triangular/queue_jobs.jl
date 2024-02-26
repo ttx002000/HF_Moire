@@ -7,12 +7,12 @@ include("submit_job.jl")
 filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "flux_threading"
 
-flux=3
+flux=3 #multiply this by pi
 V0=0.5
-ϕ=0.0
-Nq=3;
+ϕ=0.0 #convert this to radian 
+Nq=3; 
 scale=1.0;
-constq=0.1
+constq=0.1 #divide this by Nq^2
 
 
 
