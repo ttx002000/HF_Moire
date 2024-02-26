@@ -17,6 +17,6 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "HF"
 
 
-for ja in 1:5
+for ja in 1:1
      submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="120:00",cpus_per_task=5)
 end
