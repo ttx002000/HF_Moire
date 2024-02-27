@@ -721,17 +721,36 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     
     Uonelink=zeros(ComplexF64,Nq,Nq+1)
     Utwolink=zeros(ComplexF64,Nq+1,Nq)
+    tra=zeros(ComplexF64,Nq,Nq)
+    tra_single=zeros(ComplexF64,Nq,Nq)
     
     for ja in 1:Nq, jb in 1:Nq+1
         Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
        Uonelink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb]))
     end
+
+    
     
     for ja in 1:Nq+1, jb in 1:Nq
         Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
      Utwolink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1]))
     end
     
+
+    for ja in 1:Nq, jb in 1:Nq
+        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
+       tra[ja,jb]+=2*(1-dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb]))
+       tra_single[ja,jb]+=2*(1-dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb]))
+    end
+
+    for ja in 1:Nq, jb in 1:Nq
+        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
+       tra[ja,jb]+=2*(1-dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1]))
+       tra_single[ja,jb]+=2*(1-dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1]))
+  
+    end
+
+
     Flink=zeros(ComplexF64,Nq,Nq)
     for ja in 1:Nq, jb in 1:Nq
      Flink[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
@@ -742,6 +761,7 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
 
     Uonelink=zeros(ComplexF64,Nq,Nq+1)
     Utwolink=zeros(ComplexF64,Nq+1,Nq)
+  
     
     for ja in 1:Nq, jb in 1:Nq+1
         Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
@@ -753,6 +773,9 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
      Utwolink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1])/abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1]))
     end
     
+
+   
+
     Flink_single=zeros(ComplexF64,Nq,Nq)
     for ja in 1:Nq, jb in 1:Nq
      Flink_single[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
@@ -761,35 +784,8 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     
 
     
-
-   #We calculate the trace conditionviolation below
-   curvature=zeros(ComplexF64,Nq,Nq)
-   tra=zeros(ComplexF64,Nq,Nq)
-   
-
-
-  for ja in 1:Nq,jb in 1:Nq
-  curvature[ja,jb]=imag(log(dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja,jb+1]))*log(dot(eigenvector_bc[:,ja,jb+1],eigenvector_bc[:,ja+1,jb+1]))*log(dot(eigenvector_bc[:,ja+1,jb+1],eigenvector_bc[:,ja+1,jb]))*log(dot(eigenvector_bc[:,ja+1,jb],eigenvector_bc[:,ja,jb])))
-  tra[ja,jb]=2*(1-abs(dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja,jb+1])))+2*(1-abs(dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja+1,jb])))
-  end
-
-  
-  trace_condition=sum(tra)-abs(sum(curvature))
-    
-  
-     #We calculate the trace conditionviolation below
-     curvature=zeros(ComplexF64,Nq,Nq)
-     tra=zeros(ComplexF64,Nq,Nq)
-     
-  
-  
-    for ja in 1:Nq,jb in 1:Nq
-    curvature[ja,jb]=imag(log(dot(eigenvector_bc_single[:,ja,jb],eigenvector_bc_single[:,ja,jb+1]))*log(dot(eigenvector_bc_single[:,ja,jb+1],eigenvector_bc_single[:,ja+1,jb+1]))*log(dot(eigenvector_bc_single[:,ja+1,jb+1],eigenvector_bc_single[:,ja+1,jb]))*log(dot(eigenvector_bc_single[:,ja+1,jb],eigenvector_bc_single[:,ja,jb])))
-    tra[ja,jb]=2*(1-abs(dot(eigenvector_bc_single[:,ja,jb],eigenvector_bc_single[:,ja,jb+1])))+2*(1-abs(dot(eigenvector_bc_single[:,ja,jb],eigenvector_bc_single[:,ja+1,jb])))
-    end
-  
-    
-    trace_condition_single=sum(tra)-abs(sum(curvature))
+  trace_condition=sum(tra)-abs(real(chern))
+  trace_condition_single=sum(tra_single)-abs(real(chern_single))
       
 
 
