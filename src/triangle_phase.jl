@@ -61,7 +61,7 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=5.01*scale
+    cutoffstandard=4.01*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -577,7 +577,7 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
     end
     loop_dic=construct_loop_dic(wave)
     
-    Energy_Matrix=[zeros(ComplexF64,legnth(wave),legnth(wave)) for _ in 1:Nq^2]
+    Energy_Matrix=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:Nq^2]
     
     for ja in eachindex(chern_allowedq)
         k=[T1 T2]*chern_allowedq[ja]
