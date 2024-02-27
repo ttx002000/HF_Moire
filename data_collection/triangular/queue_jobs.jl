@@ -5,7 +5,7 @@ using LinearAlgebra
 include("submit_job.jl")
 
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "flux_threading"
+job_prefix = "HF"
 
 flux=1.0 #multiply this by pi
 V0=3.0
