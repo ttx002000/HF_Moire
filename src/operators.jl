@@ -784,8 +784,8 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     
 
     
-  trace_condition=sum(tra)-abs(real(chern))*2*π
-  trace_condition_single=sum(tra_single)-abs(real(chern_single))*2*π
+  trace_condition=sum(tra)-sum(abs.(Flink))
+  trace_condition_single=sum(tra_single)-sum(abs.(Flink_single))
       
 
 
