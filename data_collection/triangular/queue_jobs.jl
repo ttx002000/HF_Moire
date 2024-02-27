@@ -17,7 +17,7 @@ constq=0.1 #divide this by Nq^2
 
 arguments=[flux,V0,ϕ,Nq,scale,constq]
 for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="200:00",cpus_per_task=8)
+     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="200:00",cpus_per_task=12)
 end
 
 
@@ -30,7 +30,7 @@ constq=1.5 #divide this by Nq^2
 
 arguments=[flux,V0,ϕ,Nq,scale,constq]
 for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="200:00",cpus_per_task=8)
+     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="200:00",cpus_per_task=12)
 end
 
 
@@ -45,7 +45,7 @@ constq=1.0 #divide this by Nq^2
 
 arguments=[flux,V0,ϕ,Nq,scale,constq]
 for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="200:00",cpus_per_task=8)
+     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="200:00",cpus_per_task=12)
 end
 
 flux=1.0 #multiply this by pi
@@ -58,5 +58,5 @@ constq=0.1 #divide this by Nq^2
 
 arguments=[flux,V0,ϕ,Nq,scale,constq]
 for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="200:00",cpus_per_task=8)
+     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="200:00",cpus_per_task=12)
 end
