@@ -18,12 +18,12 @@ trytimes=Int(args[7])
 strongpotential=Int(args[8])
 
 if strongpotential
- st=load("DensityMatrix_strongpotential.jld2")
+ st=load(joinpath(@__DIR__,"DensityMatrix_strongpotential.jld2"))
  initial_DensityMatrix=st["densitymatrix"]
 end
 
 if !strongpotential
-    st=load("DensityMatrix_nopotential.jld2")
+    st=load(joinpath(@__DIR__,"DensityMatrix_nopotential.jld2"))
     initial_DensityMatrix=st["densitymatrix"]
 end
 
