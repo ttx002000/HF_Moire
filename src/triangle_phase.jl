@@ -577,8 +577,8 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
     end
     loop_dic=construct_loop_dic(wave)
     
- 
-
+    Energy_Matrix=[zeros(ComplexF64,legnth(wave),legnth(wave)) for _ in 1:Nq^2]
+    
     for ja in eachindex(chern_allowedq)
         k=[T1 T2]*chern_allowedq[ja]
         chern_Ham=zeros(ComplexF64,dimension,dimension)
