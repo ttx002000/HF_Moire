@@ -766,3 +766,85 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
    return chern,Flink,chern_single,Flink_single
 
 end
+
+
+
+
+
+
+
+function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64)
+
+  
+    β=4*flux/(√3*scale^2)
+    mass=0.5;
+    dimension=length(wave)
+    
+    b1=scale*[0,1]
+    b2=scale*[√3/2,1/2]
+
+    
+    
+    T1=b1/(Nq)
+    T2=b2/(Nq)
+    b1T=Int.(round.(inv([T1 T2])*b1))
+    b2T=Int.(round.(inv([T1 T2])*b2))
+    
+    
+    chern_allowedq=Vector{Int64}[]
+    for ja in 0:Nq-1,jb in 0:Nq-1
+        push!(chern_allowedq,[ja,jb])
+    end
+    
+    chern_overlapmatrix=zeros(ComplexF64,(Nq)^2,length(wave),(Nq)^2,length(wave))
+    for ja in 1:(Nq)^2, jb in eachindex(wave), jc in 1:(Nq)^2, jd in eachindex(wave)
+       chern_overlapmatrix[ja,jb,jc,jd]=overlap([T1 T2]*(chern_allowedq[ja]+wave[jb]),[T1 T2]*(chern_allowedq[jc]+wave[jd]-wave[jb]-chern_allowedq[ja]),β)
+    end
+    loop_dic=construct_loop_dic(wave)
+    
+    Energy_Matrix=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:Nq^2]
+    
+    for ja in eachindex(chern_allowedq)
+        k=[T1 T2]*chern_allowedq[ja]
+        chern_Ham=zeros(ComplexF64,dimension,dimension)
+        chern_MoirePo=zeros(ComplexF64,dimension,dimension)
+        for jb in eachindex(wave)
+            chern_Ham[jb,jb]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2)^2/(2*mass)
+        end
+    
+        for jc in eachindex(wave)
+            k1=k+wave[jc][1]*T1+wave[jc][2]*T2
+            pos=findfirst(item->item==wave[jc]-b1T,wave)
+            if pos≠nothing
+           chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b1,β)
+            end
+            
+          
+            pos=findfirst(item->item==wave[jc]-b2T+b1T,wave)
+            if pos≠nothing
+                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2+b1,β)
+            end
+        
+            pos=findfirst(item->item==wave[jc]+b2T,wave)
+            if pos≠nothing
+                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2,β)
+            end
+         end
+
+
+      chern_MoirePo=chern_MoirePo+chern_MoirePo'
+      HFmatrix=Construct_HFmatrix(loop_dic,ja,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq,chern_overlapmatrix)
+      Energy_Matrix[ja]=1/2*HFmatrix+chern_MoirePo+chern_Ham
+    
+    end
+    
+    
+   energy=0
+   for ja in 1:Nq^2
+       energy+=tr(Energy_Matrix[ja]*input_DensityMatrix[ja])
+   end
+
+
+   return energy
+
+end
