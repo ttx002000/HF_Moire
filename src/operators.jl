@@ -658,10 +658,9 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     dimension=length(wave)
     
     b1=scale*[0,1]
-    b2=scale*[√3/2,1/2]
+    b2=scale*[√3/2,-1/2]
 
-    
-    
+
     T1=b1/(Nq)
     T2=b2/(Nq)
     b1T=Int.(round.(inv([T1 T2])*b1))
@@ -699,14 +698,14 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
             end
             
           
-            pos=findfirst(item->item==wave[jc]-b2T+b1T,wave)
+            pos=findfirst(item->item==wave[jc]+b2T+b1T,wave)
             if pos≠nothing
-                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2+b1,β)
+                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2+b1,β)
             end
         
-            pos=findfirst(item->item==wave[jc]+b2T,wave)
+            pos=findfirst(item->item==wave[jc]-b2T,wave)
             if pos≠nothing
-                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2,β)
+                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2,β)
             end
          end
 
@@ -736,19 +735,19 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
      Utwolink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1]))
     end
     
-
+    dG=norm(T2)
     for ja in 1:Nq, jb in 1:Nq
         Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
+        Bmatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
+        Cmatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2-T1,T1,T2)
+        A1=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])
+        B1=dot(eigenvector_bc[:,ja,jb],Bmatrix*eigenvector_bc[:,ja,jb+1])
+        C1=dot(eigenvector_bc[:,ja,jb],Cmatrix*eigenvector_bc[:,ja+1,jb])
        tra[ja,jb]+=2*(1-abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])))
-       tra_single[ja,jb]+=2*(1-abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])))
+      
     end
 
-    for ja in 1:Nq, jb in 1:Nq
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
-       tra[ja,jb]+=2*(1-abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1])))
-       tra_single[ja,jb]+=2*(1-abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1])))
-  
-    end
+   
 
 
     Flink=zeros(ComplexF64,Nq,Nq)
@@ -801,7 +800,7 @@ end
 
 
 
-function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64)
+function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64,overlapmatrix::Array{ComplexF64,4})
 
   
     β=4*flux/(√3*scale^2)
@@ -809,7 +808,7 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
     dimension=length(wave)
     
     b1=scale*[0,1]
-    b2=scale*[√3/2,1/2]
+    b2=scale*[√3/2,-1/2]
 
     
     
@@ -824,10 +823,7 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
         push!(chern_allowedq,[ja,jb])
     end
     
-    chern_overlapmatrix=zeros(ComplexF64,(Nq)^2,length(wave),(Nq)^2,length(wave))
-    for ja in 1:(Nq)^2, jb in eachindex(wave), jc in 1:(Nq)^2, jd in eachindex(wave)
-       chern_overlapmatrix[ja,jb,jc,jd]=overlap([T1 T2]*(chern_allowedq[ja]+wave[jb]),[T1 T2]*(chern_allowedq[jc]+wave[jd]-wave[jb]-chern_allowedq[ja]),β)
-    end
+
     loop_dic=construct_loop_dic(wave)
     
     Energy_Matrix=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:Nq^2]
@@ -848,12 +844,12 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
             end
             
           
-            pos=findfirst(item->item==wave[jc]-b2T+b1T,wave)
+            pos=findfirst(item->item==wave[jc]+b2T+b1T,wave)
             if pos≠nothing
-                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2+b1,β)
+                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2+b1,β)
             end
         
-            pos=findfirst(item->item==wave[jc]+b2T,wave)
+            pos=findfirst(item->item==wave[jc]-b2T,wave)
             if pos≠nothing
                 chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2,β)
             end
@@ -861,7 +857,7 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
 
 
       chern_MoirePo=chern_MoirePo+chern_MoirePo'
-      HFmatrix=Construct_HFmatrix(loop_dic,ja,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq,chern_overlapmatrix)
+      HFmatrix=Construct_HFmatrix(loop_dic,ja,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq,overlapmatrix)
       Energy_Matrix[ja]=1/2*HFmatrix+chern_MoirePo+chern_Ham
     
     end
