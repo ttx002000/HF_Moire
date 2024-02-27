@@ -507,18 +507,31 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
      Utwolink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1]))
     end
 
+    dG=norm(T2)
     for ja in 1:Nq, jb in 1:Nq
         Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
-       tra[ja,jb]+=2*(1-abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])))
-       tra_single[ja,jb]+=2*(1-abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])))
+        Bmatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
+        Cmatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2+T1,T1,T2)
+        A1=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])
+        B1=dot(eigenvector_bc[:,ja,jb],Bmatrix*eigenvector_bc[:,ja,jb+1])
+        C1=dot(eigenvector_bc[:,ja,jb],Cmatrix*eigenvector_bc[:,ja+1,jb+1])
+       gyy=(1-abs(A1)^2)/dG^2
+       gxx=(2-1/2*gyy*dG^2-abs(B1)^2-abs(C1)^2)/(1.5*dG^2)
+       tra[ja,jb]+=(gxx+gyy)*3^(1/2)/2*dG^2
+
+        A1=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])
+        B1=dot(eigenvector_bc_single[:,ja,jb],Bmatrix*eigenvector_bc_single[:,ja,jb+1])
+        C1=dot(eigenvector_bc_single[:,ja,jb],Cmatrix*eigenvector_bc_single[:,ja+1,jb+1])
+       gyy=(1-abs(A1)^2)/dG^2
+       gxx=(2-1/2*gyy*dG^2-abs(B1)^2-abs(C1)^2)/(1.5*dG^2)
+       tra_single[ja,jb]+=(gxx+gyy)*3^(1/2)/2*dG^2
+      
+      
     end
 
-    for ja in 1:Nq, jb in 1:Nq
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
-       tra[ja,jb]+=2*(1-abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1])))
-       tra_single[ja,jb]+=2*(1-abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1])))
-  
-    end
+    trace_condition=sum(tra)-sum(abs.(Flink))
+  trace_condition_single=sum(tra_single)-sum(abs.(Flink_single))
+     
     
     Flink=zeros(ComplexF64,Nq,Nq)
     for ja in 1:Nq, jb in 1:Nq
@@ -547,8 +560,7 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     end
     chern_single=sum(Flink_single)/(2*π*im)
     
-    trace_condition=sum(tra)-abs(real(chern))*2*π
-    trace_condition_single=sum(tra_single)-abs(real(chern_single))*2*π
+   
       
     
     
