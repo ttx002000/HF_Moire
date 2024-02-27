@@ -17,12 +17,12 @@ constq=args[6]/Nq^2
 trytimes=Int(args[7])
 strongpotential=Int(args[8])
 
-if strongpotential
+if strongpotential==1
  st=load(joinpath(@__DIR__,"DensityMatrix_strongpotential.jld2"))
  initial_DensityMatrix=st["densitymatrix"]
 end
 
-if !strongpotential
+if strongpotential==0
     st=load(joinpath(@__DIR__,"DensityMatrix_nopotential.jld2"))
     initial_DensityMatrix=st["densitymatrix"]
 end
