@@ -8,7 +8,7 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "HF"
 
 flux=1.0 #multiply this by pi
-V0=1.0
+V0=0.5
 ϕ=0.0 #convert this to radian 
 Nq=8.0; 
 scale=1.0;
@@ -22,7 +22,7 @@ end
 
 
 flux=1.0 #multiply this by pi
-V0=1.0
+V0=0.5
 ϕ=0.0 #convert this to radian 
 Nq=8.0; 
 scale=1.0;
@@ -34,7 +34,7 @@ for ja in 1:3
 end
 
 flux=1.0 #multiply this by pi
-V0=1.0
+V0=0.5
 ϕ=0.0 #convert this to radian 
 Nq=8.0; 
 scale=1.0;
