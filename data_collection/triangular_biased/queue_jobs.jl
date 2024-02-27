@@ -14,7 +14,7 @@ Nq=6.0;
 scale=1.0;
 constq=1.0 #divide this by Nq^2
 
-V0space=[0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6]
+V0space=[0,0.3,0.6,0.9,1.2,1.5,1.8,2.1,2.4,2.7,3.0]
 
 for jb in eachindex(V0space)
   arguments=[flux,V0space[jb],ϕ,Nq,scale,constq]

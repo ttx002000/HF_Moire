@@ -8,7 +8,7 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "flux_threading"
 
 flux=1.0 #multiply this by pi
-V0=8.0
+V0=3.0
 ϕ=0.0 #convert this to radian 
 Nq=6.0; 
 scale=1.0;
@@ -22,7 +22,7 @@ end
 
 
 flux=1.0 #multiply this by pi
-V0=0.0
+V0=3.0
 ϕ=0.0 #convert this to radian 
 Nq=6.0; 
 scale=1.0;
