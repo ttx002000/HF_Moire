@@ -291,6 +291,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
       itcount+=1
       toc=time()
       println(toc-tic,"eout=$eout")
+      flush(stdout)
      
     
     end
@@ -320,6 +321,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
 
         toc=time()
         println(toc-tic,"eout=$eout")
+        flush(stdout)
     end
 
  
