@@ -761,9 +761,41 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     
 
     
+
+   #We calculate the trace conditionviolation below
+   curvature=zeros(ComplexF64,Nq,Nq)
+   tra=zeros(ComplexF64,Nq,Nq)
+   
+
+
+  for ja in 1:Nq,jb in 1:Nq
+  curvature[ja,jb]=imag(log(dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja,jb+1]))*log(dot(eigenvector_bc[:,ja,jb+1],eigenvector_bc[:,ja+1,jb+1]))*log(dot(eigenvector_bc[:,ja+1,jb+1],eigenvector_bc[:,ja+1,jb]))*log(dot(eigenvector_bc[:,ja+1,jb],eigenvector_bc[:,ja,jb])))
+  tra[ja,jb]=2*(1-abs(dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja,jb+1])))+2*(1-abs(dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja+1,jb])))
+  end
+
+  
+  trace_condition=sum(tra)-abs(sum(curvature))
+    
+  
+     #We calculate the trace conditionviolation below
+     curvature=zeros(ComplexF64,Nq,Nq)
+     tra=zeros(ComplexF64,Nq,Nq)
+     
+  
+  
+    for ja in 1:Nq,jb in 1:Nq
+    curvature[ja,jb]=imag(log(dot(eigenvector_bc_single[:,ja,jb],eigenvector_bc_single[:,ja,jb+1]))*log(dot(eigenvector_bc_single[:,ja,jb+1],eigenvector_bc_single[:,ja+1,jb+1]))*log(dot(eigenvector_bc_single[:,ja+1,jb+1],eigenvector_bc_single[:,ja+1,jb]))*log(dot(eigenvector_bc_single[:,ja+1,jb],eigenvector_bc_single[:,ja,jb])))
+    tra[ja,jb]=2*(1-abs(dot(eigenvector_bc_single[:,ja,jb],eigenvector_bc_single[:,ja,jb+1])))+2*(1-abs(dot(eigenvector_bc_single[:,ja,jb],eigenvector_bc_single[:,ja+1,jb])))
+    end
+  
+    
+    trace_condition_single=sum(tra)-abs(sum(curvature))
+      
+
+
     
       
-   return chern,Flink,chern_single,Flink_single
+   return chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single
 
 end
 
