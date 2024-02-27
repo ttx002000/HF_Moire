@@ -10,7 +10,7 @@ job_prefix = "flux_threading"
 flux=1.0 #multiply this by pi
 #V0=30
 ϕ=0.0 #convert this to radian 
-Nq=6; 
+Nq=6.0; 
 scale=1.0;
 constq=0.5 #divide this by Nq^2
 
