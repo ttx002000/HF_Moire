@@ -141,10 +141,10 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     mass=0.5;
     
     b1=4*π/(√3*am)*[0,1]
-    b2=4*π/(√3*am)*[√3/2,1/2]
+    b2=4*π/(√3*am)*[√3/2,-1/2]
 
 
-    a1m=am*[-1/2,√3/2]
+    a1m=am*[1/2,√3/2]
     a2m=am*[1,0]
     
     
@@ -212,14 +212,14 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
         end
         
       
-        pos=findfirst(item->item==wave[jc]-b2T+b1T,wave)
+        pos=findfirst(item->item==wave[jc]+b2T+b1T,wave)
         if pos≠nothing
-            single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2+b1,β)
+            single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*overlap(k1,+b2+b1,β)
         end
     
-        pos=findfirst(item->item==wave[jc]+b2T,wave)
+        pos=findfirst(item->item==wave[jc]-b2T,wave)
         if pos≠nothing
-            single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2,β)
+            single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2,β)
         end
      end
     
@@ -658,7 +658,7 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     dimension=length(wave)
     
     b1=scale*[0,1]
-    b2=scale*[√3/2,1/2]
+    b2=scale*[√3/2,-1/2]
 
     
     
@@ -699,14 +699,14 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
             end
             
           
-            pos=findfirst(item->item==wave[jc]-b2T+b1T,wave)
+            pos=findfirst(item->item==wave[jc]+b2T+b1T,wave)
             if pos≠nothing
-                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2+b1,β)
+                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2+b1,β)
             end
         
-            pos=findfirst(item->item==wave[jc]+b2T,wave)
+            pos=findfirst(item->item==wave[jc]-b2T,wave)
             if pos≠nothing
-                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2,β)
+                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2,β)
             end
          end
 
@@ -809,7 +809,7 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
     dimension=length(wave)
     
     b1=scale*[0,1]
-    b2=scale*[√3/2,1/2]
+    b2=scale*[√3/2,-1/2]
 
     
     
@@ -845,14 +845,14 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
             end
             
           
-            pos=findfirst(item->item==wave[jc]-b2T+b1T,wave)
+            pos=findfirst(item->item==wave[jc]+b2T+b1T,wave)
             if pos≠nothing
-                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2+b1,β)
+                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2+b1,β)
             end
         
-            pos=findfirst(item->item==wave[jc]+b2T,wave)
+            pos=findfirst(item->item==wave[jc]-b2T,wave)
             if pos≠nothing
-                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2,β)
+                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2,β)
             end
          end
 
