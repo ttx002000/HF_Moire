@@ -3,9 +3,9 @@ include("../../src/operators.jl")
 flux=3*π
 V0=0.5
 ϕ=0.0
-Nq=3;
+Nq=6;
 scale=1.0;
-constq=0.1/Nq^2
+constq=0.0/Nq^2
 
 
 
@@ -21,6 +21,7 @@ DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue=iteration_loop(ini
 HFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatrix[1])
 
 chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single=triangle_chern(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq)
+
 energy=calculate_energy(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq)
 
 jldsave(joinpath(@__DIR__, "data_output/try.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,densitymatrix=DIIS_input_DensityMatrix,energy=energy,TC=trace_condition,TCS=trace_condition_single)

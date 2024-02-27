@@ -61,7 +61,7 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=4.01*scale
+    cutoffstandard=5.01*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -494,6 +494,8 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     
     Uonelink=zeros(ComplexF64,Nq,Nq+1)
     Utwolink=zeros(ComplexF64,Nq+1,Nq)
+    tra=zeros(ComplexF64,Nq,Nq)
+    tra_single=zeros(ComplexF64,Nq,Nq)
     
     for ja in 1:Nq, jb in 1:Nq+1
         Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
@@ -503,6 +505,19 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     for ja in 1:Nq+1, jb in 1:Nq
         Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
      Utwolink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1]))
+    end
+
+    for ja in 1:Nq, jb in 1:Nq
+        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
+       tra[ja,jb]+=2*(1-abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])))
+       tra_single[ja,jb]+=2*(1-abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])))
+    end
+
+    for ja in 1:Nq, jb in 1:Nq
+        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
+       tra[ja,jb]+=2*(1-abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1])))
+       tra_single[ja,jb]+=2*(1-abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1])))
+  
     end
     
     Flink=zeros(ComplexF64,Nq,Nq)
@@ -532,11 +547,14 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     end
     chern_single=sum(Flink_single)/(2*π*im)
     
-
+    trace_condition=sum(tra)-abs(real(chern))*2*π
+    trace_condition_single=sum(tra_single)-abs(real(chern_single))*2*π
+      
     
     
       
-   return chern,Flink,chern_single,Flink_single
+       
+    return chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single
 
 end
 
