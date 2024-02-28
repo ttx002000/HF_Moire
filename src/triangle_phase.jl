@@ -82,11 +82,11 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
      
     single_Ham=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
     single_MoirePo=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-    single_eigenvalue=zeros(dimension,Nq^2)
+    single_eigenvalue=[zeros(Float64,dimension) for _ in 1:Nq^2]
     single_eigenvector=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
     
     
-    for ja in 1:Nq^2
+    Threads.@threads for ja in 1:Nq^2
       
       
       k=allowedq[ja][1]*T1+allowedq[ja][2]*T2
@@ -119,7 +119,7 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
      single_MoirePo[ja]=single_MoirePo[ja]+single_MoirePo[ja]'
      FFF=eigen(single_MoirePo[ja]+single_Ham[ja])
     
-      single_eigenvalue[:,ja]=real(FFF.values)
+      single_eigenvalue[ja]=real(FFF.values)
       single_eigenvector[ja]=FFF.vectors
     
     end
