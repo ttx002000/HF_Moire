@@ -569,8 +569,8 @@ function square_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float
     
     eigenvector_bc=zeros(ComplexF64,dimension,Nq+1,Nq+1)
     eigenvector_bc_single=zeros(ComplexF64,dimension,Nq+1,Nq+1)
-    eigenvector_intermediate_bc=Vector{Vector{CompelxF64}}(undef,(Nq+1)^2)
-    eigenvector_intermediate_single=Vector{Vector{CompelxF64}}(undef,(Nq+1)^2)
+    eigenvector_intermediate_bc=Vector{Vector{ComplexF64}}(undef,(Nq+1)^2)
+    eigenvector_intermediate_single=Vector{Vector{ComplexF64}}(undef,(Nq+1)^2)
 
 
     Threads.@threads for ja in eachindex(chern_allowedq)
@@ -689,8 +689,8 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     loop_dic=construct_loop_dic(wave)
     
     
-    eigenvector_intermediate_bc=Vector{Vector{CompelxF64}}(undef,(Nq+1)^2)
-    eigenvector_intermediate_single=Vector{Vector{CompelxF64}}(undef,(Nq+1)^2)
+    eigenvector_intermediate_bc=Vector{Vector{ComplexF64}}(undef,(Nq+1)^2)
+    eigenvector_intermediate_single=Vector{Vector{ComplexF64}}(undef,(Nq+1)^2)
 
     Threads.@threads for ja in eachindex(chern_allowedq)
         k=[T1 T2]*chern_allowedq[ja]

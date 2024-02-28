@@ -454,8 +454,8 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     loop_dic=construct_loop_dic(wave)
     
     
-    eigenvector_intermediate_bc=Vector{Vector{CompelxF64}}(undef,(Nq+1)^2)
-    eigenvector_intermediate_single=Vector{Vector{CompelxF64}}(undef,(Nq+1)^2)
+    eigenvector_intermediate_bc=Vector{Vector{ComplexF64}}(undef,(Nq+1)^2)
+    eigenvector_intermediate_single=Vector{Vector{ComplexF64}}(undef,(Nq+1)^2)
 
 
     Threads.@threads for ja in eachindex(chern_allowedq)
