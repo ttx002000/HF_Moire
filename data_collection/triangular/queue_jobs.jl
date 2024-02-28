@@ -11,7 +11,7 @@ flux=1.0 #multiply this by pi
 ϕ=0.0 #convert this to radian 
 Nq=9.0; 
 scale=1.0;
-constq=0.0 #divide this by Nq^2
+constq=1.5 #divide this by Nq^2
 V0space=[0.1,0.3,0.5,1.0,1.5,2.0,2.5,3.0]
 for jb in eachindex(V0space)
    arguments=[flux,V0space[jb],ϕ,Nq,scale,constq]
@@ -21,17 +21,5 @@ end
 end
 
 
-flux=1.0 #multiply this by pi
-ϕ=0.0 #convert this to radian 
-V0=0.0;
-Nq=9.0; 
-scale=1.0;
-constqspace=[0.1,0.2,0.4,0.7,1.0,1.3,1.7,2.0]
 
-for jb in eachindex(constqspace)
-     arguments=[flux,0.0,ϕ,Nq,scale,constqspace[jb]]
-  for ja in 1:3
-       submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="400:00",cpus_per_task=36)
-  end
-  end
 
