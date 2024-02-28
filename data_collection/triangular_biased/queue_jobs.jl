@@ -8,25 +8,25 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "flux_threading"
 
 flux=1.0 #multiply this by pi
-#V0=30
+
 ϕ=0.0 #convert this to radian 
-Nq=6.0; 
+Nq=9.0; 
 scale=1.0;
 constq=1.0 #divide this by Nq^2
 
-V0space=[0,0.3,0.6,0.9,1.2,1.5,1.8,2.1,2.4,2.7,3.0,3.3,3.6,3.9,4.2]
+V0space=[0,0.3,0.6,0.9,1.2,1.5,1.8,2.1]
 
 for jb in eachindex(V0space)
   arguments=[flux,V0space[jb],ϕ,Nq,scale,constq]
  for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja,1; time="200:00",cpus_per_task=8)
+     submit_job(filepath, @__DIR__, job_prefix,arguments,ja,1; time="400:00",cpus_per_task=36)
  end
 end
 
 for jb in eachindex(V0space)
      arguments=[flux,V0space[jb],ϕ,Nq,scale,constq]
     for ja in 1:3
-        submit_job(filepath, @__DIR__, job_prefix,arguments,ja,0; time="200:00",cpus_per_task=8)
+        submit_job(filepath, @__DIR__, job_prefix,arguments,ja,0; time="400:00",cpus_per_task=36)
     end
 end
 
