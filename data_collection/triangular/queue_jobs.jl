@@ -29,7 +29,7 @@ scale=1.0;
 constqspace=[0.1,0.2,0.4,0.7,1.0,1.3,1.7,2.0]
 
 for jb in eachindex(constqspace)
-     arguments=[flux,0.0,ϕ,Nq,scale,constqspace[ja]]
+     arguments=[flux,0.0,ϕ,Nq,scale,constqspace[jb]]
   for ja in 1:3
        submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="400:00",cpus_per_task=36)
   end
