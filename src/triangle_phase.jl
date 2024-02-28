@@ -619,7 +619,7 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
     
     Energy_Matrix=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:Nq^2]
     
-    for ja in eachindex(chern_allowedq)
+    Thread.@threads for ja in eachindex(chern_allowedq)
         k=[T1 T2]*chern_allowedq[ja]
         chern_Ham=zeros(ComplexF64,dimension,dimension)
         chern_MoirePo=zeros(ComplexF64,dimension,dimension)

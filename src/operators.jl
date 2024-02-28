@@ -569,8 +569,11 @@ function square_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float
     
     eigenvector_bc=zeros(ComplexF64,dimension,Nq+1,Nq+1)
     eigenvector_bc_single=zeros(ComplexF64,dimension,Nq+1,Nq+1)
+    eigenvector_intermediate_bc=Vector{Vector{CompelxF64}}(undef,(Nq+1)^2)
+    eigenvector_intermediate_single=Vector{Vector{CompelxF64}}(undef,(Nq+1)^2)
 
-    for ja in eachindex(chern_allowedq)
+
+    Threads.@threads for ja in eachindex(chern_allowedq)
         k=[T1 T2]*chern_allowedq[ja]
         chern_Ham=zeros(ComplexF64,dimension,dimension)
         chern_MoirePo=zeros(ComplexF64,dimension,dimension)
@@ -594,11 +597,15 @@ function square_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float
         
       chern_MoirePo=chern_MoirePo+chern_MoirePo'
       HFmatrix=Construct_HFmatrix(loop_dic,ja,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq,chern_overlapmatrix)
-      eigenvector_bc[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=eigvecs(chern_Ham+chern_MoirePo+HFmatrix)[:,1] 
-      eigenvector_bc_single[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=eigvecs(chern_Ham+chern_MoirePo)[:,1] 
+      eigenvector_intermediate_bc[ja]=eigvecs(chern_Ham+chern_MoirePo+HFmatrix)[:,1] 
+      eigenvector_intermediate_single[ja]=eigvecs(chern_Ham+chern_MoirePo)[:,1] 
     
     end
-    
+
+    for ja in eachindex(chern_allowedq)
+        eigenvector_bc[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=eigenvector_intermediate_bc[ja]
+        eigenvector_bc_single[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=eigenvector_intermediate_single[ja]
+     end
     
     Uonelink=zeros(ComplexF64,Nq,Nq+1)
     Utwolink=zeros(ComplexF64,Nq+1,Nq)
