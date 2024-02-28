@@ -8,80 +8,30 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "HF"
 
 flux=1.0 #multiply this by pi
-V0=3.0
 ϕ=0.0 #convert this to radian 
-Nq=8.0; 
+Nq=9.0; 
 scale=1.0;
-constq=0.1 #divide this by Nq^2
-
-
-arguments=[flux,V0,ϕ,Nq,scale,constq]
+constq=0.0 #divide this by Nq^2
+V0space=[0.1,0.3,0.5,1.0,1.5,2.0,2.5,3.0]
+for jb in eachindex(V0space)
+   arguments=[flux,V0space[jb],ϕ,Nq,scale,constq]
 for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="400:00",cpus_per_task=16)
+     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="400:00",cpus_per_task=36)
+end
 end
 
 
 flux=1.0 #multiply this by pi
-V0=3.0
 ϕ=0.0 #convert this to radian 
-Nq=8.0; 
+V0=0.0;
+Nq=9.0; 
 scale=1.0;
-constq=1.5 #divide this by Nq^2
+constqspace=[0.1,0.2,0.4,0.7,1.0,1.3,1.7,2.0]
 
-arguments=[flux,V0,ϕ,Nq,scale,constq]
-for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="400:00",cpus_per_task=16)
-end
+for jb in eachindex(constqspace)
+     arguments=[flux,0.0,ϕ,Nq,scale,constqspace[ja]]
+  for ja in 1:3
+       submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="400:00",cpus_per_task=36)
+  end
+  end
 
-flux=1.0 #multiply this by pi
-V0=3.0
-ϕ=0.0 #convert this to radian 
-Nq=8.0; 
-scale=1.0;
-constq=2.5 #divide this by Nq^2
-
-arguments=[flux,V0,ϕ,Nq,scale,constq]
-for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="400:00",cpus_per_task=16)
-end
-
-
-
-
-flux=1.0 #multiply this by pi
-V0=0.0
-ϕ=0.0 #convert this to radian 
-Nq=8.0; 
-scale=1.0;
-constq=1.0 #divide this by Nq^2
-
-arguments=[flux,V0,ϕ,Nq,scale,constq]
-for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="400:00",cpus_per_task=16)
-end
-
-flux=1.0 #multiply this by pi
-V0=0.0
-ϕ=0.0 #convert this to radian 
-Nq=8.0; 
-scale=1.0;
-constq=0.1 #divide this by Nq^2
-
-
-arguments=[flux,V0,ϕ,Nq,scale,constq]
-for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="400:00",cpus_per_task=16)
-end
-
-
-flux=1.0 #multiply this by pi
-V0=0.0
-ϕ=0.0 #convert this to radian 
-Nq=8.0; 
-scale=1.0;
-constq=2.0 #divide this by Nq^2
-
-arguments=[flux,V0,ϕ,Nq,scale,constq]
-for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="400:00",cpus_per_task=16)
-end
