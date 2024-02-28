@@ -299,7 +299,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
     println("startDIIS",itcount)
     HF_eigenvalue=Vector{Any}(undef,Nq^2)
 
-    while eout>10^-14
+    while eout>10^-13
         tic=time()
         Bmatrix=zeros(ComplexF64,4,4)
         for ja in 1:3
