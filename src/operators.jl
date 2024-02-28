@@ -782,7 +782,11 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
      Flink[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
     end
     chern=sum(Flink)/(2*π*im)
-
+    aveF=sum(Flink)/Nq^2
+    uniform=0
+    for ja in 1:Nq, jb in 1:Nq
+        uniform+=(imag(Flink[ja,jb])-imag(aveF))^2*N4^2/(2π)^2
+    end
 
 
     Uonelink=zeros(ComplexF64,Nq,Nq+1)
@@ -807,6 +811,12 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
      Flink_single[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
     end
     chern_single=sum(Flink_single)/(2*π*im)
+    aveF=sum(Flink_single)/Nq^2
+    uniform_single=0
+    for ja in 1:Nq, jb in 1:Nq
+        uniform_single+=(imag(Flink_single[ja,jb])-imag(aveF))^2*N4^2/(2π)^2
+    end
+    
     
 
     
@@ -817,7 +827,7 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
 
     
       
-   return chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single
+   return chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single
 
 end
 
