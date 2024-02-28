@@ -785,7 +785,7 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     aveF=sum(Flink)/Nq^2
     uniform=0
     for ja in 1:Nq, jb in 1:Nq
-        uniform+=(imag(Flink[ja,jb])-imag(aveF))^2*N4^2/(2π)^2
+        uniform+=(imag(Flink[ja,jb])-imag(aveF))^2*Nq^2/(2π)^2
     end
 
 
