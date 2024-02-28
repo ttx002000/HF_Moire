@@ -19,12 +19,12 @@ strongpotential=Int(args[8])
 
 if strongpotential==1
  st=load(joinpath(@__DIR__,"strongpotential.jld2"))
- initial_DensityMatrix=st["densitymatrix"][1]
+ initial_DensityMatrix=st["DM"][1]
 end
 
 if strongpotential==0
     st=load(joinpath(@__DIR__,"stronginteraction.jld2"))
-    initial_DensityMatrix=st["densitymatrix"][1]
+    initial_DensityMatrix=st["DM"][1]
 end
 
 overlapmatrix, wave, _, single_MoirePo, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(flux,V0,ϕ,scale,Nq)
