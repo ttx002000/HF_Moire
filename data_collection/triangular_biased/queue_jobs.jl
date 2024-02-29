@@ -12,9 +12,9 @@ flux=1.0 #multiply this by pi
 ϕ=0.0 #convert this to radian 
 Nq=9.0; 
 scale=1.0;
-constq=1.0 #divide this by Nq^2
+constq=1.5 #divide this by Nq^2
 
-V0space=[0,0.3,0.6,0.9,1.2,1.5,1.8,2.1]
+V0space=[0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
 
 for jb in eachindex(V0space)
   arguments=[flux,V0space[jb],ϕ,Nq,scale,constq]
