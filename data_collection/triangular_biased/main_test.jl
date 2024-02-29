@@ -23,7 +23,7 @@ if strongpotential==1
 end
 
 if strongpotential==0
-    st=load(joinpath(@__DIR__,"stronginteraction.jld2"))
+    st=load(joinpath(@__DIR__,"stronginteraction2.jld2"))
     initial_DensityMatrix=st["DM"][1]
 end
 
