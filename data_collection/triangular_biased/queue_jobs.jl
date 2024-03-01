@@ -25,7 +25,7 @@ end
 =#
 
 for jb in eachindex(constqspace)
-     arguments=[flux,V0,ϕ,Nq,scale,constqspace[ja]]
+     arguments=[flux,V0,ϕ,Nq,scale,constqspace[jb]]
     for ja in 1:3
         submit_job(filepath, @__DIR__, job_prefix,arguments,ja,1; time="200:00",cpus_per_task=36)
     end
