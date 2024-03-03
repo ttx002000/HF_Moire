@@ -14,7 +14,7 @@ Nq=9.0;
 scale=1.0;
 #constq=1.3 #divide this by Nq^2
 
-constqspace=[1.25,1.3]
+constqspace=[1.3,1.35,1.4]
 #=
 for jb in eachindex(V0space)
   arguments=[flux,V0space[jb],ϕ,Nq,scale,constq]
@@ -27,7 +27,7 @@ end
 for jb in eachindex(constqspace)
      arguments=[flux,V0,ϕ,Nq,scale,constqspace[jb]]
     for ja in 2:4
-        submit_job(filepath, @__DIR__, job_prefix,arguments,ja,1; time="500:00",cpus_per_task=36)
+        submit_job(filepath, @__DIR__, job_prefix,arguments,ja,1; time="3000:00",cpus_per_task=36)
     end
 end
 
