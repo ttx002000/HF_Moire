@@ -395,14 +395,14 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
     eout=1.0
     itcount=0
     loop_dic=construct_loop_dic(wave)
-    
+    HF_eigenvalue=Vector{Any}(undef,Nq^2)
     DIIS_input_DensityMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     input_DensityMatrix=initial_DensityMatrix
-    while eout>10^-13
+    while eout>0.9*10^-13
       
       tic=time()
-      eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],_=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,overlapmatrix)
+      eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,overlapmatrix)
       DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
       input_DensityMatrix=output_DensityMatrix
       itcount+=1
@@ -414,7 +414,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
     end
     
     println("startDIIS",itcount)
-    HF_eigenvalue=Vector{Any}(undef,Nq^2)
+    
 
     while eout>10^-13
         tic=time()
