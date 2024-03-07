@@ -10,11 +10,11 @@ job_prefix = "flux_threading"
 flux=1.0 #multiply this by pi
 V0=1.5
 ϕ=0.0 #convert this to radian 
-Nq=9.0; 
+Nq=15.0; 
 scale=1.0;
 #constq=1.3 #divide this by Nq^2
 
-constqspace=[1.18,1.16,1.14,1.12,1.10]
+constqspace=[1.15,1.18,1.20,1.22,1.25,1.28,1.3,1.32,1.35]
 #=
 for jb in eachindex(V0space)
   arguments=[flux,V0space[jb],ϕ,Nq,scale,constq]
