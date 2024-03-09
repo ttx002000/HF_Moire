@@ -9,14 +9,14 @@ job_prefix = "HF"
 
 flux=1.0 #multiply this by pi
 ϕ=0.0 #convert this to radian 
-Nq=15.0; 
+Nq=9.0; 
 scale=1.0;
-constq=[0.0,0.5,1.0,0.7,0.2] #divide this by Nq^2
-V0space=[1.5]
+constq=[0.0,0.3,0.2,0.5] #divide this by Nq^2
+V0space=[0.8]
 for jb in eachindex(V0space), jc in eachindex(constq)
    arguments=[flux,V0space[jb],ϕ,Nq,scale,constq[jc]]
 for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="1000:00",cpus_per_task=48)
+     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="12:00:00",cpus_per_task=36)
 end
 end
 
