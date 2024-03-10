@@ -5,7 +5,7 @@ using LinearAlgebra
 include("submit_job.jl")
 
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "flux_threading"
+job_prefix = "HF"
 
 flux=1.0 #multiply this by pi
 V0=1.5
@@ -14,7 +14,7 @@ Nq=15.0;
 scale=1.0;
 #constq=1.3 #divide this by Nq^2
 
-constqspace=[1.15,1.18,1.20,1.22,1.25,1.28,1.3,1.32,1.35]
+constqspace=[1.3,1.32,1.35]
 #=
 for jb in eachindex(V0space)
   arguments=[flux,V0space[jb],ϕ,Nq,scale,constq]
