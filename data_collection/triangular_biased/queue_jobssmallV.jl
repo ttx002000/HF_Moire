@@ -7,14 +7,14 @@ include("submit_job.jl")
 filepath = joinpath(@__DIR__, "main_testsmallV.jl")
 job_prefix = "flux_threading"
 
-flux=1.0 #multiply this by pi
-V0=0.8
+flux=0.7 #multiply this by pi
+V0=0.6
 ϕ=0.0 #convert this to radian 
 Nq=9.0; 
 scale=1.0;
 #constq=1.3 #divide this by Nq^2
 
-constqspace=[0.84,0.82,0.8,0.78,0.76,0.74,0.72,0.7,0.68,0.66,0.64]
+constqspace=[0.1,0.2,0.3,0.4,0.5,0.6]
 #=
 for jb in eachindex(V0space)
   arguments=[flux,V0space[jb],ϕ,Nq,scale,constq]
