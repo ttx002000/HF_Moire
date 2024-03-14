@@ -22,7 +22,7 @@ NoHFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,initial_DensityMatrix)
  
 for ja in 1:Nq^2
     A=randn(ComplexF64,length(wave),length(wave))
-    initial_DensityMatrix[ja]=initial_DensityMatrix[ja]+(A+A')*0.001
+    initial_DensityMatrix[ja]=initial_DensityMatrix[ja]+(A+A')*0.01
 end
 
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue=iteration_loop(initial_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,constq,overlapmatrix)
