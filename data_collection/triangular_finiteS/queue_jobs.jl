@@ -17,7 +17,7 @@ vfspace=collect(2.0:0.5:8.0)
 for jb in eachindex(vfspace), jc in eachindex(constq)
    arguments=[vfspace[jb],V0,ϕ,Nq,scale,constq[jc]]
 for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="36:00:00",cpus_per_task=36)
+     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="24:00:00",cpus_per_task=36)
 end
 end
 
