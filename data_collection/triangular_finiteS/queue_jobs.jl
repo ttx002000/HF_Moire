@@ -13,7 +13,7 @@ Nq=9.0;
 scale=1.0;
 constq=[1.5] #divide this by Nq^2
 V0=0.0
-vfspace=collect(5.55:0.05:5.95)
+vfspace=collect(5.0:0.05:6.0)
 for jb in eachindex(vfspace), jc in eachindex(constq)
    arguments=[vfspace[jb],V0,ϕ,Nq,scale,constq[jc]]
 for ja in 1:3
