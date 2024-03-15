@@ -9,7 +9,7 @@ using Random
  
 
 function overlap(k::Vector{Float64},q::Vector{Float64},spin::Float64,M::Float64)::ComplexF64
-    v=(M^2+norm(k)^2+k[1]*q[1]+k[2]*q[2]-im*(k[1]*q[2]-k[2]*q[1]))^(2*spin)/((M^2+norm(k)^2)^spin*(M^2+norm(k+q)^2)^spin)
+    v=(M^2+norm(k)^2+k[1]*q[1]+k[2]*q[2]-im*(k[1]*q[2]-k[2]*q[1]))^(Int(2*spin))/((M^2+norm(k)^2)^spin*(M^2+norm(k+q)^2)^spin)
     
     return v
 end
@@ -29,7 +29,7 @@ end
 
 
 
-function triangle_initial_Densitymatrix(V0::Float64,ϕ::Float64,scale::Float64,Nq::Int64,spin::Float64,vf::Float64)
+function triangle_initial_Densitymatrix(spin::Float64,vf::Float64,V0::Float64,ϕ::Float64,scale::Float64,Nq::Int64)
     am=4*π/(√3*scale);
     
     mass=0.5;
@@ -293,7 +293,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
     DIIS_input_DensityMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     input_DensityMatrix=initial_DensityMatrix
-    while eout>1*10^-13
+    while eout>1*10^-8
       
       tic=time()
       eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,overlapmatrix)
