@@ -18,7 +18,7 @@ trytimes=Int(args[7])
 
 
 st=load(joinpath(@__DIR__,"data_input/$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale0.1constq_3.0try.jld2"))
-initial_DensityMatrix=st["DM"][1]
+initial_DensityMatrix=st["densitymatrix"][1]
 
 
 
