@@ -6,7 +6,7 @@ function submit_job(filepath, dirpath, job_prefix,arguments; nodes=1, ntasks=1, 
     mkpath(outpath)
     mkpath(slurmpath)
 
-    arguments=[vf,spin,V0,ϕ]
+    
     vf=arguments[1]
     V0=arguments[3]
     ϕ=arguments[4]
