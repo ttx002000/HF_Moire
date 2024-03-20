@@ -14,8 +14,8 @@ V0=2.0
 spin=2.0
 
 vfspace=collect(3.5:0.05:4.95)
-for jb in eachindex(vfspace), jc in eachindex(constq)
-   arguments=[vf,spin,V0,ϕ]
+for jb in eachindex(vfspace), jc in eachindex(ϕspace)
+   arguments=[vfspace[jb],spin,V0,ϕspace[jc]]
 
    submit_job(filepath, @__DIR__, job_prefix,arguments; time="20:00",cpus_per_task=1)
 
