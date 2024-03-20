@@ -18,7 +18,7 @@ spin=[0.5,4.0,5.5]
 for jb in eachindex(vfspace), jc in eachindex(ϕspace), jd in eachindex(V0)
    arguments=[vfspace[jb],spin,V0[jd],ϕspace[jc]]
 
-   submit_job(filepath, @__DIR__, job_prefix,arguments; time="15:00",cpus_per_task=1)
+   submit_job(filepath, @__DIR__, job_prefix,arguments; time="25:00",cpus_per_task=1)
 
 end
 
