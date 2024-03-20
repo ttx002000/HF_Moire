@@ -90,11 +90,11 @@ for ja in 1:Nqpath
 end
 
 
-chern,uniform,Flink=calculatechern(wave,Moireglist,T1,T2,g1,g3,spin,vf,V0,ϕ)
+chern,uniform,Flink,bandwidth,gap=calculatechern(wave,Moireglist,T1,T2,g1,g3,spin,vf,V0,ϕ)
 
 
 
 
-jldsave(joinpath(@__DIR__, "data_output/$(args[1])vf$(args[2])spin$(args[3])V0$(args[4])phi.jld2"),chern=chern,Flink=Flink,arguments=args,uniform=uniform,diff=diff,diffdivedeq=diffdivedeq)
+jldsave(joinpath(@__DIR__, "data_output/$(args[1])vf$(args[2])spin$(args[3])V0$(args[4])phi.jld2"),chern=chern,Flink=Flink,arguments=args,uniform=uniform,diff=diff,diffdivedeq=diffdivedeq,bandwidth=bandwdith,gap=gap)
 
 

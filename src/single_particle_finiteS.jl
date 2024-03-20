@@ -110,9 +110,9 @@ end
 
 
 
-function calculatechern(wave::Vector{Vector{Int64}},Moireglist::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},g1::Vector{Float64},g3::Vector{Float64},spin::Float64,vf::Float64,V0::Float64,ϕ::Float64)::Tuple{ComplexF64,Float64,Matrix{ComplexF64}}
+function calculatechern(wave::Vector{Vector{Int64}},Moireglist::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},g1::Vector{Float64},g3::Vector{Float64},spin::Float64,vf::Float64,V0::Float64,ϕ::Float64)::Tuple{ComplexF64,Float64,Matrix{ComplexF64},Float64,Float64}
 
-
+    bandindex=1
     Nchern=15
     dimension=length(wave)
     chern_allowedq=Vector{Int64}[]
@@ -121,16 +121,20 @@ function calculatechern(wave::Vector{Vector{Int64}},Moireglist::Vector{Vector{In
     end
     
     
-    
+    single_energy=Array{Float64}(undef,2,(Nchern+1)^2)
     chern_eigenvector_single=Array{ComplexF64}(undef,dimension,Nchern+1,Nchern+1)
     for ja in 1:(Nchern+1)*(Nchern+1)
     
         Ham=getHamiltonian(chern_allowedq[ja][1]/Nchern*g1+chern_allowedq[ja][2]/Nchern*g3,wave,Moireglist,T1,T2,g1,g3,spin,vf,V0,ϕ)
         F1=eigen(Ham)
-        chern_eigenvector_single[:,chern_allowedq[ja][1],chern_allowedq[ja][2]]=F1.vectors[:,1]
-        
+        chern_eigenvector_single[:,chern_allowedq[ja][1],chern_allowedq[ja][2]]=F1.vectors[:,bandindex]
+        single_energy[1,ja]=real(F1.values[:,bandindex])
+        single_energy[2,ja]=real(F1.values[:,bandindex+1])
     end
     
+   bandwidth=max(single_energy[1,:]...)-min(single_energy[1,:]...)
+   gap=min((single_energy[2,:]-single_energy[1,:])...)
+
     
     Uonelink=zeros(ComplexF64,Nchern,Nchern+1)
     Utwolink=zeros(ComplexF64,Nchern+1,Nchern)
@@ -166,7 +170,7 @@ function calculatechern(wave::Vector{Vector{Int64}},Moireglist::Vector{Vector{In
     
        chern=sum(Flink)/(2*π*im)
 
-  return chern,uniform,Flink
+  return chern,uniform,Flink,bandwidth,gap
 end
 
 
