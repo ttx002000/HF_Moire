@@ -95,6 +95,6 @@ chern,uniform,Flink,bandwidth,gap=calculatechern(wave,Moireglist,T1,T2,g1,g3,spi
 
 
 
-jldsave(joinpath(@__DIR__, "data_output/$(args[1])vf$(args[2])spin$(args[3])V0$(args[4])phi.jld2"),chern=chern,Flink=Flink,arguments=args,uniform=uniform,diff=diff,diffdq=diffdq,bandwidth=bandwdith,gap=gap)
+jldsave(joinpath(@__DIR__, "data_output/$(args[1])vf$(args[2])spin$(args[3])V0$(args[4])phi.jld2"),chern=chern,Flink=Flink,arguments=args,uniform=uniform,diff=diff,diffdq=diffdq,bandwidth=bandwidth,gap=gap)
 
 

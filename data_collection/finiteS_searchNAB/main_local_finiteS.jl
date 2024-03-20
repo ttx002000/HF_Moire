@@ -1,12 +1,17 @@
+using Pkg
+Pkg.activate(joinpath(@__DIR__, "../.."))
+using Plots
 using JLD2
+using CSV,DataFrames
+
+
 include("../../src/single_particle_finiteS.jl")
-
-
 scale=1.0
-vf=2.0
+standard=6.01*scale
+vf=0.2
 spin=2.0
-V0=3.5
-ϕ=0/180*π
+V0=1.0
+ϕ=3.0/180*π
 
 am=4*π/(√3*scale)
 
@@ -57,7 +62,7 @@ end
 
 
 
-wave=getwave(7.01*scale,g1,g3,g1T,g3T)
+wave=getwave(standard,g1,g3,g1T,g3T)
 Moireglist=getMoireglist(wave,g1T,g3T)
 formq=Vector{Vector{Float64}}(undef,Nx*Ny)
 averaged_formq=zeros(Float64,Nqpath)
@@ -81,6 +86,17 @@ end
 diff=sum(abs.(formq1LL-averaged_formq))
 
 
+diffdq=(abs.(formq1LL-averaged_formq))./(norm.(Trqpath))
 
-chern,uniform,Flink=calculatechern(wave,Moireglist,T1,T2,g1,g3,spin,vf,V0,ϕ)
+
+
+chern,uniform,Flink,bandwidth,gap=calculatechern(wave,Moireglist,T1,T2,g1,g3,spin,vf,V0,ϕ)
+
+
+
+
+jldsave(joinpath(@__DIR__, "data_output/$(vf)vf$(spin)spin$(V0)V0$(ϕ)phi.jld2"),chern=chern,Flink=Flink,uniform=uniform,diff=diff,diffdq=diffdq,bandwidth=bandwidth,gap=gap)
+
+
+
 

@@ -128,8 +128,8 @@ function calculatechern(wave::Vector{Vector{Int64}},Moireglist::Vector{Vector{In
         Ham=getHamiltonian(chern_allowedq[ja][1]/Nchern*g1+chern_allowedq[ja][2]/Nchern*g3,wave,Moireglist,T1,T2,g1,g3,spin,vf,V0,ϕ)
         F1=eigen(Ham)
         chern_eigenvector_single[:,chern_allowedq[ja][1],chern_allowedq[ja][2]]=F1.vectors[:,bandindex]
-        single_energy[1,ja]=real(F1.values[:,bandindex])
-        single_energy[2,ja]=real(F1.values[:,bandindex+1])
+        single_energy[1,ja]=real(F1.values[bandindex])
+        single_energy[2,ja]=real(F1.values[bandindex+1])
     end
     
    bandwidth=max(single_energy[1,:]...)-min(single_energy[1,:]...)
