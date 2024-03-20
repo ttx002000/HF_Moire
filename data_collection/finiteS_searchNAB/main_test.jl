@@ -84,10 +84,10 @@ for ja in 1:Nqpath
 end
 
 diff=sum(abs.(formq1LL-averaged_formq))
-diffdq=0
-for ja in 1:Nqpath
-    diffdq+=abs(formq1LL[ja]-averaged_formq[ja])/norm(Trqpath[ja])
-end
+
+
+diffdq=(abs.(formq1LL-averaged_formq))./(norm.(Trqpath))
+
 
 
 chern,uniform,Flink,bandwidth,gap=calculatechern(wave,Moireglist,T1,T2,g1,g3,spin,vf,V0,ϕ)
