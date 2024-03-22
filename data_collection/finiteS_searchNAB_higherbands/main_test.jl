@@ -3,15 +3,16 @@ Pkg.activate(joinpath(@__DIR__, "../.."))
 using Plots
 using JLD2
 using CSV,DataFrames
+args=parse.(Float64,ARGS)
 
-
-include("../../src/single_particle_finiteS.jl")
+include("../../src/single_particle_finiteS_higherbands.jl")
 scale=1.0
-standard=9.01*scale
-vf=3.5
-spin=4.5
-V0=3.0
-ϕ=45/180*π
+standard=10.01*scale
+vf=args[1]
+spin=args[2]
+V0=args[3]
+ϕ=args[4]/180*π
+bandindex=Int64(args[5])
 
 am=4*π/(√3*scale)
 
@@ -68,7 +69,7 @@ formq=Vector{Vector{Float64}}(undef,Nx*Ny)
 averaged_formq=zeros(Float64,Nqpath)
 
 for ja in 1:Nx*Ny
-    formq[ja]=calculateformq(allowedq[ja][1]*T1+allowedq[ja][2]*T2,Trqpath,wave,Moireglist,T1,T2,g1,g3,spin,vf,V0,ϕ)
+    formq[ja]=calculateformq(allowedq[ja][1]*T1+allowedq[ja][2]*T2,Trqpath,wave,Moireglist,T1,T2,g1,g3,spin,vf,V0,ϕ,bandindex)
 end
 
 
@@ -90,13 +91,11 @@ diffdq=(abs.(formq1LL-averaged_formq))./(norm.(Trqpath))
 
 
 
-chern,uniform,Flink,bandwidth,gap=calculatechern(wave,Moireglist,T1,T2,g1,g3,spin,vf,V0,ϕ)
+chern,uniform,Flink,bandwidth,gap=calculatechern(wave,Moireglist,T1,T2,g1,g3,spin,vf,V0,ϕ,bandindex)
 
 
 
 
-jldsave(joinpath(@__DIR__, "data_output/$(vf)vf$(spin)spin$(V0)V045.0phi.jld2"),chern=chern,Flink=Flink,uniform=uniform,diff=diff,diffdq=diffdq,bandwidth=bandwidth,gap=gap)
-
-
+jldsave(joinpath(@__DIR__, "data_output/$(args[1])vf$(args[2])spin$(args[3])V0$(args[4])phi$(args[5])band.jld2"),chern=chern,Flink=Flink,arguments=args,uniform=uniform,diff=diff,diffdq=diffdq,bandwidth=bandwidth,gap=gap)
 
 
