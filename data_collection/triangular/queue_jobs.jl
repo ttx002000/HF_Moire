@@ -14,7 +14,7 @@ scale=1.0;
 constq=1.0 #divide this by Nq^2
 V0=0.0
 for jb in eachindex(fluxspace)
-  arguments=[fluxspace[ja],V0,ϕ,Nq,scale,constq]
+  arguments=[fluxspace[jb],V0,ϕ,Nq,scale,constq]
 for ja in 1:4
     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="20:00:00",cpus_per_task=36)
 end
