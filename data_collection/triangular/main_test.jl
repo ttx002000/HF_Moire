@@ -5,7 +5,7 @@ using JLD2
 using CSV,DataFrames
 
 
-include("../../src/operators.jl")
+include("../../src/operators_DIISon.jl")
 
 args=parse.(Float64,ARGS)
 flux=args[1]*π
