@@ -24,7 +24,7 @@ index=st["index"]
 for ja in eachindex(index)
     arguments=[flux,index[ja][1],ϕ,Nq,scale,index[ja][2]]
     trytime=Int(index[ja][3])
-    submit_job(filepath, @__DIR__, job_prefix,arguments,trytime; time="38:00:00",cpus_per_task=36)
+    submit_job(filepath, @__DIR__, job_prefix,arguments,trytime; time="50:00:00",cpus_per_task=36)
 end
 
 #constq=collect(0.9:0.1:1.0) #divide this by Nq^2
