@@ -12,7 +12,7 @@ job_prefix = "search"
 ϕspace=[0.0] #convert this to radian 
 vfspace=collect(0.5:0.2:4.5)
 V0=collect(1.0:0.2:6.4)
-spinspace=[1.0]
+spinspace=[2.0]
 bandspace=[2.0,3.0]
 
 for jb in eachindex(vfspace), jc in eachindex(ϕspace), jd in eachindex(V0), spin in spinspace, bandindex in bandspace
