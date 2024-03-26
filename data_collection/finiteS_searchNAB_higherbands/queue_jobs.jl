@@ -14,14 +14,14 @@ vfspace=collect(0.5:0.2:4.5)
 V0=collect(1.0:0.2:6.4)
 spinspace=[1.0]
 bandspace=[2.0,3.0]
-#=
+
 for jb in eachindex(vfspace), jc in eachindex(ϕspace), jd in eachindex(V0), spin in spinspace, bandindex in bandspace
    arguments=[vfspace[jb],spin,V0[jd],ϕspace[jc],bandindex]
 
    submit_job(filepath, @__DIR__, job_prefix,arguments; time="25:00",cpus_per_task=1)
 
 end
-=#
+
 
 #=
 st=load(joinpath(@__DIR__, "missedindex.jld2"))
