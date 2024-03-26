@@ -10,8 +10,8 @@ job_prefix = "search"
 
 
 ϕspace=[0.0] #convert this to radian 
-vfspace=collect(0.5:0.05:4.5)
-V0=collect(0.5:0.05:6.5)
+vfspace=collect(0.5:0.2:4.5)
+V0=collect(1.0:0.2:6.4)
 spinspace=[1.5]
 bandspace=[2.0]
 
