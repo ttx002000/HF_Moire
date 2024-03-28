@@ -394,13 +394,16 @@ end
 function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,overlapmatrix::Array{ComplexF64,4})::Tuple{Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Float64}}}
     eout=1.0
     itcount=0
+    bad_count=0
     loop_dic=construct_loop_dic(wave)
     HF_eigenvalue=Vector{Any}(undef,Nq^2)
     DIIS_input_DensityMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     input_DensityMatrix=initial_DensityMatrix
-    while eout>1*10^-13
-      
+    while (eout>1*10^-13) || (bad_count<4)
+      if eout<1*10^-13 
+      bad_count+=1
+      end
       tic=time()
       eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,overlapmatrix)
       DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
@@ -415,8 +418,11 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
     
     println("startDIIS",itcount)
     
-
-    while eout>10^-13
+    bad_count=0
+    while (eout>10^-13) || (bad_count<4)
+        if eout<1*10^-13 
+            bad_count+=1
+        end
         tic=time()
         Bmatrix=zeros(ComplexF64,4,4)
         for ja in 1:3
