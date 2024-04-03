@@ -7,8 +7,6 @@ function single_part(flux::Float64,V0::Float64,ϕ::Float64,scale::Float64,Nq::In
     b2=4*π/(√3*am)*[√3/2,-1/2]
 
 
-    a1m=am*[1/2,√3/2]
-    a2m=am*[1,0]
     
     
     T1=b1/(Nq)
@@ -31,7 +29,7 @@ function single_part(flux::Float64,V0::Float64,ϕ::Float64,scale::Float64,Nq::In
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=6.01*scale
+    cutoffstandard=4.01*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -43,7 +41,7 @@ function single_part(flux::Float64,V0::Float64,ϕ::Float64,scale::Float64,Nq::In
 
     wave_diff=Vector{Int64}[]
     cutoff=36
-    cutoffstandard=12.01*scale
+    cutoffstandard=8.01*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -120,10 +118,10 @@ function overlap(k::Vector{Float64},q::Vector{Float64},β::Float64)::ComplexF64
 end
 
 
-function  get_foverlap(wave_diff,wave,allowedq,Nq,T1,T2)
+function  get_foverlap(wave_diff::Vector{Vector{Int64}},wave::Vector{Vector{Int64}},allowedq::Vector{Vector{Int64}},Nq::Int64,T1::Vector{Float64},T2::Vector{Float64},flux::Float64)::Array{ComplexF64}
     form_overlapmatrix=zeros(ComplexF64,Nq^2,Nq^2,length(wave),length(wave_diff))
-
-
+    scale=1.0
+    β=4*flux/(√3*scale^2)
     for ja in 1:Nq^2, jb in 1:Nq^2, jc in eachindex(wave), jd in eachindex(wave_diff)
         k1=allowedq[ja][1]*T1+allowedq[ja][2]*T2
         k2=allowedq[jb][1]*T1+allowedq[jb][2]*T2
@@ -136,6 +134,13 @@ function  get_foverlap(wave_diff,wave,allowedq,Nq,T1,T2)
 end
 
 
+function Coulomb(k::Vector{Int64},T1::Vector{Float64},T2::Vector{Float64})::Float64
+ 
+
+    return k==[0,0] ? 0.0 : 1/norm(k[1]*T1+k[2]*T2)
+    
+  end
+  
 
 function get_HFeigenvectors(loop_dic::Dict{Vector{Int},Any},allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Matrix{ComplexF64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,overlapmatrix::Array{ComplexF64,4})::Tuple{Float64,Vector{Matrix{ComplexF64}},Vector{Vector{Float64}}}
   
@@ -204,7 +209,7 @@ function get_HFeigenvectors(loop_dic::Dict{Vector{Int},Any},allowedq::Vector{Vec
 end
 
 
-function get_indexset(Flevel,HF_eigenvalue,wave,wave_diff,num_bandbelow,num_bandup,allowedq)
+function get_indexset(Flevel::Float64,HF_eigenvalue::Vector{Vector{Float64}},wave::Vector{Vector{Int64}},wave_diff::Vector{Vector{Int64}},num_bandbelow::Int64,num_bandup::Int64,allowedq::Vector{Vector{Int64}},Nq::Int64,bigQ::Vector{Int64})::Tuple{Vector{Vector{Int64}},Vector{Vector{Vector{Int64}}},Vector{Vector{Vector{Int64}}},Vector{Vector{Vector{Int64}}},Array{Int64},Array{Int64}}
         
  dimension=length(wave)    
  FLindex=0
@@ -285,4 +290,117 @@ function get_indexset(Flevel,HF_eigenvalue,wave,wave_diff,num_bandbelow,num_band
         push!(B2indexset,[[pos1,kmQpos,pband],[pos2,kindex,hband]])
     end
  end
+
+ return Bandvector,Aindexset,AmQindexset,B2indexset,gkpqmap,gkmqmap
+end
+
+
+function get_Fmatrix(Bandvector::Vector{Vector{Int64}},HF_eigenvector::Vector{Matrix{ComplexF64}},wave::Vector{Vector{Int}},wave_diff::Vector{Vector{Int}},form_overlapmatrix::Array{ComplexF64})::Array{ComplexF64}
+    dimension=length(wave)
+    Fmatrix=zeros(ComplexF64,length(Bandvector),length(Bandvector),length(wave_diff))
+    eigenvector_single=zeros(ComplexF64,length(wave),length(Bandvector))
+
+    for ja in eachindex(Bandvector)
+        eigenvector_single[:,ja]=HF_eigenvector[Bandvector[ja][1]][:,Bandvector[ja][2]]
+    end       
+
+
+    diff_eigenvector=zeros(ComplexF64,dimension,length(Bandvector),length(wave_diff))
+    for jc in eachindex(wave_diff), jd in eachindex(wave)
+        pos=findfirst(item->item==wave[jd]+wave_diff[jc],wave)
+        if pos≠nothing 
+            diff_eigenvector[jd,:,jc]=eigenvector_single[pos,:]
+        end 
+    end
+
+    for ja in eachindex(Bandvector), jb in eachindex(Bandvector), jc in eachindex(wave_diff)
+        Fmatrix[ja,jb,jc]=sum(conj(diff_eigenvector[:,ja,jc]).*eigenvector_single[:,jb].*form_overlapmatrix[Bandvector[ja][1],Bandvector[jb][1],:,jc])
+    end
+  
+    pos=findfirst(item->item==[0,0],wave_diff)
+    for ja in eachindex(Bandvector)
+        Fmatrix[ja,ja,pos]=1.0+0.0*im
+    end
+    
+  return Fmatrix
+end
+
+
+function get_Velement(qindex::Int64,v1::Vector{Int64},v2::Vector{Int64},v3::Vector{Int64},v4::Vector{Int64},Fmatrix::Array{ComplexF64},gkpqmap::Array{Int64},gkmqmap::Array{Int64},T1::Vector{Float64},T2::Vector{Float64},wave_diff::Vector{Vector{Int64}})::ComplexF64
+    Velement=0 #v1v2v3v4 contains two informatin, which band and which momentum
+   for ja in eachindex(wave_diff)
+        qvec=allowedq[qindex]+wave_diff[ja]
+       if  (gkpqmap[v3[2],qindex,ja]≠0) && (gkmqmap[v4[2],qindex,ja]≠0) &&(qvec≠[0,0])
+          Velement+=constq/norm(qvec[1]*T1+qvec[2]*T2)*Fmatrix[v1[1],v3[1],gkpqmap[v3[2],qindex,ja]]*Fmatrix[v2[1],v4[1],gkmqmap[v4[2],qindex,ja]]
+       end
+   end
+
+   return Velement
+end
+
+
+
+
+
+function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset::Vector{Vector{Vector{Int64}}},B2indexset::Vector{Vector{Vector{Int64}}},allowedq::Vector{Vector{Int64}},Fmatrix::Array{ComplexF64},gkpqmap::Array{Int64},gkmqmap::Array{Int64},T1::Vector{Float64},T2::Vector{Float64},wave_diff::Vector{Vector{Int64}},HF_eigenvalue::Vector{Vector{Float64}})::Tuple{Matrix{ComplexF64},Matrix{ComplexF64},Matrix{ComplexF64}}
+
+    Amatrix=zeros(ComplexF64,length(Aindexset),length(Aindexset))
+ for ja in eachindex(Aindexset), jb in eachindex(Aindexset)
+   v1=Aindexset[ja][1]
+   v2=Aindexset[jb][2]
+   v3=Aindexset[jb][1]
+   v4=Aindexset[ja][2]
+   deltaq1=allowedq[v1[2]]-allowedq[v3[2]]
+   q1index=findfirst(item->item==[mod(deltaq1[1],Nq),mod(deltaq1[2],Nq)],allowedq)
+
+   deltaq2=allowedq[v1[2]]-allowedq[v4[2]]
+   q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
+   Amatrix[ja,jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)
+ end
+
+ for ja in eachindex(Aindexset)
+   v1=Aindexset[ja][1]
+   v2=Aindexset[ja][2]
+   Amatrix[ja,ja]+=HF_eigenvalue[v1[2]][v1[3]]-HF_eigenvalue[v2[2]][v2[3]]
+ end
+
+
+ 
+ AmQmatrix=zeros(ComplexF64,length(AmQindexset),length(AmQindexset))
+ for ja in eachindex(AmQindexset), jb in eachindex(AmQindexset)
+   v1=AmQindexset[ja][1]
+   v2=AmQindexset[jb][2]
+   v3=AmQindexset[jb][1]
+   v4=AmQindexset[ja][2]
+   deltaq1=allowedq[v1[2]]-allowedq[v3[2]]
+   q1index=findfirst(item->item==[mod(deltaq1[1],Nq),mod(deltaq1[2],Nq)],allowedq)
+
+   deltaq2=allowedq[v1[2]]-allowedq[v4[2]]
+   q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
+   AmQmatrix[ja,jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)
+ end
+
+  for ja in eachindex(AmQindexset)
+   v1=AmQindexset[ja][1]
+   v2=AmQindexset[ja][2]
+   AmQmatrix[ja,ja]+=HF_eigenvalue[v1[2]][v1[3]]-HF_eigenvalue[v2[2]][v2[3]]
+ end
+
+  Bmatrix=zeros(ComplexF64,length(Aindexset),length(B2indexset))
+
+  for ja in eachindex(Aindexset), jb in eachindex(B2indexset)
+     v1=Aindexset[ja][1]
+     v2=B2indexset[jb][1]
+     v3=B2indexset[jb][2]
+     v4=Aindexset[ja][2]
+     deltaq1=allowedq[v1[2]]-allowedq[v3[2]]
+     q1index=findfirst(item->item==[mod(deltaq1[1],Nq),mod(deltaq1[2],Nq)],allowedq)
+  
+     deltaq2=allowedq[v1[2]]-allowedq[v4[2]]
+     q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
+     Bmatrix[ja,jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)
+   end
+
+
+ return  (Amatrix+Amatrix')/2,(AmQmatrix+AmQmatrix')/2,Bmatrix
 end
