@@ -87,7 +87,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
           end
        end
        DeltaMatrix[ja]=NewDensityMatrix[ja]-input_DensityMatrix[ja]
-       output_DensityMatrix[ja]=0.5*input_DensityMatrix[ja]+0.5*NewDensityMatrix[ja]
+       output_DensityMatrix[ja]=0.0*input_DensityMatrix[ja]+1.0*NewDensityMatrix[ja]
   end
 
 
