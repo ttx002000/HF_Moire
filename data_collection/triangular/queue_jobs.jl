@@ -12,7 +12,7 @@ fluxspace=collect(0.0:0.1:1.0) #multiply this by pi
 ϕ=0.0 #convert this to radian 
 Nq=9.0; 
 scale=1.0;
-constq=4.0 #divide this by Nq^2
+constq=1.0 #divide this by Nq^2
 V0=0.0
 
 for jb in eachindex(fluxspace)
