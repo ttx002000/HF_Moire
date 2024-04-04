@@ -24,7 +24,7 @@ end
 =#
 
 
-miss=joinpath(@__DIR__, "missedindex.jld2")
+miss=load(joinpath(@__DIR__, "missedindex.jld2"))
 index=miss["index"]
 for ja in eachindex(index)
   arguments=[index[ja][1],V0,ϕ,Nq,scale,constq]
