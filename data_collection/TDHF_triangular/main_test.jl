@@ -18,12 +18,13 @@ scale=args[5];
 constq=args[6]/Nq^2
 trytimes=Int(args[7])
 bigQindex=Int(args[8])
-input=load(joinpath(@__DIR__, "outputflux0.0constq1.0V0.0.jld2"))
+
+input=load(joinpath(@__DIR__, "data_input/$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq_$(args[7])try.jld2"))
 
 
-DIIS_input_DensityMatrix=input["DIIS_input_DensityMatrix"][1]
+DIIS_input_DensityMatrix=input["DIIS_input_DensityMatrix"]
 loop_dic=input["loop_dic"]
-bigQ=[0,0]
+
 num_bandup=25
 num_bandbelow=1
 tot_bd=num_bandup+num_bandbelow
@@ -38,8 +39,9 @@ Fmatrix=get_Fmatrix(Bandvector,HF_eigenvector,wave,wave_diff,form_overlapmatrix)
 Amatrix,AmQmatrix,Bmatrix=Construct_Amatrix(Aindexset,AmQindexset,B2indexset,allowedq,Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,HF_eigenvalue)
 Totalmatrix=vcat(hcat(Amatrix,Bmatrix),hcat(-Bmatrix',-conj(AmQmatrix)))
 ω=eigvals(Totalmatrix)
-sort(real(ω))[length(Aindexset)-5:length(Aindexset)+5]
 
 
+
+jldsave(joinpath(@__DIR__, "data_output/spectrum$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq$(args[7])try$(args[8])bigQ.jld2"),spectrum=ω)
 
 

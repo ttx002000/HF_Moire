@@ -30,8 +30,6 @@ Fmatrix=get_Fmatrix(Bandvector,HF_eigenvector,wave,wave_diff,form_overlapmatrix)
 Amatrix,AmQmatrix,Bmatrix=Construct_Amatrix(Aindexset,AmQindexset,B2indexset,allowedq,Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,HF_eigenvalue)
 Totalmatrix=vcat(hcat(Amatrix,Bmatrix),hcat(-Bmatrix',-conj(AmQmatrix)))
 ω=eigvals(Totalmatrix)
-jldsave(joinpath(@__DIR__, "data_output/spectrum$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq$(args[7])try$(args[8])bigQ.jld2"),spectrum=ω)
-
 
 
 
