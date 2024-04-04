@@ -15,7 +15,7 @@ function submit_job(filepath, dirpath, job_prefix,arguments,trytimes,bigQindex; 
     constq=arguments[6];
  
 
-    name = "$(Nq)Nq$(flux)flux$(V0)V0$(ϕ)phi$(scale)scale$(constq)constq$(trytimes)try"
+    name = "$(Nq)Nq$(flux)flux$(V0)V0$(ϕ)phi$(scale)scale$(constq)constq$(trytimes)try$(bigQindex)bigQ"
     filestr = """#!/bin/bash
     #SBATCH --job-name=$(job_prefix*"_"*name)
     #SBATCH --partition=$partition

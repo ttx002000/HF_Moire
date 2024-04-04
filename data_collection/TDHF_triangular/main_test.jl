@@ -24,7 +24,7 @@ if isfile(joinpath(@__DIR__, "data_input/$(args[4])Nq$(args[1])flux$(args[2])V0$
  input=load(joinpath(@__DIR__, "data_input/$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq_$(args[7])try.jld2"))
 
 
- DIIS_input_DensityMatrix=input["DIIS_input_DensityMatrix"]
+ DIIS_input_DensityMatrix=input["DIIS_input_DensityMatrixfirst"]
  loop_dic=input["loop_dic"]
 
  num_bandup=30
