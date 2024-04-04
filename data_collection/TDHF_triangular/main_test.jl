@@ -25,7 +25,7 @@ input=load(joinpath(@__DIR__, "data_input/$(args[4])Nq$(args[1])flux$(args[2])V0
 DIIS_input_DensityMatrix=input["DIIS_input_DensityMatrix"]
 loop_dic=input["loop_dic"]
 
-num_bandup=25
+num_bandup=30
 num_bandbelow=1
 tot_bd=num_bandup+num_bandbelow
 
