@@ -18,6 +18,6 @@ V0=0.0
 for jb in 1:1
   arguments=[fluxspace[jb],V0,ϕ,Nq,scale,constq]
 for ja in 1:1, bigQindex in 1:Nq^2
-    submit_job(filepath, @__DIR__, job_prefix,arguments,ja,bigQindex; time="25:00:00",cpus_per_task=36)
+    submit_job(filepath, @__DIR__, job_prefix,arguments,ja,bigQindex; time="1:00:00",cpus_per_task=1)
 end
 end
