@@ -18,7 +18,7 @@ V0=0.0
 for jb in eachindex(fluxspace)
   arguments=[fluxspace[jb],V0,ϕ,Nq,scale,constq]
 for ja in 1:3
-    submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="1:00:00",cpus_per_task=1)
+    submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="30:00",cpus_per_task=1)
 end
 end
 #=
