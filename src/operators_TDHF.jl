@@ -396,7 +396,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
    q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
    AmQmatrix[ja,jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)
  end
- end
+ 
 
 
 
