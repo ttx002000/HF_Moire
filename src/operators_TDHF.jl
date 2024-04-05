@@ -354,7 +354,83 @@ end
 
 
 function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset::Vector{Vector{Vector{Int64}}},B2indexset::Vector{Vector{Vector{Int64}}},allowedq::Vector{Vector{Int64}},Fmatrix::Array{ComplexF64},gkpqmap::Array{Int64},gkmqmap::Array{Int64},T1::Vector{Float64},T2::Vector{Float64},wave_diff::Vector{Vector{Int64}},HF_eigenvalue::Vector{Vector{Float64}})::Tuple{Matrix{ComplexF64},Matrix{ComplexF64},Matrix{ComplexF64}}
+    Amatrix=zeros(ComplexF64,length(Aindexset),length(Aindexset))
+ 
 
+    for ja in eachindex(Aindexset),jb in eachindex(Aindexset)
+   v1=Aindexset[ja][1]
+   v2=Aindexset[jb][2]
+   v3=Aindexset[jb][1]
+   v4=Aindexset[ja][2]
+   deltaq1=allowedq[v1[2]]-allowedq[v3[2]]
+   q1index=findfirst(item->item==[mod(deltaq1[1],Nq),mod(deltaq1[2],Nq)],allowedq)
+
+   deltaq2=allowedq[v1[2]]-allowedq[v4[2]]
+   q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
+   Amatrix[ja,jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)
+  
+    end
+
+
+
+ for ja in eachindex(Aindexset)
+   v1=Aindexset[ja][1]
+   v2=Aindexset[ja][2]
+   Amatrix[ja,ja]+=HF_eigenvalue[v1[2]][v1[3]]-HF_eigenvalue[v2[2]][v2[3]]
+ end
+
+
+ 
+ AmQmatrix=zeros(ComplexF64,length(AmQindexset),length(AmQindexset))
+
+
+ for ja in eachindex(AmQindexset),jb in eachindex(AmQindexset)
+   v1=AmQindexset[ja][1]
+   v2=AmQindexset[jb][2]
+   v3=AmQindexset[jb][1]
+   v4=AmQindexset[ja][2]
+   deltaq1=allowedq[v1[2]]-allowedq[v3[2]]
+   q1index=findfirst(item->item==[mod(deltaq1[1],Nq),mod(deltaq1[2],Nq)],allowedq)
+
+   deltaq2=allowedq[v1[2]]-allowedq[v4[2]]
+   q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
+   AmQmatrix[ja,jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)
+ end
+ end
+
+
+
+
+
+  for ja in eachindex(AmQindexset)
+   v1=AmQindexset[ja][1]
+   v2=AmQindexset[ja][2]
+   AmQmatrix[ja,ja]+=HF_eigenvalue[v1[2]][v1[3]]-HF_eigenvalue[v2[2]][v2[3]]
+ end
+
+
+
+
+  Bmatrix=zeros(ComplexF64,length(Aindexset),length(B2indexset))
+
+   for ja in eachindex(Aindexset),jb in eachindex(B2indexset)
+     v1=Aindexset[ja][1]
+     v2=B2indexset[jb][1]
+     v3=B2indexset[jb][2]
+     v4=Aindexset[ja][2]
+     deltaq1=allowedq[v1[2]]-allowedq[v3[2]]
+     q1index=findfirst(item->item==[mod(deltaq1[1],Nq),mod(deltaq1[2],Nq)],allowedq)
+  
+     deltaq2=allowedq[v1[2]]-allowedq[v4[2]]
+     q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
+     Bmatrix[ja,jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)
+   end
+
+
+
+
+
+    #=
     Amatrix=zeros(ComplexF64,length(Aindexset),length(Aindexset))
     Amatrixvec=[zeros(ComplexF64,length(Aindexset)) for _ in eachindex(Aindexset)]
 
@@ -439,6 +515,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
    for ja in eachindex(Aindexset)
     Bmatrix[ja,:]=Bmatrixvec[ja]
    end
+   =#
 
 
  return  (Amatrix+Amatrix')/2,(AmQmatrix+AmQmatrix')/2,Bmatrix
