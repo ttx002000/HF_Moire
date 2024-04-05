@@ -17,7 +17,7 @@ V0=0.0
 
 for jb in [0.0]
   arguments=[jb,V0,ϕ,Nq,scale,constq]
-for ja in 1:1, bigQindex in 1:Nq^2
+for ja in 1:1, bigQindex in 6:6
     submit_job(filepath, @__DIR__, job_prefix,arguments,ja,bigQindex; time="15:00",cpus_per_task=4)
 end
 end
