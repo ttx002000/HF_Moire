@@ -356,7 +356,7 @@ end
 function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset::Vector{Vector{Vector{Int64}}},B2indexset::Vector{Vector{Vector{Int64}}},allowedq::Vector{Vector{Int64}},Fmatrix::Array{ComplexF64},gkpqmap::Array{Int64},gkmqmap::Array{Int64},T1::Vector{Float64},T2::Vector{Float64},wave_diff::Vector{Vector{Int64}},HF_eigenvalue::Vector{Vector{Float64}})::Tuple{Matrix{ComplexF64},Matrix{ComplexF64},Matrix{ComplexF64}}
 
     Amatrix=zeros(ComplexF64,length(Aindexset),length(Aindexset))
-    Amatrixvec=[zeros(complexF64,length(Aindexset)) for _ in eachindex(Aindexset)]
+    Amatrixvec=[zeros(ComplexF64,length(Aindexset)) for _ in eachindex(Aindexset)]
 
  Threads.@threads for ja in eachindex(Aindexset)
   for  jb in eachindex(Aindexset)
@@ -386,7 +386,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
 
  
  AmQmatrix=zeros(ComplexF64,length(AmQindexset),length(AmQindexset))
- AmQmatrixvec=[zeros(complexF64,length(AmQindexset)) for _ in eachindex(AmQindexset)]
+ AmQmatrixvec=[zeros(ComplexF64,length(AmQindexset)) for _ in eachindex(AmQindexset)]
 
  Threads.@threads for ja in eachindex(AmQindexset)
  for jb in eachindex(AmQindexset)
@@ -419,7 +419,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
 
 
   Bmatrix=zeros(ComplexF64,length(Aindexset),length(B2indexset))
-  Bmatrixvec=[zeros(complexF64,length(B2indexset)) for _ in eachindex(Aindexset)]
+  Bmatrixvec=[zeros(ComplexF64,length(B2indexset)) for _ in eachindex(Aindexset)]
 
   Threads.@threads for ja in eachindex(Aindexset)
    for jb in eachindex(B2indexset)
