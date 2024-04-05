@@ -341,11 +341,22 @@ end
 
 
 
+function test_function()
+    Amatrix=zeros(Float64,5,5)
+    Threads.@threads for ja in 1:5
+        for jb in 1:5
+       Amatrix[ja,jb]=ja+jb
+    end
+    end
+    return Amatrix
+end
+
 
 function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset::Vector{Vector{Vector{Int64}}},B2indexset::Vector{Vector{Vector{Int64}}},allowedq::Vector{Vector{Int64}},Fmatrix::Array{ComplexF64},gkpqmap::Array{Int64},gkmqmap::Array{Int64},T1::Vector{Float64},T2::Vector{Float64},wave_diff::Vector{Vector{Int64}},HF_eigenvalue::Vector{Vector{Float64}})::Tuple{Matrix{ComplexF64},Matrix{ComplexF64},Matrix{ComplexF64}}
 
     Amatrix=zeros(ComplexF64,length(Aindexset),length(Aindexset))
- for ja in eachindex(Aindexset), jb in eachindex(Aindexset)
+ Threads.@threads for ja in eachindex(Aindexset)
+ for  jb in eachindex(Aindexset)
    v1=Aindexset[ja][1]
    v2=Aindexset[jb][2]
    v3=Aindexset[jb][1]
@@ -357,6 +368,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
    q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
    Amatrix[ja,jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)
  end
+ end
 
  for ja in eachindex(Aindexset)
    v1=Aindexset[ja][1]
@@ -367,7 +379,8 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
 
  
  AmQmatrix=zeros(ComplexF64,length(AmQindexset),length(AmQindexset))
- for ja in eachindex(AmQindexset), jb in eachindex(AmQindexset)
+ Threads.@threads for ja in eachindex(AmQindexset)
+ for jb in eachindex(AmQindexset)
    v1=AmQindexset[ja][1]
    v2=AmQindexset[jb][2]
    v3=AmQindexset[jb][1]
@@ -379,6 +392,8 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
    q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
    AmQmatrix[ja,jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)
  end
+ end
+
 
   for ja in eachindex(AmQindexset)
    v1=AmQindexset[ja][1]
@@ -388,7 +403,8 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
 
   Bmatrix=zeros(ComplexF64,length(Aindexset),length(B2indexset))
 
-  for ja in eachindex(Aindexset), jb in eachindex(B2indexset)
+  Threads.@threads for ja in eachindex(Aindexset)
+   for jb in eachindex(B2indexset)
      v1=Aindexset[ja][1]
      v2=B2indexset[jb][1]
      v3=B2indexset[jb][2]
@@ -399,6 +415,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
      deltaq2=allowedq[v1[2]]-allowedq[v4[2]]
      q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
      Bmatrix[ja,jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)
+   end
    end
 
 
