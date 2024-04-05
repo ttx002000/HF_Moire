@@ -354,6 +354,7 @@ end
 
 
 function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset::Vector{Vector{Vector{Int64}}},B2indexset::Vector{Vector{Vector{Int64}}},allowedq::Vector{Vector{Int64}},Fmatrix::Array{ComplexF64},gkpqmap::Array{Int64},gkmqmap::Array{Int64},T1::Vector{Float64},T2::Vector{Float64},wave_diff::Vector{Vector{Int64}},HF_eigenvalue::Vector{Vector{Float64}})::Tuple{Matrix{ComplexF64},Matrix{ComplexF64},Matrix{ComplexF64}}
+    #=
     Amatrix=zeros(ComplexF64,length(Aindexset),length(Aindexset))
  
 
@@ -427,10 +428,10 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
    end
 
 
+  =#
 
 
-
-    #=
+   
     Amatrix=zeros(ComplexF64,length(Aindexset),length(Aindexset))
     Amatrixvec=[zeros(ComplexF64,length(Aindexset)) for _ in eachindex(Aindexset)]
 
@@ -515,7 +516,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
    for ja in eachindex(Aindexset)
     Bmatrix[ja,:]=Bmatrixvec[ja]
    end
-   =#
+
 
 
  return  (Amatrix+Amatrix')/2,(AmQmatrix+AmQmatrix')/2,Bmatrix
