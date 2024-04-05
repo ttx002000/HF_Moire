@@ -45,6 +45,6 @@ bigQindex=Int(args[8])
 
 
 
- jldsave(joinpath(@__DIR__, "data_output/spectrum$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq$(args[7])try$(args[8])bigQ.jld2"),omegaspectrum=ω,Sspectrum=Sspectrum)
+ jldsave(joinpath(@__DIR__, "data_output/spectrum$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq$(args[7])try$(args[8])bigQ.jld2"),omegaspectrum=ω,Sspectrum=Sspectrum,Amatrix=Amatrix,AmQmatrix=AmQmatrix,Bmatrix=Bmatrix)
 
 
