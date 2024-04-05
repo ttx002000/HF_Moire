@@ -342,12 +342,13 @@ end
 
 
 function test_function()
-    Amatrix=zeros(Float64,5,5)
+    Amatrixvector=[zeros(Float64,5) for _ in 1:5]
     Threads.@threads for ja in 1:5
         for jb in 1:5
-       Amatrix[ja,jb]=ja+jb
+       Amatrixvector[ja][jb]=ja+jb
     end
     end
+    Amatrix=reduce(hcat,Amatrixvector)
     return Amatrix
 end
 
