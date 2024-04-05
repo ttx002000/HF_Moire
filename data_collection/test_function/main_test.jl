@@ -20,9 +20,9 @@ trytimes=Int(args[7])
 bigQindex=Int(args[8])
 
 
-Amatrix=test_function()
+Amatrix,Avec=test_function()
 println(Amatrix)
-
+println(Avec)
 jldsave(joinpath(@__DIR__, "data_output/spectrum$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq$(args[7])try$(args[8])bigQ.jld2"),Amatrix=Amatrix)
 
 
