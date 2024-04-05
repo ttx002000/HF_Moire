@@ -28,5 +28,5 @@ miss=load(joinpath(@__DIR__, "missedindex.jld2"))
 index=miss["index"]
 for ja in eachindex(index)
   arguments=[index[ja][1],V0,ϕ,Nq,scale,constq]
-  submit_job(filepath, @__DIR__, job_prefix,arguments,Int(index[ja][3]),Int(index[ja][2]); time="25:00",cpus_per_task=1)
+  submit_job(filepath, @__DIR__, job_prefix,arguments,Int(index[ja][3]),Int(index[ja][2]); time="3:00:00",cpus_per_task=4)
 end
