@@ -19,7 +19,6 @@ constq=args[6]/Nq^2
 trytimes=Int(args[7])
 bigQindex=Int(args[8])
 
-if isfile(joinpath(@__DIR__, "data_input/$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq_$(args[7])try.jld2"))
 
  input=load(joinpath(@__DIR__, "data_input/$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq_$(args[7])try.jld2"))
 
@@ -40,10 +39,12 @@ if isfile(joinpath(@__DIR__, "data_input/$(args[4])Nq$(args[1])flux$(args[2])V0$
  Fmatrix=get_Fmatrix(Bandvector,HF_eigenvector,wave,wave_diff,form_overlapmatrix)
  Amatrix,AmQmatrix,Bmatrix=Construct_Amatrix(Aindexset,AmQindexset,B2indexset,allowedq,Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,HF_eigenvalue)
  Totalmatrix=vcat(hcat(Amatrix,Bmatrix),hcat(-Bmatrix',-conj(AmQmatrix)))
+ Smatrix=vcat(hcat(Amatrix,Bmatrix),hcat(Bmatrix',conj(AmQmatrix)))
  ω=eigvals(Totalmatrix)
+ Sspectrum=eigvals(Smatrix)
 
 
 
- jldsave(joinpath(@__DIR__, "data_output/spectrum$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq$(args[7])try$(args[8])bigQ.jld2"),spectrum=ω)
+ jldsave(joinpath(@__DIR__, "data_output/spectrum$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq$(args[7])try$(args[8])bigQ.jld2"),omegaspectrum=ω,Sspectrum=Sspectrum)
 
-end
+
