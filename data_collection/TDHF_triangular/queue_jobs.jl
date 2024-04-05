@@ -16,7 +16,7 @@ constq=1.0 #divide this by Nq^2
 V0=0.0
 
 for jb in [0.0,0.2,0.8,1.0]
-  arguments=[fluxspace[jb],V0,ϕ,Nq,scale,constq]
+  arguments=[jb,V0,ϕ,Nq,scale,constq]
 for ja in 3:3, bigQindex in 1:Nq^2
     submit_job(filepath, @__DIR__, job_prefix,arguments,ja,bigQindex; time="12:00:00",cpus_per_task=4)
 end
