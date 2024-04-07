@@ -31,7 +31,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     export JULIA_NUM_THREADS=\$SLURM_CPUS_ON_NODE
 
     # run the script
-    julia $filepath $args"""
+    julia $filepath $(args[1]) $(args[2]) $(args[3]) $(args[4]) $(args[5]) $(args[6]) $(args[7]) $(args[8]) $(args[9]) $(args[10]) $(args[11]) $(args[12]) $(args[13]) $(args[14]) $(args[15]) $(args[16])"""
 
     open("$slurmpath/$(name).slurm", "w") do io
         write(io, filestr)
