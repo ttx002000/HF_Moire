@@ -69,7 +69,9 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
     T1=b1/(Nq)
     T2=b2/(Nq)
     
-    
+    κt=bm*[-1/2,1/(2√3)]
+   κm=bm*[-1/2,-1/(2√3)]
+   κb=κt
     
     b1T=Int.(round.(inv([T1 T2])*b1))
     b2T=Int.(round.(inv([T1 T2])*b2))
@@ -93,7 +95,7 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
             push!(wave,ja*b1T+jb*b2T)
         end
     end
-    dimension=length(wave)
+    dimension=3*length(wave)
    
     
 
@@ -217,18 +219,32 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
 
 
 
-    input_DensityMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-    for ja in 1:Nq^2, vi in 1:2
-        A=randn(ComplexF64,dimension,dimension)
-       input_DensityMatrix[ja][vi]+=A+A'
-    end
+
      
     BG_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
     for ja in 1:Nq^2, vi in 1:2, jb in 1:length(wave)*2
       BG_DensityMatrix[ja][vi]+=(uncoupled_eigenvector[ja][vi][:,jb]*(uncoupled_eigenvector[ja][vi][:,jb])') 
     end
+
+    input_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
+    #for ja in 1:Nq^2, vi in 1:2
+     #   A=randn(ComplexF64,dimension,dimension)
+      # input_DensityMatrix[ja][vi]+=A+A'
+    #end
+
+    for ja in 1:Nq^2, vi in 1:1, jb in 1:length(wave)*2
+        input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
+    end
+      
+    for ja in 1:Nq^2,vi in 2:2, jb in 1:length(wave)*2-2
+        input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
+    end
+      
     
-    
+    for ja in 1:Nq^2, vi in 1:2
+        input_DensityMatrix[ja][vi]=input_DensityMatrix[ja][vi]-BG_DensityMatrix[ja][vi]
+    end
+      
     
     return  wave, input_DensityMatrix, BG_DensityMatrix, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m,constq
       
@@ -378,7 +394,7 @@ end
 
 
 
-function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},BG_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},constq::Float64)::Tuple{Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Float64}},Float64}
+function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},BG_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Vector{Matrix{ComplexF64}}},constq::Float64,holenum::Int64)::Tuple{Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Float64}},Float64}
     eout=1.0
     itcount=0
     loop_dic=construct_loop_dic(wave)
@@ -387,13 +403,14 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
     DIIS_input_DeltaMatrix=Vector{Vector{Vector{Matrix{ComplexF64}}}}(undef,3)
     input_DensityMatrix=initial_DensityMatrix
     bad_count=0
-
+    Parnum=2*Nq^2*(2*length(wave))-holenum*Nq^2
+    bound=0.0
     while (eout>1*10^-9) || (bad_count<4)
       if  eout<1*10^-9 
         bad_count+=1
       end
       tic=time()
-      eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,BG_DensityMatrix,single_Ham,constq,Parnum)
+      eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,BG_DensityMatrix,single_Ham,constq,Parnum)
       DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
       input_DensityMatrix=output_DensityMatrix
       itcount+=1
@@ -419,14 +436,14 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
         end
     
         for ja in 1:3,jb in 1:3
-            for jc in 1:Nq^2
-               Bmatrix[ja,jb]+=tr((DIIS_input_DeltaMatrix[ja][jc])'*(DIIS_input_DeltaMatrix[jb][jc]))
+            for jc in 1:Nq^2, vi in 1:2
+               Bmatrix[ja,jb]+=tr((DIIS_input_DeltaMatrix[ja][jc][vi])'*(DIIS_input_DeltaMatrix[jb][jc][vi]))
             end
         end
         coeff=inv(Bmatrix)*[0;0;0;1]
        
         dmk=coeff[1]*(DIIS_input_DensityMatrix[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_DensityMatrix[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_DensityMatrix[3]+DIIS_input_DeltaMatrix[3])
-         eout,_,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,dmk,BG_DensityMatrix,single_Ham,constq,Parnum)
+        eout,_,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,dmk,BG_DensityMatrix,single_Ham,constq,Parnum)
         DIIS_input_DensityMatrix[mod(itcount,3)+1]=dmk
         itcount+=1
 
@@ -471,10 +488,10 @@ end
 
 
 
-function Construct_HFmatrix(loop_dic::Dict{Vector{Int},Any},pathpointindex::Int64,pathpoint::Vector{Int64},allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64,chern_overlapmatrix::Array{ComplexF64,4})::Matrix{ComplexF64}
+function Construct_HFmatrix(loop_dic::Dict{Vector{Int},Any},pathpoint::Vector{Int64},vi::Int64,allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},constq::Float64)::Matrix{ComplexF64}
   
   
-  dimension=length(wave)
+  dimension=3*length(wave)
   HartreeMatrix=zeros(ComplexF64,dimension,dimension) 
   FockMatrix=zeros(ComplexF64,dimension,dimension) 
  
@@ -486,14 +503,12 @@ function Construct_HFmatrix(loop_dic::Dict{Vector{Int},Any},pathpointindex::Int6
         dmk = input_DensityMatrix[jk1]
         q=allowedq[jk1]-pathpoint
        for (dg,loop_dic_dg) in loop_dic
-           CoulF1=Coulomb(q+dg,T1,T2)     
+           CoulF=Coulomb(q+dg,T1,T2)     
            for (gg2,loop_dic_dg_gg2) in loop_dic_dg          
-               CoulF=CoulF1*chern_overlapmatrix[jk1,gg2[2],pathpointindex,gg2[1]]
            for g1g3 in loop_dic_dg_gg2
-               FockMatrix[g1g3[2],gg2[1]]+=dmk[g1g3[1],gg2[2]]*CoulF*chern_overlapmatrix[pathpointindex,g1g3[2],jk1,g1g3[1]]
+               FockMatrix[g1g3[5]:g1g3[6],gg2[3]:gg2[4]]+=dmk[vi][g1g3[3]:g1g3[4],gg2[5]:gg2[6]]*CoulF
            end 
            end
-   
        end    
     end
 
@@ -501,19 +516,19 @@ function Construct_HFmatrix(loop_dic::Dict{Vector{Int},Any},pathpointindex::Int6
 
   Hartree_Density=zeros(ComplexF64,dimension,dimension)
   for jk1 in 1:Nq^2
-   Hartree_Density+=input_DensityMatrix[jk1] .* transpose(chern_overlapmatrix[jk1,:,jk1,:])
+   Hartree_Density+=input_DensityMatrix[jk1][1]+input_DensityMatrix[jk1][2]
   end
 
  
 
     
+ Identity=Matrix{Float64}(I,3,3)   
  
     for dg in keys(loop_dic)
-        CoulH1=Coulomb(dg,T1,T2)
-        for gg2 in keys(loop_dic[dg])          
-            CoulH=CoulH1*chern_overlapmatrix[pathpointindex,gg2[2],pathpointindex,gg2[1]]            
-        for g1g3 in loop_dic[dg][gg2]           
-            HartreeMatrix[gg2[2],gg2[1]]+=Hartree_Density[g1g3[1],g1g3[2]]*CoulH               
+        CoulH=Coulomb(dg,T1,T2)
+        for gg2 in keys(loop_dic[dg])                    
+        for g1g3 in loop_dic[dg][gg2]            
+             HartreeMatrix[gg2[5]:gg2[6],gg2[3]:gg2[4]]+=tr(Hartree_Density[g1g3[3]:g1g3[4],g1g3[5]:g1g3[6]])*CoulH*Identity                           
         end 
         end
 
@@ -529,244 +544,24 @@ end
 
 
 
-function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64)
+
+
+function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64,T1::Vector{Float64},T2::Vector{Float64},allowedq::Vector{Vector{Int64}},single_Ham::Vector{Vector{Matrix{ComplexF64}}})
 
   
-    β=4*flux/(√3*scale^2)
-    mass=0.5;
-    dimension=length(wave)
-    
-    b1=scale*[0,1]
-    b2=scale*[√3/2,-1/2]
-
+   
+    dimension=3*length(wave)
     
     
-    T1=b1/(Nq)
-    T2=b2/(Nq)
-    b1T=Int.(round.(inv([T1 T2])*b1))
-    b2T=Int.(round.(inv([T1 T2])*b2))
-    
-    
-    chern_allowedq=Vector{Int64}[]
-    for ja in 0:Nq,jb in 0:Nq
-        push!(chern_allowedq,[ja,jb])
-    end
-    
-    chern_overlapmatrix=zeros(ComplexF64,(Nq+1)^2,length(wave),(Nq+1)^2,length(wave))
-    for ja in 1:(Nq+1)^2, jb in eachindex(wave), jc in 1:(Nq+1)^2, jd in eachindex(wave)
-       chern_overlapmatrix[ja,jb,jc,jd]=overlap([T1 T2]*(chern_allowedq[ja]+wave[jb]),[T1 T2]*(chern_allowedq[jc]+wave[jd]-wave[jb]-chern_allowedq[ja]),β)
-    end
     loop_dic=construct_loop_dic(wave)
     
+    Energy_Matrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
     
-    eigenvector_intermediate_bc=Vector{Vector{ComplexF64}}(undef,(Nq+1)^2)
-    eigenvector_intermediate_single=Vector{Vector{ComplexF64}}(undef,(Nq+1)^2)
-
-    Threads.@threads for ja in eachindex(chern_allowedq)
-        k=[T1 T2]*chern_allowedq[ja]
-        chern_Ham=zeros(ComplexF64,dimension,dimension)
-        chern_MoirePo=zeros(ComplexF64,dimension,dimension)
-        for jb in eachindex(wave)
-            chern_Ham[jb,jb]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2)^2/(2*mass)
-        end
-    
-        for jc in eachindex(wave)
-            k1=k+wave[jc][1]*T1+wave[jc][2]*T2
-            pos=findfirst(item->item==wave[jc]-b1T,wave)
-            if pos≠nothing
-           chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b1,β)
-            end
-            
-          
-            pos=findfirst(item->item==wave[jc]+b2T+b1T,wave)
-            if pos≠nothing
-                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2+b1,β)
-            end
-        
-            pos=findfirst(item->item==wave[jc]-b2T,wave)
-            if pos≠nothing
-                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2,β)
-            end
-         end
-
-
-      chern_MoirePo=chern_MoirePo+chern_MoirePo'
-      HFmatrix=Construct_HFmatrix(loop_dic,ja,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq,chern_overlapmatrix)
-      eigenvector_intermediate_bc[ja]=eigvecs(chern_Ham+chern_MoirePo+HFmatrix)[:,1] 
-      eigenvector_intermediate_single[ja]=eigvecs(chern_Ham+chern_MoirePo)[:,1] 
-    
+    Threads.@threads for ja in eachindex(allowedq)
+        for vi in 1:2
+      HFmatrix=Construct_HFmatrix(loop_dic,allowedq[ja],vi,allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq)
+      Energy_Matrix[ja][vi]=1/2*HFmatrix+single_Ham[ja][vi]
     end
-
-    eigenvector_bc=zeros(ComplexF64,dimension,Nq+1,Nq+1)
-    eigenvector_bc_single=zeros(ComplexF64,dimension,Nq+1,Nq+1)
-    for ja in eachindex(chern_allowedq)
-       eigenvector_bc[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=eigenvector_intermediate_bc[ja]
-       eigenvector_bc_single[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=eigenvector_intermediate_single[ja]
-    end
-    
-    
-    Uonelink=zeros(ComplexF64,Nq,Nq+1)
-    Utwolink=zeros(ComplexF64,Nq+1,Nq)
-    tra=zeros(ComplexF64,Nq,Nq)
-    tra_single=zeros(ComplexF64,Nq,Nq)
-    
-    for ja in 1:Nq, jb in 1:Nq+1
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
-       Uonelink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb]))
-    end
-
-    
-    
-    for ja in 1:Nq+1, jb in 1:Nq
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
-     Utwolink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1]))
-    end
-    
-    dG=norm(T2)
-    for ja in 1:Nq, jb in 1:Nq
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
-        Bmatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
-        Cmatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2+T1,T1,T2)
-        A1=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])
-        B1=dot(eigenvector_bc[:,ja,jb],Bmatrix*eigenvector_bc[:,ja,jb+1])
-        C1=dot(eigenvector_bc[:,ja,jb],Cmatrix*eigenvector_bc[:,ja+1,jb+1])
-       gyy=(1-abs(A1)^2)/dG^2
-       gxx=(2-1/2*gyy*dG^2-abs(B1)^2-abs(C1)^2)/(1.5*dG^2)
-       tra[ja,jb]+=(gxx+gyy)*3^(1/2)/2*dG^2
-
-        A1=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])
-        B1=dot(eigenvector_bc_single[:,ja,jb],Bmatrix*eigenvector_bc_single[:,ja,jb+1])
-        C1=dot(eigenvector_bc_single[:,ja,jb],Cmatrix*eigenvector_bc_single[:,ja+1,jb+1])
-       gyy=(1-abs(A1)^2)/dG^2
-       gxx=(2-1/2*gyy*dG^2-abs(B1)^2-abs(C1)^2)/(1.5*dG^2)
-       tra_single[ja,jb]+=(gxx+gyy)*3^(1/2)/2*dG^2
-      
-      
-    end
-
-   
-
-
-    Flink=zeros(ComplexF64,Nq,Nq)
-    for ja in 1:Nq, jb in 1:Nq
-     Flink[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
-    end
-    chern=sum(Flink)/(2*π*im)
-    aveF=sum(Flink)/Nq^2
-    uniform=0
-    for ja in 1:Nq, jb in 1:Nq
-        uniform+=(imag(Flink[ja,jb])-imag(aveF))^2*Nq^2/(2π)^2
-    end
-
-
-    Uonelink=zeros(ComplexF64,Nq,Nq+1)
-    Utwolink=zeros(ComplexF64,Nq+1,Nq)
-  
-    
-    for ja in 1:Nq, jb in 1:Nq+1
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
-       Uonelink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])/abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb]))
-    end
-    
-    for ja in 1:Nq+1, jb in 1:Nq
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
-     Utwolink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1])/abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1]))
-    end
-    
-
-   
-
-    Flink_single=zeros(ComplexF64,Nq,Nq)
-    for ja in 1:Nq, jb in 1:Nq
-     Flink_single[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
-    end
-    chern_single=sum(Flink_single)/(2*π*im)
-    aveF=sum(Flink_single)/Nq^2
-    uniform_single=0
-    for ja in 1:Nq, jb in 1:Nq
-        uniform_single+=(imag(Flink_single[ja,jb])-imag(aveF))^2*Nq^2/(2π)^2
-    end
-    
-    
-
-    
-  trace_condition=sum(tra)-sum(abs.(Flink))
-  trace_condition_single=sum(tra_single)-sum(abs.(Flink_single))
-      
-
-
-    
-      
-   return chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single
-
-end
-
-
-
-
-
-
-
-function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64,overlapmatrix::Array{ComplexF64,4})
-
-  
-    β=4*flux/(√3*scale^2)
-    mass=0.5;
-    dimension=length(wave)
-    
-    b1=scale*[0,1]
-    b2=scale*[√3/2,-1/2]
-
-    
-    
-    T1=b1/(Nq)
-    T2=b2/(Nq)
-    b1T=Int.(round.(inv([T1 T2])*b1))
-    b2T=Int.(round.(inv([T1 T2])*b2))
-    
-    
-    chern_allowedq=Vector{Int64}[]
-    for ja in 0:Nq-1,jb in 0:Nq-1
-        push!(chern_allowedq,[ja,jb])
-    end
-    
-
-    loop_dic=construct_loop_dic(wave)
-    
-    Energy_Matrix=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:Nq^2]
-    
-    Threads.@threads for ja in eachindex(chern_allowedq)
-        k=[T1 T2]*chern_allowedq[ja]
-        chern_Ham=zeros(ComplexF64,dimension,dimension)
-        chern_MoirePo=zeros(ComplexF64,dimension,dimension)
-        for jb in eachindex(wave)
-            chern_Ham[jb,jb]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2)^2/(2*mass)
-        end
-    
-        for jc in eachindex(wave)
-            k1=k+wave[jc][1]*T1+wave[jc][2]*T2
-            pos=findfirst(item->item==wave[jc]-b1T,wave)
-            if pos≠nothing
-           chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b1,β)
-            end
-            
-          
-            pos=findfirst(item->item==wave[jc]+b2T+b1T,wave)
-            if pos≠nothing
-                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2+b1,β)
-            end
-        
-            pos=findfirst(item->item==wave[jc]-b2T,wave)
-            if pos≠nothing
-                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2,β)
-            end
-         end
-
-
-      chern_MoirePo=chern_MoirePo+chern_MoirePo'
-      HFmatrix=Construct_HFmatrix(loop_dic,ja,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq,overlapmatrix)
-      Energy_Matrix[ja]=1/2*HFmatrix+chern_MoirePo+chern_Ham
-    
     end
     
     
