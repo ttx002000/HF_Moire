@@ -227,11 +227,11 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
     end
 
     input_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
-    #for ja in 1:Nq^2, vi in 1:2
-     #   A=randn(ComplexF64,dimension,dimension)
-      # input_DensityMatrix[ja][vi]+=A+A'
-    #end
-
+    for ja in 1:Nq^2, vi in 1:2
+       A=randn(ComplexF64,dimension,dimension)
+       input_DensityMatrix[ja][vi]+=A+A'
+    end
+   #=
     for ja in 1:Nq^2, vi in 1:1, jb in 1:length(wave)*2
         input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
     end
@@ -244,7 +244,7 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
     for ja in 1:Nq^2, vi in 1:2
         input_DensityMatrix[ja][vi]=input_DensityMatrix[ja][vi]-BG_DensityMatrix[ja][vi]
     end
-      
+    =#  
     
     return  wave, input_DensityMatrix, BG_DensityMatrix, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m,constq
       
@@ -313,7 +313,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
     HF_eigenvector=[Vector{Matrix{ComplexF64}}(undef,2) for _ in 1:Nq^2]
   
    tic=time()
-    for jk in 1:Nq^2
+    Threads.@threads for jk in 1:Nq^2
       Fk = FockMatrix[jk]
       for jk1 in 1:Nq^2
           dmk = input_DensityMatrix[jk1]
@@ -322,7 +322,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
              CoulF=Coulomb(q+dg,T1,T2)     
              for (gg2,loop_dic_dg_gg2) in loop_dic_dg         
              for g1g3 in loop_dic_dg_gg2
-                    Fk[1][g1g3[5]:g1g3[6],gg2[3]:gg2[4]]+=dmk[1][g1g3[3]:g1g3[4],gg2[5]:gg2[6]]*CoulF
+                 Fk[1][g1g3[5]:g1g3[6],gg2[3]:gg2[4]]+=dmk[1][g1g3[3]:g1g3[4],gg2[5]:gg2[6]]*CoulF
                  Fk[2][g1g3[5]:g1g3[6],gg2[3]:gg2[4]]+=dmk[2][g1g3[3]:g1g3[4],gg2[5]:gg2[6]]*CoulF   
               end 
              end

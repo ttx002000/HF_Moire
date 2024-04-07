@@ -46,4 +46,4 @@ energy=calculate_energy(Nq,wave,DIIS_input_DensityMatrix[1],constq,T1,T2,allowed
 
 savepath=joinpath(@__DIR__, "data_output/$(args[1])mt$(args[2])mm$(args[3])mb$(args[4])Vt$(args[5])phit$(args[6])Vm$(args[7])phim$(args[8])Vb$(args[9])phib$(args[10])er$(args[11])Eg$(args[12])theta$(args[13])w$(args[14])holenum$(args[15])trytime$(args[16])Nq.jld2")
 
-jldsave(savepath,HFdensity=HFdensity,energy=energy,parameters=args,HF_eigenvalue=HF_eigenvalue)
+jldsave(savepath,HFdensity=HFdensity,energy=energy,parameters=args,HF_eigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue)
