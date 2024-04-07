@@ -14,14 +14,14 @@ Nq=9.0;
 scale=1.0;
 constq=1.0 #divide this by Nq^2
 V0=0.0
-#=
-for jb in [0.1,0.9,0.7,0.3]
+
+for jb in [0.4,0.5,0.6]
   arguments=[jb,V0,ϕ,Nq,scale,constq]
-for ja in 3:3, bigQindex in 1:Nq^2
-    submit_job(filepath, @__DIR__, job_prefix,arguments,ja,bigQindex; time="12:00:00",cpus_per_task=4)
+for ja in 6:6, bigQindex in 1:Nq^2
+    submit_job(filepath, @__DIR__, job_prefix,arguments,ja,bigQindex; time="3:00:00",cpus_per_task=4)
 end
 end
-=#
+
 
 
 miss=load(joinpath(@__DIR__, "missedindex.jld2"))
