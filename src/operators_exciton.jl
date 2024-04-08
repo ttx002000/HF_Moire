@@ -571,8 +571,8 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},input_DensityMatrix:
     
     
    energy=0
-   for ja in 1:Nq^2
-       energy+=tr(Energy_Matrix[ja]*input_DensityMatrix[ja])
+   for ja in 1:Nq^2, vi in 1:2
+       energy+=tr(Energy_Matrix[ja][vi]*input_DensityMatrix[ja][vi])
    end
 
 
