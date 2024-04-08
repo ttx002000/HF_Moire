@@ -551,7 +551,7 @@ end
 
 
 
-function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Vecotr{Matrix{ComplexF64}}},constq::Float64,T1::Vector{Float64},T2::Vector{Float64},allowedq::Vector{Vector{Int64}},single_Ham::Vector{Vector{Matrix{ComplexF64}}})
+function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},constq::Float64,T1::Vector{Float64},T2::Vector{Float64},allowedq::Vector{Vector{Int64}},single_Ham::Vector{Vector{Matrix{ComplexF64}}})
 
   
    
