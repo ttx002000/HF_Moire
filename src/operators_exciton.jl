@@ -465,7 +465,8 @@ end
 
 
 function Densitymap(a1m::Vector{Float64},a2m::Vector{Float64},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}})::Tuple{Array{ComplexF64},Array{ComplexF64},Array{ComplexF64}}
-    N3=50
+  dimension=3*length(wave)  
+     N3=50
     xgrid=zeros(Float64,N3,N3)
     ygrid=zeros(Float64,N3,N3)
     zgrid=zeros(ComplexF64,N3,N3,2,3)
