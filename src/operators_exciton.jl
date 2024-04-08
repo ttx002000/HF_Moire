@@ -62,8 +62,8 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
     b2=bm*[-1/2,√3/2]
     
 
-    a1m=am*[1/2,√3/2]
-    a2m=am*[1,0]
+    a1m=am*[√3/2,1/2]
+    a2m=am*[0,1]
     
     
     T1=b1/(Nq)
