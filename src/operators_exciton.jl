@@ -378,7 +378,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
   
     NewDensityMatrix=NewDensityMatrix-BG_DensityMatrix
     DeltaMatrix=NewDensityMatrix-input_DensityMatrix
-    output_DensityMatrix=0.0*input_DensityMatrix+1.0*NewDensityMatrix
+    output_DensityMatrix=0.5*input_DensityMatrix+0.5*NewDensityMatrix
     
     e1=0.0
     for ja in 1:Nq^2,vi in 1:2
@@ -551,7 +551,7 @@ end
 
 
 
-function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64,T1::Vector{Float64},T2::Vector{Float64},allowedq::Vector{Vector{Int64}},single_Ham::Vector{Vector{Matrix{ComplexF64}}})
+function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Vecotr{Matrix{ComplexF64}}},constq::Float64,T1::Vector{Float64},T2::Vector{Float64},allowedq::Vector{Vector{Int64}},single_Ham::Vector{Vector{Matrix{ComplexF64}}})
 
   
    
