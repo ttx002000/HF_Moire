@@ -12,12 +12,12 @@ job_prefix = "exciton"
 mt=0.35
 mm=0.4
 mb=0.35
-Vtspace=[10,40,148]
-ϕt=70
+Vtspace=10
+ϕt=[10,40,148]
 Vm=10
 ϕm=80
-Vbspace=[15,27,30]
-ϕb=1
+Vbspace=10
+ϕb=[15,27,30]
 ϵr=7
 Egspace=[115]
 θ=2
@@ -47,7 +47,7 @@ trytime=parameters[15]
 Nq=parameters[16]
 =#
 
-for trytime in 1:30, Eg in Egspace, Vt in Vtspace, Vb in Vbspace
+for trytime in 1:30, Eg in Egspace, ϕt in ϕtspace, ϕb in ϕbspace
   arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,Nq])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",cpus_per_task=3)
 end
