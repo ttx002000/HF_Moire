@@ -248,7 +248,7 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
     end
   end
     
-    return  wave, input_DensityMatrix, BG_DensityMatrix, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m,constq
+  return  wave, input_DensityMatrix, BG_DensityMatrix, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m,constq
       
 end
 
