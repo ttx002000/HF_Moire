@@ -228,7 +228,7 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
     
     input_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
     
-  if rand(1)>0.2
+  if rand(1)[1]>0.2
     for ja in 1:Nq^2, vi in 1:2
        A=randn(ComplexF64,dimension,dimension)
        input_DensityMatrix[ja][vi]+=(A+A')*10^-4
