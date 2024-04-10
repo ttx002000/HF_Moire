@@ -228,12 +228,13 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
     
     input_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
     
+  if rand(1)>0.2
     for ja in 1:Nq^2, vi in 1:2
        A=randn(ComplexF64,dimension,dimension)
        input_DensityMatrix[ja][vi]+=(A+A')*10^-4
     end
+  else
    
-   #=
     for ja in 1:Nq^2, vi in 1:1, jb in 1:length(wave)*2
         input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
     end
@@ -242,11 +243,10 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
         input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
     end
       
-    
     for ja in 1:Nq^2, vi in 1:2
         input_DensityMatrix[ja][vi]=input_DensityMatrix[ja][vi]-BG_DensityMatrix[ja][vi]
     end
-    =#
+  end
     
     return  wave, input_DensityMatrix, BG_DensityMatrix, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m,constq
       
