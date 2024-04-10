@@ -26,7 +26,7 @@ bigQindex=Int(args[8])
  DIIS_input_DensityMatrix=input["DIIS_input_DensityMatrixfirst"]
  loop_dic=input["loop_dic"]
 
- num_bandup=30
+ num_bandup=25
  num_bandbelow=1
  tot_bd=num_bandup+num_bandbelow
 
