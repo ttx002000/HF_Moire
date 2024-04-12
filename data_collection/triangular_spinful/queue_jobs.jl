@@ -19,7 +19,7 @@ V0=0.0
 
 for jb in eachindex(fluxspace), jz in eachindex(ζspace)
   arguments=[fluxspace[jb],V0,ϕ,Nq,scale,constq,ζspace[jz]]
- for ja in 1:5
+ for ja in 1:8
     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="10:00:00",cpus_per_task=5)
  end
 end
