@@ -231,7 +231,7 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
   if rand(1)[1]>0.2
     for ja in 1:Nq^2, vi in 1:2
        A=randn(ComplexF64,dimension,dimension)
-       input_DensityMatrix[ja][vi]+=(A+A')*10^-4
+       input_DensityMatrix[ja][vi]+=(A+A')*10^-3
     end
   else
    
@@ -245,7 +245,7 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
       
     for ja in 1:Nq^2, vi in 1:2
         A=randn(ComplexF64,dimension,dimension)
-        input_DensityMatrix[ja][vi]=input_DensityMatrix[ja][vi]-BG_DensityMatrix[ja][vi]+(A+A')*10^-5
+        input_DensityMatrix[ja][vi]=input_DensityMatrix[ja][vi]-BG_DensityMatrix[ja][vi]+(A+A')*10^-3
     end
   end
     
