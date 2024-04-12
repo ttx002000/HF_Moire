@@ -13,6 +13,7 @@ function submit_job(filepath, dirpath, job_prefix,arguments,trytimes; nodes=1, n
     Nq=arguments[4];
     scale=arguments[5];
     constq=arguments[6];
+    ζ=arguments[7];
  
 
     name = "$(Nq)Nq$(flux)flux$(V0)V0$(ϕ)phi$(scale)scale$(constq)constq$(trytimes)try"
@@ -38,7 +39,7 @@ function submit_job(filepath, dirpath, job_prefix,arguments,trytimes; nodes=1, n
     export JULIA_NUM_THREADS=\$SLURM_CPUS_ON_NODE
 
     # run the script
-    julia $filepath $flux $V0 $ϕ $Nq $scale $constq $(Float64(trytimes))"""
+    julia $filepath $flux $V0 $ϕ $Nq $scale $constq $ζ $(Float64(trytimes))"""
 
     open("$slurmpath/$(name).slurm", "w") do io
         write(io, filestr)
