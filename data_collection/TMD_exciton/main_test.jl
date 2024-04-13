@@ -9,7 +9,7 @@ include("../../src/operators_exciton.jl")
 
 args=parse.(Float64,ARGS)
 println("This is the arguments$args")
-parameters=args[1:length(args)-2]
+parameters=args[1:13]
 #parameters=[0.35,0.4,0.35,-10.0,70.0,10.0,80.0,10.0,1.0,10,100.0,2.0,5.0]
 holenum=Int(args[14])
 trytime=Int(args[15])

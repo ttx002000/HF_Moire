@@ -9,7 +9,7 @@ include("../../src/operators_exciton.jl")
 
 args=parse.(Float64,ARGS)
 println("This is the arguments$args")
-parameters=args[1:length(args)-2]
+parameters=args[1:13]
 #parameters=[0.35,0.4,0.35,-10.0,70.0,10.0,80.0,10.0,1.0,10,100.0,2.0,5.0]
 holenum=Int(args[14])
 trytime=Int(args[15])
@@ -36,7 +36,7 @@ Nq=parameters[16]
 =#
 
 
-wave, initial_DensityMatrix,BG_DensityMatrix, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m,constq=triangle_initial_Densitymatrix(parameters,Nq)
+wave, initial_DensityMatrix,BG_DensityMatrix, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m,constq=triangle_initial_Densitymatrix_contolled(parameters,Nq)
 
 
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,bound=iteration_loop(initial_DensityMatrix,BG_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,constq,holenum)

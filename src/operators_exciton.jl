@@ -21,6 +21,253 @@ end
 
 
 
+function triangle_initial_Densitymatrix_contolled(parameters::Vector{Float64},Nq::Int64)
+ 
+
+  mt=parameters[1]
+  mm=parameters[2]
+  mb=parameters[3]
+  Vt=parameters[4]
+  ϕt=parameters[5]/180*π
+  Vm=parameters[6]
+  ϕm=parameters[7]/180*π
+  Vb=parameters[8]
+  ϕb=parameters[9]/180*π
+  ϵr=parameters[10]
+  Eg=parameters[11]
+  θ=parameters[12]/180*π
+  w=parameters[13]
+
+
+
+
+
+
+
+  alattice=0.3# In units of NM
+  blattice=4*π/(√3*alattice)
+
+  
+  
+  bm=√3*2*blattice*sin(θ/2)
+  am=4*π/(√3*bm);
+  constt=-38.09981949*1/(mt)
+  constm=38.09981949*1/(mm)
+  constb=-38.09981949*1/(mb) # the 38 is \hbar^2/(2me*nm^2) in units of meV
+  constq=1/(Nq^2*3^(1/2)/2*am^2)*1/ϵr*9047.5636
+  
+  
+  b1=bm*[1,0]
+  b2=bm*[-1/2,√3/2]
+  
+
+  a1m=am*[√3/2,1/2]
+  a2m=am*[0,1]
+  
+  
+  T1=b1/(Nq)
+  T2=b2/(Nq)
+  
+  κt=bm*[-1/2,1/(2√3)]
+ κm=bm*[-1/2,-1/(2√3)]
+ κb=κt
+  
+  b1T=Int.(round.(inv([T1 T2])*b1))
+  b2T=Int.(round.(inv([T1 T2])*b2))
+  
+  
+  
+  allowedq=Vector{Int64}[]
+  for ja in 0:Nq-1,jb in 0:Nq-1
+      push!(allowedq,[ja,jb])
+  end
+
+  
+  
+  
+  wave=Vector{Int64}[]
+  cutoff=18
+  cutoffstandard=4.01*bm
+  for ja in -cutoff:cutoff, jb in -cutoff:cutoff
+      gtest=ja*b1+jb*b2;
+      if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
+          push!(wave,ja*b1T+jb*b2T)
+      end
+  end
+  dimension=3*length(wave)
+ 
+  
+
+
+
+
+  single_Ham=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for ja in 1:Nq^2]
+  single_MoirePo=zeros(ComplexF64,dimension,dimension)
+  tunnel=zeros(ComplexF64,dimension,dimension)
+  M_tunnel=zeros(ComplexF64,dimension,dimension)
+  
+  single_eigenvalue=[[zeros(Float64,dimension) for _ in 1:2] for _ in 1:Nq^2]
+  single_eigenvector=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
+  uncoupled_eigenvector=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
+  
+
+  
+  for jc in eachindex(wave)
+    pos=findfirst(item->item==wave[jc]-b1T,wave)
+    if pos≠nothing
+      single_MoirePo[3*(jc-1)+1:3*jc,3*(pos-1)+1:3*pos]=diagm([Vt*exp(im*ϕt),Vm*exp(im*ϕm),Vb*exp(im*ϕb)])
+    end
+    
+  
+    pos=findfirst(item->item==wave[jc]+b2T+b1T,wave)
+    if pos≠nothing
+      single_MoirePo[3*(jc-1)+1:3*jc,3*(pos-1)+1:3*pos]=diagm([Vt*exp(im*ϕt),Vm*exp(im*ϕm),Vb*exp(im*ϕb)])
+    end
+  
+    pos=findfirst(item->item==wave[jc]-b2T,wave)
+    if pos≠nothing
+      single_MoirePo[3*(jc-1)+1:3*jc,3*(pos-1)+1:3*pos]=diagm([Vt*exp(im*ϕt),Vm*exp(im*ϕm),Vb*exp(im*ϕb)])
+    end
+  end
+  
+  
+  single_MoirePo=single_MoirePo+single_MoirePo'
+  
+  for jc in eachindex(wave)
+    tunnel[3*(jc-1)+1,3*(jc-1)+2]=w
+    tunnel[3*(jc-1)+3,3*(jc-1)+2]=w
+  
+    pos=findfirst(item->item==wave[jc]-b2T-b1T,wave)
+    if pos≠nothing
+      tunnel[3*(jc-1)+1,3*(pos-1)+2]=w
+      tunnel[3*(jc-1)+3,3*(pos-1)+2]=w
+    end
+  
+    pos=findfirst(item->item==wave[jc]-b2T,wave)
+    if pos≠nothing
+      tunnel[3*(jc-1)+1,3*(pos-1)+2]=w
+      tunnel[3*(jc-1)+3,3*(pos-1)+2]=w
+    end
+  end
+  
+  tunnel=tunnel+tunnel'
+  
+  for jc in eachindex(wave)
+    M_tunnel[3*(jc-1)+1,3*(jc-1)+2]=w
+    M_tunnel[3*(jc-1)+3,3*(jc-1)+2]=w
+  
+    pos=findfirst(item->item==wave[jc]+b2T+b1T,wave)
+    if pos≠nothing
+      M_tunnel[3*(jc-1)+1,3*(pos-1)+2]=w
+      M_tunnel[3*(jc-1)+3,3*(pos-1)+2]=w
+    end
+  
+    pos=findfirst(item->item==wave[jc]+b2T,wave)
+    if pos≠nothing
+      M_tunnel[3*(jc-1)+1,3*(pos-1)+2]=w
+      M_tunnel[3*(jc-1)+3,3*(pos-1)+2]=w
+    end
+  end
+  
+  M_tunnel=M_tunnel+M_tunnel'
+  
+  
+  
+  
+  
+  Threads.@threads for ja in 1:Nq^2
+    
+    
+    k=allowedq[ja][1]*T1+allowedq[ja][2]*T2
+  
+    for jb in eachindex(wave)
+     single_Ham[ja][1][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2-κt)^2*constt
+     single_Ham[ja][1][3*(jb-1)+2,3*(jb-1)+2]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2-κm)^2*constm+Eg
+     single_Ham[ja][1][3*(jb-1)+3,3*(jb-1)+3]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2-κb)^2*constb
+    end
+  
+    for jb in eachindex(wave)
+      single_Ham[ja][2][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κt)^2*constt
+      single_Ham[ja][2][3*(jb-1)+2,3*(jb-1)+2]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κm)^2*constm+Eg
+      single_Ham[ja][2][3*(jb-1)+3,3*(jb-1)+3]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κb)^2*constb
+     end
+    
+  
+     
+    FFF=eigen(single_Ham[ja][1])
+     uncoupled_eigenvector[ja][1]=FFF.vectors
+   
+    FFF=eigen(single_Ham[ja][2])
+     uncoupled_eigenvector[ja][2]=FFF.vectors
+  
+  
+  
+   single_Ham[ja][1]+=single_MoirePo+tunnel
+   single_Ham[ja][2]+=single_MoirePo+M_tunnel
+   
+    FFF=eigen(single_Ham[ja][1])
+    single_eigenvalue[ja][1]=real(FFF.values)
+    single_eigenvector[ja][1]=FFF.vectors
+  
+    FFF=eigen(single_Ham[ja][2])
+    single_eigenvalue[ja][2]=real(FFF.values)
+    single_eigenvector[ja][2]=FFF.vectors
+  
+  end
+  
+
+
+
+
+   
+  BG_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
+  for ja in 1:Nq^2, vi in 1:2, jb in 1:length(wave)*2
+    BG_DensityMatrix[ja][vi]+=(uncoupled_eigenvector[ja][vi][:,jb]*(uncoupled_eigenvector[ja][vi][:,jb])') 
+  end
+  
+  input_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
+  
+if rand(1)[1]>0.2
+  for ja in 1:Nq^2, vi in 1:2
+     A=randn(ComplexF64,dimension,dimension)
+     input_DensityMatrix[ja][vi]+=(A+A')*10^-3
+  end
+else
+ 
+  for ja in 1:Nq^2, vi in 1:1, jb in 1:length(wave)*2
+      input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
+  end
+    
+  for ja in 1:Nq^2,vi in 2:2, jb in 1:length(wave)*2-2
+      input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
+  end
+    
+  for ja in 1:Nq^2, vi in 1:2
+      A=randn(ComplexF64,dimension,dimension)
+      input_DensityMatrix[ja][vi]=input_DensityMatrix[ja][vi]-BG_DensityMatrix[ja][vi]+(A+A')*10^-3
+  end
+end
+  
+return  wave, input_DensityMatrix, BG_DensityMatrix, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m,constq
+    
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
  
