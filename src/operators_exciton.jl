@@ -21,28 +21,28 @@ end
 function generate_seed(generate_num,wavenum)
   seed_tunnel=[zeros(Float64,3*wavenum,3*wavenum) for _ in 1:2]
   if generate_num==1
-    for ja in 1:wave_num
+    for ja in 1:wavenum
     seed_tunnel[1][3*(ja-1)+1,3*(ja-1)+2]+=1
     seed_tunnel[1][3*(ja-1)+3,3*(ja-1)+2]+=1
     end
   end
 
   if generate_num==2
-    for ja in 1:wave_num
+    for ja in 1:wavenum
     seed_tunnel[1][3*(ja-1)+1,3*(ja-1)+2]+=1
     seed_tunnel[2][3*(ja-1)+3,3*(ja-1)+2]+=1
     end
   end
 
   if generate_num==3
-    for ja in 1:wave_num
+    for ja in 1:wavenum
     seed_tunnel[2][3*(ja-1)+1,3*(ja-1)+2]+=1
     seed_tunnel[1][3*(ja-1)+3,3*(ja-1)+2]+=1
     end
   end
 
   if generate_num==4
-    for ja in 1:wave_num
+    for ja in 1:wavenum
     seed_tunnel[2][3*(ja-1)+1,3*(ja-1)+2]+=1
     seed_tunnel[2][3*(ja-1)+3,3*(ja-1)+2]+=1
     end
