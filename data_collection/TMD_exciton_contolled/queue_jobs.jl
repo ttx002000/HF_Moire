@@ -27,6 +27,7 @@ Nq=3
 
 
 
+
 #=
 mt=parameters[1] actually args not parameters
 mm=parameters[2]
@@ -47,8 +48,8 @@ trytime=parameters[15]
 Nq=parameters[16]
 =#
 
-for trytime in 1:30, Eg in Egspace, ϕt in ϕtspace, ϕb in ϕbspace
-  arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,Nq])
+for trytime in 1:2, Eg in Egspace, ϕt in ϕtspace, ϕb in ϕbspace,seednum in 1:8
+  arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,Nq,seednum])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",cpus_per_task=3)
 end
 

@@ -21,7 +21,7 @@ end
 
 
 
-function triangle_initial_Densitymatrix_contolled(parameters::Vector{Float64},Nq::Int64)
+function triangle_initial_Densitymatrix_contolled(parameters::Vector{Float64},Nq::Int64,seednum::Int64)
  
 
   mt=parameters[1]
@@ -227,12 +227,12 @@ function triangle_initial_Densitymatrix_contolled(parameters::Vector{Float64},Nq
   
   input_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
   
-if rand(1)[1]>0.2
+ if rand(1)[1]>0.2
   for ja in 1:Nq^2, vi in 1:2
      A=randn(ComplexF64,dimension,dimension)
      input_DensityMatrix[ja][vi]+=(A+A')*10^-3
   end
-else
+ else
  
   for ja in 1:Nq^2, vi in 1:1, jb in 1:length(wave)*2
       input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
