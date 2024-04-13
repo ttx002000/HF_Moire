@@ -380,7 +380,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
   for ja in 1:Nq^2
     e1+=tr(DeltaMatrix[ja]'*DeltaMatrix[ja])
   end
-  eout=real(e1)
+  eout=real(e1)/Nq^2
   
   
  
