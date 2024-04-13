@@ -18,10 +18,46 @@ end
 
 
 
+function generate_seed(generate_num,wavenum)
+  seed_tunnel=[zeros(Float64,3*wavenum,3*wavenum) for _ in 1:2]
+  if generate_num==1
+    for ja in 1:wave_num
+    seed_tunnel[1][3*(ja-1)+1,3*(ja-1)+2]+=1
+    seed_tunnel[1][3*(ja-1)+3,3*(ja-1)+2]+=1
+    end
+  end
+
+  if generate_num==2
+    for ja in 1:wave_num
+    seed_tunnel[1][3*(ja-1)+1,3*(ja-1)+2]+=1
+    seed_tunnel[2][3*(ja-1)+3,3*(ja-1)+2]+=1
+    end
+  end
+
+  if generate_num==3
+    for ja in 1:wave_num
+    seed_tunnel[2][3*(ja-1)+1,3*(ja-1)+2]+=1
+    seed_tunnel[1][3*(ja-1)+3,3*(ja-1)+2]+=1
+    end
+  end
+
+  if generate_num==4
+    for ja in 1:wave_num
+    seed_tunnel[2][3*(ja-1)+1,3*(ja-1)+2]+=1
+    seed_tunnel[2][3*(ja-1)+3,3*(ja-1)+2]+=1
+    end
+  end
+
+  seed_tunnel[1]=seed_tunnel[1]+seed_tunnel[1]'
+  seed_tunnel[2]=seed_tunnel[2]+seed_tunnel[2]'
+  return seed_tunnel
+end
 
 
 
-function triangle_initial_Densitymatrix_contolled(parameters::Vector{Float64},Nq::Int64,seednum::Int64)
+
+
+function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::Int64,seednum::Int64)
  
 
   mt=parameters[1]
@@ -108,6 +144,7 @@ function triangle_initial_Densitymatrix_contolled(parameters::Vector{Float64},Nq
   
   single_eigenvalue=[[zeros(Float64,dimension) for _ in 1:2] for _ in 1:Nq^2]
   single_eigenvector=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
+  seed_eigenvector=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
   uncoupled_eigenvector=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
   
 
@@ -172,7 +209,7 @@ function triangle_initial_Densitymatrix_contolled(parameters::Vector{Float64},Nq
   M_tunnel=M_tunnel+M_tunnel'
   
   
-  
+  seed_tunnel=generate_seed(mod(seednum-1,4)+1,length(wave))
   
   
   Threads.@threads for ja in 1:Nq^2
@@ -197,9 +234,14 @@ function triangle_initial_Densitymatrix_contolled(parameters::Vector{Float64},Nq
     FFF=eigen(single_Ham[ja][1])
      uncoupled_eigenvector[ja][1]=FFF.vectors
    
+    FFF=eigen(single_Ham[ja][1]+single_MoirePo+tunnel+0.2*seed_tunnel[1])
+     seed_eigenvector[ja][1]=FFF.vectors
+
     FFF=eigen(single_Ham[ja][2])
      uncoupled_eigenvector[ja][2]=FFF.vectors
-  
+    
+     FFF=eigen(single_Ham[ja][2]+single_MoirePo+tunnel+0.2*seed_tunnel[2])
+     seed_eigenvector[ja][2]=FFF.vectors
   
   
    single_Ham[ja][1]+=single_MoirePo+tunnel
@@ -227,28 +269,37 @@ function triangle_initial_Densitymatrix_contolled(parameters::Vector{Float64},Nq
   
   input_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
   
- if rand(1)[1]>0.2
-  for ja in 1:Nq^2, vi in 1:2
-     A=randn(ComplexF64,dimension,dimension)
-     input_DensityMatrix[ja][vi]+=(A+A')*10^-3
-  end
- else
+ if seednum>4
  
   for ja in 1:Nq^2, vi in 1:1, jb in 1:length(wave)*2
-      input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
+      input_DensityMatrix[ja][vi]+=(seed_eigenvector[ja][vi][:,jb]*(seed_eigenvector[ja][vi][:,jb])') 
   end
     
   for ja in 1:Nq^2,vi in 2:2, jb in 1:length(wave)*2-2
-      input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
+      input_DensityMatrix[ja][vi]+=(seed_eigenvector[ja][vi][:,jb]*(seed_eigenvector[ja][vi][:,jb])') 
+  end
+ end
+
+ if seednum<=4
+ 
+  for ja in 1:Nq^2, vi in 1:2, jb in 1:length(wave)*2-2
+      input_DensityMatrix[ja][vi]+=(seed_eigenvector[ja][vi][:,jb]*(seed_eigenvector[ja][vi][:,jb])') 
   end
     
-  for ja in 1:Nq^2, vi in 1:2
-      A=randn(ComplexF64,dimension,dimension)
-      input_DensityMatrix[ja][vi]=input_DensityMatrix[ja][vi]-BG_DensityMatrix[ja][vi]+(A+A')*10^-3
-  end
-end
+  for ja in 1:Nq^2
+    jb=2*length(wave)
+    input_DensityMatrix[ja][1]+=(seed_eigenvector[ja][1][:,jb]*(seed_eigenvector[ja][1][:,jb])') 
+    jb=2*length(wave)-1
+    input_DensityMatrix[ja][2]+=(seed_eigenvector[ja][2][:,jb]*(seed_eigenvector[ja][2][:,jb])') 
+  end 
+ end
+    
+ 
+  input_DensityMatrix=input_DensityMatrix-BG_DensityMatrix
+ 
+
   
-return  wave, input_DensityMatrix, BG_DensityMatrix, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m,constq
+ return  wave, input_DensityMatrix, BG_DensityMatrix, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m,constq
     
 end
 
