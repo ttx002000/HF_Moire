@@ -240,7 +240,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
     FFF=eigen(single_Ham[ja][2])
      uncoupled_eigenvector[ja][2]=FFF.vectors
     
-     FFF=eigen(single_Ham[ja][2]+single_MoirePo+tunnel+0.2*seed_tunnel[2])
+     FFF=eigen(single_Ham[ja][2]+single_MoirePo+M_tunnel+0.2*seed_tunnel[2])
      seed_eigenvector[ja][2]=FFF.vectors
   
   
