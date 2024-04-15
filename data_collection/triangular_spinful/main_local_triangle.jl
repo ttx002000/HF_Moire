@@ -1,6 +1,6 @@
 using JLD2
 include("../../src/operators_spinful.jl")
-flux=1.0*π
+flux=0.6*π
 V0=0.0
 ϕ=0.0
 Nq=3;
@@ -16,7 +16,7 @@ NoHFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,initial_DensityMatrix)
 
 for ja in 1:Nq^2, vi in 1:2
    A=randn(ComplexF64,length(wave),length(wave))
-    initial_DensityMatrix[ja][vi]=initial_DensityMatrix[ja][vi]+(A+A')*0.001
+    initial_DensityMatrix[ja][vi]=initial_DensityMatrix[ja][vi]+(A+A')*0.1
 end
 
 

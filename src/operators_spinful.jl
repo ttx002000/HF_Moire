@@ -44,12 +44,10 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     T1=b1/(Nq)
     T2=b2/(Nq)
 
-    #Vseed=0.2;
-    #ϕseed=π/3
-    #M_ϕseed=π
-    Vseed=0.0;
+    Vseed=0.2;
     ϕseed=π/3
     M_ϕseed=π
+    
     
     
     b1T=Int.(round.(inv([T1 T2])*b1))
