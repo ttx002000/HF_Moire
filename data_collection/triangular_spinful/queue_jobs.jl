@@ -8,11 +8,11 @@ include("submit_job.jl")
 filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "HF"
 
-fluxspace=[0.6,1.0] #multiply this by pi
+fluxspace=[0.6,0.7,1.0] #multiply this by pi
 ϕ=0.0 #convert this to radian 
-Nq=3.0; 
+Nq=6.0; 
 scale=1.0;
-constq=1.0 #divide this by Nq^2
+constq=1.2 #divide this by Nq^2
 V0=0.0
 ζspace=collect(0.0:0.1:1.0)
 
@@ -20,7 +20,7 @@ V0=0.0
 for jb in eachindex(fluxspace), jz in eachindex(ζspace)
   arguments=[fluxspace[jb],V0,ϕ,Nq,scale,constq,ζspace[jz]]
  for ja in 1:3
-    submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="2:00:00",cpus_per_task=1)
+    submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="5:00:00",cpus_per_task=3)
  end
 end
 
