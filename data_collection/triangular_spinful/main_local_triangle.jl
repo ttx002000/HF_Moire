@@ -1,6 +1,6 @@
 using JLD2
 include("../../src/operators_spinful.jl")
-flux=0.6*π
+flux=1.0*π
 V0=0.0
 ϕ=0.0
 Nq=3;
