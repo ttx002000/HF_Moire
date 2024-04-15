@@ -8,7 +8,7 @@ include("submit_job.jl")
 filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "HF"
 
-fluxspace=[0.6,0.1] #multiply this by pi
+fluxspace=[0.6,1.0] #multiply this by pi
 ϕ=0.0 #convert this to radian 
 Nq=3.0; 
 scale=1.0;
