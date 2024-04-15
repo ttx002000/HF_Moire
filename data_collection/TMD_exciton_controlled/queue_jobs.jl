@@ -19,7 +19,7 @@ Vm=14
 Vb=10
 ϕb=80
 ϵrspace=[5]
-Egspace=[210,220,230,240,350]
+Egspace=[245,250,255]
 θ=2
 w=0
 holenum=2
@@ -50,7 +50,7 @@ Nq=parameters[16]
 
 for trytime in 1:3, Eg in Egspace,seednum in 1:8,ϵr in ϵrspace
   arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,Nq,seednum])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",cpus_per_task=1)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="10:00:00",cpus_per_task=1)
 end
 
 

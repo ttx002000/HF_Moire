@@ -50,7 +50,7 @@ function generate_seed(generate_num,wavenum)
 
   seed_tunnel[1]=seed_tunnel[1]+seed_tunnel[1]'
   seed_tunnel[2]=seed_tunnel[2]+seed_tunnel[2]'
-  return seed_tunnel
+  return 0.2*seed_tunnel
 end
 
 
@@ -234,13 +234,13 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
     FFF=eigen(single_Ham[ja][1])
      uncoupled_eigenvector[ja][1]=FFF.vectors
    
-    FFF=eigen(single_Ham[ja][1]+single_MoirePo+tunnel+0.2*seed_tunnel[1])
+    FFF=eigen(single_Ham[ja][1]+single_MoirePo+tunnel+seed_tunnel[1])
      seed_eigenvector[ja][1]=FFF.vectors
 
     FFF=eigen(single_Ham[ja][2])
      uncoupled_eigenvector[ja][2]=FFF.vectors
     
-     FFF=eigen(single_Ham[ja][2]+single_MoirePo+M_tunnel+0.2*seed_tunnel[2])
+     FFF=eigen(single_Ham[ja][2]+single_MoirePo+M_tunnel+seed_tunnel[2])
      seed_eigenvector[ja][2]=FFF.vectors
   
   
@@ -761,6 +761,103 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
   return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,bound
 
 end
+
+
+
+
+
+function iteration_loop_control(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},BG_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Vector{Matrix{ComplexF64}}},constq::Float64,holenum::Int64,seednum::Int64)::Tuple{Vector{Vector{Vector{Matrix{ComplexF64}}}},Vector{Vector{Vector{Matrix{ComplexF64}}}},Vector{Vector{Vector{Float64}}},Float64}
+  eout=1.0
+  itcount=0
+  loop_dic=construct_loop_dic(wave)
+  HF_eigenvalue=[Vector{Vector{Float64}}(undef,2) for _ in 1:Nq^2]
+  DIIS_input_DensityMatrix=Vector{Vector{Vector{Matrix{ComplexF64}}}}(undef,3)
+  DIIS_input_DeltaMatrix=Vector{Vector{Vector{Matrix{ComplexF64}}}}(undef,3)
+  input_DensityMatrix=initial_DensityMatrix
+  bad_count=0
+  Parnum=2*Nq^2*(2*length(wave))-holenum*Nq^2
+  bound=0.0
+  seed_tlmatrix=[generate_seed(mod(seednum-1,4)+1,length(wave)) for _ in 1:Nq^2]
+  
+
+  while itcount<10
+  
+    tic=time()
+    eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,BG_DensityMatrix,single_Ham+seed_tlmatrix,constq,Parnum)
+    DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
+    input_DensityMatrix=output_DensityMatrix
+    itcount+=1
+    toc=time()
+    println(toc-tic,"eout=$eout")
+    flush(stdout)
+   
+  
+  end
+
+
+
+
+
+
+  while (eout>1*10^-14) || (bad_count<4)
+    if  eout<1*10^-14 
+      bad_count+=1
+    end
+    tic=time()
+    eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,BG_DensityMatrix,single_Ham,constq,Parnum)
+    DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
+    input_DensityMatrix=output_DensityMatrix
+    itcount+=1
+    toc=time()
+    println(toc-tic,"eout=$eout")
+    flush(stdout)
+   
+  
+  end
+  #=
+  println("startDIIS",itcount)
+  
+  bad_count=0
+  while (eout>10^-14) || (bad_count<4)
+      if  eout<1*10^-14 
+          bad_count+=1
+      end
+      tic=time()
+      Bmatrix=zeros(ComplexF64,4,4)
+      for ja in 1:3
+       Bmatrix[ja,4]=1
+       Bmatrix[4,ja]=1
+      end
+  
+      for ja in 1:3,jb in 1:3
+          for jc in 1:Nq^2, vi in 1:2
+             Bmatrix[ja,jb]+=tr((DIIS_input_DeltaMatrix[ja][jc][vi])'*(DIIS_input_DeltaMatrix[jb][jc][vi]))
+          end
+      end
+      coeff=inv(Bmatrix)*[0;0;0;1]
+     
+      dmk=coeff[1]*(DIIS_input_DensityMatrix[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_DensityMatrix[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_DensityMatrix[3]+DIIS_input_DeltaMatrix[3])
+      eout,_,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,dmk,BG_DensityMatrix,single_Ham,constq,Parnum)
+      DIIS_input_DensityMatrix[mod(itcount,3)+1]=dmk
+      itcount+=1
+
+      toc=time()
+      println(toc-tic,"eout=$eout")
+      flush(stdout)
+  end
+  =#
+
+
+
+return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,bound
+
+end
+
+
+
+
+
+
 
 
 function Densitymap(a1m::Vector{Float64},a2m::Vector{Float64},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}})::Tuple{Array{ComplexF64},Array{ComplexF64},Array{ComplexF64}}
