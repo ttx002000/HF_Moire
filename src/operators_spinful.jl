@@ -44,7 +44,7 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     T1=b1/(Nq)
     T2=b2/(Nq)
 
-    Vseed=0.2;
+    Vseed=0.1;
     ϕseed=π/3
     M_ϕseed=π
     
@@ -320,7 +320,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
     input_DensityMatrix=initial_DensityMatrix
     bad_count=0
      
-    while itcount<10
+    while itcount<30
        
         tic=time()
         eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham+seed_MoirePo,single_MoirePo,constq,ζ,overlapmatrix)

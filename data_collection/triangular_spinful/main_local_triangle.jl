@@ -5,7 +5,7 @@ V0=0.0
 ϕ=0.0
 Nq=3;
 scale=1.0;
-constq=0.6/Nq^2
+constq=1.0/Nq^2
 ζ=0.5
 
 
