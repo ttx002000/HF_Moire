@@ -43,7 +43,13 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     
     T1=b1/(Nq)
     T2=b2/(Nq)
-    
+
+    #Vseed=0.2;
+    #ϕseed=π/3
+    #M_ϕseed=π
+    Vseed=0.0;
+    ϕseed=π/3
+    M_ϕseed=π
     
     
     b1T=Int.(round.(inv([T1 T2])*b1))
@@ -85,8 +91,9 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     single_MoirePo=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
     single_eigenvalue=[[zeros(Float64,dimension) for _ in 1:2] for _ in 1:Nq^2]
     single_eigenvector=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
+    seed_MoirePo=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
+    seed_eigenvector=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
 
-    
     Threads.@threads for ja in 1:Nq^2
       
       
@@ -102,6 +109,8 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
           if pos≠nothing
             single_MoirePo[ja][1][jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b1,β)
             single_MoirePo[ja][2][jc,pos]=V0*exp(im*ϕ)*conj(overlap(k1,-b1,β))
+            seed_MoirePo[ja][1][jc,pos]=Vseed*exp(im*ϕseed)*overlap(k1,-b1,β)
+            seed_MoirePo[ja][2][jc,pos]=Vseed*exp(im*M_ϕseed)*conj(overlap(k1,-b1,β))
           end
           
         
@@ -109,38 +118,55 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
           if pos≠nothing
               single_MoirePo[ja][1][jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2+b1,β)
               single_MoirePo[ja][2][jc,pos]=V0*exp(im*ϕ)*conj(overlap(k1,b2+b1,β))
+              seed_MoirePo[ja][1][jc,pos]=Vseed*exp(im*ϕseed)*overlap(k1,b2+b1,β)
+              seed_MoirePo[ja][2][jc,pos]=Vseed*exp(im*M_ϕseed)*conj(overlap(k1,b2+b1,β))
           end
       
           pos=findfirst(item->item==wave[jc]-b2T,wave)
           if pos≠nothing
               single_MoirePo[ja][1][jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2,β)
               single_MoirePo[ja][2][jc,pos]=V0*exp(im*ϕ)*conj(overlap(k1,-b2,β))
+              seed_MoirePo[ja][1][jc,pos]=Vseed*exp(im*ϕseed)*overlap(k1,-b2,β)
+              seed_MoirePo[ja][2][jc,pos]=Vseed*exp(im*M_ϕseed)*conj(overlap(k1,-b2,β))
           end
        end
       
        for vi in 1:2
        single_MoirePo[ja][vi]=single_MoirePo[ja][vi]+single_MoirePo[ja][vi]'
-       
+       seed_MoirePo[ja][vi]=seed_MoirePo[ja][vi]+seed_MoirePo[ja][vi]'
+
        FFF=eigen(single_MoirePo[ja][vi]+single_Ham[ja][vi])
       
         single_eigenvalue[ja][vi]=real(FFF.values)
         single_eigenvector[ja][vi]=FFF.vectors
+
+        FFF=eigen(single_MoirePo[ja][vi]+single_Ham[ja][vi]+seed_MoirePo[ja][vi])
+      
+       
+        seed_eigenvector[ja][vi]=FFF.vectors
+
        end
     
     end
 
 
     input_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
+    #for ja in 1:Nq^2, vi in 1:2
+     
+       #input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,1]*(single_eigenvector[ja][vi][:,1])')
+        
+    #end
+
     for ja in 1:Nq^2, vi in 1:2
      
-       input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,1]*(single_eigenvector[ja][vi][:,1])')
+       input_DensityMatrix[ja][vi]+=(seed_eigenvector[ja][vi][:,1]*(seed_eigenvector[ja][vi][:,1])')
         
     end
 
     
 
     
-    return overlapmatrix, wave, input_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m
+    return overlapmatrix, wave, input_DensityMatrix, single_MoirePo, single_Ham, seed_MoirePo,single_eigenvalue,allowedq, T1, T2, a1m, a2m
       
 
        
@@ -286,7 +312,7 @@ end
 
 
 
-function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Vector{Matrix{ComplexF64}}},single_MoirePo::Vector{Vector{Matrix{ComplexF64}}},constq::Float64,ζ::Float64,overlapmatrix::Vector{Array{ComplexF64,4}})::Tuple{Vector{Vector{Vector{Matrix{ComplexF64}}}},Vector{Vector{Vector{Matrix{ComplexF64}}}},Vector{Vector{Vector{Float64}}}}
+function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Vector{Matrix{ComplexF64}}},single_MoirePo::Vector{Vector{Matrix{ComplexF64}}},seed_MoirePo::Vector{Vector{Matrix{ComplexF64}}},constq::Float64,ζ::Float64,overlapmatrix::Vector{Array{ComplexF64,4}})::Tuple{Vector{Vector{Vector{Matrix{ComplexF64}}}},Vector{Vector{Vector{Matrix{ComplexF64}}}},Vector{Vector{Vector{Float64}}}}
     eout=1.0
     itcount=0
     loop_dic=construct_loop_dic(wave)
@@ -295,6 +321,22 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
     DIIS_input_DeltaMatrix=Vector{Vector{Vector{Matrix{ComplexF64}}}}(undef,3)
     input_DensityMatrix=initial_DensityMatrix
     bad_count=0
+     
+    while itcount<10
+       
+        tic=time()
+        eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham+seed_MoirePo,single_MoirePo,constq,ζ,overlapmatrix)
+        DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
+        input_DensityMatrix=output_DensityMatrix
+        itcount+=1
+        toc=time()
+        println(toc-tic,"eout=$eout")
+        flush(stdout)
+       
+      
+    end
+    println("takeaway the fake potential")
+    flush(stdout)
 
     while (eout>1*10^-13) || (bad_count<4)
       if  eout<1*10^-13 
