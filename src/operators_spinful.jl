@@ -44,7 +44,7 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     T1=b1/(Nq)
     T2=b2/(Nq)
 
-    Vseed=0.1;
+    Vseed=0.0;
     ϕseed=π/3
     M_ϕseed=π
     
