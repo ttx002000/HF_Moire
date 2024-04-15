@@ -1,6 +1,6 @@
 using JLD2
 include("../../src/operators.jl")
-flux=1.0*π
+flux=0.6*π
 V0=0.0
 ϕ=0.0
 Nq=3;
