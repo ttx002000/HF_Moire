@@ -35,10 +35,10 @@ function submit_job(filepath, dirpath, job_prefix,arguments,trytimes; nodes=1, n
     ml julia/1.10.0
 
     # multithreading
-    export JULIA_NUM_THREADS=\$SLURM_CPUS_ON_NODE
+    export JULIA_NUM_THREADS=$SLURM_CPUS_ON_NODE
 
     # run the script
-    julia -t \$SLURM_CPUS_ON_NODE  $filepath $flux $V0 $ϕ $Nq $scale $constq $(Float64(trytimes))"""
+    julia  $filepath $flux $V0 $ϕ $Nq $scale $constq $(Float64(trytimes))"""
 
     open("$slurmpath/$(name).slurm", "w") do io
         write(io, filestr)
