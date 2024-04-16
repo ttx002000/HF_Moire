@@ -50,7 +50,7 @@ function generate_seed(generate_num,wavenum)
 
   seed_tunnel[1]=seed_tunnel[1]+seed_tunnel[1]'
   seed_tunnel[2]=seed_tunnel[2]+seed_tunnel[2]'
-  return 0.2*seed_tunnel
+  return 2*seed_tunnel
 end
 
 
@@ -233,19 +233,14 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
      
     FFF=eigen(single_Ham[ja][1])
      uncoupled_eigenvector[ja][1]=FFF.vectors
-   
-    FFF=eigen(single_Ham[ja][1]+single_MoirePo+tunnel+seed_tunnel[1])
-     seed_eigenvector[ja][1]=FFF.vectors
 
     FFF=eigen(single_Ham[ja][2])
      uncoupled_eigenvector[ja][2]=FFF.vectors
     
-     FFF=eigen(single_Ham[ja][2]+single_MoirePo+M_tunnel+seed_tunnel[2])
-     seed_eigenvector[ja][2]=FFF.vectors
   
   
-   single_Ham[ja][1]+=single_MoirePo+tunnel
-   single_Ham[ja][2]+=single_MoirePo+M_tunnel
+    single_Ham[ja][1]+=single_MoirePo+tunnel
+    single_Ham[ja][2]+=single_MoirePo+M_tunnel
    
     FFF=eigen(single_Ham[ja][1])
     single_eigenvalue[ja][1]=real(FFF.values)
@@ -254,6 +249,13 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
     FFF=eigen(single_Ham[ja][2])
     single_eigenvalue[ja][2]=real(FFF.values)
     single_eigenvector[ja][2]=FFF.vectors
+
+      
+    FFF=eigen(single_Ham[ja][1]+seed_tunnel[1])
+     seed_eigenvector[ja][1]=FFF.vectors
+
+    FFF=eigen(single_Ham[ja][2]+seed_tunnel[2])
+    seed_eigenvector[ja][2]=FFF.vectors
   
   end
   
@@ -780,7 +782,7 @@ function iteration_loop_control(initial_DensityMatrix::Vector{Vector{Matrix{Comp
   seed_tlmatrix=[generate_seed(mod(seednum-1,4)+1,length(wave)) for _ in 1:Nq^2]
   
 
-  while itcount<10
+  while itcount<20
   
     tic=time()
     eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,BG_DensityMatrix,single_Ham+seed_tlmatrix,constq,Parnum)
