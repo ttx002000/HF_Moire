@@ -4,8 +4,8 @@ flux=2.0*π
 V0=0.0
 ϕ=0.0
 Nq=3;
-scale=1.0*2^(1/2);
-constq=2.4/Nq^2
+scale=1.0*2^(1/2)*2;
+constq=2.4/Nq^2*2^2
 
 
 
@@ -24,4 +24,4 @@ chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uni
 println(trace_condition_single)
 energy=calculate_energy(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,overlapmatrix)
 println(energy)
-jldsave(joinpath(@__DIR__, "data_output/try.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,densitymatrix=DIIS_input_DensityMatrix,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue)
+jldsave(joinpath(@__DIR__, "data_output/try2.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,densitymatrix=DIIS_input_DensityMatrix,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue)
