@@ -16,6 +16,7 @@ scalespace=collect(0.3:0.1:1.8);
 V0=0.0
 
 for jb in eachindex(scalespace)
+  scale=scalespace[jb]
   flux=1.0*scale^2
   constq=1.0*scale^2
   arguments=[flux,V0,ϕ,Nq,scalespace[jb],constq]
@@ -25,6 +26,7 @@ for jb in eachindex(scalespace)
 end
 
 for jb in eachindex(scalespace)
+  scale=scalespace[jb]
   flux=1.0*scale^2
   constq=1.2*scale^2
   arguments=[flux,V0,ϕ,Nq,scalespace[jb],constq]
