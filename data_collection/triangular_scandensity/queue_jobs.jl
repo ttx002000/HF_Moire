@@ -20,8 +20,8 @@ for jb in eachindex(scalespace)
   flux=1.0*scale^2
   constq=1.0*scale^2
   arguments=[flux,V0,ϕ,Nq,scalespace[jb],constq]
- for ja in 1:4
-    submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="10:00:00",cpus_per_task=3)
+ for ja in 1:3
+    submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="8:00:00",cpus_per_task=5)
  end
 end
 
@@ -30,8 +30,8 @@ for jb in eachindex(scalespace)
   flux=1.0*scale^2
   constq=1.2*scale^2
   arguments=[flux,V0,ϕ,Nq,scalespace[jb],constq]
- for ja in 1:4
-    submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="10:00:00",cpus_per_task=3)
+ for ja in 1:3
+    submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="8:00:00",cpus_per_task=5)
  end
 end
 
