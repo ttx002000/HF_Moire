@@ -10,7 +10,7 @@ job_prefix = "spinful"
 
 fluxspace=[1.0] #multiply this by pi
 ϕ=0.0 #convert this to radian 
-Nqspace=collect(3.0:1.0:9.0); 
+Nqspace=collect(7.0:1.0:10.0); 
 scale=1.0;
 constq=1.0 #divide this by Nq^2
 V0=0.0
@@ -20,7 +20,15 @@ V0=0.0
 for jb in eachindex(fluxspace), jz in eachindex(ζspace), jNq in eachindex(Nqspace)
   arguments=[fluxspace[jb],V0,ϕ,Nqspace[jNq],scale,constq,ζspace[jz]]
  for ja in 1:2
-    submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="$(Int(Nqspace[jNq])):00:00",cpus_per_task=4)
+    submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="$(Int(Nqspace[jNq])+4):00:00",cpus_per_task=8,mem=128)
+ end
+end
+
+
+for jb in eachindex(fluxspace), jz in eachindex(ζspace)
+  arguments=[fluxspace[jb],V0,ϕ,4.0,scale,constq,ζspace[jz]]
+ for ja in 1:2
+    submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="6:00:00",cpus_per_task=4)
  end
 end
 
