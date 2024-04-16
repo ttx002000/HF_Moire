@@ -15,7 +15,7 @@ scale=1.0*√2;
 constq=2.0 #divide this by Nq^2
 V0=0.0
 
-for ja in fluxspace, jNq in eachindex(Nqspace)
+for ja in eachindex(fluxspace), jNq in eachindex(Nqspace)
   arguments=[fluxspace[ja],V0,ϕ,Nqspace[jNq],scale,constq]
 for ja in 1:5
     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="$(Int(Nqspace[jNq])):00:00",cpus_per_task=5)
@@ -23,7 +23,7 @@ end
 end
 
 constq=2.4
-for ja in fluxspace, jNq in eachindex(Nqspace)
+for ja in eachindex(fluxspace), jNq in eachindex(Nqspace)
   arguments=[fluxspace[ja],V0,ϕ,Nqspace[jNq],scale,constq]
 for ja in 1:5
     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="$(Int(Nqspace[jNq])):00:00",cpus_per_task=5)
