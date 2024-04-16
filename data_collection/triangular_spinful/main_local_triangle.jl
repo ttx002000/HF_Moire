@@ -1,12 +1,12 @@
 using JLD2
 include("../../src/operators_spinful.jl")
-flux=0.7*π
+flux=1.0*π
 V0=0.0
 ϕ=0.0
-Nq=3;
+Nq=5;
 scale=1.0;
-constq=1.0/Nq^2
-ζ=0.2
+constq=1.2/Nq^2
+ζ=0.4
 
 
 
@@ -27,4 +27,5 @@ chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uni
 
 energy=calculate_energy(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,ζ,overlapmatrix)
 println(trace_condition_single)
+println(energy)
 jldsave(joinpath(@__DIR__, "data_output/trywithpining.jld2"),HFeigenvalue=HF_eigenvalue,chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,densitymatrix=DIIS_input_DensityMatrix,energy=energy,TC=trace_condition,TCS=trace_condition_single)
