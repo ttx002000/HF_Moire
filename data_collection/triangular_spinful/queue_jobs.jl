@@ -6,7 +6,7 @@ using JLD2
 include("submit_job.jl")
 
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "HF"
+job_prefix = "spinful"
 
 fluxspace=[1.0] #multiply this by pi
 ϕ=0.0 #convert this to radian 
