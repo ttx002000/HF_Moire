@@ -1,11 +1,5 @@
-using Pkg
-Pkg.activate(joinpath(@__DIR__, "../.."))
-using LinearAlgebra
-using JLD2
-using Plots
-using CSV,DataFrames
 
-include("submit_job.jl")
+include(joinpath(@__DIR__,"submit_job.jl"))
 
 filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "exciton"
