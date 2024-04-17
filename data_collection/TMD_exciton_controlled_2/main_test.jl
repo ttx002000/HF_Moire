@@ -1,5 +1,3 @@
-using Pkg
-Pkg.activate(joinpath(@__DIR__, "../.."))
 using Plots
 using JLD2
 using CSV,DataFrames
