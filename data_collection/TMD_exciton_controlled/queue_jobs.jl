@@ -11,7 +11,7 @@ job_prefix = "exciton"
 #parameters=[0.35,0.4,0.35,-10.0,70.0,10.0,80.0,10.0,1.0,10,100.0,2.0,5.0]
 mt=0.35
 mm=0.4
-mb=0.35
+mb=0.5
 Vt=4
 ϕt=270
 Vm=6
@@ -19,11 +19,11 @@ Vm=6
 Vb=5
 ϕb=80
 ϵrspace=[5]
-Egspace=[245,250,255]
+Egspace=[210,220,230,240]
 θ=2
 w=0
 holenum=2
-Nq=6
+Nq=3
 
 
 
@@ -50,7 +50,7 @@ Nq=parameters[16]
 
 for trytime in 1:2, Eg in Egspace,seednum in 1:8,ϵr in ϵrspace
   arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,Nq,seednum])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",cpus_per_task=4)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=16)
 end
 
 
