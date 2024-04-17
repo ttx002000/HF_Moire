@@ -14,7 +14,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     #SBATCH --partition=$partition
     #SBATCH --time=$time
     #SBATCH --nodes=$nodes
-    #SBATCH --ntasks=$ntask
+    #SBATCH --ntasks=$ntasks
     #SBATCH --cpus-per-task=$cpus_per_task
     #SBATCH --mem=$(mem)G
     #SBATCH --mail-type=BEGIN,FAIL,END
