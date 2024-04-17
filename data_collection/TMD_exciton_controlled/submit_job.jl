@@ -14,7 +14,8 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     #SBATCH --partition=$partition
     #SBATCH --time=$time
     #SBATCH --nodes=$nodes
-    #SBATCH --ntasks=16
+    #SBATCH --ntasks=$ntask
+    #SBATCH --cpus-per-task=$cpus_per_task
     #SBATCH --mem=$(mem)G
     #SBATCH --mail-type=BEGIN,FAIL,END
     #SBATCH --mail-user=ttx2000@stanford.edu
@@ -27,7 +28,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     ml julia/1.10.0
 
     # multithreading
-    export JULIA_NUM_THREADS=16
+    export JULIA_NUM_THREADS=$cpus_per_task
 
     # run the script
     julia $filepath $(args[1]) $(args[2]) $(args[3]) $(args[4]) $(args[5]) $(args[6]) $(args[7]) $(args[8]) $(args[9]) $(args[10]) $(args[11]) $(args[12]) $(args[13]) $(args[14]) $(args[15]) $(args[16]) $(args[17])"""
