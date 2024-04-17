@@ -23,7 +23,7 @@ Egspace=[245,250,255]
 θ=2
 w=0
 holenum=2
-Nq=2
+Nq=6
 
 
 
