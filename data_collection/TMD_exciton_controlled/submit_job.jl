@@ -13,6 +13,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     #SBATCH --job-name=$(job_prefix*"_"*name)
     #SBATCH --partition=$partition
     #SBATCH --time=$time
+    #SBATCH --requeue
     #SBATCH --nodes=$nodes
     #SBATCH --ntasks=$ntasks
     #SBATCH --mem=$(mem)G
