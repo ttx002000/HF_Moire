@@ -2,6 +2,8 @@ using Pkg
 Pkg.activate(joinpath(@__DIR__, "../.."))
 using LinearAlgebra
 using JLD2
+using Plots
+using CSV,DataFrames
 
 include("submit_job.jl")
 
