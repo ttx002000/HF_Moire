@@ -6,7 +6,7 @@ using Plots
 using CSV,DataFrames
 
 
-include(joingpath(@__DIR__,"../../src/operators_exciton.jl"))
+include(joinpath(@__DIR__,"../../src/operators_exciton.jl"))
 
 args=parse.(Float64,ARGS)
 println("This is the arguments$args")
