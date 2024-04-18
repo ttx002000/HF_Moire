@@ -26,7 +26,7 @@ function CoulombMatrix(k::Vector{Int64},T1::Vector{Float64},T2::Vector{Float64})
   Cmatrix=Matrix{Float64}(undef,3,3)
   qab=norm(k[1]*T1+k[2]*T2)
   for L1 in 1:3, L2 in 1:3
-    Cmatrix[ja,jb]=Coulomb(qab,k,L1,L2)
+    Cmatrix[L1,L2]=Coulomb(qab,k,L1,L2)
   end
   return Cmatrix
   
