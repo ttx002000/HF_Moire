@@ -85,7 +85,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
 
   
   
-  bm=√3*2*blattice*sin(θ/2)
+  bm=2*blattice*sin(θ/2)
   am=4*π/(√3*bm);
   constt=-38.09981949*1/(mt)
   constm=38.09981949*1/(mm)
@@ -350,7 +350,7 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
  
     
     
-    bm=√3*2*blattice*sin(θ/2)
+    bm=2*blattice*sin(θ/2)
     am=4*π/(√3*bm);
     constt=-38.09981949*1/(mt)
     constm=38.09981949*1/(mm)
