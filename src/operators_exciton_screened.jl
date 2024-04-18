@@ -919,10 +919,10 @@ function Construct_HFmatrix(loop_dic::Dict{Vector{Int},Any},pathpoint::Vector{In
         dmk = input_DensityMatrix[jk1]
         q=allowedq[jk1]-pathpoint
        for (dg,loop_dic_dg) in loop_dic
-           CoulF=Coulomb(q+dg,T1,T2)     
+           CoulF=CoulombMatrix(q+dg,T1,T2)     
            for (gg2,loop_dic_dg_gg2) in loop_dic_dg          
            for g1g3 in loop_dic_dg_gg2
-               FockMatrix[g1g3[5]:g1g3[6],gg2[3]:gg2[4]]+=dmk[vi][g1g3[3]:g1g3[4],gg2[5]:gg2[6]]*CoulF
+               FockMatrix[g1g3[5]:g1g3[6],gg2[3]:gg2[4]]+=dmk[vi][g1g3[3]:g1g3[4],gg2[5]:gg2[6]] .* CoulF
            end 
            end
        end    
@@ -938,13 +938,13 @@ function Construct_HFmatrix(loop_dic::Dict{Vector{Int},Any},pathpoint::Vector{In
  
 
     
- Identity=Matrix{Float64}(I,3,3)   
+
  
     for dg in keys(loop_dic)
-        CoulH=Coulomb(dg,T1,T2)
+        CoulH=CoulombMatrix(dg,T1,T2)
         for gg2 in keys(loop_dic[dg])                    
         for g1g3 in loop_dic[dg][gg2]            
-             HartreeMatrix[gg2[5]:gg2[6],gg2[3]:gg2[4]]+=tr(Hartree_Density[g1g3[3]:g1g3[4],g1g3[5]:g1g3[6]])*CoulH*Identity                           
+             HartreeMatrix[gg2[5]:gg2[6],gg2[3]:gg2[4]]+=diagm(CoulH*diag(Hartree_Density[g1g3[3]:g1g3[4],g1g3[5]:g1g3[6]],0))                         
         end 
         end
 
