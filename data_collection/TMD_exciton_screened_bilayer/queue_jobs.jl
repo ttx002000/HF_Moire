@@ -5,12 +5,12 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "bialyerexciton"
 
 
-mt=0.3
-mb=0.54
-Vt=10
-ϕt=45.8366
-Vb=-10
-ϕb=177.6169
+mt=0.2552
+mb=0.4585
+Vt=-10
+ϕt=177.6169
+Vb=10
+ϕb=45.8366
 ϵrspace=[5]
 Egspace=[75,80,85,90,95]
 θ=2
