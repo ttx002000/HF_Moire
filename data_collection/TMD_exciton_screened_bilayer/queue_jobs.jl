@@ -1,3 +1,4 @@
+using Pkg
 Pkg.activate(joinpath(@__DIR__, "../.."))
 using JLD2
 include(joinpath(@__DIR__,"submit_job.jl"))
