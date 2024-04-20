@@ -48,12 +48,10 @@ end
 
 
 
-#=
+
 st=load(joinpath(@__DIR__, "missedjobs.jld2"))
-index=st["index"]
+index=st["vector"]
 for ja in eachindex(index)
-    arguments=[index[ja][1],V0,ϕ,Nq,scale,constq]
-    trytime=Int(index[ja][2])
-    submit_job(filepath, @__DIR__, job_prefix,arguments,trytime; time="38:00:00",cpus_per_task=36)
+  arguments=Float64.([mt,mb,Vt,ϕt,Vb,ϕb,ϵr,index[ja][1],θ,w,holenum,index[ja][2],Nq,index[ja][3]])
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="4:00:00",ntasks=9)
 end
-=#
