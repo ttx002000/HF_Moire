@@ -14,8 +14,9 @@ Vm=5.0
 ϕm=173.4456
 Vb=8.6603
 ϕb=83.4456
-ϵrspace=[5]
-Egspace=collect(75:2.5:110)
+#ϵrspace=[5]
+#Egspace=collect(75:2.5:110)
+ϵr=5
 θ=2
 w=0
 holenum=2
@@ -43,22 +44,19 @@ holenum=parameters[14]
 trytime=parameters[15]
 Nq=parameters[16]
 =#
-
+#=
 for trytime in 1:1, Eg in Egspace,seednum in 1:4,ϵr in ϵrspace
   arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,Nq,seednum])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",ntasks=9)
 end
-
-
-
-
-
-#=
-st=load(joinpath(@__DIR__, "missedjobs.jld2"))
-index=st["index"]
-for ja in eachindex(index)
-    arguments=[index[ja][1],V0,ϕ,Nq,scale,constq]
-    trytime=Int(index[ja][2])
-    submit_job(filepath, @__DIR__, job_prefix,arguments,trytime; time="38:00:00",cpus_per_task=36)
-end
 =#
+
+
+
+
+st=load(joinpath(@__DIR__, "missedjobs.jld2"))
+index=st["vector"]
+for ja in eachindex(index)
+  arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,index[ja][1],θ,w,holenum,1.0,Nq,index[ja][2]])
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="12:00:00",ntasks=9)
+end
