@@ -972,11 +972,13 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},input_DensityMatrix:
     loop_dic=construct_loop_dic(wave)
     
     Energy_Matrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
-    
+    HF_vectors=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
+
     Threads.@threads for ja in eachindex(allowedq)
         for vi in 1:2
       HFmatrix=Construct_HFmatrix(loop_dic,allowedq[ja],vi,allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq)
       Energy_Matrix[ja][vi]=1/2*HFmatrix+single_Ham[ja][vi]
+      HF_vectors[ja][vi]=eigen(HFmatrix+single_Ham[ja][vi]).vectors
     end
     end
     
@@ -987,6 +989,6 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},input_DensityMatrix:
    end
 
 
-   return energy
+   return energy,HF_vectors
 
 end
