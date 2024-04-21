@@ -1,7 +1,9 @@
-
+using Pkg
+Pkg.activate(joinpath(@__DIR__, "../.."))
+using JLD2
 include(joinpath(@__DIR__,"submit_job.jl"))
-
 filepath = joinpath(@__DIR__, "main_test.jl")
+
 job_prefix = "exciton"
 
 #parameters=[0.35,0.4,0.35,-10.0,70.0,10.0,80.0,10.0,1.0,10,100.0,2.0,5.0]
