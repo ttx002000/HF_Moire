@@ -20,7 +20,7 @@ V0=0.0
 for jb in eachindex(fluxspace), jz in eachindex(ζspace), jNq in eachindex(Nqspace)
   arguments=[fluxspace[jb],V0,ϕ,Nqspace[jNq],scale,constq,ζspace[jz]]
  for ja in 1:2
-    submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="$(Int(Nqspace[jNq])+4):00:00",cpus_per_task=12,mem=128)
+    submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="$(Int(Nqspace[jNq])+4):00:00",ntasks=Int(Nqspace[jNq])^2,mem=128)
  end
 end
 

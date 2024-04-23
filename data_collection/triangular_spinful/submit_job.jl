@@ -23,7 +23,6 @@ function submit_job(filepath, dirpath, job_prefix,arguments,trytimes; nodes=1, n
     #SBATCH --time=$time
     #SBATCH --nodes=$nodes
     #SBATCH --ntasks=$ntasks
-    #SBATCH --cpus-per-task=$cpus_per_task
     #SBATCH --mem=$(mem)G
     #SBATCH --mail-type=BEGIN,FAIL,END
     #SBATCH --mail-user=ttx2000@stanford.edu
@@ -36,7 +35,7 @@ function submit_job(filepath, dirpath, job_prefix,arguments,trytimes; nodes=1, n
     ml julia/1.10.0
 
     # multithreading
-    export JULIA_NUM_THREADS=\$SLURM_CPUS_ON_NODE
+    export JULIA_NUM_THREADS=$ntasks
 
     # run the script
     julia $filepath $flux $V0 $ϕ $Nq $scale $constq $ζ $(Float64(trytimes))"""
