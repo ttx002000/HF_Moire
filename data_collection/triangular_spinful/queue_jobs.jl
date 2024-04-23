@@ -12,7 +12,7 @@ fluxspace=[1.0] #multiply this by pi
 ϕ=0.0 #convert this to radian 
 Nqspace=collect(3.0:1.0:10.0); 
 scale=1.0;
-constq=[1.3,1.5] #divide this by Nq^2
+constq=[1.3,1.5,1.7] #divide this by Nq^2
 V0=0.0
 ζspace=[0.5]
 
