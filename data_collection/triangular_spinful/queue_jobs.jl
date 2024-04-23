@@ -12,12 +12,12 @@ fluxspace=[1.0] #multiply this by pi
 ϕ=0.0 #convert this to radian 
 Nqspace=collect(3.0:1.0:10.0); 
 scale=1.0;
-constq=[1.3,1.5,1.7] #divide this by Nq^2
+constqspace=[1.3,1.5,1.7] #divide this by Nq^2
 V0=0.0
 ζspace=[0.5]
 
 
-for jb in eachindex(fluxspace), jz in eachindex(ζspace), jNq in eachindex(Nqspace)
+for jb in eachindex(fluxspace), jz in eachindex(ζspace), jNq in eachindex(Nqspace), constq in constqspace
   arguments=[fluxspace[jb],V0,ϕ,Nqspace[jNq],scale,constq,ζspace[jz]]
  for ja in 1:2
     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="$(Int(Nqspace[jNq])+4):00:00",ntasks=Int(Nqspace[jNq])^2,mem=128)
