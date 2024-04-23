@@ -10,9 +10,9 @@ job_prefix = "HF"
 
 fluxspace=[2.0] #multiply this by pi
 ϕ=0.0 #convert this to radian 
-Nqspace=[6.0]; 
+Nqspace=[3.0,4.0,5.0,6.0,7.0,8.0]; 
 scale=1.0*√2;
-constq=2.0 #divide this by Nq^2
+constq=2.6 #divide this by Nq^2
 V0=0.0
 
 for ja in eachindex(fluxspace), jNq in eachindex(Nqspace)
@@ -22,7 +22,7 @@ for ja in 1:5
 end
 end
 
-constq=2.4
+constq=3.0
 for ja in eachindex(fluxspace), jNq in eachindex(Nqspace)
   arguments=[fluxspace[ja],V0,ϕ,Nqspace[jNq],scale,constq]
 for ja in 1:5
