@@ -16,7 +16,7 @@ scale=args[5];
 constq=args[6]/Nq^2
 ζ=args[7]
 trytimes=Int(args[8])
-shiftindex=Int(args[9])
+shift_index=Int(args[9])
 
 #=
     flux=arg[1]
