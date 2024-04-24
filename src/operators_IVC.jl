@@ -95,8 +95,8 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
         kshift=(allowedq[ja]+allowedq[shiftindex])[1]*T1+(allowedq[ja]+allowedq[shiftindex])[2]*T2
 
         for jb in eachindex(wave)
-         single_Ham[ja][jb,jb]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2)^2/(2*mass)
-         single_Ham[ja][jb+length(wave),jb+length(wave)]=norm(kshift+wave[jb][1]*T1+wave[jb][2]*T2)^2/(2*mass)
+          single_Ham[ja][jb,jb]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2)^2/(2*mass)
+          single_Ham[ja][jb+length(wave),jb+length(wave)]=norm(kshift+wave[jb][1]*T1+wave[jb][2]*T2)^2/(2*mass)
         end
         
        for jc in eachindex(wave)
@@ -210,61 +210,60 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
    Threads.@threads for jk in 1:Nq^2
    
      Fk = FockMatrix[jk]
-     for jk1 in 1:Nq^2
-         dmk = input_DensityMatrix[jk1]
-         q=allowedq[jk1]-allowedq[jk]
-        for (dg,loop_dic_dg) in loop_dic
-            CoulF1=Coulomb(q+dg,T1,T2)     
-            for (gg2,loop_dic_dg_gg2) in loop_dic_dg          
-                CoulF=CoulF1*[overlapmatrix[1][jk1,gg2[2][1],jk,gg2[1][1]] overlapmatrix[2][jk1,gg2[2][1],jk,gg2[1][1]]]#This is a row vector
-            for g1g3 in loop_dic_dg_gg2
-                Fk[g1g3[2],gg2[1]]+=scrmix .* dmk[g1g3[1],gg2[2]].*([overlapmatrix[1][jk,g1g3[2][1],jk1,g1g3[1][1]],overlapmatrix[2][jk,g1g3[2][1],jk1,g1g3[1][1]]]*CoulF)
-            end 
-            end
+      for jk1 in 1:Nq^2
+          dmk = input_DensityMatrix[jk1]
+          q=allowedq[jk1]-allowedq[jk]
+          for (dg,loop_dic_dg) in loop_dic
+              CoulF1=Coulomb(q+dg,T1,T2)     
+              for (gg2,loop_dic_dg_gg2) in loop_dic_dg          
+                 CoulF=CoulF1*[overlapmatrix[1][jk1,gg2[2][1],jk,gg2[1][1]] overlapmatrix[2][jk1,gg2[2][1],jk,gg2[1][1]]]#This is a row vector
+                 for g1g3 in loop_dic_dg_gg2
+                      Fk[g1g3[2],gg2[1]]+=scrmix .* dmk[g1g3[1],gg2[2]].*([overlapmatrix[1][jk,g1g3[2][1],jk1,g1g3[1][1]],overlapmatrix[2][jk,g1g3[2][1],jk1,g1g3[1][1]]]*CoulF)
+                 end 
+              end
     
-        end    
-     end
+           end    
+       end
  
    end
   
    Hartree_Density=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:2]
    for ja in 1:Nq^2
-    Hartree_Density[1]+=input_DensityMatrix[ja][1:length(wave),1:length(wave)] .* transpose(overlapmatrix[1][ja,:,ja,:])
-    Hartree_Density[2]+=input_DensityMatrix[ja][1+length(wave):dimension,1+length(wave):dimension] .* transpose(overlapmatrix[2][ja,:,ja,:])
+     Hartree_Density[1]+=input_DensityMatrix[ja][1:length(wave),1:length(wave)] .* transpose(overlapmatrix[1][ja,:,ja,:])
+     Hartree_Density[2]+=input_DensityMatrix[ja][1+length(wave):dimension,1+length(wave):dimension] .* transpose(overlapmatrix[2][ja,:,ja,:])
    end
  
    
  
    Threads.@threads for jk in 1:Nq^2
-    for vi in 1:2
-        if vi==1
+      for vi in 1:2
+          if vi==1
             ovi=2
-        end
-        if vi==2
+          end
+         if vi==2
             ovi=1
-        end
+         end
 
-       for dg in keys(loop_dic)
-           CoulH1=Coulomb(dg,T1,T2)
-           for gg2 in keys(loop_dic[dg])          
-               CoulH=CoulH1*overlapmatrix[vi][jk,gg2[2][1],jk,gg2[1][1]]            
-           for g1g3 in loop_dic[dg][gg2]           
-               HartreeMatrix[jk][gg2[2][vi],gg2[1][vi]]+=Hartree_Density[vi][g1g3[1][1],g1g3[2][1]]*CoulH+ζ*Hartree_Density[ovi][g1g3[1][1],g1g3[2][1]]*CoulH                  
-           end 
-           end
-   
-       end    
-  end
-  end
+         for dg in keys(loop_dic)
+             CoulH1=Coulomb(dg,T1,T2)
+             for gg2 in keys(loop_dic[dg])          
+                  CoulH=CoulH1*overlapmatrix[vi][jk,gg2[2][1],jk,gg2[1][1]]            
+                  for g1g3 in loop_dic[dg][gg2]           
+                     HartreeMatrix[jk][gg2[2][vi],gg2[1][vi]]+=Hartree_Density[vi][g1g3[1][1],g1g3[2][1]]*CoulH+ζ*Hartree_Density[ovi][g1g3[1][1],g1g3[2][1]]*CoulH                  
+                  end 
+              end
+          end    
+       end
+   end
   
  
  
   
  
   Threads.@threads for ja in 1:Nq^2
-    FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+constq*HartreeMatrix[ja]-constq*FockMatrix[ja])
-    HF_eigenvalue[ja]=real(FFF.values)
-    HF_eigenvector[ja]=FFF.vectors
+       FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+constq*HartreeMatrix[ja]-constq*FockMatrix[ja])
+       HF_eigenvalue[ja]=real(FFF.values)
+       HF_eigenvector[ja]=FFF.vectors
   end
   sorted=sort(reduce(vcat,reduce(vcat,HF_eigenvalue)))
   bound=(sorted[Nq^2+1]+sorted[Nq^2])/2
@@ -348,8 +347,8 @@ function Densitymap(a1m::Vector{Float64},a2m::Vector{Float64},overlapmatrix::Vec
     for ja in 1:50, jb in 1:50
       rvec=ja/25*a1m+jb/25*a2m
       for jc in eachindex(wave), jd in eachindex(wave), vi in 1:2
-        gvec=[T1 T2]*(wave[jc]-wave[jd])
-       zgrid[vi][ja,jb]+=real(Hartree_Density[vi][jc,jd]*exp(im*(gvec[1]*rvec[1]+gvec[2]*rvec[2])))
+         gvec=[T1 T2]*(wave[jc]-wave[jd])
+         zgrid[vi][ja,jb]+=real(Hartree_Density[vi][jc,jd]*exp(im*(gvec[1]*rvec[1]+gvec[2]*rvec[2])))
       end
     
     end
@@ -366,12 +365,12 @@ function metric(wavelist::Vector{Vector{Int64}},β::Float64,k::Vector{Float64},q
     Amatrix=zeros(ComplexF64,2*length(wavelist),2*length(wavelist))
     
      for ja in 1:length(wavelist)
-     Amatrix[ja,ja]=overlap(k+wavelist[ja][1]*T1+wavelist[ja][2]*T2,q,β)
+        Amatrix[ja,ja]=overlap(k+wavelist[ja][1]*T1+wavelist[ja][2]*T2,q,β)
      end
     
-    for ja in 1:length(wavelist)
-     Amatrix[ja+length(wavelist),ja+length(wavelist)]=overlap(k+shift[1]*T1+shift[2]*T2+wavelist[ja][1]*T1+wavelist[ja][2]*T2,q,β)
-    end
+     for ja in 1:length(wavelist)
+         Amatrix[ja+length(wavelist),ja+length(wavelist)]=overlap(k+shift[1]*T1+shift[2]*T2+wavelist[ja][1]*T1+wavelist[ja][2]*T2,q,β)
+      end
     
     return Amatrix
 end
@@ -393,29 +392,29 @@ function Construct_HFmatrix(loop_dic::Dict{Vector{Int},Any},pathpointindex::Int6
   
       
       for jk1 in 1:Nq^2
-          dmk = input_DensityMatrix[jk1]
-          q=allowedq[jk1]-pathpoint
-         for (dg,loop_dic_dg) in loop_dic
-             CoulF1=Coulomb(q+dg,T1,T2)     
-             for (gg2,loop_dic_dg_gg2) in loop_dic_dg          
-                 CoulF=CoulF1*[chern_overlapmatrix[1][jk1,gg2[2][1],pathpointindex,gg2[1][1]] chern_overlapmatrix[2][jk1,gg2[2][1],pathpointindex,gg2[1][1]]]
-             for g1g3 in loop_dic_dg_gg2
-                 FockMatrix[g1g3[2],gg2[1]]+=scrmix .* dmk[g1g3[1],gg2[2]] .* ([chern_overlapmatrix[1][pathpointindex,g1g3[2][1],jk1,g1g3[1][1]],chern_overlapmatrix[2][pathpointindex,g1g3[2][1],jk1,g1g3[1][1]]]*CoulF)
-             end 
-             end
+           dmk = input_DensityMatrix[jk1]
+           q=allowedq[jk1]-pathpoint
+           for (dg,loop_dic_dg) in loop_dic
+                CoulF1=Coulomb(q+dg,T1,T2)     
+                for (gg2,loop_dic_dg_gg2) in loop_dic_dg          
+                   CoulF=CoulF1*[chern_overlapmatrix[1][jk1,gg2[2][1],pathpointindex,gg2[1][1]] chern_overlapmatrix[2][jk1,gg2[2][1],pathpointindex,gg2[1][1]]]
+                   for g1g3 in loop_dic_dg_gg2
+                     FockMatrix[g1g3[2],gg2[1]]+=scrmix .* dmk[g1g3[1],gg2[2]] .* ([chern_overlapmatrix[1][pathpointindex,g1g3[2][1],jk1,g1g3[1][1]],chern_overlapmatrix[2][pathpointindex,g1g3[2][1],jk1,g1g3[1][1]]]*CoulF)
+                   end 
+               end
      
-         end    
+           end    
       end
   
     
   
  
 
-    Hartree_Density=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:2]
-    for ja in 1:Nq^2
-     Hartree_Density[1]+=input_DensityMatrix[ja][1:length(wave),1:length(wave)] .* transpose(chern_overlapmatrix[1][ja,:,ja,:])
-     Hartree_Density[2]+=input_DensityMatrix[ja][1+length(wave):dimension,1+length(wave):dimension] .* transpose(chern_overlapmatrix[2][ja,:,ja,:])
-    end
+       Hartree_Density=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:2]
+      for ja in 1:Nq^2
+         Hartree_Density[1]+=input_DensityMatrix[ja][1:length(wave),1:length(wave)] .* transpose(chern_overlapmatrix[1][ja,:,ja,:])
+          Hartree_Density[2]+=input_DensityMatrix[ja][1+length(wave):dimension,1+length(wave):dimension] .* transpose(chern_overlapmatrix[2][ja,:,ja,:])
+       end
 
 
 
@@ -428,22 +427,21 @@ function Construct_HFmatrix(loop_dic::Dict{Vector{Int},Any},pathpointindex::Int6
 
 
   for vi in 1:2
-    if vi==1
-      ovi=2
-    else
-      ovi=1
-    end
+      if vi==1
+         ovi=2
+      else
+          ovi=1
+       end
    
       for dg in keys(loop_dic)
-          CoulH1=Coulomb(dg,T1,T2)
-          for gg2 in keys(loop_dic[dg])          
-              CoulH=CoulH1*chern_overlapmatrix[vi][pathpointindex,gg2[2][1],pathpointindex,gg2[1][1]]            
-          for g1g3 in loop_dic[dg][gg2]           
-              HartreeMatrix[gg2[2][vi],gg2[1][vi]]+=Hartree_Density[vi][g1g3[1][1],g1g3[2][1]]*CoulH+ζ*Hartree_Density[ovi][g1g3[1][1],g1g3[2][1]]*CoulH             
-          end 
-          end
-  
-      end    
+            CoulH1=Coulomb(dg,T1,T2)
+            for gg2 in keys(loop_dic[dg])          
+               CoulH=CoulH1*chern_overlapmatrix[vi][pathpointindex,gg2[2][1],pathpointindex,gg2[1][1]]            
+               for g1g3 in loop_dic[dg][gg2]           
+                  HartreeMatrix[gg2[2][vi],gg2[1][vi]]+=Hartree_Density[vi][g1g3[1][1],g1g3[2][1]]*CoulH+ζ*Hartree_Density[ovi][g1g3[1][1],g1g3[2][1]]*CoulH             
+               end 
+            end
+       end    
   end
   
   
@@ -506,7 +504,7 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
         end
       
        
-            for jc in eachindex(wave)
+        for jc in eachindex(wave)
                 k1=k+wave[jc][1]*T1+wave[jc][2]*T2
                 k1shift=wave[jc][1]*T1+wave[jc][2]*T2+kshift
                 pos=findfirst(item->item==wave[jc]-b1T,wave)
@@ -527,7 +525,7 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
                     chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2,β)
                     chern_MoirePo[jc+length(wave),pos+length(wave)]=V0*exp(im*ϕ)*overlap(k1shift,-b2,β)
                 end
-             end
+       end
     
 
 
