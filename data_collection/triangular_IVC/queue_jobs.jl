@@ -31,7 +31,7 @@ shiftindexspace=[1.0,6.0]
 for jtry in 1:2, constq in constqspace, shiftindex in shiftindexspace
   arguments=[flux,V0,ϕ,Nq,scale,constq,ζ,jtry,shiftindex]
 
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="$(Int(Nq)+2):00:00",ntasks=Int(Nq)^2,mem=256)
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="$(Int(Nq)):00:00",ntasks=Int(Nq)^2,mem=256)
 
 end
 
