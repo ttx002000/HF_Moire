@@ -61,7 +61,7 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=3.01*scale
+    cutoffstandard=4.01*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -141,7 +141,7 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     input_DensityMatrix=[zeros(ComplexF64,dimension,dimension)  for _ in 1:Nq^2]
     for ja in 1:Nq^2
      
-       input_DensityMatrix[ja]+=(single_eigenvector[ja][:,1]*(single_eigenvector[ja][:,1])')+(single_eigenvector[ja][:,2]*(single_eigenvector[ja][:,2])')
+       input_DensityMatrix[ja]+=(single_eigenvector[ja][:,1]*(single_eigenvector[ja][:,1])')
         
     end
 
@@ -207,7 +207,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
    HF_eigenvector=[zeros(ComplexF64,dimension,dimension)  for _ in 1:Nq^2]
    scrmix=[1 ζ;ζ 1]
   
-   for jk in 1:Nq^2
+   Threads.@threads for jk in 1:Nq^2
    
      Fk = FockMatrix[jk]
      for jk1 in 1:Nq^2
@@ -235,7 +235,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
  
    
  
- for jk in 1:Nq^2
+   Threads.@threads for jk in 1:Nq^2
     for vi in 1:2
         if vi==1
             ovi=2
@@ -261,14 +261,14 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
  
   
  
-  #Threads.@threads for ja in 1:Nq^2
+  Threads.@threads for ja in 1:Nq^2
  for ja in 1:Nq^2
     FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+constq*HartreeMatrix[ja]-constq*FockMatrix[ja])
     HF_eigenvalue[ja]=real(FFF.values)
     HF_eigenvector[ja]=FFF.vectors
   end
- 
-  bound=sort(reduce(vcat,reduce(vcat,HF_eigenvalue)))[2*Nq^2+1]
+  sorted=sort(reduce(vcat,reduce(vcat,HF_eigenvalue)))
+  bound=(sorted[Nq^2+1]+sorted[Nq^2])/2
  
    for ja in 1:Nq^2
         for jd in eachindex(HF_eigenvalue[ja])
@@ -509,7 +509,7 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
        
             for jc in eachindex(wave)
                 k1=k+wave[jc][1]*T1+wave[jc][2]*T2
-                k1shift=k+wave[jc][1]*T1+wave[jc][2]*T2+kshift
+                k1shift=wave[jc][1]*T1+wave[jc][2]*T2+kshift
                 pos=findfirst(item->item==wave[jc]-b1T,wave)
                 if pos≠nothing
                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b1,β)
@@ -698,7 +698,7 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
      
         for jc in eachindex(wave)
             k1=k+wave[jc][1]*T1+wave[jc][2]*T2
-            k1shift=k+wave[jc][1]*T1+wave[jc][2]*T2+T1*shift_vector[1]+T2*shift_vector[2]
+            k1shift=kshift+wave[jc][1]*T1+wave[jc][2]*T2
             pos=findfirst(item->item==wave[jc]-b1T,wave)
             if pos≠nothing
            chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b1,β)

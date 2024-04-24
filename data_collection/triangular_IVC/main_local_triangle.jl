@@ -1,14 +1,13 @@
 using JLD2
 include("../../src/operators_IVC.jl")
 flux=1.0*π
-V0=0.5
-ϕ=π/3
+V0=0.0
+ϕ=0.0
 Nq=3;
 scale=1.0;
-constq=0.1/Nq^2
-ζ=0.0
+constq=0.6/Nq^2
+ζ=1.0
 shift_index=1
-
 
 
 overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham,single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(flux,V0,ϕ,scale,Nq,shift_index)
