@@ -29,7 +29,7 @@ shiftspace=[[0.0,0.0],[6.0,8.0],[8.0,6.0]]
     =#
 
 for jtry in 1:3, constq in constqspace, shift in shiftspace
-  arguments=[flux,V0,ϕ,Nq,scale,constq,ζ,jtry,shift[1],shift2[2]]
+  arguments=[flux,V0,ϕ,Nq,scale,constq,ζ,jtry,shift[1],shift[2]]
 
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="$(Int(Nq)):00:00",ntasks=Int(Nq)^2,mem=256)
 
