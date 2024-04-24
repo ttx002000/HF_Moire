@@ -8,14 +8,14 @@ include("submit_job.jl")
 filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "shift"
 
-flux=1.0 #multiply this by pi
-ϕ=0.0 #convert this to radian 
+flux=0.0 #multiply this by pi
+ϕ=60.0 #convert this to radian 
 Nq=3.0; 
 scale=1.0;
 constqspace=[1.0,2.0] #divide this by Nq^2
-V0=0.0
+V0=0.5
 ζ=1.0
-shiftindexspace=[1.0,6.0]
+shiftspace[[0.0,0.0],[6.0,8.0],[8.0,6.0]]
 #=
     flux=arg[1]
     V0=arg[2]
@@ -28,8 +28,8 @@ shiftindexspace=[1.0,6.0]
     shiftindex=arg[9]
     =#
 
-for jtry in 1:2, constq in constqspace, shiftindex in shiftindexspace
-  arguments=[flux,V0,ϕ,Nq,scale,constq,ζ,jtry,shiftindex]
+for jtry in 1:3, constq in constqspace, shift in shiftspace
+  arguments=[flux,V0,ϕ,Nq,scale,constq,ζ,jtry,shift[1],shift2[2]]
 
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="$(Int(Nq)):00:00",ntasks=Int(Nq)^2,mem=256)
 

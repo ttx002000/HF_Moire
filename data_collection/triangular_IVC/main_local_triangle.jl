@@ -7,7 +7,7 @@ Nq=3;
 scale=1.0;
 constq=0.6/Nq^2
 ζ=1.0
-shift_index=1
+shift_index=[1,1]
 
 
 overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham,single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(flux,V0,ϕ,scale,Nq,shift_index)

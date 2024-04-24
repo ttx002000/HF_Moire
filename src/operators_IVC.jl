@@ -27,7 +27,7 @@ end
 
 
 
-function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,scale::Float64,Nq::Int64,shiftindex::Int64)
+function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,scale::Float64,Nq::Int64,shiftindex::Vector{Int64})
     am=4*π/(√3*scale);
     β=4*flux/(√3*scale^2)
     mass=0.5;
@@ -74,8 +74,8 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
 
     overlapmatrix=[zeros(ComplexF64,Nq^2,length(wave),Nq^2,length(wave)) for _ in 1:2]
     for ja in 1:Nq^2, jb in eachindex(wave), jc in 1:Nq^2, jd in eachindex(wave)
-       overlapmatrix[1][ja,jb,jc,jd]=overlap([T1 T2]*(allowedq[ja]+wave[jb]),[T1 T2]*(allowedq[jc]+wave[jd]-wave[jb]-allowedq[ja]),β)
-       overlapmatrix[2][ja,jb,jc,jd]=overlap([T1 T2]*(allowedq[ja]+wave[jb]+allowedq[shiftindex]),[T1 T2]*(allowedq[jc]+wave[jd]-wave[jb]-allowedq[ja]),β)
+       overlapmatrix[1][ja,jb,jc,jd]=overlap([T1 T2]*(allowedq[ja]+wave[jb]+allowedq[shiftindex[1]]),[T1 T2]*(allowedq[jc]+wave[jd]-wave[jb]-allowedq[ja]),β)
+       overlapmatrix[2][ja,jb,jc,jd]=overlap([T1 T2]*(allowedq[ja]+wave[jb]+allowedq[shiftindex[2]]),[T1 T2]*(allowedq[jc]+wave[jd]-wave[jb]-allowedq[ja]),β)
    
     end
     
@@ -91,8 +91,8 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     Threads.@threads for ja in 1:Nq^2
       
       
-        k=allowedq[ja][1]*T1+allowedq[ja][2]*T2
-        kshift=(allowedq[ja]+allowedq[shiftindex])[1]*T1+(allowedq[ja]+allowedq[shiftindex])[2]*T2
+        k=(allowedq[ja]+allowedq[shiftindex[1]])[1]*T1+(allowedq[ja]+allowedq[shiftindex[1]])[2]*T2
+        kshift=(allowedq[ja]+allowedq[shiftindex[2]])[1]*T1+(allowedq[ja]+allowedq[shiftindex[2]])[2]*T2
 
         for jb in eachindex(wave)
           single_Ham[ja][jb,jb]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2)^2/(2*mass)
@@ -361,15 +361,15 @@ end
 
 
 
-function metric(wavelist::Vector{Vector{Int64}},β::Float64,k::Vector{Float64},q::Vector{Float64},T1::Vector{Float64},T2::Vector{Float64},shift::Vector{Int64})::Matrix{ComplexF64}
+function metric(wavelist::Vector{Vector{Int64}},β::Float64,k::Vector{Float64},q::Vector{Float64},T1::Vector{Float64},T2::Vector{Float64},shift::Vector{Vector{Int64}})::Matrix{ComplexF64}
     Amatrix=zeros(ComplexF64,2*length(wavelist),2*length(wavelist))
     
      for ja in 1:length(wavelist)
-        Amatrix[ja,ja]=overlap(k+wavelist[ja][1]*T1+wavelist[ja][2]*T2,q,β)
+        Amatrix[ja,ja]=overlap(k+[T1 T2]*(shift[1]+wavelist[ja]),q,β)
      end
     
      for ja in 1:length(wavelist)
-         Amatrix[ja+length(wavelist),ja+length(wavelist)]=overlap(k+shift[1]*T1+shift[2]*T2+wavelist[ja][1]*T1+wavelist[ja][2]*T2,q,β)
+         Amatrix[ja+length(wavelist),ja+length(wavelist)]=overlap(k+[T1 T2]*(shift[2]+wavelist[ja]),q,β)
       end
     
     return Amatrix
@@ -455,7 +455,7 @@ end
 
 
 
-function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64,ζ::Float64,shift_vector::Vector{Int64})
+function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64,ζ::Float64,shift_vector::Vector{Vector{Int64}})
 
   
     β=4*flux/(√3*scale^2)
@@ -480,8 +480,8 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     
     chern_overlapmatrix=[zeros(ComplexF64,(Nq+1)^2,length(wave),(Nq+1)^2,length(wave)) for _ in 1:2]
     for ja in 1:(Nq+1)^2, jb in eachindex(wave), jc in 1:(Nq+1)^2, jd in eachindex(wave)
-       chern_overlapmatrix[1][ja,jb,jc,jd]=overlap([T1 T2]*(chern_allowedq[ja]+wave[jb]),[T1 T2]*(chern_allowedq[jc]+wave[jd]-wave[jb]-chern_allowedq[ja]),β)
-       chern_overlapmatrix[2][ja,jb,jc,jd]=overlap([T1 T2]*(chern_allowedq[ja]+shift_vector+wave[jb]),[T1 T2]*(chern_allowedq[jc]+wave[jd]-wave[jb]-chern_allowedq[ja]),β)
+       chern_overlapmatrix[1][ja,jb,jc,jd]=overlap([T1 T2]*(chern_allowedq[ja]+shift_vector[1]+wave[jb]),[T1 T2]*(chern_allowedq[jc]+wave[jd]-wave[jb]-chern_allowedq[ja]),β)
+       chern_overlapmatrix[2][ja,jb,jc,jd]=overlap([T1 T2]*(chern_allowedq[ja]+shift_vector[2]+wave[jb]),[T1 T2]*(chern_allowedq[jc]+wave[jd]-wave[jb]-chern_allowedq[ja]),β)
 
     end
    
@@ -494,8 +494,8 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
 
    for ja in eachindex(chern_allowedq)
     
-        k=[T1 T2]*chern_allowedq[ja]
-        kshift=k+shift_vector[1]*T1+shift_vector[2]*T2
+        k=[T1 T2]*(chern_allowedq[ja]+shift_vector[1])
+        kshift=[T1 T2]*(chern_allowedq[ja]+shift_vector[2])
         chern_Ham=zeros(ComplexF64,dimension,dimension)
         chern_MoirePo=zeros(ComplexF64,dimension,dimension)
         for jb in eachindex(wave)
@@ -654,7 +654,7 @@ end
 
 
 
-function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64,ζ::Float64,overlapmatrix::Vector{Array{ComplexF64,4}},shift_vector::Vector{Int})
+function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64,ζ::Float64,overlapmatrix::Vector{Array{ComplexF64,4}},shift_vector::Vector{Vector{Int}})
 
   
     β=4*flux/(√3*scale^2)
@@ -684,8 +684,8 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
     
     Threads.@threads for ja in eachindex(chern_allowedq)
       
-        k=[T1 T2]*chern_allowedq[ja]
-        kshift=[T1 T2]*(chern_allowedq[ja]+shift_vector)
+        k=[T1 T2]*(chern_allowedq[ja]+shift_vector[1])
+        kshift=[T1 T2]*(chern_allowedq[ja]+shift_vector[2])
         chern_Ham=zeros(ComplexF64,dimension,dimension)
         chern_MoirePo=zeros(ComplexF64,dimension,dimension)
         for jb in eachindex(wave)

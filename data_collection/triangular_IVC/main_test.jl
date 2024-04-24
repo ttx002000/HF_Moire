@@ -16,7 +16,7 @@ scale=args[5];
 constq=args[6]/Nq^2
 ζ=args[7]
 trytimes=Int(args[8])
-shift_index=Int(args[9])
+shift_index=[Int(args[9]),Int(args[10])]
 
 #=
     flux=arg[1]
@@ -47,5 +47,5 @@ HFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatrix[1])
 chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=triangle_chern(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,ζ,allowedq[shift_index])
 
 energy=calculate_energy(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,ζ,overlapmatrix,allowedq[shift_index])
-jldsave(joinpath(@__DIR__, "data_output/$(args[1])flux$(args[2])V0$(args[3])phi$(args[4])Nq$(args[5])scale$(args[6])constq$(args[7])zeta$(args[8])try$(args[9])shift.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,arguments=args,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,uniform=uniform,uniform_single=uniform_single,DM=DIIS_input_DensityMatrix[1])
+jldsave(joinpath(@__DIR__, "data_output/$(args[1])flux$(args[2])V0$(args[3])phi$(args[4])Nq$(args[5])scale$(args[6])constq$(args[7])zeta$(args[8])try$([Int(args[9]),Int(args[10])])shift.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,arguments=args,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,uniform=uniform,uniform_single=uniform_single,DM=DIIS_input_DensityMatrix[1])
 
