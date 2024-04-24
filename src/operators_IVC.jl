@@ -262,7 +262,6 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
   
  
   Threads.@threads for ja in 1:Nq^2
- for ja in 1:Nq^2
     FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+constq*HartreeMatrix[ja]-constq*FockMatrix[ja])
     HF_eigenvalue[ja]=real(FFF.values)
     HF_eigenvector[ja]=FFF.vectors
