@@ -563,7 +563,7 @@ end
 
 
 
-function sxmap(a1m::Vector{Float64},a2m::Vector{Float64},off_overlapmatrix::Vector{Array{ComplexF64,4}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64})
+function sxmap(a1m::Vector{Float64},a2m::Vector{Float64},off_overlapmatrix::Vector{Array{ComplexF64,4}},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64})
     
    
      
@@ -594,7 +594,7 @@ end
 
 
 
-function symap(a1m::Vector{Float64},a2m::Vector{Float64},off_overlapmatrix::Vector{Array{ComplexF64,4}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64})
+function symap(a1m::Vector{Float64},a2m::Vector{Float64},off_overlapmatrix::Vector{Array{ComplexF64,4}},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64})
     
    
      
