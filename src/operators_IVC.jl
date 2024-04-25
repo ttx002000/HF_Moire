@@ -569,7 +569,7 @@ function sxmap(a1m::Vector{Float64},a2m::Vector{Float64},off_overlapmatrix::Vect
      
     N3=50
     dimension=2*length(wave)
-    zgrid=[zeros(Float64,N3,N3) for _ in 1:2]
+    zgrid=zeros(Float64,N3,N3)
   
     
     Hartree_Density=zeros(ComplexF64,length(wave),length(wave)) 
@@ -600,7 +600,7 @@ function symap(a1m::Vector{Float64},a2m::Vector{Float64},off_overlapmatrix::Vect
      
     N3=50
     dimension=2*length(wave)
-    zgrid=[zeros(Float64,N3,N3) for _ in 1:2]
+    zgrid=zeros(Float64,N3,N3)
   
     
     Hartree_Density=zeros(ComplexF64,length(wave),length(wave)) 
