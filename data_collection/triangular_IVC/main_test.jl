@@ -40,7 +40,7 @@ if shift_index==[1,1]
 end
 
 
-off_overlap=get_offdiagoverlap(wave,T1,T2,allowedq,flux,scale,Nq)
+off_overlap=get_offdiagoverlap(wave,T1,T2,allowedq,flux,scale,Nq,shift_index)
    
 
 

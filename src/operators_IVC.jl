@@ -548,7 +548,7 @@ end
 
 
 
-function get_offdiagoverlap(wave,T1,T2,allowedq,flux,scale,Nq)
+function get_offdiagoverlap(wave,T1,T2,allowedq,flux,scale,Nq,shiftindex)
     β=4*flux/(√3*scale^2)
     xoverlapmatrix=[zeros(ComplexF64,Nq^2,length(wave),Nq^2,length(wave)) for _ in 1:2]
     for ja in 1:Nq^2, jb in eachindex(wave), jc in 1:Nq^2, jd in eachindex(wave)
