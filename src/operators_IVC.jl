@@ -23,7 +23,143 @@ end
 
 
 
+function triangle_initial_Densitymatrix_withseed(flux::Float64,V0::Float64,ϕ::Float64,scale::Float64,Nq::Int64,shiftindex::Vector{Int64})
+    am=4*π/(√3*scale);
+    β=4*flux/(√3*scale^2)
+    mass=0.5;
+    zm_seed=0.1
+    b1=4*π/(√3*am)*[0,1]
+    b2=4*π/(√3*am)*[√3/2,-1/2]
 
+
+    a1m=am*[1/2,√3/2]
+    a2m=am*[1,0]
+    
+    
+    T1=b1/(Nq)
+    T2=b2/(Nq)
+
+    
+    
+    
+    b1T=Int.(round.(inv([T1 T2])*b1))
+    b2T=Int.(round.(inv([T1 T2])*b2))
+    
+    
+    
+    allowedq=Vector{Int64}[]
+    for ja in 0:Nq-1,jb in 0:Nq-1
+        push!(allowedq,[ja,jb])
+    end
+
+    
+    
+    
+    wave=Vector{Int64}[]
+    cutoff=18
+    cutoffstandard=4.01*scale
+    for ja in -cutoff:cutoff, jb in -cutoff:cutoff
+        gtest=ja*b1+jb*b2;
+        if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
+            push!(wave,ja*b1T+jb*b2T)
+        end
+    end
+    dimension=2*length(wave)
+   
+    
+
+    overlapmatrix=[zeros(ComplexF64,Nq^2,length(wave),Nq^2,length(wave)) for _ in 1:2]
+    for ja in 1:Nq^2, jb in eachindex(wave), jc in 1:Nq^2, jd in eachindex(wave)
+       overlapmatrix[1][ja,jb,jc,jd]=overlap([T1 T2]*(allowedq[ja]+wave[jb]+allowedq[shiftindex[1]]),[T1 T2]*(allowedq[jc]+wave[jd]-wave[jb]-allowedq[ja]),β)
+       overlapmatrix[2][ja,jb,jc,jd]=overlap([T1 T2]*(allowedq[ja]+wave[jb]+allowedq[shiftindex[2]]),[T1 T2]*(allowedq[jc]+wave[jd]-wave[jb]-allowedq[ja]),β)
+   
+    end
+    
+ 
+    
+ 
+    
+    single_Ham=[zeros(ComplexF64,dimension,dimension)  for _ in 1:Nq^2]
+    seed_Ham=[zeros(ComplexF64,dimension,dimension)  for _ in 1:Nq^2]
+    single_MoirePo=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
+    single_eigenvalue=[zeros(Float64,dimension) for _ in 1:Nq^2]
+    single_eigenvector=[zeros(ComplexF64,dimension,dimension)  for _ in 1:Nq^2]
+    seed_eigenvector=[zeros(ComplexF64,dimension,dimension)  for _ in 1:Nq^2]
+
+    Threads.@threads for ja in 1:Nq^2
+      
+      
+        k=(allowedq[ja]+allowedq[shiftindex[1]])[1]*T1+(allowedq[ja]+allowedq[shiftindex[1]])[2]*T2
+        kshift=(allowedq[ja]+allowedq[shiftindex[2]])[1]*T1+(allowedq[ja]+allowedq[shiftindex[2]])[2]*T2
+
+        for jb in eachindex(wave)
+          single_Ham[ja][jb,jb]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2)^2/(2*mass)
+          single_Ham[ja][jb+length(wave),jb+length(wave)]=norm(kshift+wave[jb][1]*T1+wave[jb][2]*T2)^2/(2*mass)
+        end
+
+        for jb in eachindex(wave)
+            seed_Ham[ja][jb,jb+length(wave)]=zm_seed
+            seed_Ham[ja][jb+length(wave),jb]=zm_seed
+        end
+        
+       for jc in eachindex(wave)
+          k1=k+wave[jc][1]*T1+wave[jc][2]*T2
+          k1shift=kshift+wave[jc][1]*T1+wave[jc][2]*T2
+          pos=findfirst(item->item==wave[jc]-b1T,wave)
+          if pos≠nothing
+            single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b1,β)
+            single_MoirePo[ja][jc+length(wave),pos+length(wave)]=V0*exp(im*ϕ)*overlap(k1shift,-b1,β)
+          end
+          
+        
+          pos=findfirst(item->item==wave[jc]+b2T+b1T,wave)
+          if pos≠nothing
+              single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2+b1,β)
+              single_MoirePo[ja][jc+length(wave),pos+length(wave)]=V0*exp(im*ϕ)*overlap(k1shift,b2+b1,β)
+          end
+      
+          pos=findfirst(item->item==wave[jc]-b2T,wave)
+          if pos≠nothing
+              single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2,β)
+              single_MoirePo[ja][jc+length(wave),pos+length(wave)]=V0*exp(im*ϕ)*overlap(k1shift,-b2,β)
+          end
+       end
+      
+ 
+       single_MoirePo[ja]=single_MoirePo[ja]+single_MoirePo[ja]'
+   
+
+       FFF=eigen(single_MoirePo[ja]+single_Ham[ja])
+      
+        single_eigenvalue[ja]=real(FFF.values)
+        single_eigenvector[ja]=FFF.vectors
+       FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+seed_Ham[ja])
+      
+        seed_eigenvector[ja]=FFF.vectors
+        
+
+    
+    
+    end
+
+
+    input_DensityMatrix=[zeros(ComplexF64,dimension,dimension)  for _ in 1:Nq^2]
+    for ja in 1:Nq^2
+     
+       input_DensityMatrix[ja]+=(seed_eigenvector[ja][:,1]*(seed_eigenvector[ja][:,1])')
+        
+    end
+
+  
+
+    
+
+    
+    return overlapmatrix, wave, input_DensityMatrix, single_MoirePo, single_Ham,seed_Ham,single_eigenvalue,allowedq, T1, T2, a1m, a2m
+      
+
+       
+end
 
 
 
@@ -296,10 +432,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
 end
  
 
-
-
-
-function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,ζ::Float64,overlapmatrix::Vector{Array{ComplexF64,4}})::Tuple{Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Float64}},Float64}
+function iteration_loop_withseed(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},seed_Ham::Vector{Matrix{ComplexF64}},constq::Float64,ζ::Float64,overlapmatrix::Vector{Array{ComplexF64,4}})::Tuple{Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Float64}},Float64}
     eout=1.0
     energy_diff=1.0
     energy_input=2.0
@@ -311,9 +444,22 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
     input_DensityMatrix=initial_DensityMatrix
     bad_count=0
      
+    while (itcount<10)
+    
+        tic=time()
+        eout,energy_diff,energy_new,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham+seed_Ham,single_MoirePo,constq,energy_input,ζ,overlapmatrix)
+        energy_input=energy_new
+        DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
+        input_DensityMatrix=output_DensityMatrix
+        itcount+=1
+        toc=time()
+        println(toc-tic,"eout=$eout","Eout=$energy_diff")
+        flush(stdout)
+       
+      
+    end
 
-
-    while (eout>1*10^-13) || (bad_count<4) || (energy_diff>10^-7)
+    while (eout>1*10^-13) || (bad_count<4) || (energy_diff>10^-10)
       if  eout<1*10^-13 
         bad_count+=1
       end
@@ -336,7 +482,45 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
 end
 
 
-function Densitymap(a1m::Vector{Float64},a2m::Vector{Float64},overlapmatrix::Vector{Array{ComplexF64,4}},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}})
+
+function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,ζ::Float64,overlapmatrix::Vector{Array{ComplexF64,4}})::Tuple{Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Float64}},Float64}
+    eout=1.0
+    energy_diff=1.0
+    energy_input=2.0
+    itcount=0
+    loop_dic=construct_loop_dic(wave)
+    HF_eigenvalue=Vector{Any}(undef,Nq^2)
+    DIIS_input_DensityMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
+    DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
+    input_DensityMatrix=initial_DensityMatrix
+    bad_count=0
+     
+
+
+    while (eout>1*10^-13) || (bad_count<4) || (energy_diff>10^-10)
+      if  eout<1*10^-13 
+        bad_count+=1
+      end
+      tic=time()
+      eout,energy_diff,energy_new,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,energy_input,ζ,overlapmatrix)
+      energy_input=energy_new
+      DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
+      input_DensityMatrix=output_DensityMatrix
+      itcount+=1
+      toc=time()
+      println(toc-tic,"eout=$eout","Eout=$energy_diff")
+      flush(stdout)
+     
+    
+    end
+    
+
+  return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input
+
+end
+
+
+function Densitymap(a1m::Vector{Float64},a2m::Vector{Float64},overlapmatrix::Vector{Array{ComplexF64,4}},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64})
     N3=50
     dimension=2*length(wave)
     zgrid=[zeros(Float64,N3,N3) for _ in 1:2]
@@ -363,6 +547,81 @@ function Densitymap(a1m::Vector{Float64},a2m::Vector{Float64},overlapmatrix::Vec
 end
 
 
+
+function get_offdiagoverlap(wave,T1,T2,allowedq,flux,scale,Nq)
+    β=4*flux/(√3*scale^2)
+    xoverlapmatrix=[zeros(ComplexF64,Nq^2,length(wave),Nq^2,length(wave)) for _ in 1:2]
+    for ja in 1:Nq^2, jb in eachindex(wave), jc in 1:Nq^2, jd in eachindex(wave)
+      xoverlapmatrix[1][ja,jb,jc,jd]=overlap([T1 T2]*(allowedq[ja]+wave[jb]+allowedq[shiftindex[1]]),[T1 T2]*(allowedq[jc]+wave[jd]+allowedq[shiftindex[2]]-wave[jb]-allowedq[ja]-allowedq[shiftindex[1]]),β)
+      xoverlapmatrix[2][ja,jb,jc,jd]=overlap([T1 T2]*(allowedq[ja]+wave[jb]+allowedq[shiftindex[2]]),[T1 T2]*(allowedq[jc]+wave[jd]+allowedq[shiftindex[1]]-wave[jb]-allowedq[ja]-allowedq[shiftindex[2]]),β)
+    end
+
+    return xoverlapmatrix
+end
+
+
+
+
+
+function sxmap(a1m::Vector{Float64},a2m::Vector{Float64},off_overlapmatrix::Vector{Array{ComplexF64,4}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64})
+    
+   
+     
+    N3=50
+    dimension=2*length(wave)
+    zgrid=[zeros(Float64,N3,N3) for _ in 1:2]
+  
+    
+    Hartree_Density=zeros(ComplexF64,length(wave),length(wave)) 
+    for ja in 1:Nq^2
+     Hartree_Density+=input_DensityMatrix[ja][1:length(wave),1+length(wave):dimension] .* transpose(off_overlapmatrix[2][ja,:,ja,:])
+     Hartree_Density+=input_DensityMatrix[ja][1+length(wave):dimension,1:length(wave)] .* transpose(off_overlapmatrix[1][ja,:,ja,:])
+    end
+
+
+
+    for ja in 1:50, jb in 1:50
+      rvec=ja/25*a1m+jb/25*a2m
+      for jc in eachindex(wave), jd in eachindex(wave)
+         gvec=[T1 T2]*(wave[jc]-wave[jd])
+         zgrid[ja,jb]+=real(Hartree_Density[jc,jd]*exp(im*(gvec[1]*rvec[1]+gvec[2]*rvec[2])))
+      end
+    
+    end
+    
+    return zgrid
+end
+
+
+
+function symap(a1m::Vector{Float64},a2m::Vector{Float64},off_overlapmatrix::Vector{Array{ComplexF64,4}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64})
+    
+   
+     
+    N3=50
+    dimension=2*length(wave)
+    zgrid=[zeros(Float64,N3,N3) for _ in 1:2]
+  
+    
+    Hartree_Density=zeros(ComplexF64,length(wave),length(wave)) 
+    for ja in 1:Nq^2
+     Hartree_Density+=(im)*input_DensityMatrix[ja][1:length(wave),1+length(wave):dimension] .* transpose(off_overlapmatrix[2][ja,:,ja,:])
+     Hartree_Density+=(-im)*input_DensityMatrix[ja][1+length(wave):dimension,1:length(wave)] .* transpose(off_overlapmatrix[1][ja,:,ja,:])
+    end
+
+
+
+    for ja in 1:50, jb in 1:50
+      rvec=ja/25*a1m+jb/25*a2m
+      for jc in eachindex(wave), jd in eachindex(wave)
+         gvec=[T1 T2]*(wave[jc]-wave[jd])
+         zgrid[ja,jb]+=real(Hartree_Density[jc,jd]*exp(im*(gvec[1]*rvec[1]+gvec[2]*rvec[2])))
+      end
+    
+    end
+    
+    return zgrid
+end
 
 
 

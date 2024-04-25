@@ -30,9 +30,23 @@ shift_index=[Int(args[9]),Int(args[10])]
     shiftindex=arg[9]
 =#
 
+if shift_index≠[1,1]
+overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham,seed_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix_withseed(flux,V0,ϕ,scale,Nq,shift_index)
+end
 
-overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham,single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(flux,V0,ϕ,scale,Nq,shift_index)
-NoHFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,initial_DensityMatrix)
+
+if shift_index==[1,1]
+    overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(flux,V0,ϕ,scale,Nq,shift_index)
+end
+
+
+off_overlap=get_offdiagoverlap(wave,T1,T2,allowedq,flux,scale,Nq)
+   
+
+
+NoHFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,initial_DensityMatrix,T1,T2)
+NoHF_sxmap=sxmap(a1m,a2m,off_overlap,wave,initial_DensityMatrix,T1,T2)
+NoHF_symap=symap(a1m,a2m,off_overlap,wave,initial_DensityMatrix,T1,T2)
  
 
 for ja in 1:Nq^2
@@ -40,9 +54,18 @@ for ja in 1:Nq^2
     initial_DensityMatrix[ja]=initial_DensityMatrix[ja]+(A+A')*0.1
 end
 
+if shift_index≠[1,1]
+DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input=iteration_loop_withseed(initial_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,seed_Ham,constq,ζ,overlapmatrix)
+end
 
-DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input=iteration_loop(initial_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,constq,ζ,overlapmatrix)
-HFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatrix[1])
+if shift_index==[1,1]
+    DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input=iteration_loop(initial_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,constq,ζ,overlapmatrix)
+end
+
+HFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatrix[1],T1,T2)
+HF_sxmap=sxmap(a1m,a2m,off_overlap,wave,DIIS_input_DensityMatrix[1],T1,T2)
+HF_symap=symap(a1m,a2m,off_overlap,wave,DIIS_input_DensityMatrix[1],T1,T2)
+
 
 chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=triangle_chern(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,ζ,allowedq[shift_index])
 
