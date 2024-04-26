@@ -167,7 +167,7 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     am=4*π/(√3*scale);
     β=4*flux/(√3*scale^2)
     mass=0.5;
-    
+    zm_seed=0.1
     b1=4*π/(√3*am)*[0,1]
     b2=4*π/(√3*am)*[√3/2,-1/2]
 
@@ -218,11 +218,14 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
  
     
  
-    
+
+
     single_Ham=[zeros(ComplexF64,dimension,dimension)  for _ in 1:Nq^2]
+    seed_Ham=[zeros(ComplexF64,dimension,dimension)  for _ in 1:Nq^2]
     single_MoirePo=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
     single_eigenvalue=[zeros(Float64,dimension) for _ in 1:Nq^2]
     single_eigenvector=[zeros(ComplexF64,dimension,dimension)  for _ in 1:Nq^2]
+    seed_eigenvector=[zeros(ComplexF64,dimension,dimension)  for _ in 1:Nq^2]
     
     Threads.@threads for ja in 1:Nq^2
       
@@ -233,6 +236,10 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
         for jb in eachindex(wave)
           single_Ham[ja][jb,jb]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2)^2/(2*mass)
           single_Ham[ja][jb+length(wave),jb+length(wave)]=norm(kshift+wave[jb][1]*T1+wave[jb][2]*T2)^2/(2*mass)
+        end
+
+        for jb in eachindex(wave)
+            seed_Ham[ja][jb,jb]=zm_seed
         end
         
        for jc in eachindex(wave)
@@ -264,10 +271,11 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
 
        FFF=eigen(single_MoirePo[ja]+single_Ham[ja])
       
-        single_eigenvalue[ja]=real(FFF.values)
-        single_eigenvector[ja]=FFF.vectors
-
-        
+       single_eigenvalue[ja]=real(FFF.values)
+       single_eigenvector[ja]=FFF.vectors
+      FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+seed_Ham[ja])
+     
+       seed_eigenvector[ja]=FFF.vectors
 
     
     
@@ -277,7 +285,7 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     input_DensityMatrix=[zeros(ComplexF64,dimension,dimension)  for _ in 1:Nq^2]
     for ja in 1:Nq^2
      
-       input_DensityMatrix[ja]+=(single_eigenvector[ja][:,1]*(single_eigenvector[ja][:,1])')
+       input_DensityMatrix[ja]+=(seed_eigenvector[ja][:,1]*(seed_eigenvector[ja][:,1])')
         
     end
 

@@ -36,7 +36,7 @@ end
 
 
 if shift_index==[1,1]
-    overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(flux,V0,ϕ,scale,Nq,shift_index)
+    overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham,seed_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(flux,V0,ϕ,scale,Nq,shift_index)
 end
 
 
@@ -54,13 +54,13 @@ for ja in 1:Nq^2
     initial_DensityMatrix[ja]=initial_DensityMatrix[ja]+(A+A')*0.1
 end
 
-if shift_index≠[1,1]
+#if shift_index≠[1,1]
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input=iteration_loop_withseed(initial_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,seed_Ham,constq,ζ,overlapmatrix)
-end
+#end
 
-if shift_index==[1,1]
-    DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input=iteration_loop(initial_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,constq,ζ,overlapmatrix)
-end
+#if shift_index==[1,1]
+ #   DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input=iteration_loop(initial_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,constq,ζ,overlapmatrix)
+#end
 
 HFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatrix[1],T1,T2)
 HF_sxmap=sxmap(a1m,a2m,off_overlap,wave,DIIS_input_DensityMatrix[1],T1,T2)
