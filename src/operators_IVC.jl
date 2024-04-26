@@ -467,8 +467,8 @@ function iteration_loop_withseed(initial_DensityMatrix::Vector{Matrix{ComplexF64
       
     end
 
-    while (eout>1*10^-13) || (bad_count<4) || (energy_diff>10^-10)
-      if  eout<1*10^-13 
+    while (eout>1*10^-10) || (bad_count<4) || (energy_diff>10^-6)
+      if  eout<1*10^-10 
         bad_count+=1
       end
       tic=time()
@@ -484,6 +484,40 @@ function iteration_loop_withseed(initial_DensityMatrix::Vector{Matrix{ComplexF64
     
     end
     
+
+
+    println("startDIIS",itcount)
+    
+    bad_count=0
+    while (eout>1*10^-13) || (bad_count<4) || (energy_diff>10^-10)
+        if  eout<1*10^-13 
+            bad_count+=1
+        end
+        tic=time()
+        Bmatrix=zeros(ComplexF64,4,4)
+        for ja in 1:3
+         Bmatrix[ja,4]=1
+         Bmatrix[4,ja]=1
+        end
+    
+        for ja in 1:3,jb in 1:3
+            for jc in 1:Nq^2
+               Bmatrix[ja,jb]+=tr((DIIS_input_DeltaMatrix[ja][jc])'*(DIIS_input_DeltaMatrix[jb][jc]))
+            end
+        end
+        coeff=inv(Bmatrix)*[0;0;0;1]
+       
+        dmk=coeff[1]*(DIIS_input_DensityMatrix[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_DensityMatrix[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_DensityMatrix[3]+DIIS_input_DeltaMatrix[3])
+        eout,energy_diff,energy_new,_,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,dmk,single_Ham,single_MoirePo,constq,energy_input,ζ,overlapmatrix)
+        energy_input=energy_new
+        DIIS_input_DensityMatrix[mod(itcount,3)+1]=dmk
+        itcount+=1
+
+        toc=time()
+        println(toc-tic,"eout=$eout","Eout=$energy_diff")
+        flush(stdout)
+    end
+
 
   return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input
 
@@ -505,8 +539,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
      
 
 
-    while (eout>1*10^-13) || (bad_count<4) || (energy_diff>10^-10)
-      if  eout<1*10^-13 
+    while (eout>1*10^-10) || (bad_count<4) || (energy_diff>10^-6)
+      if  eout<1*10^-10 
         bad_count+=1
       end
       tic=time()
@@ -522,6 +556,40 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
     
     end
     
+
+
+    
+    println("startDIIS",itcount)
+    
+    bad_count=0
+    while (eout>1*10^-13) || (bad_count<4) || (energy_diff>10^-10)
+        if  eout<1*10^-13 
+            bad_count+=1
+        end
+        tic=time()
+        Bmatrix=zeros(ComplexF64,4,4)
+        for ja in 1:3
+         Bmatrix[ja,4]=1
+         Bmatrix[4,ja]=1
+        end
+    
+        for ja in 1:3,jb in 1:3
+            for jc in 1:Nq^2
+               Bmatrix[ja,jb]+=tr((DIIS_input_DeltaMatrix[ja][jc])'*(DIIS_input_DeltaMatrix[jb][jc]))
+            end
+        end
+        coeff=inv(Bmatrix)*[0;0;0;1]
+       
+        dmk=coeff[1]*(DIIS_input_DensityMatrix[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_DensityMatrix[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_DensityMatrix[3]+DIIS_input_DeltaMatrix[3])
+        eout,energy_diff,energy_new,_,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,dmk,single_Ham,single_MoirePo,constq,energy_input,ζ,overlapmatrix)
+        energy_input=energy_new
+        DIIS_input_DensityMatrix[mod(itcount,3)+1]=dmk
+        itcount+=1
+
+        toc=time()
+        println(toc-tic,"eout=$eout","Eout=$energy_diff")
+        flush(stdout)
+    end
 
   return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input
 
