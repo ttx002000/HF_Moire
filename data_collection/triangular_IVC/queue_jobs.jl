@@ -28,21 +28,24 @@ shiftspace=[[1.0,1.0],[6.0,8.0],[8.0,6.0]]
     shiftindex=arg[9]
     =#
 
+#=
 for jtry in 1:3, constq in constqspace, shift in shiftspace, V0 in V0space
   arguments=[flux,V0,ϕ,Nq,scale,constq,ζ,jtry,shift[1],shift[2]]
 
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",ntasks=Int(Nq)^2,mem=256)
 
 end
+=#
 
 
 
-#=
 st=load(joinpath(@__DIR__, "missedjobs.jld2"))
 index=st["index"]
 for ja in eachindex(index)
-    arguments=[index[ja][1],V0,ϕ,Nq,scale,constq,ζ]
-    trytime=Int(index[ja][2])
-    submit_job(filepath, @__DIR__, job_prefix,arguments,trytime; time="38:00:00",cpus_per_task=36)
+    arguments=Float64.([flux,index[ja][1],ϕ,Nq,scale,index[ja][2],ζ,index[ja][3],index[ja][4],index[ja][5]])
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="12:00:00",ntasks=Int(Nq)^2,mem=256)
 end
-=#
+
+
+
+
