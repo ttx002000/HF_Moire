@@ -12,7 +12,7 @@ fluxspace=[1.0] #multiply this by pi
 ϕ=0.0 #convert this to radian 
 Nqspace=[3.0,4.0,5.0,6.0,7.0,8.0,9.0]; 
 scale=1.0;
-constq=3.0 #divide this by Nq^2
+constq=1.5 #divide this by Nq^2
 V0=0.0
 
 for ja in eachindex(fluxspace), jNq in eachindex(Nqspace)
@@ -27,7 +27,7 @@ fluxspace=[0.7] #multiply this by pi
 ϕ=0.0 #convert this to radian 
 Nqspace=[3.0,4.0,5.0,6.0,7.0,8.0,9.0]; 
 scale=1.0*√0.7;
-constq=3.0*0.7 #divide this by Nq^2
+constq=1.5*0.7 #divide this by Nq^2
 V0=0.0
 
 for ja in eachindex(fluxspace), jNq in eachindex(Nqspace)
@@ -41,7 +41,7 @@ fluxspace=[1.3] #multiply this by pi
 ϕ=0.0 #convert this to radian 
 Nqspace=[3.0,4.0,5.0,6.0,7.0,8.0,9.0]; 
 scale=1.0*√1.3;
-constq=3.0*1.3 #divide this by Nq^2
+constq=1.5*1.3 #divide this by Nq^2
 V0=0.0
 
 for ja in eachindex(fluxspace), jNq in eachindex(Nqspace)
@@ -55,7 +55,7 @@ fluxspace=[1.2] #multiply this by pi
 ϕ=0.0 #convert this to radian 
 Nqspace=[3.0,4.0,5.0,6.0,7.0,8.0,9.0]; 
 scale=1.0*√1.2;
-constq=3.0*1.2 #divide this by Nq^2
+constq=1.5*1.2 #divide this by Nq^2
 V0=0.0
 
 for ja in eachindex(fluxspace), jNq in eachindex(Nqspace)
