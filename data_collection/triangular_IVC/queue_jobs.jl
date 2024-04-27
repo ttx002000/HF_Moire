@@ -49,3 +49,20 @@ end
 
 
 
+flux=1.0 #multiply this by pi
+ϕ=60.0 #convert this to radian 
+Nq=5.0; 
+scale=1.0;
+constqspace=[0.4,0.6,0.8,1.0] #divide this by Nq^2
+V0space=[0.0]
+ζ=1.0
+shiftspace=[[1.0,1.0],[6.0,8.0],[8.0,6.0]]
+
+
+for jtry in 1:3, constq in constqspace, shift in shiftspace, V0 in V0space
+  arguments=[flux,V0,ϕ,Nq,scale,constq,ζ,jtry,shift[1],shift[2]]
+
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="12:00:00",ntasks=Int(Nq)^2,mem=256)
+
+end
+
