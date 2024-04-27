@@ -467,8 +467,8 @@ function iteration_loop_withseed(initial_DensityMatrix::Vector{Matrix{ComplexF64
       
     end
 
-    while (eout>1*10^-10) || (bad_count<4) || (energy_diff>10^-6)
-      if  eout<1*10^-10 
+    while (eout>1*10^-13) || (bad_count<4) || (energy_diff>10^-10)
+      if  eout<1*10^-13
         bad_count+=1
       end
       tic=time()
@@ -485,7 +485,7 @@ function iteration_loop_withseed(initial_DensityMatrix::Vector{Matrix{ComplexF64
     end
     
 
-
+   #=
     println("startDIIS",itcount)
     
     bad_count=0
@@ -517,7 +517,7 @@ function iteration_loop_withseed(initial_DensityMatrix::Vector{Matrix{ComplexF64
         println(toc-tic,"eout=$eout","Eout=$energy_diff")
         flush(stdout)
     end
-
+=#
 
   return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input
 
@@ -539,8 +539,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
      
 
 
-    while (eout>1*10^-10) || (bad_count<4) || (energy_diff>10^-6)
-      if  eout<1*10^-10 
+    while (eout>1*10^-13) || (bad_count<4) || (energy_diff>10^-10)
+      if  eout<1*10^-13
         bad_count+=1
       end
       tic=time()
@@ -558,7 +558,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
     
 
 
-    
+    #=
     println("startDIIS",itcount)
     
     bad_count=0
@@ -590,7 +590,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
         println(toc-tic,"eout=$eout","Eout=$energy_diff")
         flush(stdout)
     end
-
+  =#
   return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input
 
 end
