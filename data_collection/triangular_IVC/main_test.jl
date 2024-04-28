@@ -51,7 +51,7 @@ NoHF_symap=symap(a1m,a2m,off_overlap,wave,initial_DensityMatrix,T1,T2)
 
 for ja in 1:Nq^2
    A=randn(ComplexF64,2*length(wave),2*length(wave))
-    initial_DensityMatrix[ja]=initial_DensityMatrix[ja]+(A+A')*0.1
+    initial_DensityMatrix[ja]=initial_DensityMatrix[ja]+(A+A')*0.01
 end
 
 #if shift_index≠[1,1]

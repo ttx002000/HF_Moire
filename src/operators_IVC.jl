@@ -167,7 +167,7 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     am=4*π/(√3*scale);
     β=4*flux/(√3*scale^2)
     mass=0.5;
-    zm_seed=0.1
+    zm_seed=0.0
     b1=4*π/(√3*am)*[0,1]
     b2=4*π/(√3*am)*[√3/2,-1/2]
 
