@@ -8,11 +8,11 @@ include("submit_job.jl")
 filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "spinful"
 
-fluxspace=[1.0] #multiply this by pi
+fluxspace=[0.0] #multiply this by pi
 ϕ=0.0 #convert this to radian 
-Nqspace=collect(3.0:1.0:10.0); 
+Nqspace=collect(3.0:1.0:9.0); 
 scale=1.0;
-constqspace=[3.0,4.0] #divide this by Nq^2
+constqspace=[1.0] #divide this by Nq^2
 V0=0.0
 ζspace=[0.5,1.0]
 
