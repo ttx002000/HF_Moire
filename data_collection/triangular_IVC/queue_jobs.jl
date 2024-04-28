@@ -10,9 +10,9 @@ job_prefix = "shift"
 
 flux=1.0 #multiply this by pi
 ϕ=60.0 #convert this to radian 
-Nq=3.0; 
+Nq=6.0; 
 scale=1.0;
-constqspace=[0.2,0.4,0.6,0.8,1.0] #divide this by Nq^2
+constqspace=[0.4,0.6,0.8,1.0] #divide this by Nq^2
 V0space=[0.0]
 ζ=1.0
 shiftspace=[[1.0,1.0],[6.0,8.0],[8.0,6.0]]
@@ -28,36 +28,6 @@ shiftspace=[[1.0,1.0],[6.0,8.0],[8.0,6.0]]
     shiftindex=arg[9]
     =#
 
-#=
-for jtry in 1:3, constq in constqspace, shift in shiftspace, V0 in V0space
-  arguments=[flux,V0,ϕ,Nq,scale,constq,ζ,jtry,shift[1],shift[2]]
-
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",ntasks=Int(Nq)^2,mem=256)
-
-end
-=#
-
-
-
-st=load(joinpath(@__DIR__, "missedindex.jld2"))
-index=st["index"]
-for ja in eachindex(index)
-    arguments=Float64.([flux,index[ja][1],ϕ,index[ja][6],scale,index[ja][2],ζ,index[ja][3],index[ja][4],index[ja][5]])
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="15:00:00",ntasks=Int(Nq)^2,mem=256)
-end
-
-
-
-#=
-flux=1.0 #multiply this by pi
-ϕ=60.0 #convert this to radian 
-Nq=5.0; 
-scale=1.0;
-constqspace=[0.4,0.6,0.8,1.0] #divide this by Nq^2
-V0space=[0.0]
-ζ=1.0
-shiftspace=[[1.0,1.0],[6.0,8.0],[8.0,6.0]]
-
 
 for jtry in 1:3, constq in constqspace, shift in shiftspace, V0 in V0space
   arguments=[flux,V0,ϕ,Nq,scale,constq,ζ,jtry,shift[1],shift[2]]
@@ -66,4 +36,22 @@ for jtry in 1:3, constq in constqspace, shift in shiftspace, V0 in V0space
 
 end
 
+for jtry in 1:3, constq in constqspace, shift in shiftspace, V0 in V0space
+  arguments=[flux,V0,ϕ,3.0,scale,constq,ζ,jtry,shift[1],shift[2]]
+
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="12:00:00",ntasks=Int(Nq)^2,mem=256)
+
+end
+
+
+
+#=
+st=load(joinpath(@__DIR__, "missedindex.jld2"))
+index=st["index"]
+for ja in eachindex(index)
+    arguments=Float64.([flux,index[ja][1],ϕ,index[ja][6],scale,index[ja][2],ζ,index[ja][3],index[ja][4],index[ja][5]])
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="15:00:00",ntasks=Int(Nq)^2,mem=256)
+end
 =#
+
+

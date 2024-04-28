@@ -595,8 +595,44 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
 
 end
 
+function Densitymap_kresolved(a1m::Vector{Float64},a2m::Vector{Float64},overlapmatrix::Vector{Array{ComplexF64,4}},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64)
+    N3=50
+    dimension=2*length(wave)
+    zgrid=[[zeros(Float64,N3,N3) for _ in 1:2] for _ in 1:Nq^2]
+  
+    
+    Hartree_Density=[[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:2] for _ in 1:Nq^2]
+    for ja in 1:Nq^2
+     Hartree_Density[ja][1]+=input_DensityMatrix[ja][1:length(wave),1:length(wave)] .* transpose(overlapmatrix[1][ja,:,ja,:])
+     Hartree_Density[ja][2]+=input_DensityMatrix[ja][1+length(wave):dimension,1+length(wave):dimension] .* transpose(overlapmatrix[2][ja,:,ja,:])
+    end
 
-function Densitymap(a1m::Vector{Float64},a2m::Vector{Float64},overlapmatrix::Vector{Array{ComplexF64,4}},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64})
+
+  Threads.@threads for jk in 1:Nq^2
+    for ja in 1:50, jb in 1:50
+      rvec=ja/25*a1m+jb/25*a2m
+      for jc in eachindex(wave), jd in eachindex(wave), vi in 1:2
+         gvec=[T1 T2]*(wave[jc]-wave[jd])
+         zgrid[jk][vi][ja,jb]+=real(Hartree_Density[jk][vi][jc,jd]*exp(im*(gvec[1]*rvec[1]+gvec[2]*rvec[2])))
+      end
+    
+    end
+   end
+    
+    return zgrid
+end
+
+
+
+
+
+
+
+
+
+
+
+function Densitymap(a1m::Vector{Float64},a2m::Vector{Float64},overlapmatrix::Vector{Array{ComplexF64,4}},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64)
     N3=50
     dimension=2*length(wave)
     zgrid=[zeros(Float64,N3,N3) for _ in 1:2]
@@ -637,9 +673,66 @@ end
 
 
 
+function sxmap_kresolved(a1m::Vector{Float64},a2m::Vector{Float64},off_overlapmatrix::Vector{Array{ComplexF64,4}},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64)
+    
+   
+    N3=50
+    dimension=2*length(wave)
+    zgrid=[zeros(Float64,N3,N3) for _ in 1:Nq^2]
+  
+    
+    Hartree_Density=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:Nq^2] 
+    for ja in 1:Nq^2
+     Hartree_Density[ja]+=input_DensityMatrix[ja][1:length(wave),1+length(wave):dimension] .* transpose(off_overlapmatrix[2][ja,:,ja,:])
+     Hartree_Density[ja]+=input_DensityMatrix[ja][1+length(wave):dimension,1:length(wave)] .* transpose(off_overlapmatrix[1][ja,:,ja,:])
+    end
 
 
-function sxmap(a1m::Vector{Float64},a2m::Vector{Float64},off_overlapmatrix::Vector{Array{ComplexF64,4}},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64})
+ Threads.@threads for jk in 1:Nq^2
+    for ja in 1:50, jb in 1:50
+      rvec=ja/25*a1m+jb/25*a2m
+      for jc in eachindex(wave), jd in eachindex(wave)
+         gvec=[T1 T2]*(wave[jc]-wave[jd])
+         zgrid[jk][ja,jb]+=real(Hartree_Density[jk][jc,jd]*exp(im*(gvec[1]*rvec[1]+gvec[2]*rvec[2])))
+      end
+    
+    end
+   end
+    return zgrid
+end
+
+
+function symap_kresolved(a1m::Vector{Float64},a2m::Vector{Float64},off_overlapmatrix::Vector{Array{ComplexF64,4}},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64)
+    
+   
+     
+    N3=50
+    dimension=2*length(wave)
+    zgrid=[zeros(Float64,N3,N3) for _ in 1:Nq^2]
+  
+    
+    Hartree_Density=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:Nq^2] 
+    for ja in 1:Nq^2
+     Hartree_Density[ja]+=(im)*input_DensityMatrix[ja][1:length(wave),1+length(wave):dimension] .* transpose(off_overlapmatrix[2][ja,:,ja,:])
+     Hartree_Density[ja]+=(-im)*input_DensityMatrix[ja][1+length(wave):dimension,1:length(wave)] .* transpose(off_overlapmatrix[1][ja,:,ja,:])
+    end
+
+  
+   Threads.@threads for jk in 1:Nq^2
+    for ja in 1:50, jb in 1:50
+      rvec=ja/25*a1m+jb/25*a2m
+      for jc in eachindex(wave), jd in eachindex(wave)
+         gvec=[T1 T2]*(wave[jc]-wave[jd])
+         zgrid[jk][ja,jb]+=real(Hartree_Density[jk][jc,jd]*exp(im*(gvec[1]*rvec[1]+gvec[2]*rvec[2])))
+      end
+    
+    end
+   end
+    
+    return zgrid
+end
+
+function sxmap(a1m::Vector{Float64},a2m::Vector{Float64},off_overlapmatrix::Vector{Array{ComplexF64,4}},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64)
     
    
      
@@ -670,7 +763,7 @@ end
 
 
 
-function symap(a1m::Vector{Float64},a2m::Vector{Float64},off_overlapmatrix::Vector{Array{ComplexF64,4}},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64})
+function symap(a1m::Vector{Float64},a2m::Vector{Float64},off_overlapmatrix::Vector{Array{ComplexF64,4}},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64)
     
    
      

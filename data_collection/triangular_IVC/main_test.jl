@@ -44,9 +44,9 @@ off_overlap=get_offdiagoverlap(wave,T1,T2,allowedq,flux,scale,Nq,shift_index)
    
 
 
-NoHFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,initial_DensityMatrix,T1,T2)
-NoHF_sxmap=sxmap(a1m,a2m,off_overlap,wave,initial_DensityMatrix,T1,T2)
-NoHF_symap=symap(a1m,a2m,off_overlap,wave,initial_DensityMatrix,T1,T2)
+NoHFdensity=Densitymap_kresolved(a1m,a2m,overlapmatrix,wave,initial_DensityMatrix,T1,T2,Nq)
+NoHF_sxmap=sxmap_kresolved(a1m,a2m,off_overlap,wave,initial_DensityMatrix,T1,T2,Nq)
+NoHF_symap=symap_kresolved(a1m,a2m,off_overlap,wave,initial_DensityMatrix,T1,T2,Nq)
  
 
 for ja in 1:Nq^2
@@ -62,9 +62,9 @@ DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input=itera
  #   DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input=iteration_loop(initial_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,constq,ζ,overlapmatrix)
 #end
 
-HFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatrix[1],T1,T2)
-HF_sxmap=sxmap(a1m,a2m,off_overlap,wave,DIIS_input_DensityMatrix[1],T1,T2)
-HF_symap=symap(a1m,a2m,off_overlap,wave,DIIS_input_DensityMatrix[1],T1,T2)
+HFdensity=Densitymap_kresolved(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatrix[1],T1,T2,Nq)
+HF_sxmap=sxmap_kresolved(a1m,a2m,off_overlap,wave,DIIS_input_DensityMatrix[1],T1,T2,Nq)
+HF_symap=symap_kresolved(a1m,a2m,off_overlap,wave,DIIS_input_DensityMatrix[1],T1,T2,Nq)
 
 
 chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=triangle_chern(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,ζ,allowedq[shift_index])
