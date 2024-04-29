@@ -39,12 +39,12 @@ end
     shiftindex=arg[9]
 =#
 
-if shift_index≠1
+if Int(args[9])≠1
 overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham,seed_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix_withseed(flux,V0,ϕ,scale,Nq,shift_vector)
 end
 
 
-if shift_index==1
+if Int(args[9])==1
     overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham,seed_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(flux,V0,ϕ,scale,Nq,shift_vector)
 end
 
