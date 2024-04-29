@@ -24,7 +24,7 @@ if Int(args[9])==1
     shift_vector=[0.0*b1,0.0*b1]
 elseif  Int(args[9])==2
     shift_vector=[b1/3+b2/3*2,b2/3+b1/3*2]
-elseif Int(args[9])==2
+elseif Int(args[9])==3
     shift_vector=[b2/3+b1/3*2,b1/3+b2/3*2]
 end
 #=
