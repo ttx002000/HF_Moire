@@ -20,11 +20,11 @@ trytimes=Int(args[8])
 b1=scale*[0,1]
 b2=scale*[√3/2,-1/2]
 
-if Int(arg[9])==1
+if Int(args[9])==1
     shiftvector=[0.0*b1,0.0*b1]
-elseif  Int(arg[9])==2
+elseif  Int(args[9])==2
     shiftvector=[b1/3+b2/3*2,b2/3+b1/3*2]
-elseif Int(arg[9])==2
+elseif Int(args[9])==2
     shiftvector=[b2/3+b1/3*2,b1/3+b2/3*2]
 end
 #=
