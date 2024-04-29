@@ -21,11 +21,11 @@ b1=scale*[0,1]
 b2=scale*[√3/2,-1/2]
 
 if Int(args[9])==1
-    shiftvector=[0.0*b1,0.0*b1]
+    shift_vector=[0.0*b1,0.0*b1]
 elseif  Int(args[9])==2
-    shiftvector=[b1/3+b2/3*2,b2/3+b1/3*2]
+    shift_vector=[b1/3+b2/3*2,b2/3+b1/3*2]
 elseif Int(args[9])==2
-    shiftvector=[b2/3+b1/3*2,b1/3+b2/3*2]
+    shift_vector=[b2/3+b1/3*2,b1/3+b2/3*2]
 end
 #=
     flux=arg[1]
