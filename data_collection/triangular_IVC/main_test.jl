@@ -16,8 +16,17 @@ scale=args[5];
 constq=args[6]/Nq^2
 ζ=args[7]
 trytimes=Int(args[8])
-shift_index=[Int(args[9]),Int(args[10])]
 
+b1=scale*[0,1]
+b2=scale*[√3/2,-1/2]
+
+if Int(arg[9])==1
+    shiftvector=[0.0*b1,0.0*b1]
+elseif  Int(arg[9])==2
+    shiftvector=[b1/3+b2/3*2,b2/3+b1/3*2]
+elseif Int(arg[9])==2
+    shiftvector=[b2/3+b1/3*2,b1/3+b2/3*2]
+end
 #=
     flux=arg[1]
     V0=arg[2]
@@ -30,17 +39,17 @@ shift_index=[Int(args[9]),Int(args[10])]
     shiftindex=arg[9]
 =#
 
-if shift_index≠[1,1]
-overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham,seed_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix_withseed(flux,V0,ϕ,scale,Nq,shift_index)
+if shift_index≠1
+overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham,seed_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix_withseed(flux,V0,ϕ,scale,Nq,shift_vector)
 end
 
 
-if shift_index==[1,1]
-    overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham,seed_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(flux,V0,ϕ,scale,Nq,shift_index)
+if shift_index==1
+    overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham,seed_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(flux,V0,ϕ,scale,Nq,shift_vector)
 end
 
 
-off_overlap=get_offdiagoverlap(wave,T1,T2,allowedq,flux,scale,Nq,shift_index)
+off_overlap=get_offdiagoverlap(wave,T1,T2,allowedq,flux,scale,Nq,shift_vector)
    
 
 
@@ -54,11 +63,11 @@ for ja in 1:Nq^2
     initial_DensityMatrix[ja]=initial_DensityMatrix[ja]+(A+A')*0.01
 end
 
-#if shift_index≠[1,1]
+#if shift_index≠1
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input=iteration_loop_withseed(initial_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,seed_Ham,constq,ζ,overlapmatrix)
 #end
 
-#if shift_index==[1,1]
+#if shift_index==1
  #   DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,energy_input=iteration_loop(initial_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,constq,ζ,overlapmatrix)
 #end
 
@@ -67,8 +76,8 @@ HF_sxmap=sxmap_kresolved(a1m,a2m,off_overlap,wave,DIIS_input_DensityMatrix[1],T1
 HF_symap=symap_kresolved(a1m,a2m,off_overlap,wave,DIIS_input_DensityMatrix[1],T1,T2,Nq)
 
 
-chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=triangle_chern(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,ζ,allowedq[shift_index])
+chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=triangle_chern(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,ζ,shift_vector)
 
-energy=calculate_energy(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,ζ,overlapmatrix,allowedq[shift_index])
-jldsave(joinpath(@__DIR__, "data_output/$(args[1])flux$(args[2])V0$(args[3])phi$(args[4])Nq$(args[5])scale$(args[6])constq$(args[7])zeta$(args[8])try$(Int(args[9]))$(Int(args[10]))shift.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,arguments=args,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,uniform=uniform,uniform_single=uniform_single,DM=DIIS_input_DensityMatrix[1],energy_input=energy_input,HF_symap=HF_symap,HF_sxmap=HF_sxmap,NoHF_symap=NoHF_symap,NoHF_sxmap=NoHF_sxmap)
+energy=calculate_energy(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,ζ,overlapmatrix,shift_vector)
+jldsave(joinpath(@__DIR__, "data_output/$(args[1])flux$(args[2])V0$(args[3])phi$(args[4])Nq$(args[5])scale$(args[6])constq$(args[7])zeta$(args[8])try$(Int(args[9]))shift.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,arguments=args,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,uniform=uniform,uniform_single=uniform_single,DM=DIIS_input_DensityMatrix[1],energy_input=energy_input,HF_symap=HF_symap,HF_sxmap=HF_sxmap,NoHF_symap=NoHF_symap,NoHF_sxmap=NoHF_sxmap)
 

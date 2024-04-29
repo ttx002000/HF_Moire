@@ -15,7 +15,7 @@ scale=1.0;
 constqspace=[0.4,0.6,0.8,1.0] #divide this by Nq^2
 V0space=[0.0]
 ζ=1.0
-shiftspace=[[1.0,1.0],[6.0,8.0],[8.0,6.0]]
+shiftspace=[1,2,3]
 #=
     flux=arg[1]
     V0=arg[2]
@@ -30,14 +30,14 @@ shiftspace=[[1.0,1.0],[6.0,8.0],[8.0,6.0]]
 
 
 for jtry in 1:3, constq in constqspace, shift in shiftspace, V0 in V0space
-  arguments=[flux,V0,ϕ,Nq,scale,constq,ζ,jtry,shift[1],shift[2]]
+  arguments=[flux,V0,ϕ,Nq,scale,constq,ζ,jtry,shift]
 
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="12:00:00",ntasks=Int(Nq)^2,mem=256)
 
 end
 
 for jtry in 1:3, constq in constqspace, shift in shiftspace, V0 in V0space
-  arguments=[flux,V0,ϕ,3.0,scale,constq,ζ,jtry,shift[1],shift[2]]
+  arguments=[flux,V0,ϕ,3.0,scale,constq,ζ,jtry,shift]
 
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="12:00:00",ntasks=Int(Nq)^2,mem=256)
 
