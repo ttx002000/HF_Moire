@@ -49,7 +49,7 @@ end
 st=load(joinpath(@__DIR__, "missedindex.jld2"))
 index=st["index"]
 for ja in eachindex(index)
-    arguments=Float64.([flux,V0,ϕ,index[ja][4],scale,index[ja][1],ζ,index[ja][2],index[ja][3]])
+    arguments=Float64.([flux,0.0,ϕ,index[ja][4],scale,index[ja][1],ζ,index[ja][2],index[ja][3]])
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="20:00:00",ntasks=Int(index[ja][4])^2,mem=256)
 end
 
