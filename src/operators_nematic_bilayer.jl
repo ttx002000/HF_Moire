@@ -78,7 +78,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
   Eg=parameters[8]
   θ=parameters[9]/180*π
   w=parameters[10]
-  omega=exp(i*2*π/3*parametersp[11])
+  omega=exp(im*2*π/3*parametersp[11])
 
 
 
