@@ -28,10 +28,10 @@ end
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue=iteration_loop(initial_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,constq,overlapmatrix)
 HFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatrix[1])
 
-chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=triangle_chern(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq)
-energy=calculate_energy(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,overlapmatrix)
+chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=triangle_chern(Nq,wave,scale,V0,ϕ,flux,DIIS_input_DensityMatrix[1],constq)
+energy=calculate_energy(Nq,wave,scale,V0,ϕ,flux,DIIS_input_DensityMatrix[1],constq,overlapmatrix)
 
-orbital_mag_HF,orbital_mag_single=orbital_magmoment(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq)
+orbital_mag_HF,orbital_mag_single=orbital_magmoment(Nq,wave,scale,V0,ϕ,flux,DIIS_input_DensityMatrix[1],constq)
 
 
 jldsave(joinpath(@__DIR__, "data_output/$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq_$(args[7])try.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,arguments=args,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,uniform=uniform,uniform_single=uniform_single,orbital_mag_single=orbital_mag_single,orbital_mag_HF=orbital_mag_HF)

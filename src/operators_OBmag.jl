@@ -443,7 +443,7 @@ end
 
 
 
-function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64)
+function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,V0::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64)
 
   
     β=4*flux/(√3*scale^2)
@@ -623,7 +623,7 @@ end
 
 
 
-function orbital_magmoment(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64)
+function orbital_magmoment(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,V0::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64)
 
   
     β=4*flux/(√3*scale^2)
@@ -755,7 +755,7 @@ end
 
 
 
-function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64,overlapmatrix::Array{ComplexF64,4})
+function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,V0::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64,overlapmatrix::Array{ComplexF64,4})
 
   
     β=4*flux/(√3*scale^2)
