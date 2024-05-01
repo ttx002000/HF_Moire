@@ -708,8 +708,13 @@ function orbital_magmoment(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::
     orbital_mag_single=zeros(Float64,Nq,Nq)
     
     for ja in 1:Nq, jb in 1:Nq
-        dHT1=(HF_Hamiltonian[ja+1,jb]-HF_Hamiltonian[ja,jb])/norm(T1)
-        dHT2=(HF_Hamiltonian[ja,jb+1]-HF_Hamiltonian[ja,jb])/norm(T2)
+        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
+        Bmatrix=metric(wave,β,(ja+1-1)*T1+(jb-1)*T2,-T1,T1,T2)
+        dHT1=(Amatrix*HF_Hamiltonian[ja+1,jb]*Bmatrix-HF_Hamiltonian[ja,jb])/norm(T1)
+
+        Cmatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
+        Dmatrix=metric(wave,β,(ja-1)*T1+(jb+1-1)*T2,-T2,T1,T2)
+        dHT2=(Cmatrix*HF_Hamiltonian[ja,jb+1]*Dmatrix-HF_Hamiltonian[ja,jb])/norm(T2)
         dyH=copy(dHT1)
         dxH=(dHT2+1/2*dHT1)/(√3/2)
         for bandnum in 2:length(eigenvalue_single[1,1])
