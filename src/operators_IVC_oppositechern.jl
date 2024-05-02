@@ -21,7 +21,13 @@ function Coulomb(k::Vector{Int64},T1::Vector{Float64},T2::Vector{Float64})::Floa
    
 end
 
-
+function sum_density(Nq,leng,dm)
+    order=0.0
+    for ja in 1:Nq^2
+    order+=sum(abs.(dm[ja][1:leng,1+leng:2*leng]))
+    end
+    return order
+end
 
 function triangle_initial_Densitymatrix_withseed(flux::Float64,V0::Float64,ϕ::Float64,scale::Float64,Nq::Int64,shiftvector::Vector{Vector{Float64}})
     am=4*π/(√3*scale);
