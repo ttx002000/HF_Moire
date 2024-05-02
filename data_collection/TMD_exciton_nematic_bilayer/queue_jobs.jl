@@ -19,7 +19,7 @@ Egspace=[75]
 wspace=[1,2,3]
 omegaspace=[0,1,2]
 holenum=1
-Nqspace=[7,8,9]
+Nqspace=[3,4,5]
 
 
 
