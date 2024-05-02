@@ -12,7 +12,7 @@ flux=0.0 #multiply this by pi
 ϕ=60.0 #convert this to radian 
 Nqspace=[3.0,4.0,5.0,6.0]; 
 scale=1.0;
-constqspace=[1.0] #divide this by Nq^2
+constqspace=[0.3,0.4,0.2] #divide this by Nq^2
 V0space=[0.0]
 ζ=1.0
 shiftspace=[1,2,3]
@@ -35,14 +35,14 @@ for jtry in 1:3, constq in constqspace, shift in shiftspace, V0 in V0space, Nq i
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="$(Int(Nq)+5):00:00",ntasks=Int(Nq)^2,mem=256)
 
 end
-
+#=
 for jtry in 1:3, constq in [3.0,4.0], shift in shiftspace, Nq in Nqspace
   arguments=[2.0,0.0,ϕ,Nq,1.0*√2,constq,ζ,jtry,shift]
 
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="$(Int(Nq)+5):00:00",ntasks=Int(Nq)^2,mem=256)
 
 end
-
+=#
 
 
 
