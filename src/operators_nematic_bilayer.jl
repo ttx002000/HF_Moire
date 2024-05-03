@@ -127,7 +127,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
   
   wave=Vector{Int64}[]
   cutoff=18
-  cutoffstandard=4.01*bm
+  cutoffstandard=3.01*bm
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*b1+jb*b2;
       if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
