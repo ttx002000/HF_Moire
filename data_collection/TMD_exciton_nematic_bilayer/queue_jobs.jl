@@ -44,7 +44,7 @@ Nq=parameters[14]
 
 for trytime in 1:2, Eg in Egspace,seednum in 3:3, Nq in Nqspace, omega in omegaspace, w in wspace
   arguments=Float64.([mt,mb,Vt,ϕt,Vb,ϕb,ϵr,Eg,θ,w,omega,holenum,trytime,Nq,seednum])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="$(Nq+5):00:00",ntasks=Nq^2)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="10:00:00",ntasks=Nq^2)
 end
 
 

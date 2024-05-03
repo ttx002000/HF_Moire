@@ -15,6 +15,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     #SBATCH --time=$time
     #SBATCH --nodes=$nodes
     #SBATCH --requeue
+    #SBATCH --extra-node-info 2-2:*:*
     #SBATCH --ntasks=$ntasks
     #SBATCH --mem=$(mem)G
     #SBATCH --mail-type=BEGIN,FAIL,END
@@ -23,7 +24,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     #SBATCH --error=$outpath/$(job_prefix*"_"*name)_error.txt
     #SBATCH --open-mode=append
     #SBATCH --sockets-per-node=2
-
+    
     # load Julia module
     ml julia/1.10.0
 
