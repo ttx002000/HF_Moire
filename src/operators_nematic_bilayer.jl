@@ -58,7 +58,7 @@ function generate_seed(generate_num,wavenum)
 
   seed_tunnel[1]=seed_tunnel[1]+seed_tunnel[1]'
   seed_tunnel[2]=seed_tunnel[2]+seed_tunnel[2]'
-  return 2*seed_tunnel
+  return 0.3*seed_tunnel
 end
 
 
