@@ -10,10 +10,10 @@ job_prefix = "shift"
 
 flux=0.0 #multiply this by pi
 ϕ=60.0 #convert this to radian 
-Nqspace=[3.0,4.0,5.0,6.0]; 
+Nqspace=[3.0]; 
 scale=1.0;
-constqspace=[0.3,0.4,0.2] #divide this by Nq^2
-V0space=[0.0]
+constqspace=[0.1] #divide this by Nq^2
+V0space=[0.1]
 ζ=1.0
 shiftspace=[1,2,3]
 #=
