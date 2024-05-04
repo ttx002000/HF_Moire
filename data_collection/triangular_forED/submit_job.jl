@@ -39,7 +39,7 @@ function submit_job(filepath, dirpath, job_prefix,args,trytimes; nodes=1, ntasks
     export JULIA_NUM_THREADS=$(ntasks)
 
     # run the script
-    julia  $filepath $(args[1]) $(args[2]) $(args[3]) $(args[4]) $(args[5]) $(args[6]) $(args[7]) """
+    julia  $filepath $(args[1]) $(args[2]) $(args[3]) $(args[4]) $(args[5]) $(args[6]) $(args[7]) $(Float64(trytimes)) """
 
     open("$slurmpath/$(name).slurm", "w") do io
         write(io, filestr)
