@@ -14,7 +14,7 @@ V0=args[2]
 Nx=Int(args[4]);
 Ny=Int(args[5]);
 scale=args[6];
-constq=args[7]/Nq^2
+constq=args[7]/(Nx*Ny)
 trytimes=Int(args[8])
 
 
