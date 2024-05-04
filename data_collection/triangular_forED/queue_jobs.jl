@@ -28,7 +28,7 @@ constq=args[7]/Nq^2
 trytimes=Int(args[8])
 =#
 
-for ja in eachindex(fluxspace), jNq in eachindex(Nqspace)
+for ja in eachindex(fluxspace)
   arguments=Float64.([fluxspace[ja],V0,ϕ,3.0,3.0,scale,constq])
  for jb in 1:2
     submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="1:00:00",ntasks=9,mem=6)
