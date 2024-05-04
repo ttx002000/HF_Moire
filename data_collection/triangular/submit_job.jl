@@ -21,6 +21,7 @@ function submit_job(filepath, dirpath, job_prefix,arguments,trytimes; nodes=1, n
     #SBATCH --partition=$partition
     #SBATCH --time=$time
     #SBATCH --nodes=$nodes
+    #SBATCH --extra-node-info 2-2:*:*
     #SBATCH --ntasks=$ntasks
     #SBATCH --mem=$(mem)G
     #SBATCH --mail-type=BEGIN,FAIL,END
