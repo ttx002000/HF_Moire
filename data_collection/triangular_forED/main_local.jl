@@ -7,7 +7,7 @@ using CSV,DataFrames
 
 include("../../src/operators_forED.jl")
 
-args=[1.0,0.0,0.0,3.0,5.0,1.0,2.0,1.0]
+args=[1.0,0.0,0.0,3.0,3.0,1.0,2.0,1.0]
 flux=args[1]*π
 V0=args[2]
 ϕ=args[3]/180*π
