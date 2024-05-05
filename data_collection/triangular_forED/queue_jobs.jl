@@ -29,17 +29,14 @@ trytimes=Int(args[8])
 =#
 
 for ja in eachindex(fluxspace)
-  arguments=Float64.([fluxspace[ja],V0,ϕ,3.0,3.0,scale,constq])
+
+
+ arguments=Float64.([fluxspace[ja],V0,ϕ,9.0,10.0,scale,constq])
  for jb in 1:2
-    submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="1:00:00",ntasks=9,mem=6)
+    submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="5:00:00",ntasks=16,mem=128)
  end
 
- arguments=Float64.([fluxspace[ja],V0,ϕ,6.0,6.0,scale,constq])
- for jb in 1:2
-    submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="3:00:00",ntasks=16,mem=64)
- end
-
- arguments=Float64.([fluxspace[ja],V0,ϕ,9.0,9.0,scale,constq])
+ arguments=Float64.([fluxspace[ja],V0,ϕ,10.0,8.0,scale,constq])
  for jb in 1:2
     submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="5:00:00",ntasks=16,mem=128)
  end
