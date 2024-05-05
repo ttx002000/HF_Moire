@@ -18,7 +18,7 @@ constq=args[7]/(Nx*Ny)
 trytimes=Int(args[8])
 
 
-overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(flux,V0,ϕ,scale,Nx,Ny)
+overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m,cutoffstandard=triangle_initial_Densitymatrix(flux,V0,ϕ,scale,Nx,Ny)
 NoHFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,initial_DensityMatrix)
  
 for ja in 1:Nx*Ny
