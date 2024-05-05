@@ -48,17 +48,17 @@ for ja in eachindex(fluxspace)
 
  arguments=Float64.([fluxspace[ja],V0,ϕ,12.0,14.0,scale,constq])
  for jb in 1:2
-    submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="5:00:00",ntasks=16,mem=128)
+    submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="5:00:00",ntasks=32,mem=128)
  end
 
  arguments=Float64.([fluxspace[ja],V0,ϕ,14.0,16.0,scale,constq])
  for jb in 1:2
-    submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="5:00:00",ntasks=16,mem=256)
+    submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="5:00:00",ntasks=32,mem=256)
  end
 
  arguments=Float64.([fluxspace[ja],V0,ϕ,16.0,19.0,scale,constq])
  for jb in 1:2
-    submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="5:00:00",ntasks=16,mem=256)
+    submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="5:00:00",ntasks=64,mem=256)
  end
 end
 
