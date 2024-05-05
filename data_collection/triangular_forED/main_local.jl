@@ -7,7 +7,7 @@ using CSV,DataFrames
 
 include("../../src/operators_forED.jl")
 
-args=[1.0,0.0,0.0,3.0,3.0,1.0,2.0,1.0]
+args=[1.0,0.0,0.0,3.0,5.0,1.0,2.0,1.0]
 flux=args[1]*π
 V0=args[2]
 ϕ=args[3]/180*π
@@ -31,5 +31,5 @@ HFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatrix[1])
 
 chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=triangle_chern(Nx,Ny,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq)
 energy,ED_vec,ED_val=calculate_energy(Nx,Ny,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,overlapmatrix)
-jldsave(joinpath(@__DIR__, "data_output/$(args[4])Nx$(args[5])Ny$(args[1])flux$(args[2])V0$(args[3])phi$(args[6])scale$(args[7])constq_$(args[8])try.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,arguments=args,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,uniform=uniform,uniform_single=uniform_single,ED_vec=ED_vec,ED_val=ED_val)
+jldsave(joinpath(@__DIR__, "data_output/$(args[4])Nx$(args[5])Ny$(args[1])flux$(args[2])V0$(args[3])phi$(args[6])scale$(args[7])constq_$(args[8])try.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,arguments=args,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,uniform=uniform,uniform_single=uniform_single,ED_vec=ED_vec,ED_val=ED_val,cutoffstandard=cutoffstandard)
 
