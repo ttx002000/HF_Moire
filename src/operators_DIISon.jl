@@ -814,7 +814,7 @@ function calculate_energy_HFresolved(Nq::Int,wave::Vector{Vector{Int}},scale::Fl
 
 
       chern_MoirePo=chern_MoirePo+chern_MoirePo'
-      Ha_Matrix[ja],Fk_Matrix[ja]=Construct_HFmatrix(loop_dic,ja,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq,overlapmatrix)
+      Ha_Matrix[ja],Fk_Matrix[ja]=Construct_HFmatrix_distinct(loop_dic,ja,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq,overlapmatrix)
       kin_Matrix[ja]=chern_MoirePo+chern_Ham
     
     end
