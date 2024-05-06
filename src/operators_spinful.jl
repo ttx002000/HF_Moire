@@ -398,7 +398,7 @@ function Densitymap(a1m::Vector{Float64},a2m::Vector{Float64},overlapmatrix::Vec
     Hartree_Density=[zeros(ComplexF64,dimension,dimension) for _ in 1:2]
 
 
-    for jk1 in 1:Nq^2, vi in 1:2
+    for jk1 in eachindex(input_DensityMatrix), vi in 1:2
         Hartree_Density[vi]+=input_DensityMatrix[jk1][vi] .* transpose(overlapmatrix[vi][jk1,:,jk1,:])
     end
     
@@ -494,6 +494,67 @@ function Construct_HFmatrix(loop_dic::Dict{Vector{Int},Any},vi::Int64,pathpointi
    
   
    return  constq*(HartreeMatrix-FockMatrix)
+end
+
+
+function Construct_HFmatrix_distinct(loop_dic::Dict{Vector{Int},Any},vi::Int64,pathpointindex::Int64,pathpoint::Vector{Int64},allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},constq::Float64,ζ::Float64,chern_overlapmatrix::Vector{Array{ComplexF64,4}})::Matrix{ComplexF64}
+  
+  
+    dimension=length(wave)
+    HartreeMatrix=zeros(ComplexF64,dimension,dimension) 
+    FockMatrix=zeros(ComplexF64,dimension,dimension) 
+   
+  
+  
+  
+      
+      for jk1 in 1:Nq^2
+          dmk = input_DensityMatrix[jk1][vi]
+          q=allowedq[jk1]-pathpoint
+         for (dg,loop_dic_dg) in loop_dic
+             CoulF1=Coulomb(q+dg,T1,T2)     
+             for (gg2,loop_dic_dg_gg2) in loop_dic_dg          
+                 CoulF=CoulF1*chern_overlapmatrix[vi][jk1,gg2[2],pathpointindex,gg2[1]]
+             for g1g3 in loop_dic_dg_gg2
+                 FockMatrix[g1g3[2],gg2[1]]+=dmk[g1g3[1],gg2[2]]*CoulF*chern_overlapmatrix[vi][pathpointindex,g1g3[2],jk1,g1g3[1]]
+             end 
+             end
+     
+         end    
+      end
+  
+    
+  
+    Hartree_Density=[zeros(ComplexF64,dimension,dimension) for _ in 1:2]
+    for jk1 in 1:Nq^2, vi in 1:2
+     Hartree_Density[vi]+=input_DensityMatrix[jk1][vi] .* transpose(chern_overlapmatrix[vi][jk1,:,jk1,:])
+    end
+  
+    if vi==1
+      ovi=2
+    else
+      ovi=1
+    end
+   
+  
+      
+   
+      for dg in keys(loop_dic)
+          CoulH1=Coulomb(dg,T1,T2)
+          for gg2 in keys(loop_dic[dg])          
+              CoulH=CoulH1*chern_overlapmatrix[vi][pathpointindex,gg2[2],pathpointindex,gg2[1]]            
+          for g1g3 in loop_dic[dg][gg2]           
+              HartreeMatrix[gg2[2],gg2[1]]+=Hartree_Density[vi][g1g3[1],g1g3[2]]*CoulH+ζ*Hartree_Density[ovi][g1g3[1],g1g3[2]]*CoulH             
+          end 
+          end
+  
+      end    
+   
+  
+  
+   
+  
+   return  constq*(HartreeMatrix),constq*(-FockMatrix)
 end
 
 
@@ -803,5 +864,106 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
 
 
    return energy
+
+end
+
+function calculate_energy_HFresolved(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},constq::Float64,ζ::Float64,overlapmatrix::Vector{Array{ComplexF64,4}})
+
+  
+    β=4*flux/(√3*scale^2)
+    mass=0.5;
+    dimension=length(wave)
+    
+    b1=scale*[0,1]
+    b2=scale*[√3/2,-1/2]
+
+    
+    
+    T1=b1/(Nq)
+    T2=b2/(Nq)
+    b1T=Int.(round.(inv([T1 T2])*b1))
+    b2T=Int.(round.(inv([T1 T2])*b2))
+    
+    
+    chern_allowedq=Vector{Int64}[]
+    for ja in 0:Nq-1,jb in 0:Nq-1
+        push!(chern_allowedq,[ja,jb])
+    end
+    
+
+    loop_dic=construct_loop_dic(wave)
+    
+    kin_Matrix=[[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:2] for _ in 1:Nq^2]
+    Ha_Matrix=[[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:2] for _ in 1:Nq^2]
+    Fk_Matrix=[[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:2] for _ in 1:Nq^2]
+    
+    Threads.@threads for ja in eachindex(chern_allowedq)
+        for vi in 1:2
+        k=[T1 T2]*chern_allowedq[ja]
+        chern_Ham=zeros(ComplexF64,dimension,dimension)
+        chern_MoirePo=zeros(ComplexF64,dimension,dimension)
+        for jb in eachindex(wave)
+            chern_Ham[jb,jb]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2)^2/(2*mass)
+        end
+      if vi==1
+        for jc in eachindex(wave)
+            k1=k+wave[jc][1]*T1+wave[jc][2]*T2
+            pos=findfirst(item->item==wave[jc]-b1T,wave)
+            if pos≠nothing
+           chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b1,β)
+            end
+            
+          
+            pos=findfirst(item->item==wave[jc]+b2T+b1T,wave)
+            if pos≠nothing
+                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,b2+b1,β)
+            end
+        
+            pos=findfirst(item->item==wave[jc]-b2T,wave)
+            if pos≠nothing
+                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2,β)
+            end
+         end
+      else
+        for jc in eachindex(wave)
+            k1=k+wave[jc][1]*T1+wave[jc][2]*T2
+            pos=findfirst(item->item==wave[jc]-b1T,wave)
+            if pos≠nothing
+           chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*conj(overlap(k1,-b1,β))
+            end
+            
+          
+            pos=findfirst(item->item==wave[jc]+b2T+b1T,wave)
+            if pos≠nothing
+                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*conj(overlap(k1,b2+b1,β))
+            end
+        
+            pos=findfirst(item->item==wave[jc]-b2T,wave)
+            if pos≠nothing
+                chern_MoirePo[jc,pos]=V0*exp(im*ϕ)*conj(overlap(k1,-b2,β))
+            end
+         end
+      end
+
+
+      chern_MoirePo=chern_MoirePo+chern_MoirePo'
+      Ha_Matrix[ja][vi],Fk_Matrix[ja][vi]=Construct_HFmatrix_distinct(loop_dic,vi,ja,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq,ζ,overlapmatrix)
+
+      kin_Matrix[ja][vi]=chern_MoirePo+chern_Ham
+        end
+    end
+    
+    
+   kin_energy=0
+   Ha_energy=0
+   Fk_energy=0
+   for ja in 1:Nq^2, vi in 1:2
+       kin_energy+=tr(kin_Matrix[ja][vi]*input_DensityMatrix[ja][vi])
+       Ha_energy+=tr(Ha_Matrix[ja][vi]*input_DensityMatrix[ja][vi])
+       Fk_energy+=tr(Fk_Matrix[ja][vi]*input_DensityMatrix[ja][vi])
+   end
+
+
+   return kin_energy,Ha_energy,Fk_energy
 
 end

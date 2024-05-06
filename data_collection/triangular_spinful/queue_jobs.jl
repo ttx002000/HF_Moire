@@ -6,20 +6,20 @@ using JLD2
 include("submit_job.jl")
 
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "spinful"
+job_prefix = "spinful_resolve"
 
-fluxspace=[0.0] #multiply this by pi
+fluxspace=[1.0] #multiply this by pi
 ϕ=0.0 #convert this to radian 
 Nqspace=collect(3.0:1.0:9.0); 
 scale=1.0;
-constqspace=[1.0] #divide this by Nq^2
+constqspace=collect(1.0:0.25:3.0) #divide this by Nq^2
 V0=0.0
-ζspace=[0.5,1.0]
+ζspace=[1.0]
 
 
 for jb in eachindex(fluxspace), jz in eachindex(ζspace), jNq in eachindex(Nqspace), constq in constqspace
   arguments=[fluxspace[jb],V0,ϕ,Nqspace[jNq],scale,constq,ζspace[jz]]
- for ja in 1:2
+ for ja in 1:3
     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="$(Int(Nqspace[jNq])+5):00:00",ntasks=Int(Nqspace[jNq])^2,mem=128)
  end
 end
