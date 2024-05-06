@@ -497,7 +497,7 @@ function Construct_HFmatrix(loop_dic::Dict{Vector{Int},Any},vi::Int64,pathpointi
 end
 
 
-function Construct_HFmatrix_distinct(loop_dic::Dict{Vector{Int},Any},vi::Int64,pathpointindex::Int64,pathpoint::Vector{Int64},allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},constq::Float64,ζ::Float64,chern_overlapmatrix::Vector{Array{ComplexF64,4}})::Matrix{ComplexF64}
+function Construct_HFmatrix_distinct(loop_dic::Dict{Vector{Int},Any},vi::Int64,pathpointindex::Int64,pathpoint::Vector{Int64},allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},constq::Float64,ζ::Float64,chern_overlapmatrix::Vector{Array{ComplexF64,4}})::Tuple{Matrix{ComplexF64},Matrix{ComplexF64}}
   
   
     dimension=length(wave)
