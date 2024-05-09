@@ -17,7 +17,7 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "square_HF"
 
 
-for ja in 1:3
+for ja in 1:3,constq in constqspace
      arguments=Float64.([flux,Vx,Vy,Nq,scale,constq])
      submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="3:00:00",ntasks=6,mem=32)
 end
