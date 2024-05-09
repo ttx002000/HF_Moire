@@ -18,6 +18,6 @@ job_prefix = "square_HF"
 
 
 for ja in 1:3
-     arguments=[flux,Vx,Vy,Nq,scale,constq]
+     arguments=Float64.([flux,Vx,Vy,Nq,scale,constq])
      submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="3:00:00",ntasks=6,mem=32)
 end
