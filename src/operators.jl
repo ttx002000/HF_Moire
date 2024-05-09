@@ -477,6 +477,40 @@ function Densitymap(a1m::Vector{Float64},a2m::Vector{Float64},overlapmatrix::Arr
 end
 
 
+function get_zerooverlapmatrix(wave,allowedq,flux::Float64,scale,Nq::Int64,T1::Vector{Float64},T2::Vector{Float64})::Array{Float64,4}
+    β=4*flux/(√3*scale^2)
+    zero_overlapmatrix=zeros(Float64,Nq^2,length(wave),Nq^2,length(wave))
+    for ja in 1:Nq^2, jb in eachindex(wave), jc in 1:Nq^2, jd in eachindex(wave)
+        kg1=[T1 T2]*(allowedq[ja]+wave[jb])
+        kg2=[T1 T2]*(allowedq[jc]+wave[jd])
+       zero_overlapmatrix[ja,jb,jc,jd]=exp(-β/4*(norm(kg1)^2+norm(kg2)^2))
+    end
+    return  zero_overlapmatrix
+
+end
+
+
+function Densitymap_zerocomp(a1m::Vector{Float64},a2m::Vector{Float64},zero_overlapmatrix::Array{Float64,4},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Matrix{ComplexF64}})
+    N3=50
+    dimension=length(wave)
+    zgrid=zeros(Float64,N3,N3)
+    Hartree_Density=zeros(ComplexF64,dimension,dimension)
+    for jk1 in eachindex(input_DensityMatrix)
+       Hartree_Density+=input_DensityMatrix[jk1] .* transpose(zero_overlapmatrix[jk1,:,jk1,:])
+    end
+    
+    for ja in 1:50, jb in 1:50
+      rvec=ja/25*a1m+jb/25*a2m
+      for jc in eachindex(wave), jd in eachindex(wave)
+        gvec=[T1 T2]*(wave[jc]-wave[jd])
+       zgrid[ja,jb]+=real(Hartree_Density[jc,jd]*exp(im*(gvec[1]*rvec[1]+gvec[2]*rvec[2])))
+      end
+    
+    end
+    
+    return zgrid
+end
+
 
 
 
