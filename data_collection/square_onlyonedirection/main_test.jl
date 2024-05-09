@@ -32,6 +32,6 @@ HFdensity=Densitymap_kresolved(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatr
 chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=square_chern(Nq,wave,scale,flux,Vx,Vy,DIIS_input_DensityMatrix[1],constq)
 energy=calculate_energy_square(Nq,wave,scale,flux,Vx,Vy,DIIS_input_DensityMatrix[1],constq,overlapmatrix)
 
-jldsave(joinpath(@__DIR__, "data_output/$(args[4])Nq$(args[1])flux$(args[2])Vx$(args[3])Vy$(args[5])scale$(args[6])constq$(args[7])try.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,arguments=args,trace_condition=trace_condition,trace_condition_single=trace_condition_single,energy=energy)
+jldsave(joinpath(@__DIR__, "data_output/$(args[1])flux$(args[2])Vx$(args[3])Vy$(args[4])Nq$(args[5])scale$(args[6])constq$(args[7])try.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,arguments=args,trace_condition=trace_condition,trace_condition_single=trace_condition_single,energy=energy)
 
 
