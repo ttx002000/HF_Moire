@@ -8,12 +8,12 @@ include("submit_job.jl")
 filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "piflux"
 
-fluxspace=[1.0] #multiply this by pi
-ϕ=0.0 #convert this to radian 
+fluxspace=[0.7] #multiply this by pi
+ϕ=20.0 #convert this to radian 
 Nqspace=[9.0]; 
 scale=1.0;
-constqspace=collect(0.0:0.2:2.0) #divide this by Nq^2
-V0space=collect(0.0:0.2:2.0)
+constqspace=collect(0.1:0.1:0.8) #divide this by Nq^2
+V0space=collect(0.1:0.1:1.5)
 
 for ja in eachindex(fluxspace), jNq in eachindex(Nqspace), constq in constqspace,V0 in V0space
   arguments=[fluxspace[ja],V0,ϕ,Nqspace[jNq],scale,constq]
