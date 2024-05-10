@@ -8,12 +8,12 @@ include("submit_job.jl")
 filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "piflux"
 
-fluxspace=[0.7] #multiply this by pi
-ϕ=20.0 #convert this to radian 
+fluxspace=[1.0] #multiply this by pi
+ϕ=0.0 #convert this to radian 
 Nqspace=[9.0]; 
 scale=1.0;
-constqspace=collect(0.1:0.1:0.8) #divide this by Nq^2
-V0space=collect(0.1:0.1:1.5)
+constqspace=collect(0.0:0.2:2.0) #divide this by Nq^2
+V0space=collect(0.0:0.2:2.0)
 
 
 #=
@@ -28,6 +28,6 @@ index=load(joinpath(@__DIR__, "missedjobs1.jld2"))["index"]
 for ja in eachindex(index), jb in eachindex(fluxspace), jNq in eachindex(Nqspace)
 
   arguments=[fluxspace[jb],index[ja][1],ϕ,Nqspace[jNq],scale,index[ja][2]]
-  submit_job(filepath, @__DIR__, job_prefix,arguments,Int(index[ja][3]); time="$(Int(Nqspace[jNq])):00:00",ntasks=32,mem=32)
+  submit_job(filepath, @__DIR__, job_prefix,arguments,Int(index[ja][3]); time="10:00:00",ntasks=32,mem=32)
 
 end
