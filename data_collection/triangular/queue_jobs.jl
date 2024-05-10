@@ -27,7 +27,15 @@ end
 index=load(joinpath(@__DIR__, "missedjobs1.jld2"))["index"]
 for ja in eachindex(index), jb in eachindex(fluxspace), jNq in eachindex(Nqspace)
 
-  arguments=[fluxspace[jb],index[ja][1],ϕ,Nqspace[jNq],scale,index[ja][2]]
+  arguments=[0.7,index[ja][1],ϕ,Nqspace[jNq],scale,index[ja][2]]
+  submit_job(filepath, @__DIR__, job_prefix,arguments,Int(index[ja][3]); time="10:00:00",ntasks=32,mem=32)
+
+end
+
+index=load(joinpath(@__DIR__, "missedjobs2.jld2"))["index"]
+for ja in eachindex(index), jb in eachindex(fluxspace), jNq in eachindex(Nqspace)
+
+  arguments=[1.0,index[ja][1],ϕ,Nqspace[jNq],scale,index[ja][2]]
   submit_job(filepath, @__DIR__, job_prefix,arguments,Int(index[ja][3]); time="10:00:00",ntasks=32,mem=32)
 
 end
