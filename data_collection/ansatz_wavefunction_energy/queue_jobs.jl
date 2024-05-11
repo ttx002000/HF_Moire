@@ -3,13 +3,26 @@ Pkg.activate(joinpath(@__DIR__, "../.."))
 using LinearAlgebra
 
 
-flux=2 #I multiply it by pi when doing the calculation
-Vx=1.0
-Vy=0.0
-Nq=6.0;
-scale=1.0;
-constqspace=collect(0.1:0.1:1.5) #I divide it by Nq^2 in the actual calculation
+scale=1.0#I multiply it by pi when doing the calculation
+flux=1.0
+Nqspace=[3.0,4.0,5.0,6.0,7.0,8.0,9.0]
+V0=0.0
+ϕ=0.0
+chistart=0.1
+chiend=2.0
+constq=15.0 #I divide it by Nq^2 in the actual calculation
 
+
+#=
+scale=args[1]
+flux=args[2]*π
+Nq=Int(args[3])
+V0=args[4]
+ϕ=args[5]
+chistart=args[6]
+chiend=args[7]
+constq=args[8]/Nq^2
+=#
 
 include("submit_job.jl")
 
@@ -17,7 +30,7 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "ansatz_energy"
 
 
-for ja in 1:3,constq in constqspace
-     arguments=Float64.([flux,Vx,Vy,Nq,scale,constq])
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="3:00:00",ntasks=6,mem=32)
+for Nq in Nqspace
+     arguments=Float64.([scale,flux,Nq,V0,ϕ,chistart,chiend,constq])
+     submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=32,mem=256)
 end

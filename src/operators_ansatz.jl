@@ -161,8 +161,8 @@ function get_wavefunction(scale::Float64,flux::Float64,Nq::Int64,V0::Float64,ϕ:
         
         
     wave=Vector{Int64}[]
-    cutoff=18
-    cutoffstandard=4.01*scale
+    cutoff=50
+    cutoffstandard=15.01*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -173,7 +173,7 @@ function get_wavefunction(scale::Float64,flux::Float64,Nq::Int64,V0::Float64,ϕ:
        
     
     wave_diff=Vector{Int64}[]
-    cutoff=50
+    cutoff=100
     cutoffstandard_diff=2*cutoffstandard
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;

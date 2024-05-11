@@ -17,7 +17,7 @@ chistart=args[6]
 chiend=args[7]
 constq=args[8]/Nq^2
 
-chispace=LinRange(0.2, 2.0, 30)#Notice the subtlety in the definition of chi
+chispace=LinRange(chistart,chiend,200)#Notice the subtlety in the definition of chi
 
 single_Ham, eigenvector, wave, wavediff, allowedq,T1,T2=get_wavefunction(scale,flux,Nq,V0,ϕ,chispace,constq)
 
