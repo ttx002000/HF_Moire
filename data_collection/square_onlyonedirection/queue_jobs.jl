@@ -1,6 +1,7 @@
 using Pkg
 Pkg.activate(joinpath(@__DIR__, "../.."))
 using LinearAlgebra
+using JLD2
 
 
 flux=2 #I multiply it by pi when doing the calculation
@@ -16,8 +17,16 @@ include("submit_job.jl")
 filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "square_HF"
 
-
+#=
 for ja in 1:3,constq in constqspace
      arguments=Float64.([flux,Vx,Vy,Nq,scale,constq])
      submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="3:00:00",ntasks=6,mem=32)
+end
+=#
+
+st=load(joinpath(@__DIR__, "missedjob.jld2"))
+index=st["index"]
+for ja in eachinex(index)
+     arguments=Float64.([flux,Vx,Vy,Nq,scale,index[ja][1]])
+     submit_job(filepath, @__DIR__, job_prefix,arguments,Int(index[ja][2]); time="5:00:00",ntasks=8,mem=32)
 end
