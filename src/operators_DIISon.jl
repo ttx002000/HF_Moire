@@ -294,8 +294,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
     input_DensityMatrix=initial_DensityMatrix
     bad_count=0
  
-    while (eout>1*10^-9) || (bad_count<4)
-      if  eout<1*10^-9 
+    while (eout>1*10^-13) || (bad_count<4)
+      if  eout<1*10^-13 
         bad_count+=1
       end
       tic=time()
@@ -309,7 +309,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
      
     
     end
-    
+    #=
     println("startDIIS",itcount)
     
     bad_count=0
@@ -341,7 +341,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
         flush(stdout)
     end
 
- 
+   =#
 
 
   return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue
