@@ -4,7 +4,7 @@ using LinearAlgebra
 
 
 scale=1.0#I multiply it by pi when doing the calculation
-flux=1.0
+flux=2.0
 Nqspace=[3.0,4.0,5.0,6.0,7.0,8.0,9.0]
 V0=0.0
 ϕ=0.0
