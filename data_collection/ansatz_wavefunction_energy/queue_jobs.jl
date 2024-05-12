@@ -9,7 +9,7 @@ Nqspace=[3.0,4.0,5.0,6.0,7.0,8.0,9.0]
 V0=0.0
 ϕ=0.0
 chistart=0.1
-chiend=2.0
+chiend=1.0
 constq=15.0 #I divide it by Nq^2 in the actual calculation
 
 
