@@ -296,6 +296,7 @@ function iteration_loop(Nq::Int64,nu::Int64,allowedq::Vector{Vector{Int64}},T1::
     
     end
     println(eout)
+    flush(stdout)
 
     return DIIS_input_DensityMatrix[1],eout,energy,HF_eigenvalue,HF_eigenvector
    
