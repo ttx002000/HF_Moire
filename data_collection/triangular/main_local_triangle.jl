@@ -23,8 +23,12 @@ HFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatrix[1])
 zero_overlapmatrix=get_zerooverlapmatrix(wave,allowedq,flux,scale,Nq,T1,T2)
 
 zerocomp=Densitymap_zerocomp(a1m,a2m,zero_overlapmatrix,wave,DIIS_input_DensityMatrix[1])
+C3eig=get_C3eig(Nq,allowedq,wave,T1,T2,DIIS_input_DensityMatrix[1],flux,scale)
+println(C3eig)
+println(angle.(C3eig))
+
 chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=triangle_chern(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq)
-println(trace_condition)
+
 energy=calculate_energy(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,overlapmatrix)
 
 

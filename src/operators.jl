@@ -696,7 +696,37 @@ function square_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float
 end
 
 
+function get_C3eig(Nq::Int,allowedq::Vector{Vector{Int}},wave::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},input_DM::Vector{Matrix{ComplexF64}},flux::Float64,scale::Float64)
+    β=4*flux/(√3*scale^2)
+    Γindex=findfirst(item->item==[0,0],allowedq)
+  κindex=findfirst(item->item==[Int(Nq/3),Int(Nq/3*2)],allowedq)
+  κpindex=findfirst(item->item==[Int(Nq/3*2),Int(Nq/3)],allowedq)
+  C3matrix=[-1/2 -√3/2;√3/2 -1/2]
+  C3gamma=0.0
+  C3kappa=0.0
+  C3kappaprime=0.0
 
+  for ja in eachindex(wave)
+    k1=[T1 T2]*[0,0]+[T1 T2]*wave[ja]
+    k2=C3matrix*k1
+    C3gamma+=(input_DM[Γindex][ja,ja])*overlap(k1,k2-k1,β)
+  end
+
+  for ja in eachindex(wave)
+    k1=[T1 T2]*[Int(Nq/3),Int(Nq/3*2)]+[T1 T2]*wave[ja]
+    k2=C3matrix*k1
+    C3kappa+=(input_DM[κindex][ja,ja])*overlap(k1,k2-k1,β)
+  end
+
+  for ja in eachindex(wave)
+    k1=[T1 T2]*[Int(Nq/3*2),Int(Nq/3)]+[T1 T2]*wave[ja]
+    k2=C3matrix*k1
+    C3kappaprime+=(input_DM[κpindex][ja,ja])*overlap(k1,k2-k1,β)
+  end
+
+  return [C3gamma,C3kappa,C3kappaprime]
+
+end
 
 
 function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float64,flux::Float64,input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64)
