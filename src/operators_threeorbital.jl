@@ -424,7 +424,7 @@ function excecute_loop()
     parameters["nu"]=nu
 
 
-  return observable,parameters,energymatrix,eoutmatrix
+  return observable,parameters,energymatrix,eoutmatrix,single_eigenvalue,HF_eigenvalue
 end
 
 function test_func()
