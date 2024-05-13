@@ -11,7 +11,7 @@ include(joinpath(@__DIR__,"../../src/operators_threeorbital.jl"))
 
 observable,parameters,energymatrix,eoutmatrix,single_eigenvalue,HF_eigenvalue=excecute_loop()
 
-jldsave(joinpath(@__DIR__, "data_output/try$(trytime).jld2"),observable=observable,parameters=parameters,energymatrix=energymatrix,eoutmatrix=eoutmatrix,single_eigenvalue=single_eigenvalue,HF_eigenvalue=HF_eigenvalue)
+jldsave(joinpath(@__DIR__, "data_output/try$(trytime)_Hartreeonly.jld2"),observable=observable,parameters=parameters,energymatrix=energymatrix,eoutmatrix=eoutmatrix,single_eigenvalue=single_eigenvalue,HF_eigenvalue=HF_eigenvalue)
 
 
 

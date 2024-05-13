@@ -1,7 +1,7 @@
-function Construct_DensityMatrix_Hartreeonly(allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,input_DensityMatrix::Vector{Matrix{ComplexF64}},single_Ham::Vector{Matrix{ComplexF64}},U::Float64,Uprime::Float64)::Tuple{Float64,Vector{Matrix{ComplexF64}},Vector{Matrix{ComplexF64}},Vector{Vector{Float64}},Matrix{ComplexF64},ComplexF64,Vector{Matrix{ComplexF64}}}
+function Construct_DensityMatrix_Hartreeonly(allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,input_DensityMatrix::Vector{Matrix{ComplexF64}},single_Ham::Vector{Matrix{ComplexF64}},U::Float64,Uprime::Float64,nu::Int64)::Tuple{Float64,Vector{Matrix{ComplexF64}},Vector{Matrix{ComplexF64}},Vector{Vector{Float64}},Matrix{ComplexF64},ComplexF64,Vector{Matrix{ComplexF64}}}
 
  
-  
+    FockMatrix=[zeros(ComplexF64,3,3) for _ in 1:Nq^2]
     HartreeMatrix=zeros(ComplexF64,3,3)
     output_DensityMatrix=Vector{Matrix{ComplexF64}}(undef,Nq^2)
     DeltaMatrix=Vector{Matrix{ComplexF64}}(undef,Nq^2)
@@ -22,7 +22,33 @@ function Construct_DensityMatrix_Hartreeonly(allowedq::Vector{Vector{Int}},T1::V
    HartreeMatrix[3,3]+=HartreeDensity[2,2]*Uprime/Nq^2*3
    
    
+    
 
+   BmA=[[0,1],[0,0],[√3/2,1/2]]#from A to it's neighbour B
+   CmA=[[0,1],[0,0],[-√3/2,1/2]]#from A to it's neighbour C
+   BmC=[[√3/2,-1/2],[0,0],[√3/2,1/2]]#from C to it's neighbour B
+
+   
+   for ja in 1:Nq^2
+    k=[T1 T2]*allowedq[ja]
+    for jb in 1:Nq^2
+     kprime=[T1 T2]*allowedq[jb]
+     for deltaBA in BmA
+     FockMatrix[ja][1,2]+=input_DensityMatrix[jb][1,2]*U/Nq^2*exp(im*dot(k-kprime,deltaBA))
+     end
+
+     for deltaCA in CmA
+     FockMatrix[ja][1,3]+=input_DensityMatrix[jb][1,3]*U/Nq^2*exp(im*dot(k-kprime,deltaCA))
+     end
+     
+     for deltaBC in BmC
+     FockMatrix[ja][3,2]+=input_DensityMatrix[jb][3,2]*Uprime/Nq^2*exp(im*dot(k-kprime,deltaBC))
+     end
+    end
+
+    FockMatrix[ja]=FockMatrix[ja]+FockMatrix[ja]'
+   end
+   
    
    for ja in 1:Nq^2
      FFF=eigen(single_Ham[ja]+HartreeMatrix)
@@ -33,7 +59,7 @@ function Construct_DensityMatrix_Hartreeonly(allowedq::Vector{Vector{Int}},T1::V
    
    
    
-   bound=(sort(reduce(vcat,HF_eigenvalue))[Nq^2+1]+sort(reduce(vcat,HF_eigenvalue))[Nq^2])/2
+   bound=(sort(reduce(vcat,HF_eigenvalue))[nu*Nq^2+1]+sort(reduce(vcat,HF_eigenvalue))[nu*Nq^2])/2
    
     for ja in 1:Nq^2
       
@@ -56,7 +82,7 @@ function Construct_DensityMatrix_Hartreeonly(allowedq::Vector{Vector{Int}},T1::V
     
     energy=0.0
     for ja in 1:Nq^2
-        energy+=tr(output_DensityMatrix[ja]*(single_Ham[ja]+1/2*HartreeMatrix))
+        energy+=tr(output_DensityMatrix[ja]*(single_Ham[ja]+1/2*HartreeMatrix-1/2*FockMatrix[ja]))
     end 
    
    
@@ -256,7 +282,7 @@ function iteration_loop(Nq::Int64,nu::Int64,allowedq::Vector{Vector{Int64}},T1::
             bad_count+=1 
         end
       #tic=time()
-      eout,output_DensityMatrix,DeltaMatrix,HF_eigenvalue,Hartree_Matrix,energy,HF_eigenvector=Construct_DensityMatrix(allowedq,T1,T2,Nq,input_DensityMatrix,single_Ham,U,Uprime,nu)
+      eout,output_DensityMatrix,DeltaMatrix,HF_eigenvalue,Hartree_Matrix,energy,HF_eigenvector=Construct_DensityMatrix_Hartreeonly(allowedq,T1,T2,Nq,input_DensityMatrix,single_Ham,U,Uprime,nu)
       DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
       DIIS_input_DeltaMatrix[mod(itcount,3)+1]=DeltaMatrix
       input_DensityMatrix=output_DensityMatrix
