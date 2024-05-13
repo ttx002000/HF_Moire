@@ -381,18 +381,15 @@ function excecute_loop()
             single_DensityMatrix,input_DensityMatrix,single_eigenvalue[ja][jb],single_Ham,allowedq,T1,T2=get_input(ϵA,ϵB,ϵC,t1,t2,t3,nu,Nq)
             for jc in 1:Nq^2
                 A=randn(3,3)+im*randn(3,3)
-                input_DensityMatrix[jc]+=(A+A')
+                input_DensityMatrix[jc]+=(A+A')*0.1
             end
 
             single_AdAmatrix[ja][jb],single_BdBmatrix[ja][jb],single_CdCmatrix[ja][jb],single_BdAmatrix[ja][jb],single_CdBmatrix[ja][jb],single_AdCmatrix[ja][jb]=calculate_observable(Nq,single_DensityMatrix,T1,T2,allowedq)
-            println(single_CdCmatrix[ja][jb])
+     
             HF_DensityMatrix,eoutmatrix[ja][jb],energymatrix[ja][jb],HF_eigenvalue[ja][jb],HF_eigenvector=iteration_loop(Nq,nu,allowedq,T1,T2,single_Ham,U,Uprime,input_DensityMatrix)
           
             AdAmatrix[ja][jb],BdBmatrix[ja][jb],CdCmatrix[ja][jb],BdAmatrix[ja][jb],CdBmatrix[ja][jb],AdCmatrix[ja][jb]=calculate_observable(Nq,HF_DensityMatrix,T1,T2,allowedq)
-            println(CdCmatrix[ja][jb])
-            println(BdBmatrix[ja][jb])
-            println(CdBmatrix[ja][jb])
-            println(energymatrix)
+       
         end
     end
 
