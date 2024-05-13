@@ -32,5 +32,5 @@ job_prefix = "ansatz_energy"
 
 for Nq in Nqspace
      arguments=Float64.([scale,flux,Nq,V0,ϕ,chistart,chiend,constq])
-     submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=32,mem=256)
+     submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=32,mem=256)
 end
