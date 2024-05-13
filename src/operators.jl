@@ -415,7 +415,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
      
     
     end
-    
+    #=
     println("startDIIS",itcount)
     
     bad_count=0
@@ -447,7 +447,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
         flush(stdout)
     end
 
- 
+ =#
 
 
   return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue
@@ -696,12 +696,18 @@ function square_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float
 end
 
 
-function get_C3eig(Nq::Int,allowedq::Vector{Vector{Int}},wave::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},input_DM::Vector{Matrix{ComplexF64}},flux::Float64,scale::Float64)
-    β=4*flux/(√3*scale^2)
+function get_C3eig(Nq::Int,allowedq::Vector{Vector{Int}},wave::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},input_DM::Vector{Matrix{ComplexF64}})
     Γindex=findfirst(item->item==[0,0],allowedq)
   κindex=findfirst(item->item==[Int(Nq/3),Int(Nq/3*2)],allowedq)
   κpindex=findfirst(item->item==[Int(Nq/3*2),Int(Nq/3)],allowedq)
+
+  
+
+
   C3matrix=[-1/2 -√3/2;√3/2 -1/2]
+  
+  
+
   C3gamma=0.0
   C3kappa=0.0
   C3kappaprime=0.0
@@ -709,19 +715,31 @@ function get_C3eig(Nq::Int,allowedq::Vector{Vector{Int}},wave::Vector{Vector{Int
   for ja in eachindex(wave)
     k1=[T1 T2]*[0,0]+[T1 T2]*wave[ja]
     k2=C3matrix*k1
-    C3gamma+=(input_DM[Γindex][ja,ja])*overlap(k1,k2-k1,β)
+    k2int=Int.(round.(inv([T1 T2])*k2,digits=5))
+    rotpos=findfirst(item->item+[0,0]==k2int,wave)
+    if rotpos≠nothing
+    C3gamma+=(input_DM[Γindex][ja,rotpos])
+    end
   end
 
   for ja in eachindex(wave)
-    k1=[T1 T2]*[Int(Nq/3),Int(Nq/3*2)]+[T1 T2]*wave[ja]
+    k1=[T1 T2]*allowedq[κindex]+[T1 T2]*wave[ja]
     k2=C3matrix*k1
-    C3kappa+=(input_DM[κindex][ja,ja])*overlap(k1,k2-k1,β)
+    k2int=Int.(round.(inv([T1 T2])*k2,digits=5))
+    rotpos=findfirst(item->item+allowedq[κindex]==k2int,wave)
+    if rotpos≠nothing
+    C3kappa+=(input_DM[κindex][ja,rotpos])
+    end
   end
 
   for ja in eachindex(wave)
-    k1=[T1 T2]*[Int(Nq/3*2),Int(Nq/3)]+[T1 T2]*wave[ja]
+    k1=[T1 T2]*allowedq[κpindex]+[T1 T2]*wave[ja]
     k2=C3matrix*k1
-    C3kappaprime+=(input_DM[κpindex][ja,ja])*overlap(k1,k2-k1,β)
+    k2int=Int.(round.(inv([T1 T2])*k2,digits=5))
+    rotpos=findfirst(item->item+allowedq[κpindex]==k2int,wave)
+    if rotpos≠nothing
+    C3kappaprime+=(input_DM[κpindex][ja,rotpos])
+    end
   end
 
   return [C3gamma,C3kappa,C3kappaprime]
@@ -934,6 +952,7 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
     loop_dic=construct_loop_dic(wave)
     
     Energy_Matrix=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:Nq^2]
+    output_Ham=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:Nq^2]
     
     Threads.@threads for ja in eachindex(chern_allowedq)
         k=[T1 T2]*chern_allowedq[ja]
@@ -966,7 +985,7 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
       chern_MoirePo=chern_MoirePo+chern_MoirePo'
       HFmatrix=Construct_HFmatrix(loop_dic,ja,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq,overlapmatrix)
       Energy_Matrix[ja]=1/2*HFmatrix+chern_MoirePo+chern_Ham
-    
+      output_Ham[ja]=HFmatrix+chern_MoirePo+chern_Ham
     end
     
     
@@ -976,7 +995,7 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
    end
 
 
-   return energy
+   return energy,output_Ham
 
 end
 
