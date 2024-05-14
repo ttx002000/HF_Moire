@@ -94,7 +94,7 @@ function Construct_DensityMatrix_Hartreeonly(allowedq::Vector{Vector{Int}},T1::V
       for ja in 1:Nq^2
           energy+=tr(output_DensityMatrix[ja]*(single_Ham[ja]+1/2*HartreeMatrix-1/2*FockMatrix[ja]))
       end 
-     end
+    end
 
 
    
@@ -303,7 +303,7 @@ function iteration_loop(Nq::Int64,nu::Int64,allowedq::Vector{Vector{Int64}},T1::
       #toc=time()
      #println(toc-tic,"eout=$eout")
      #flush(stdout)
-     if itcount>20000
+     if itcount>30000
         break
      end
     
