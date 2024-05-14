@@ -29,25 +29,7 @@ function Construct_DensityMatrix_Hartreeonly(allowedq::Vector{Vector{Int}},T1::V
    BmC=[[√3/2,-1/2],[0,0],[√3/2,1/2]]#from C to it's neighbour B
 
    
-   for ja in 1:Nq^2
-    k=[T1 T2]*allowedq[ja]
-    for jb in 1:Nq^2
-     kprime=[T1 T2]*allowedq[jb]
-     for deltaBA in BmA
-     FockMatrix[ja][1,2]+=input_DensityMatrix[jb][1,2]*U/Nq^2*exp(im*dot(k-kprime,deltaBA))
-     end
-
-     for deltaCA in CmA
-     FockMatrix[ja][1,3]+=input_DensityMatrix[jb][1,3]*U/Nq^2*exp(im*dot(k-kprime,deltaCA))
-     end
-     
-     for deltaBC in BmC
-     FockMatrix[ja][3,2]+=input_DensityMatrix[jb][3,2]*Uprime/Nq^2*exp(im*dot(k-kprime,deltaBC))
-     end
-    end
-
-    FockMatrix[ja]=FockMatrix[ja]+FockMatrix[ja]'
-   end
+  
    
    
    for ja in 1:Nq^2
@@ -82,8 +64,39 @@ function Construct_DensityMatrix_Hartreeonly(allowedq::Vector{Vector{Int}},T1::V
     
     energy=0.0
     for ja in 1:Nq^2
-        energy+=tr(output_DensityMatrix[ja]*(single_Ham[ja]+1/2*HartreeMatrix-1/2*FockMatrix[ja]))
+        energy+=tr(output_DensityMatrix[ja]*(single_Ham[ja]+1/2*HartreeMatrix))
     end 
+
+    if eout<10^(-22)
+
+
+     for ja in 1:Nq^2
+       k=[T1 T2]*allowedq[ja]
+       for jb in 1:Nq^2
+           kprime=[T1 T2]*allowedq[jb]
+           for deltaBA in BmA
+              FockMatrix[ja][1,2]+=input_DensityMatrix[jb][1,2]*U/Nq^2*exp(im*dot(k-kprime,deltaBA))
+           end
+  
+           for deltaCA in CmA
+               FockMatrix[ja][1,3]+=input_DensityMatrix[jb][1,3]*U/Nq^2*exp(im*dot(k-kprime,deltaCA))
+           end
+       
+           for deltaBC in BmC
+               FockMatrix[ja][3,2]+=input_DensityMatrix[jb][3,2]*Uprime/Nq^2*exp(im*dot(k-kprime,deltaBC))
+            end
+       end
+  
+        FockMatrix[ja]=FockMatrix[ja]+FockMatrix[ja]'
+      end
+    
+      energy=0.0
+      for ja in 1:Nq^2
+          energy+=tr(output_DensityMatrix[ja]*(single_Ham[ja]+1/2*HartreeMatrix-1/2*FockMatrix[ja]))
+      end 
+     end
+
+
    
    
    return  eout,output_DensityMatrix,DeltaMatrix,HF_eigenvalue, HartreeMatrix, energy, HF_eigenvector
@@ -290,7 +303,7 @@ function iteration_loop(Nq::Int64,nu::Int64,allowedq::Vector{Vector{Int64}},T1::
       #toc=time()
      #println(toc-tic,"eout=$eout")
      #flush(stdout)
-     if itcount>10000
+     if itcount>20000
         break
      end
     
