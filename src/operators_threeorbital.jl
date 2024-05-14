@@ -253,7 +253,7 @@ function get_input(ϵA::Float64,ϵB::Float64,ϵC::Float64,t1::Float64,t2::Float6
         single_eigenvector[ja]=eigen(single_Ham[ja]).vectors
         single_eigenvalue[ja]=eigen(single_Ham[ja]).values
     
-        if ja==1
+        if (ja==1) && (t3==0) &(ϵB==ϵC)
         
             single_eigenvector[ja][:,2]=[0.0,1/√2,-1/√2]
             single_eigenvector[ja][:,1]=[0.0,1/√2,1/√2]
@@ -385,7 +385,7 @@ function excecute_loop()
     Nq=15
     Uspace=collect(0.05:0.05:1.0)
     #Uspace=[0.1]
-    nu=1
+    nu=2
     allowedq=0
 
     single_eigenvalue=[[[zeros(ComplexF64,3) for _ in 1:Nq^2] for _ in eachindex(Uspace)] for _ in eachindex(ϵAspace)]
