@@ -24,15 +24,16 @@ function triangle_initial_Densitymatrix(Dfield::Float64,V0::Float64,ϕ::Float64,
     b1=4*π/(√3*am)*[0,1]
     b2=4*π/(√3*am)*[√3/2,-1/2]
 
-
+    layer=5
     a1m=am*[1/2,√3/2]
     a2m=am*[1,0]
     
     
     T1=b1/(Nq)
     T2=b2/(Nq)
-    
-    
+
+    v0=√3/2*0.246*(2620)
+    const1=v0^layer/(-358)^(layer-1)
     
     b1T=Int.(round.(inv([T1 T2])*b1))
     b2T=Int.(round.(inv([T1 T2])*b2))
@@ -49,7 +50,7 @@ function triangle_initial_Densitymatrix(Dfield::Float64,V0::Float64,ϕ::Float64,
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=4.01*scale
+    cutoffstandard=3.01*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -63,6 +64,7 @@ function triangle_initial_Densitymatrix(Dfield::Float64,V0::Float64,ϕ::Float64,
     
      
     single_Ham=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
+    BG_Ham=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
     single_MoirePo=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
     single_eigenvalue=[zeros(Float64,dimension) for _ in 1:Nq^2]
     single_eigenvector=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
@@ -71,10 +73,12 @@ function triangle_initial_Densitymatrix(Dfield::Float64,V0::Float64,ϕ::Float64,
     Threads.@threads for ja in 1:Nq^2
       
       
-      k=allowedq[ja][1]*T1+allowedq[ja][2]*T2
+     
     
       for jb in eachindex(wave)
-       single_Ham[ja][2*jb-1:2*jb,2*jb-1:2*jb]=[Dfield (k[1]-im*k[2])^5; (k[1]+im*k[2])^5 -Dfield]
+        k=[T1 T2]*(allowedq[ja]+wave[jb])
+       single_Ham[ja][2*jb-1:2*jb,2*jb-1:2*jb]=[Dfield const1*(k[1]-im*k[2])^layer; const1*(k[1]+im*k[2])^layer -Dfield]
+       BG_Ham[ja][2*jb-1:2*jb,2*jb-1:2*jb]=[Dfield const1*(k[1]-im*k[2])^layer; const1*(k[1]+im*k[2])^layer -Dfield]
       end
 
 
@@ -104,7 +108,7 @@ function triangle_initial_Densitymatrix(Dfield::Float64,V0::Float64,ϕ::Float64,
       single_eigenvalue[ja]=real(FFF.values)
       single_eigenvector[ja]=FFF.vectors
 
-     FFF=eigen(single_Ham[ja]) 
+     FFF=eigen(BG_Ham[ja]) 
      BG_eigenvector[ja]=FFF.vectors
     
     end
@@ -175,11 +179,11 @@ end
 
 
 
-function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Matrix{ComplexF64}},BG_DensityMatrix::Vector{Matrix{ComplexF64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64)::Tuple{Float64,Vector{Matrix{ComplexF64}},Vector{Matrix{ComplexF64}},Vector{Vector{Float64}}}
+function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Matrix{ComplexF64}},BG_DensityMatrix::Vector{Matrix{ComplexF64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64)::Tuple{Float64,Vector{Matrix{ComplexF64}},Vector{Matrix{ComplexF64}},Vector{Vector{Float64}},Float64}
   
  
    dimension=2*length(wave)
-  HartreeMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
+  HartreeMatrix=zeros(ComplexF64,dimension,dimension)
   FockMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
   output_DensityMatrix=Vector{Matrix{ComplexF64}}(undef,Nq^2)
   DeltaMatrix=Vector{Matrix{ComplexF64}}(undef,Nq^2)
@@ -215,25 +219,26 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
   end
 
   
+    
+  Identity=Matrix{Float64}(I,2,2)  
 
-
-  Threads.@threads for jk in 1:Nq^2
+  
       for dg in keys(loop_dic)
           CoulH=Coulomb(dg,T1,T2)
           for gg2 in keys(loop_dic[dg])                   
           for g1g3 in loop_dic[dg][gg2]           
-              HartreeMatrix[jk][gg2[5]:gg2[6],gg2[3]:gg2[4]]+=Hartree_Density[g1g3[3]:g1g3[4],g1g3[5]:g1g3[6]]*CoulH               
+              HartreeMatrix[gg2[5]:gg2[6],gg2[3]:gg2[4]]+=tr(Hartree_Density[g1g3[3]:g1g3[4],g1g3[5]:g1g3[6]])*CoulH*Identity               
           end 
           end
   
       end    
-  end
+
 
 
  
 
  for ja in 1:Nq^2
-   FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+constq*HartreeMatrix[ja]-constq*FockMatrix[ja])
+   FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+constq*HartreeMatrix-constq*FockMatrix[ja])
    HF_eigenvalue[ja]=real(FFF.values)
    HF_eigenvector[ja]=FFF.vectors
    
@@ -248,12 +253,12 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
              NewDensityMatrix[ja]+=HF_eigenvector[ja][:,jd]*(HF_eigenvector[ja][:,jd])'
           end
        end
-       NewDensityMatrix[ja]-=BG_DensityMatrix[ja]
-       DeltaMatrix[ja]=NewDensityMatrix[ja]-input_DensityMatrix[ja]
-       output_DensityMatrix[ja]=0.0*input_DensityMatrix[ja]+1.0*NewDensityMatrix[ja]
   end
 
-
+    NewDensityMatrix=NewDensityMatrix-BG_DensityMatrix
+    DeltaMatrix=NewDensityMatrix-input_DensityMatrix
+    output_DensityMatrix=0.4*input_DensityMatrix+0.6*NewDensityMatrix
+    
 
   
   e1=0.0
@@ -265,16 +270,17 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
   
  
 
- return  eout,output_DensityMatrix,DeltaMatrix,HF_eigenvalue
+ return  eout,output_DensityMatrix,DeltaMatrix,HF_eigenvalue,bound
 end
 
 
 
 
-function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},BG_DensityMatrix::Vector{Matrix{ComplexF64}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64)::Tuple{Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Float64}}}
+function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},BG_DensityMatrix::Vector{Matrix{ComplexF64}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64)::Tuple{Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Float64}},Float64}
     eout=1.0
     itcount=0
     bad_count=0
+    bound=0.0
     loop_dic=construct_loop_dic(wave)
     HF_eigenvalue=Vector{Any}(undef,Nq^2)
     DIIS_input_DensityMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
@@ -285,10 +291,13 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},BG_Den
       bad_count+=1
       end
       tic=time()
-      eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,BG_DensityMatrix,single_Ham,single_MoirePo,constq)
+      eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,BG_DensityMatrix,single_Ham,single_MoirePo,constq)
       DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
       input_DensityMatrix=output_DensityMatrix
       itcount+=1
+      if itcount>100
+        break
+      end
       toc=time()
       println(toc-tic,"eout=$eout")
       flush(stdout)
@@ -330,7 +339,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},BG_Den
  
 
 
-  return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue
+  return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,bound
 
 end
 
@@ -418,12 +427,14 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
 
   
 
-    dimension=length(wave)
+    dimension=2*length(wave)
     
     b1=scale*[0,1]
     b2=scale*[√3/2,-1/2]
 
-    
+    layer=5
+    v0=√3/2*0.246*(-2620)
+    const1=v0^layer/(-358)^(layer-1)
     
     T1=b1/(Nq)
     T2=b2/(Nq)
@@ -444,11 +455,12 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     eigenvector_intermediate_single=Vector{Vector{ComplexF64}}(undef,(Nq+1)^2)
 
     Threads.@threads for ja in eachindex(chern_allowedq)
-        k=[T1 T2]*chern_allowedq[ja]
+       
         chern_Ham=zeros(ComplexF64,dimension,dimension)
         chern_MoirePo=zeros(ComplexF64,dimension,dimension)
         for jb in eachindex(wave)
-            chern_Ham[2*jb-1:2*jb,2*jb-1:2*jb]=[Dfield (k[1]-im*k[2])^5; (k[1]+im*k[2])^5 -Dfield]
+            k=[T1 T2]*(chern_allowedq[ja]+wave[jb])
+            chern_Ham[2*jb-1:2*jb,2*jb-1:2*jb]=[Dfield const1*(k[1]-im*k[2])^layer; const1*(k[1]+im*k[2])^layer -Dfield]
         end
     
         for jc in eachindex(wave)
@@ -492,32 +504,28 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
     tra_single=zeros(ComplexF64,Nq,Nq)
     
     for ja in 1:Nq, jb in 1:Nq+1
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
-       Uonelink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb]))
+       Uonelink[ja,jb]=dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja+1,jb])/abs(dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja+1,jb]))
     end
 
     
     
     for ja in 1:Nq+1, jb in 1:Nq
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
-     Utwolink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1]))
+     Utwolink[ja,jb]=dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja,jb+1])/abs(dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja,jb+1]))
     end
     
     dG=norm(T2)
     for ja in 1:Nq, jb in 1:Nq
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
-        Bmatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
-        Cmatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2+T1,T1,T2)
-        A1=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])
-        B1=dot(eigenvector_bc[:,ja,jb],Bmatrix*eigenvector_bc[:,ja,jb+1])
-        C1=dot(eigenvector_bc[:,ja,jb],Cmatrix*eigenvector_bc[:,ja+1,jb+1])
+   
+        A1=dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja+1,jb])
+        B1=dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja,jb+1])
+        C1=dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja+1,jb+1])
        gyy=(1-abs(A1)^2)/dG^2
        gxx=(2-1/2*gyy*dG^2-abs(B1)^2-abs(C1)^2)/(1.5*dG^2)
        tra[ja,jb]+=(gxx+gyy)*3^(1/2)/2*dG^2
 
-        A1=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])
-        B1=dot(eigenvector_bc_single[:,ja,jb],Bmatrix*eigenvector_bc_single[:,ja,jb+1])
-        C1=dot(eigenvector_bc_single[:,ja,jb],Cmatrix*eigenvector_bc_single[:,ja+1,jb+1])
+        A1=dot(eigenvector_bc_single[:,ja,jb],eigenvector_bc_single[:,ja+1,jb])
+        B1=dot(eigenvector_bc_single[:,ja,jb],eigenvector_bc_single[:,ja,jb+1])
+        C1=dot(eigenvector_bc_single[:,ja,jb],eigenvector_bc_single[:,ja+1,jb+1])
        gyy=(1-abs(A1)^2)/dG^2
        gxx=(2-1/2*gyy*dG^2-abs(B1)^2-abs(C1)^2)/(1.5*dG^2)
        tra_single[ja,jb]+=(gxx+gyy)*3^(1/2)/2*dG^2
@@ -545,13 +553,13 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
   
     
     for ja in 1:Nq, jb in 1:Nq+1
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
-       Uonelink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])/abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb]))
+    
+       Uonelink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],eigenvector_bc_single[:,ja+1,jb])/abs(dot(eigenvector_bc_single[:,ja,jb],eigenvector_bc_single[:,ja+1,jb]))
     end
     
     for ja in 1:Nq+1, jb in 1:Nq
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
-     Utwolink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1])/abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1]))
+   
+     Utwolink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],eigenvector_bc_single[:,ja,jb+1])/abs(dot(eigenvector_bc_single[:,ja,jb],eigenvector_bc_single[:,ja,jb+1]))
     end
     
 
@@ -597,8 +605,10 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
     
     b1=scale*[0,1]
     b2=scale*[√3/2,-1/2]
-
+    layer=5
     
+    v0=√3/2*0.246*(-2620)
+    const1=v0^layer/(-358)^(layer-1)    
     
     T1=b1/(Nq)
     T2=b2/(Nq)
@@ -615,14 +625,15 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
     loop_dic=construct_loop_dic(wave)
     
     Energy_Matrix=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:Nq^2]
-    output_Ham=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:Nq^2]
+    
     
     Threads.@threads for ja in eachindex(chern_allowedq)
-        k=[T1 T2]*chern_allowedq[ja]
+      
         chern_Ham=zeros(ComplexF64,dimension,dimension)
         chern_MoirePo=zeros(ComplexF64,dimension,dimension)
         for jb in eachindex(wave)
-            chern_Ham[2*jb-1:2*jb,2*jb-1:2*jb]=[Dfield (k[1]-im*k[2])^5; (k[1]+im*k[2])^5 -Dfield]
+            k=[T1 T2]*(allowedq[ja]+wave[jb])
+            chern_Ham[2*jb-1:2*jb,2*jb-1:2*jb]=[Dfield const1*(k[1]-im*k[2])^layer; const1*(k[1]+im*k[2])^layer -Dfield]
         end
     
         for jc in eachindex(wave)
