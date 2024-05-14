@@ -416,7 +416,7 @@ function excecute_loop()
     ϵCspace=[0.0]
     t1space=[1.0]
     t2space=[1.0]
-    t3space=[-0.2]
+    t3space=[-0.02]
     Nq=15
     Uspace=collect(0.05:0.05:1.0)
     #Uspace=[0.1]
@@ -444,6 +444,7 @@ function excecute_loop()
     chern_matrix=[[zeros(ComplexF64,3) for _ in eachindex(Uspace)] for _ in eachindex(ϵAspace)]
     overlap=[zeros(ComplexF64,length(Uspace)) for _ in eachindex(ϵAspace)]
 
+
   Threads.@threads for ja in eachindex(ϵAspace)
         for jb in eachindex(Uspace)
             ϵA=ϵAspace[ja]
@@ -468,7 +469,6 @@ function excecute_loop()
             overlap[ja][jb]=calculate_overlap(HF_eigenvector,single_eigenvector,Nq)
             chern_matrix[ja][jb]=calculate_chern(HF_eigenvector,Nq,allowedq)
             AdAmatrix[ja][jb],BdBmatrix[ja][jb],CdCmatrix[ja][jb],BdAmatrix[ja][jb],CdBmatrix[ja][jb],AdCmatrix[ja][jb]=calculate_observable(Nq,HF_DensityMatrix,T1,T2,allowedq)
-       
         end
     end
 
