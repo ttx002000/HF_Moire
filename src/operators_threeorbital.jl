@@ -372,7 +372,42 @@ function calculate_observable(Nq::Int64,input_DM::Vector{Matrix{ComplexF64}},T1:
 
 end
 
+function calculate_chern(HF_eigenvector::Vector{Matrix{CompelxF64}},Nq::Int64,allowedq::Vector{Vector{Int}})
+  
+  chern=zeros(ComplexF64,3)
+  for jchern in 1:3
+  
+    Uonelink=zeros(ComplexF64,Nq,Nq+1)
+    Utwolink=zeros(ComplexF64,Nq+1,Nq)
+  
 
+    eigenvector_bc=zeros(ComplexF64,3,Nq+1,Nq+1)
+    for ja in 1:Nq+1, jb in 1:Nq+1
+      pos=findfirst(item->item==[mod(ja-1,Nq),mod(jb-1,Nq)],allowedq)
+      eigenvector_bc[:,ja,jb]=HF_eigenvector[pos][:,jchern]
+    end
+
+    for ja in 1:Nq, jb in 1:Nq+1
+     Uonelink[ja,jb]=dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja+1,jb])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb]))
+    end
+
+  
+  
+    for ja in 1:Nq+1, jb in 1:Nq
+     Utwolink[ja,jb]=dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja,jb+1])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1]))
+    end
+  
+
+
+    Flink=zeros(ComplexF64,Nq,Nq)
+     for ja in 1:Nq, jb in 1:Nq
+        Flink[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
+     end
+    chern[jchern]=sum(Flink)/(2*π*im)
+  end
+
+    return chern
+end
 
 function excecute_loop()
    # ϵAspace=collect(0.0:0.2:6.0)
@@ -381,11 +416,11 @@ function excecute_loop()
     ϵCspace=[0.0]
     t1space=[1.0]
     t2space=[1.0]
-    t3space=[0.0]
+    t3space=[0.5]
     Nq=15
     Uspace=collect(0.05:0.05:1.0)
     #Uspace=[0.1]
-    nu=2
+    nu=1
     allowedq=0
 
     single_eigenvalue=[[[zeros(ComplexF64,3) for _ in 1:Nq^2] for _ in eachindex(Uspace)] for _ in eachindex(ϵAspace)]
@@ -406,7 +441,7 @@ function excecute_loop()
     single_AdCmatrix=[zeros(ComplexF64,length(Uspace)) for _ in eachindex(ϵAspace)]
     single_BdAmatrix=[zeros(ComplexF64,length(Uspace)) for _ in eachindex(ϵAspace)]
     single_CdBmatrix=[zeros(ComplexF64,length(Uspace)) for _ in eachindex(ϵAspace)]
-
+    chern_matrix=[[zeros(ComplexF64,3) for _ in eachindex(Uspace)] for _ in eachindex(ϵAspace)]
     overlap=[zeros(ComplexF64,length(Uspace)) for _ in eachindex(ϵAspace)]
 
   Threads.@threads for ja in eachindex(ϵAspace)
@@ -431,7 +466,7 @@ function excecute_loop()
             HF_DensityMatrix,eoutmatrix[ja][jb],energymatrix[ja][jb],HF_eigenvalue[ja][jb],HF_eigenvector=iteration_loop(Nq,nu,allowedq,T1,T2,single_Ham,U,Uprime,input_DensityMatrix)
           
             overlap[ja][jb]=calculate_overlap(HF_eigenvector,single_eigenvector,Nq)
-
+            chern_matrix[ja][jb]=calculate_chern(HF_eigenvector,Nq,allowedq)
             AdAmatrix[ja][jb],BdBmatrix[ja][jb],CdCmatrix[ja][jb],BdAmatrix[ja][jb],CdBmatrix[ja][jb],AdCmatrix[ja][jb]=calculate_observable(Nq,HF_DensityMatrix,T1,T2,allowedq)
        
         end
@@ -455,6 +490,7 @@ function excecute_loop()
     observable["single_BdAmatrix"]=single_BdAmatrix
     observable["single_CdBmatrix"]=single_CdBmatrix
     observable["overlap"]=overlap
+    observable["chern_matrix"]=chern_matrix
 
     parameters=Dict{String,Any}()
     parameters["ϵAspace"]=ϵAspace
