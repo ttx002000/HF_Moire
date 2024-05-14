@@ -416,7 +416,7 @@ function excecute_loop()
     ϵCspace=[0.0]
     t1space=[1.0]
     t2space=[1.0]
-    t3space=[-0.02]
+    t3space=[0.02]
     Nq=15
     Uspace=collect(0.05:0.05:1.0)
     #Uspace=[0.1]
