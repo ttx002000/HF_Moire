@@ -268,7 +268,7 @@ function get_input(ϵA::Float64,ϵB::Float64,ϵC::Float64,t1::Float64,t2::Float6
     
     
    
-    return single_DensityMatrix,input_DensityMatrix,single_eigenvalue,single_Ham,allowedq,T1,T2
+    return single_DensityMatrix,input_DensityMatrix,single_eigenvalue,single_eigenvector,single_Ham,allowedq,T1,T2
     
 
 end
@@ -407,6 +407,8 @@ function excecute_loop()
     single_BdAmatrix=[zeros(ComplexF64,length(Uspace)) for _ in eachindex(ϵAspace)]
     single_CdBmatrix=[zeros(ComplexF64,length(Uspace)) for _ in eachindex(ϵAspace)]
 
+    overlap=[zeros(ComplexF64,length(Uspace)) for _ in eachindex(ϵAspace)]
+
   Threads.@threads for ja in eachindex(ϵAspace)
         for jb in eachindex(Uspace)
             ϵA=ϵAspace[ja]
@@ -418,7 +420,7 @@ function excecute_loop()
             t2=t2space[1]
             t3=t3space[1]
 
-            single_DensityMatrix,input_DensityMatrix,single_eigenvalue[ja][jb],single_Ham,allowedq,T1,T2=get_input(ϵA,ϵB,ϵC,t1,t2,t3,nu,Nq)
+            single_DensityMatrix,input_DensityMatrix,single_eigenvalue[ja][jb],single_eigenvector,single_Ham,allowedq,T1,T2=get_input(ϵA,ϵB,ϵC,t1,t2,t3,nu,Nq)
             for jc in 1:Nq^2
                 A=randn(3,3)+im*randn(3,3)
                 input_DensityMatrix[jc]+=(A+A')*0.1
@@ -428,6 +430,8 @@ function excecute_loop()
      
             HF_DensityMatrix,eoutmatrix[ja][jb],energymatrix[ja][jb],HF_eigenvalue[ja][jb],HF_eigenvector=iteration_loop(Nq,nu,allowedq,T1,T2,single_Ham,U,Uprime,input_DensityMatrix)
           
+            overlap[ja][jb]=calculate_overlap(HF_eigenvector,single_eigenvector,Nq)
+
             AdAmatrix[ja][jb],BdBmatrix[ja][jb],CdCmatrix[ja][jb],BdAmatrix[ja][jb],CdBmatrix[ja][jb],AdCmatrix[ja][jb]=calculate_observable(Nq,HF_DensityMatrix,T1,T2,allowedq)
        
         end
@@ -450,7 +454,7 @@ function excecute_loop()
     observable["single_AdCmatrix"]=single_AdCmatrix
     observable["single_BdAmatrix"]=single_BdAmatrix
     observable["single_CdBmatrix"]=single_CdBmatrix
-
+    observable["overlap"]=overlap
 
     parameters=Dict{String,Any}()
     parameters["ϵAspace"]=ϵAspace
@@ -477,4 +481,12 @@ function test_func()
    end
    print(B)
    print(A)
+end
+
+function calculate_overlap(HF_eigenvector,single_eigenvector,Nq)
+   num=0.0
+   for ja in 1:Nq^2
+     num+=abs(HF_eigenvector[ja][:,2]'*single_eigenvector[ja][:,2])
+   end
+   return num
 end
