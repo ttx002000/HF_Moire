@@ -295,7 +295,7 @@ function iteration_loop(Nq::Int64,nu::Int64,allowedq::Vector{Vector{Int64}},T1::
             bad_count+=1 
         end
       #tic=time()
-      eout,output_DensityMatrix,DeltaMatrix,HF_eigenvalue,Hartree_Matrix,energy,HF_eigenvector=Construct_DensityMatrix_Hartreeonly(allowedq,T1,T2,Nq,input_DensityMatrix,single_Ham,U,Uprime,nu)
+      eout,output_DensityMatrix,DeltaMatrix,HF_eigenvalue,Hartree_Matrix,energy,HF_eigenvector=Construct_DensityMatrix(allowedq,T1,T2,Nq,input_DensityMatrix,single_Ham,U,Uprime,nu)
       DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
       DIIS_input_DeltaMatrix[mod(itcount,3)+1]=DeltaMatrix
       input_DensityMatrix=output_DensityMatrix
