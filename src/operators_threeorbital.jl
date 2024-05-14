@@ -388,13 +388,13 @@ function calculate_chern(HF_eigenvector::Vector{Matrix{ComplexF64}},Nq::Int64,al
     end
 
     for ja in 1:Nq, jb in 1:Nq+1
-     Uonelink[ja,jb]=dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja+1,jb])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb]))
+     Uonelink[ja,jb]=dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja+1,jb])/abs(dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja+1,jb]))
     end
 
   
   
     for ja in 1:Nq+1, jb in 1:Nq
-     Utwolink[ja,jb]=dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja,jb+1])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1]))
+     Utwolink[ja,jb]=dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja,jb+1])/abs(dot(eigenvector_bc[:,ja,jb],eigenvector_bc[:,ja,jb+1]))
     end
   
 
