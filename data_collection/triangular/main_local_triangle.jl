@@ -1,7 +1,7 @@
 using JLD2
 include("../../src/operators.jl")
-flux=1.0*π
-V0=0.0
+flux=0.0*π
+V0=0.01
 ϕ=0.0
 Nq=3;
 scale=1.0;
@@ -30,6 +30,6 @@ println(angle.(C3eig)/π*180)
 chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=triangle_chern(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq)
 
 energy,output_Ham=calculate_energy(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,overlapmatrix)
+print(chern)
 
-
-jldsave(joinpath(@__DIR__, "data_output/try2.jld2"),zerocomp=zerocomp,chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,densitymatrix=DIIS_input_DensityMatrix,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,output_Ham=output_Ham)
+jldsave(joinpath(@__DIR__, "data_output/try3.jld2"),zerocomp=zerocomp,chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,densitymatrix=DIIS_input_DensityMatrix,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,output_Ham=output_Ham)

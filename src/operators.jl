@@ -400,8 +400,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
     DIIS_input_DensityMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     input_DensityMatrix=initial_DensityMatrix
-    while (eout>1*10^-8) || (bad_count<4)
-      if eout<1*10^-8
+    while (eout>1*10^-13) || (bad_count<4)
+      if eout<1*10^-13
       bad_count+=1
       end
       tic=time()
@@ -415,7 +415,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
      
     
     end
-    
+    #=
     println("startDIIS",itcount)
     
     bad_count=0
@@ -446,7 +446,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
         println(toc-tic,"eout=$eout")
         flush(stdout)
     end
-
+=#
  
 
 
