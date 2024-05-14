@@ -372,7 +372,7 @@ function calculate_observable(Nq::Int64,input_DM::Vector{Matrix{ComplexF64}},T1:
 
 end
 
-function calculate_chern(HF_eigenvector::Vector{Matrix{CompelxF64}},Nq::Int64,allowedq::Vector{Vector{Int}})
+function calculate_chern(HF_eigenvector::Vector{Matrix{ComplexF64}},Nq::Int64,allowedq::Vector{Vector{Int}})
   
   chern=zeros(ComplexF64,3)
   for jchern in 1:3
