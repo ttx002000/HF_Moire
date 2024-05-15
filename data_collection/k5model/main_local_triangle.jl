@@ -1,14 +1,14 @@
 using JLD2
 include("../../src/operators_k5model.jl")
 
-V0=0.1
+V0=1.0
 ϕ=0.0
 Nq=3;
 period=10
 scale=4*π/(period*√3);
 ϵr=7
 constq=10447.22667/(ϵr*Nq^2*period^2)
-Dfield=10.0
+Dfield=50.0
 
 
 
