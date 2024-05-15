@@ -240,7 +240,7 @@ end
 
 
 
-function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Matrix{ComplexF64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,overlapmatrix::Array{ComplexF64,4})::Tuple{Float64,Vector{Matrix{ComplexF64}},Vector{Matrix{ComplexF64}},Vector{Vector{Float64}}}
+function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Matrix{ComplexF64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,overlapmatrix::Array{ComplexF64,4})::Tuple{Float64,Vector{Matrix{ComplexF64}},Vector{Matrix{ComplexF64}},Vector{Vector{Float64}},Vector{Matrix{ComplexF64}}}
   
  
    dimension=length(wave)
@@ -326,17 +326,18 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
   
  
 
- return  eout,output_DensityMatrix,DeltaMatrix,HF_eigenvalue
+ return  eout,output_DensityMatrix,DeltaMatrix,HF_eigenvalue,HF_eigenvector
 end
 
 
 
 
-function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,overlapmatrix::Array{ComplexF64,4})::Tuple{Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Float64}}}
+function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,overlapmatrix::Array{ComplexF64,4})::Tuple{Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Float64}},Vector{Matrix{ComplexF64}}}
     eout=1.0
     itcount=0
     loop_dic=construct_loop_dic(wave)
     HF_eigenvalue=Vector{Any}(undef,Nq^2)
+    HF_eigenvector=Vector{Any}(undef,Nq^2)
     DIIS_input_DensityMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     input_DensityMatrix=initial_DensityMatrix
@@ -347,7 +348,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
         bad_count+=1
       end
       tic=time()
-      eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,overlapmatrix)
+      eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,overlapmatrix)
       DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
       input_DensityMatrix=output_DensityMatrix
       itcount+=1
@@ -380,7 +381,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
         coeff=inv(Bmatrix)*[0;0;0;1]
        
         dmk=coeff[1]*(DIIS_input_DensityMatrix[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_DensityMatrix[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_DensityMatrix[3]+DIIS_input_DeltaMatrix[3])
-         eout,_,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,dmk,single_Ham,single_MoirePo,constq,overlapmatrix)
+         eout,_,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,dmk,single_Ham,single_MoirePo,constq,overlapmatrix)
         DIIS_input_DensityMatrix[mod(itcount,3)+1]=dmk
         itcount+=1
 
@@ -392,7 +393,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
    =#
 
 
-  return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue
+  return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector
 
 end
 
@@ -832,6 +833,7 @@ function calculate_energy_HFresolved(Nq::Int,wave::Vector{Vector{Int}},scale::Fl
     kin_Matrix=[zeros(ComplexF64,length(wave),length(wave))  for _ in 1:Nq^2]
     Ha_Matrix=[zeros(ComplexF64,length(wave),length(wave))  for _ in 1:Nq^2]
     Fk_Matrix=[zeros(ComplexF64,length(wave),length(wave))  for _ in 1:Nq^2]
+
     
     Threads.@threads for ja in eachindex(chern_allowedq)
         k=[T1 T2]*chern_allowedq[ja]
@@ -864,7 +866,6 @@ function calculate_energy_HFresolved(Nq::Int,wave::Vector{Vector{Int}},scale::Fl
       chern_MoirePo=chern_MoirePo+chern_MoirePo'
       Ha_Matrix[ja],Fk_Matrix[ja]=Construct_HFmatrix_distinct(loop_dic,ja,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq,overlapmatrix)
       kin_Matrix[ja]=chern_MoirePo+chern_Ham
-    
     end
     
     
