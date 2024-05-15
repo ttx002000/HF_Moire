@@ -50,7 +50,7 @@ function triangle_initial_Densitymatrix(Dfield::Float64,V0::Float64,ϕ::Float64,
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=4.01*scale
+    cutoffstandard=3.5*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -276,7 +276,7 @@ end
 
 
 
-function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},BG_DensityMatrix::Vector{Matrix{ComplexF64}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64)::Tuple{Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Float64}},Float64}
+function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},BG_DensityMatrix::Vector{Matrix{ComplexF64}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64)::Tuple{Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Float64}},Float64,Float64}
     eout=1.0
     itcount=0
     bad_count=0
