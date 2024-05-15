@@ -25,7 +25,7 @@ trytime=args[7]
 =#
 
 
-for  period in periodspace, ϵr in erspace,jtry in 1:3, Dfield in Dfieldspace
+for  period in periodspace, ϵr in erspace,jtry in 1:5, Dfield in Dfieldspace
   arguments=Float64.([V0,ϕ,Nq,period,ϵr,Dfield,jtry])
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=16,mem=32)
 end
