@@ -11,7 +11,7 @@ job_prefix = "piflux"
 V0=0.0
 ϕ=0.0 #convert this to radian 
 Nq=9.0; 
-periodspace=[10.0:1.0:20.0]
+periodspace=collect(10.0:1.0:20.0)
 erspace=collect(3.0:1.0:8.0) #divide this by Nq^2
 
 #=
