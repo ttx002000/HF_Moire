@@ -1,21 +1,16 @@
 
 
-function submit_job(filepath, dirpath, job_prefix,arguments,trytimes; nodes=1, ntasks=1, time="00:120:00", cpus_per_task=1, mem=64, partition="owners,simes")
+function submit_job(filepath, dirpath, job_prefix,arguments; nodes=1, ntasks=1, time="00:120:00", cpus_per_task=1, mem=64, partition="owners,simes")
     outpath = joinpath(dirpath, "out")
     slurmpath = joinpath(dirpath, "slurmfiles")# Why is there a job_prefix semicolon there?
     mkpath(outpath)
     mkpath(slurmpath)
 
  
-    flux=arguments[1]
-    V0=arguments[2]
-    ϕ=arguments[3]
-    Nq=arguments[4];
-    scale=arguments[5];
-    constq=arguments[6];
+
  
 
-    name = "$(Nq)Nq$(flux)flux$(V0)V0$(ϕ)phi$(scale)scale$(constq)constq$(trytimes)try"
+    name = "$(args[1])V0$(args[2])phi$(args[3])Nq$(args[4])period$(args[5])er$(args[6])D$(args[7])try"
     filestr = """#!/bin/bash
     #SBATCH --job-name=$(job_prefix*"_"*name)
     #SBATCH --partition=$partition
@@ -38,7 +33,7 @@ function submit_job(filepath, dirpath, job_prefix,arguments,trytimes; nodes=1, n
     export JULIA_NUM_THREADS=$(ntasks)
 
     # run the script
-    julia  $filepath $flux $V0 $ϕ $Nq $scale $constq $(Float64(trytimes))"""
+    julia  $filepath $(args[1]) $(args[2]) $(args[3]) $(args[4]) $(args[5]) $(args[6]) $(args[7]) """
 
     open("$slurmpath/$(name).slurm", "w") do io
         write(io, filestr)

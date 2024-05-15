@@ -50,7 +50,7 @@ function triangle_initial_Densitymatrix(Dfield::Float64,V0::Float64,ϕ::Float64,
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=3.01*scale
+    cutoffstandard=4.01*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -295,7 +295,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},BG_Den
       DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
       input_DensityMatrix=output_DensityMatrix
       itcount+=1
-      if itcount>100
+      if itcount>500
         break
       end
       toc=time()
@@ -339,7 +339,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},BG_Den
  
 
 
-  return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,bound
+  return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,bound,eout
 
 end
 

@@ -1,14 +1,14 @@
 using JLD2
 include("../../src/operators_k5model.jl")
 
-V0=1.0
+V0=0.0
 ϕ=0.0
-Nq=3;
-period=10
+Nq=6;
+period=18
 scale=4*π/(period*√3);
-ϵr=7
+ϵr=6
 constq=10447.22667/(ϵr*Nq^2*period^2)
-Dfield=50.0
+Dfield=10.0
 
 
 
@@ -30,4 +30,4 @@ chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uni
 energy=calculate_energy(Nq,wave,scale,ϕ,Dfield,DIIS_input_DensityMatrix[1],constq)
 print(chern)
 
-jldsave(joinpath(@__DIR__, "data_output/try3.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,densitymatrix=DIIS_input_DensityMatrix,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue)
+jldsave(joinpath(@__DIR__, "data_output/try3.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,densitymatrix=DIIS_input_DensityMatrix,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue)
