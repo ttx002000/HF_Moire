@@ -7,8 +7,9 @@ using Random
 
 
 function overlap(k::Vector{Float64},q::Vector{Float64},β::Float64)::ComplexF64
-    v=q[1]^2+q[2]^2+2*im*(k[1]*q[2]-k[2]*q[1])
+    #v=q[1]^2+q[2]^2+2*im*(k[1]*q[2]-k[2]*q[1])
     #v=2*im*(k[1]*q[2]-k[2]*q[1])
+    v=q[1]^2+q[2]^2+4*im*((k[1]+q[1]/2)*q[2])
     return exp(-β/4*v)
 end
  
@@ -168,7 +169,7 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=4.01*scale
+    cutoffstandard=3.01*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
