@@ -1,8 +1,8 @@
 using JLD2
 include("../../src/operators.jl")
 flux=1.0*π
-V0=0.00
-ϕ=0.0
+V0=0.0
+ϕ=1.0*π
 Nq=3;
 scale=1.0;
 constq=1.0/Nq^2
@@ -17,7 +17,7 @@ for ja in 1:Nq^2
     initial_DensityMatrix[ja]=initial_DensityMatrix[ja]+(A+A')*0.001
 end
 
-DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue=iteration_loop(initial_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,constq,overlapmatrix)
+DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvec=iteration_loop(initial_DensityMatrix,allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,constq,overlapmatrix)
 HFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatrix[1])
 
 zero_overlapmatrix=get_zerooverlapmatrix(wave,allowedq,flux,scale,Nq,T1,T2)
@@ -32,4 +32,4 @@ chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uni
 energy,output_Ham=calculate_energy(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,overlapmatrix)
 print(chern)
 
-jldsave(joinpath(@__DIR__, "data_output/try_Landaugauge.jld2"),zerocomp=zerocomp,chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,densitymatrix=DIIS_input_DensityMatrix,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,output_Ham=output_Ham)
+jldsave(joinpath(@__DIR__, "data_output/try_nopotential_withint_nogauge.jld2"),zerocomp=zerocomp,chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,densitymatrix=DIIS_input_DensityMatrix,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,output_Ham=output_Ham,HF_eigenvec=HF_eigenvec)
