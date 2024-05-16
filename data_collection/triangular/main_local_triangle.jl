@@ -1,7 +1,7 @@
 using JLD2
 include("../../src/operators.jl")
-flux=0.0*π
-V0=0.0
+flux=0.2*π
+V0=0.1
 ϕ=1.0*π
 Nq=3;
 scale=1.0;
