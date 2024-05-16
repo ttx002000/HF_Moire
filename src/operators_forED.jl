@@ -439,6 +439,63 @@ end
 
 
 
+function Construct_HFmatrix_forchern(loop_dic::Dict{Vector{Int},Any},pathpointindex::Int64,pathpoint::Vector{Int64},allowedq::Vector{Vector{Int}},chern_allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nx::Int64,Ny::Int64,wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64,chern_overlapmatrix::Array{ComplexF64,4})::Matrix{ComplexF64}
+  
+  
+    dimension=length(wave)
+    HartreeMatrix=zeros(ComplexF64,dimension,dimension) 
+    FockMatrix=zeros(ComplexF64,dimension,dimension) 
+   
+    
+  
+  
+      
+      for jk1 in 1:Nx*Ny
+          dmk = input_DensityMatrix[jk1]
+          q=allowedq[jk1]-pathpoint
+          indexforjk1=findfirst(item->item==allowedq[jk1],chern_allowedq)
+         for (dg,loop_dic_dg) in loop_dic
+             CoulF1=Coulomb(q+dg,T1,T2)     
+             for (gg2,loop_dic_dg_gg2) in loop_dic_dg          
+                 CoulF=CoulF1*chern_overlapmatrix[indexforjk1,gg2[2],pathpointindex,gg2[1]]
+             for g1g3 in loop_dic_dg_gg2
+                 FockMatrix[g1g3[2],gg2[1]]+=dmk[g1g3[1],gg2[2]]*CoulF*chern_overlapmatrix[pathpointindex,g1g3[2],indexforjk1,g1g3[1]]
+             end 
+             end
+     
+         end    
+      end
+  
+    
+  
+    Hartree_Density=zeros(ComplexF64,dimension,dimension)
+    for jk1 in 1:Nx*Ny
+        indexforjk1=findfirst(item->item==allowedq[jk1],chern_allowedq)
+     Hartree_Density+=input_DensityMatrix[jk1] .* transpose(chern_overlapmatrix[indexforjk1,:,indexforjk1,:])
+    end
+  
+   
+  
+      
+   
+      for dg in keys(loop_dic)
+          CoulH1=Coulomb(dg,T1,T2)
+          for gg2 in keys(loop_dic[dg])          
+              CoulH=CoulH1*chern_overlapmatrix[pathpointindex,gg2[2],pathpointindex,gg2[1]]            
+          for g1g3 in loop_dic[dg][gg2]           
+              HartreeMatrix[gg2[2],gg2[1]]+=Hartree_Density[g1g3[1],g1g3[2]]*CoulH               
+          end 
+          end
+  
+      end    
+   
+  
+  
+   return  constq*(HartreeMatrix-FockMatrix)
+  end
+
+
+
 
 
 
@@ -463,6 +520,11 @@ function triangle_chern(Nx::Int,Ny::Int64,wave::Vector{Vector{Int}},scale::Float
     chern_allowedq=Vector{Int64}[]
     for jb in 0:Ny, ja in 0:Nx
         push!(chern_allowedq,[ja,jb])
+    end
+
+    allowedq=Vector{Int64}[]
+    for jb in 0:Ny-1, ja in 0:Nx-1
+        push!(allowedq,[ja,jb])
     end
     
     chern_overlapmatrix=zeros(ComplexF64,(Nx+1)*(Ny+1),length(wave),(Nx+1)*(Ny+1),length(wave))
@@ -504,7 +566,7 @@ function triangle_chern(Nx::Int,Ny::Int64,wave::Vector{Vector{Int}},scale::Float
 
 
       chern_MoirePo=chern_MoirePo+chern_MoirePo'
-      HFmatrix=Construct_HFmatrix(loop_dic,ja,chern_allowedq[ja],allowedq,T1,T2,Nx,Ny,wave,input_DensityMatrix,constq,chern_overlapmatrix)
+      HFmatrix=Construct_HFmatrix_forchern(loop_dic,ja,chern_allowedq[ja],allowedq,chern_allowedq,T1,T2,Nx,Ny,wave,input_DensityMatrix,constq,chern_overlapmatrix)
       eigenvector_intermediate_bc[ja]=eigvecs(chern_Ham+chern_MoirePo+HFmatrix)[:,1] 
       eigenvector_intermediate_single[ja]=eigvecs(chern_Ham+chern_MoirePo)[:,1] 
     
