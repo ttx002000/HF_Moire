@@ -30,7 +30,7 @@ constqspace=[0.0]
 for ja in eachindex(fluxspace), jNq in eachindex(Nqspace), constq in constqspace,V0 in V0space
   arguments=[fluxspace[ja],V0,ϕ,Nqspace[jNq],scale,constq]
 for jb in 1:2
-    submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="20:00",ntasks=1,mem=32)
+    submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="20:00",ntasks=10,mem=32)
 end
 end
 

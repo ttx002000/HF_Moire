@@ -368,7 +368,7 @@ end
 
 
 
-function Construct_HFmatrix(loop_dic::Dict{Vector{Int},Any},pathpointindex::Int64,pathpoint::Vector{Int64},allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64)::Matrix{ComplexF64}
+function Construct_HFmatrix(loop_dic::Dict{Vector{Int},Any},pathpoint::Vector{Int64},allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Matrix{ComplexF64}},constq::Float64)::Matrix{ComplexF64}
   
   
   dimension=2*length(wave)
@@ -484,7 +484,7 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Flo
 
 
       chern_MoirePo=chern_MoirePo+chern_MoirePo'
-      HFmatrix=Construct_HFmatrix(loop_dic,ja,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq)
+      HFmatrix=Construct_HFmatrix(loop_dic,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq)
       eigenvector_intermediate_bc[ja]=eigvecs(chern_Ham+chern_MoirePo+HFmatrix)[:,length(wave)+1] 
       eigenvector_intermediate_single[ja]=eigvecs(chern_Ham+chern_MoirePo)[:,length(wave)+1] 
     
@@ -657,7 +657,7 @@ function calculate_energy(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::F
 
 
       chern_MoirePo=chern_MoirePo+chern_MoirePo'
-      HFmatrix=Construct_HFmatrix(loop_dic,ja,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq)
+      HFmatrix=Construct_HFmatrix(loop_dic,chern_allowedq[ja],allowedq,T1,T2,Nq,wave,input_DensityMatrix,constq)
       Energy_Matrix[ja]=1/2*HFmatrix+chern_MoirePo+chern_Ham
       
     end
