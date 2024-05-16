@@ -1,6 +1,6 @@
 using JLD2
 include("../../src/operators.jl")
-flux=1.0*π
+flux=0.0*π
 V0=0.0
 ϕ=1.0*π
 Nq=3;
@@ -32,4 +32,4 @@ chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uni
 energy,output_Ham=calculate_energy(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,overlapmatrix)
 print(chern)
 
-jldsave(joinpath(@__DIR__, "data_output/try_nopotential_withint_nogauge.jld2"),zerocomp=zerocomp,chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,densitymatrix=DIIS_input_DensityMatrix,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,output_Ham=output_Ham,HF_eigenvec=HF_eigenvec)
+jldsave(joinpath(@__DIR__, "data_output/try_nopotential_withint_randomgauge.jld2"),zerocomp=zerocomp,chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,densitymatrix=DIIS_input_DensityMatrix,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,output_Ham=output_Ham,HF_eigenvec=HF_eigenvec)
