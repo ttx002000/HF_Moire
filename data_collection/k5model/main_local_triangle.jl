@@ -3,12 +3,12 @@ include("../../src/operators_k5model.jl")
 
 V0=0.0
 ϕ=0.0
-Nq=6;
+Nq=0;
 period=18
 scale=4*π/(period*√3);
 ϵr=6
 constq=10447.22667/(ϵr*Nq^2*period^2)
-Dfield=10.0
+Dfield=20.0
 
 
 

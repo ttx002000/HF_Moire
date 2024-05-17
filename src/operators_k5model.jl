@@ -50,7 +50,7 @@ function triangle_initial_Densitymatrix(Dfield::Float64,V0::Float64,ϕ::Float64,
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=3.5*scale
+    cutoffstandard=2.1*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2

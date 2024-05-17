@@ -10,10 +10,10 @@ job_prefix = "piflux"
 
 V0=0.0
 ϕ=0.0 #convert this to radian 
-Nq=9.0; 
+Nq=18.0; 
 periodspace=collect(10.0:1.0:20.0)
 erspace=collect(3.0:1.0:8.0) #divide this by Nq^2
-Dfieldspace=[10.0,15.0,20.0]
+Dfieldspace=[20.0]
 #=
 V0=args[1]
 ϕ=args[2]/180*π
@@ -27,7 +27,7 @@ trytime=args[7]
 
 for  period in periodspace, ϵr in erspace,jtry in 1:5, Dfield in Dfieldspace
   arguments=Float64.([V0,ϕ,Nq,period,ϵr,Dfield,jtry])
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=16,mem=32)
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=32,mem=64)
 end
 
 
