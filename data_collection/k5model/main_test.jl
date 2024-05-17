@@ -31,4 +31,4 @@ chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uni
 energy=calculate_energy(Nq,wave,scale,ϕ,Dfield,DIIS_input_DensityMatrix[1],constq)
 print(chern)
 
-jldsave(joinpath(@__DIR__, "data_output/$(args[1])V0$(args[2])phi$(args[3])Nq$(args[4])period$(args[5])er$(args[6])D$(args[7])try.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,eout=eout)
+jldsave(joinpath(@__DIR__, "data_output/$(args[1])V0$(args[2])phi$(args[3])Nq$(args[4])period$(args[5])er$(args[6])D$(args[7])try.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,eout=eout,bound=bound)

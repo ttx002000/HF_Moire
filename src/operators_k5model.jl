@@ -295,9 +295,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},BG_Den
       DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
       input_DensityMatrix=output_DensityMatrix
       itcount+=1
-      if itcount>500
-        break
-      end
+     
       toc=time()
       println(toc-tic,"eout=$eout")
       flush(stdout)
