@@ -16,21 +16,21 @@ constqspace=collect(0.2:0.2:2.0) #divide this by Nq^2
 V0space=[0.0]
 
 
-#=
+
 for ja in eachindex(fluxspace), jNq in eachindex(Nqspace), constq in constqspace,V0 in V0space
   arguments=[fluxspace[ja],V0,ϕ,Nqspace[jNq],scale,constq]
 for jb in 1:3
     submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="$(Int(Nqspace[jNq])):00:00",ntasks=16,mem=32)
 end
 end
-=#
+
 V0space=collect(0.2:0.2:3.0)
 constqspace=[0.0]
 
 for ja in eachindex(fluxspace), jNq in eachindex(Nqspace), constq in constqspace,V0 in V0space
   arguments=[fluxspace[ja],V0,ϕ,Nqspace[jNq],scale,constq]
 for jb in 1:2
-    submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="40:00",ntasks=10,mem=32)
+    submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="1:00:00",ntasks=10,mem=32)
 end
 end
 

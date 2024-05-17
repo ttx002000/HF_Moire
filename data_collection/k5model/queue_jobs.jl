@@ -6,7 +6,7 @@ using JLD2
 include("submit_job.jl")
 
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "piflux"
+job_prefix = "k5model"
 
 V0=0.0
 ϕ=0.0 #convert this to radian 
