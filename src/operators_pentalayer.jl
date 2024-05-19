@@ -199,7 +199,7 @@ function iteration(Nq::Int64,Nband::Int64,initial_projector::Vector{Matrix{Compl
     DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     input_projector=initial_projector
     
-    while (eout>1*10^-15) || (bad_count<4) || (abs(energy_change)>1*10^-6)
+    while (eout>1*10^-15) || (bad_count<4) || (abs(energy_change)>1*10^-10)
       if eout<1*10^-15
        bad_count+=1
       end
