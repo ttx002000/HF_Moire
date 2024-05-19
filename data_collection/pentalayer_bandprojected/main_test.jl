@@ -14,7 +14,7 @@ trytime=Int(args[6])
 
 
 eigenvector,eigenvalue,wave,wave_diff,allowedq,allowedq_dic,T1,T2,form_factors,constq=single_particle(ϵr,θ,Nq,uD,Nband)
-
+println("Finished single particle")
 initial_projector,band_Ham=get_initial_projector(Nq,Nband,eigenvalue)
 
 DIIS_input_projector,energy,HF_eigenvalue,HF_eigenvector,bound=iteration(Nq,Nband,initial_projector,form_factors,constq,wave_diff,allowedq,allowedq_dic,T1,T2,band_Ham)
