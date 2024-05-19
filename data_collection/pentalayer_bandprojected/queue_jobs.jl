@@ -13,7 +13,7 @@ erspace=collect(3.0:0.5:10.0)
 θ=0.77
 Nband=7
 uD=50.0
-Nq=21
+Nq=15
 
 #=
 ϵr=args[1]

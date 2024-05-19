@@ -86,8 +86,10 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
 
    form_factors=Array{Matrix{ComplexF64}}(undef,Nq^2,Nq^2,length(wave_diff))
    diff_eigenvector=zeros(ComplexF64,length(wave)*2*NL,Nband,Nq^2,length(wave_diff))
-   
-   
+   diff_eigenvector_threads=[zeros(ComplexF64,length(wave)*2*NL,Nband,Nq^2) for _ in 1:length(wave_diff)]
+   form_factors_threads=[Array{Matrix{ComplexF64}}(undef,Nq^2,length(wave_diff)) for _ in 1:Nq^2]
+
+   #=
    for ja in eachindex(wave), jd in eachindex(wave_diff)
        pos=findfirst(item->item==wave[ja]-wave_diff[jd],wave)
        if pos≠nothing
@@ -97,8 +99,21 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
        end
    end
    
-   
-   
+   =#
+ Threads.@threads for jd in eachindex(wave_diff)
+   for ja in eachindex(wave)
+    pos=findfirst(item->item==wave[ja]-wave_diff[jd],wave)
+    if pos≠nothing
+       for jc in 1:Nq^2
+              diff_eigenvector_threads[jd][(ja-1)*2*NL+1:ja*2*NL,:,jc]=eigenvector[jc][(pos-1)*2*NL+1:pos*2*NL,:]
+       end
+    end
+  end
+  end
+
+
+
+   #=
    for ja in 1:Nq^2, jb in 1:Nq^2
      
      meshk1plusq=mod.(allowedq[ja]+allowedq[jb],Nq)
@@ -115,6 +130,27 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
         end
       end
    
+   end
+   =#
+
+   Threads.@threads for ja in 1:Nq^2
+    for jb in 1:Nq^2
+     
+        meshk1plusq=mod.(allowedq[ja]+allowedq[jb],Nq)
+        k2pos=allowedq_dic[meshk1plusq]
+       for  jc in eachindex(wave_diff)
+           gk1plusq=wave_diff[jc]+allowedq[ja]+allowedq[jb]-meshk1plusq
+           gk1plusq_pos=findfirst(item->item==gk1plusq,wave_diff)
+           form_factors_threads[ja][jb,jc]=zeros(ComplexF64,Nband,Nband)
+           if gk1plusq_pos≠nothing
+               form_factors_threads[ja][jb,jc]=(diff_eigenvector_threads[gk1plusq_pos][:,:,ja])'*eigenvector[k2pos][:,:]
+           end
+       end
+     end
+   end
+
+   for ja in 1:Nq^2,jb in 1:Nq^2, jc in eachindex(wave_diff)
+      form_factors[ja,jb,jc]=form_factors_threads[ja][jb,jc]
    end
 
    return eigenvector,eigenvalue,wave,wave_diff,allowedq,allowedq_dic,T1,T2,form_factors,constq
