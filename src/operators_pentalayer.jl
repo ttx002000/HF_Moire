@@ -199,7 +199,7 @@ function iteration(Nq::Int64,Nband::Int64,initial_projector::Vector{Matrix{Compl
     DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     input_projector=initial_projector
     
-    while (eout>1*10^-15) || (bad_count<4) || (energy_change>1*10^-10)
+    while (eout>1*10^-15) || (bad_count<4) || (abs(energy_change)>1*10^-6)
       if eout<1*10^-15
        bad_count+=1
       end
@@ -215,6 +215,45 @@ function iteration(Nq::Int64,Nband::Int64,initial_projector::Vector{Matrix{Compl
      
     
     end
+    
+
+   #=
+    println("startDIIS",itcount)
+    
+    bad_count=0
+    while (eout>1*10^-15) || (bad_count<4) || (abs(energy_change)>1*10^-10)
+        if  eout<1*10^-15 
+            bad_count+=1
+        end
+        tic=time()
+        Bmatrix=zeros(ComplexF64,4,4)
+        for ja in 1:3
+         Bmatrix[ja,4]=1
+         Bmatrix[4,ja]=1
+        end
+    
+        for ja in 1:3,jb in 1:3
+            for jc in 1:Nq^2
+               Bmatrix[ja,jb]+=tr((DIIS_input_DeltaMatrix[ja][jc])'*(DIIS_input_DeltaMatrix[jb][jc]))
+            end
+        end
+        coeff=inv(Bmatrix)*[0;0;0;1]
+       
+        dmk=coeff[1]*(DIIS_input_projector[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_projector[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_projector[3]+DIIS_input_DeltaMatrix[3])
+        eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy=Construct_projector(form_factors,dmk,constq,Nq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,band_Ham,energy)
+        DIIS_input_projector[mod(itcount,3)+1]=dmk
+        itcount+=1
+
+        toc=time()
+        println(toc-tic,"eout=$eout","energy_change=$energy_change")
+        flush(stdout)
+    end
+
+   =#
+
+
+
+
 
     return DIIS_input_projector,energy,HF_eigenvalue,HF_eigenvector,bound
 end
