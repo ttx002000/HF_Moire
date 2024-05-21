@@ -176,12 +176,12 @@ function get_initial_projector(Nq::Int64,Nband::Int64,eigenvalue::Vector{Vector{
     for ja in 1:Nq^2
       initial_projector[ja]=band_eigenvector[:,1]*band_eigenvector[:,1]'
     end
-    #=
+    
     for ja in 1:Nq^2
       A=randn(Nband,Nband)+im*randn(Nband,Nband)
-      initial_projector[ja]+=(A+A')*0.1
+      initial_projector[ja]+=(A+A')*0.3
     end
-   =#
+   
   return initial_projector,band_Ham
 end
 
@@ -202,8 +202,8 @@ function iteration(Nq::Int64,Nband::Int64,initial_projector::Vector{Matrix{Compl
     DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     input_projector=initial_projector
     
-    while (eout>1*10^-10) || (bad_count<4) || (abs(energy_change)>1*10^-6)
-      if eout<1*10^-10
+    while (eout>1*10^-15) || (bad_count<4) || (abs(energy_change)>1*10^-10)
+      if eout<1*10^-15
        bad_count+=1
       end
       tic=time()
@@ -220,7 +220,7 @@ function iteration(Nq::Int64,Nband::Int64,initial_projector::Vector{Matrix{Compl
     end
     
 
-   
+   #=
     println("startDIIS",itcount)
     
     bad_count=0
@@ -251,7 +251,7 @@ function iteration(Nq::Int64,Nband::Int64,initial_projector::Vector{Matrix{Compl
         println(toc-tic,"eout=$eout","energy_change=$energy_change")
         flush(stdout)
     end
-
+  =#
    
 
 
