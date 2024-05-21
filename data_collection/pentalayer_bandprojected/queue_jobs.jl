@@ -23,11 +23,12 @@ uD=args[4]
 Nband=Int(args[5])
 trytime=Int(args[6])
 =#
+#=
 for  jtry in 1:15, er in erspace
   arguments=Float64.([er,0.0,Nq,20.0,Nband,jtry])
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=16,mem=64)
 end
-
+=#
 for  jtry in 1:15, er in erspace
   arguments=Float64.([er,θ,Nq,uD,Nband,jtry])
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=16,mem=64)
