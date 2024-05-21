@@ -10,9 +10,9 @@ job_prefix = "pentalayer"
 
 
 erspace=collect(3.0:0.5:10.0)
-θ=0.77
+θ=0.0
 Nband=7
-uD=50.0
+uD=20.0
 Nq=15
 
 #=
@@ -25,8 +25,8 @@ trytime=Int(args[6])
 =#
 
 
-for  jtry in 6:15
-  arguments=Float64.([6.5,θ,Nq,uD,Nband,jtry])
+for  jtry in 1:15, er in erspace
+  arguments=Float64.([er,θ,Nq,uD,Nband,jtry])
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=16,mem=64)
 end
 

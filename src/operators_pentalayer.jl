@@ -11,8 +11,11 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
     G2=2π/ac*[0,2/√3]
     ϵ=0.2504/ac-1
     NL=5
-    V0=28.9
-    V1=21.0
+    #V0=28.9
+    #V1=21.0
+    V0=0.0
+    V1=0.0
+
     ψ=-0.29
     Rθ=[cos(θ) -sin(θ);sin(θ) cos(θ)]
     g1=G1-(1+ϵ)^(-1)*Rθ*G1
