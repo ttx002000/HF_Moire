@@ -276,7 +276,7 @@ function main()
  
     am=210
     scale=4π/(√3*am)
-    Nq=15
+    Nq=30
     g1=scale*[1,0]
     g2=scale*[-1/2,√3/2]
     T1=g1/Nq
