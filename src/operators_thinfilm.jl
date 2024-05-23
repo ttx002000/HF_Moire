@@ -312,7 +312,7 @@ function main()
         end
     end
     dimension=length(wave)*2
-    chern_eigenvector=zeros(ComplexF64,dimension,Nq+1,Nq+1)
+
 
     Threads.@threads for jv in eachindex(V0space)
         V0=V0space[jv]
