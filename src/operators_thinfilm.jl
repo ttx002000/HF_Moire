@@ -272,7 +272,7 @@ end
 function main()
     L1=25.0
     Ham0,Hamx,Hamy,Hamxx,Hamyy=kpprojected_Ham(L1)
-    V0space=collect(0.4:0.005:0.06)
+    V0space=collect(0.04:0.0005:0.06)
     am=210
     scale=4π/(√3*am)
     Nq=30
