@@ -40,10 +40,10 @@ end
 
 function kpprojected_Ham(L1::Float64)
     
-    #=
+    
     #CdAS
 
-    L1=80;
+    #L1=80;
     
     M1=0.0205;
     A1=0;
@@ -54,9 +54,9 @@ function kpprojected_Ham(L1::Float64)
     D1=10.59;
     D2=11.5;
     
-=#
 
 
+#=
   #SbTe
 
     #L1=25;
@@ -68,7 +68,7 @@ function kpprojected_Ham(L1::Float64)
     C1=0.001;
     D1=-12.39;
     D2=-10.78;
-
+=#
     
     sx=[0 1;1 0]
     sy=[0 -im;im 0]
@@ -270,7 +270,7 @@ function get_chern(Nq::Int64,T1::Vector{Float64},T2::Vector{Float64},chern_eigen
 end
 
 function main()
-    L1=25.0
+    L1=80.0
     Ham0,Hamx,Hamy,Hamxx,Hamyy=kpprojected_Ham(L1)
     V0space=collect(0.04:0.0005:0.06)
  
