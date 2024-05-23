@@ -9,7 +9,7 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "piflux"
 
 fluxspace=[0.7] #multiply this by pi
-ϕ=0.0 #convert this to radian 
+ϕ=20.0 #convert this to radian 
 Nqspace=[9.0]; 
 scale=1.0;
 constqspace=collect(0.1:0.1:0.8) #divide this by Nq^2
