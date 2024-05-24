@@ -291,9 +291,9 @@ function main()
 
     ϕ=0.0
     Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham(L1,Float64(am))
-    HamV=Matrix{ComplexF64}(I,2,2)
-    V0space=collect(0.000:0.00025:0.015)
-    #V0space=collect(0.04:0.0005:0.06)
+    #HamV=Matrix{ComplexF64}(I,2,2)
+    #V0space=collect(0.000:0.00025:0.015)
+    V0space=collect(0.03:0.00025:0.06)
     
     chern_allowedq=Vector{Int64}[]
     for ja in 0:Nq, jb in 0:Nq
