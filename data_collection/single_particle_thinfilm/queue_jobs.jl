@@ -10,4 +10,4 @@ job_prefix = "thinfilm"
 
 
 
-  submit_job(filepath, @__DIR__, job_prefix; time="2:00:00",ntasks=16,mem=64)
+  submit_job(filepath, @__DIR__, job_prefix; time="1:00:00",ntasks=16,mem=64)
