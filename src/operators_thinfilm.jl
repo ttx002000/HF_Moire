@@ -289,11 +289,11 @@ function main()
     T1=g1/Nq
     T2=g2/Nq
 
-    ϕ=0.0
+    ϕ=π/3
     Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham(L1,Float64(am))
-    #HamV=Matrix{ComplexF64}(I,2,2)
-    #V0space=collect(0.000:0.00025:0.015)
-    V0space=collect(0.02:0.00025:0.06)
+    HamV=Matrix{ComplexF64}(I,2,2)
+    V0space=collect(0.000:0.0001:0.02)
+    #V0space=collect(0.02:0.00025:0.06)
     
     chern_allowedq=Vector{Int64}[]
     for ja in 0:Nq, jb in 0:Nq
@@ -326,7 +326,7 @@ function main()
         end
     end
     dimension=length(wave)*2
-    bandindex=length(wave)
+    bandindex=length(wave)+1
 
     Threads.@threads for jv in eachindex(V0space)
         V0=V0space[jv]
