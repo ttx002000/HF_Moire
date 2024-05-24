@@ -38,7 +38,7 @@ end
 
 
 
-function kpprojected_Ham(L1::Float64)
+function kpprojected_Ham(L1::Float64,am::Float64)
     
     #=
     #CdAS
@@ -173,6 +173,7 @@ Hamxx_per=Pmatrix'*Hamxx*Pmatrix;
 Hamxx_proj=basis'*Hamxx_per[1:2*Ncut,1:2*Ncut]*basis;
 Hamyy_proj=Hamxx_proj;
 HamVV=zeros(ComplexF64,4*Ncut,4*Ncut);
+g=4*π/(am*√3)
 for ja in 1:Ncut, jb in 1:Ncut
     
      fac1=g^2*L1^2+(ja-jb)^2*pi^2;
@@ -280,10 +281,6 @@ end
 
 function main()
     L1=80.0
-    Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham(L1)
-    HamV=Matrix{ComplexF64}(I,2,2)
-    V0space=collect(0.005:0.00025:0.015)
-    #V0space=collect(0.04:0.0005:0.06)
     am=200
     scale=4π/(√3*am)
     Nq=30
@@ -291,6 +288,11 @@ function main()
     g2=scale*[-1/2,√3/2]
     T1=g1/Nq
     T2=g2/Nq
+
+    Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham(L1,am)
+    HamV=Matrix{ComplexF64}(I,2,2)
+    V0space=collect(0.005:0.00025:0.015)
+    #V0space=collect(0.04:0.0005:0.06)
     
     chern_allowedq=Vector{Int64}[]
     for ja in 0:Nq, jb in 0:Nq
