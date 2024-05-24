@@ -40,7 +40,7 @@ end
 
 function kpprojected_Ham(L1::Float64)
     
-    
+    #=
     #CdAS
 
     #L1=80;
@@ -53,10 +53,10 @@ function kpprojected_Ham(L1::Float64)
     C1=-0.0145;
     D1=10.59;
     D2=11.5;
-    
+    =#
 
 
-#=
+
   #SbTe
 
     #L1=25;
@@ -68,7 +68,7 @@ function kpprojected_Ham(L1::Float64)
     C1=0.001;
     D1=-12.39;
     D2=-10.78;
-=#
+
     
     sx=[0 1;1 0]
     sy=[0 -im;im 0]
@@ -172,9 +172,18 @@ function kpprojected_Ham(L1::Float64)
 Hamxx_per=Pmatrix'*Hamxx*Pmatrix;
 Hamxx_proj=basis'*Hamxx_per[1:2*Ncut,1:2*Ncut]*basis;
 Hamyy_proj=Hamxx_proj;
-         
+HamVV=zeros(ComplexF64,4*Ncut,4*Ncut);
+for ja in 1:Ncut, jb in 1:Ncut
+    
+     fac1=g^2*L1^2+(ja-jb)^2*pi^2;
+     fac2=g^2*L1^2+(ja+jb)^2*pi^2;
+     HamVV[4*(ja-1)+1:4*(ja-1)+4,4*(jb-1)+1:4*(jb-1)+4]+=2*Matrix{Float64}(I,4,4)*exp(-g*L1)*(exp(g*L1)-(-1)^(ja+jb))*g*L1^2*ja*jb*pi^2/(fac1*fac2)*2/L1;
+ end
+
+HamVV_per=Pmatrix'*HamVV*Pmatrix;
+HamVV_proj=basis'*HamVV_per(1:2*Ncut,1:2*Ncut)*basis;
               
-return Ham0_proj,Hamx_proj,Hamy_proj,Hamxx_proj,Hamyy_proj
+return Ham0_proj,Hamx_proj,Hamy_proj,Hamxx_proj,Hamyy_proj,HamVV_proj
 
 
 end
@@ -183,7 +192,7 @@ end
 
 
 
-function get_MoireHam_thinfilm(k::Vector{Float64},wave::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},g1T::Vector{Int},g2T::Vector{Int},V0::Float64,ϕ::Float64,Ham0::Matrix{ComplexF64},Hamx::Matrix{ComplexF64},Hamy::Matrix{ComplexF64},Hamxx::Matrix{ComplexF64},Hamyy::Matrix{ComplexF64})
+function get_MoireHam_thinfilm(k::Vector{Float64},wave::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},g1T::Vector{Int},g2T::Vector{Int},V0::Float64,ϕ::Float64,Ham0::Matrix{ComplexF64},Hamx::Matrix{ComplexF64},Hamy::Matrix{ComplexF64},Hamxx::Matrix{ComplexF64},Hamyy::Matrix{ComplexF64},HamV::Matrix{ComplexF64})
     dimension=2*length(wave)
     diagHam=zeros(ComplexF64,dimension,dimension)
 
@@ -198,18 +207,18 @@ function get_MoireHam_thinfilm(k::Vector{Float64},wave::Vector{Vector{Int64}},T1
     
        pos=findfirst(item->item==wave[ja]-g2T,wave)
        if pos≠nothing
-           MoirePo[2*(ja-1)+1:2*(ja-1)+2,2*(pos-1)+1:2*(pos-1)+2]=[V0*exp(im*ϕ) 0;0 V0*exp(im*ϕ)]
+           MoirePo[2*(ja-1)+1:2*(ja-1)+2,2*(pos-1)+1:2*(pos-1)+2]=V0*exp(im*ϕ)*HamV
        end
        
      
        pos=findfirst(item->item==wave[ja]-g1T,wave)
        if pos≠nothing
-           MoirePo[2*(ja-1)+1:2*(ja-1)+2,2*(pos-1)+1:2*(pos-1)+2]=[V0*exp(im*ϕ) 0;0 V0*exp(im*ϕ)]
+           MoirePo[2*(ja-1)+1:2*(ja-1)+2,2*(pos-1)+1:2*(pos-1)+2]=V0*exp(im*ϕ)*HamV
        end
    
        pos=findfirst(item->item==wave[ja]+g1T+g2T,wave)
        if pos≠nothing
-           MoirePo[2*(ja-1)+1:2*(ja-1)+2,2*(pos-1)+1:2*(pos-1)+2]=[V0*exp(im*ϕ) 0;0 V0*exp(im*ϕ)]
+           MoirePo[2*(ja-1)+1:2*(ja-1)+2,2*(pos-1)+1:2*(pos-1)+2]=V0*exp(im*ϕ)*HamV
        end
     end
 
@@ -270,11 +279,12 @@ function get_chern(Nq::Int64,T1::Vector{Float64},T2::Vector{Float64},chern_eigen
 end
 
 function main()
-    L1=80.0
-    Ham0,Hamx,Hamy,Hamxx,Hamyy=kpprojected_Ham(L1)
-    V0space=collect(0.005:0.0005:0.015)
- 
-    am=200
+    L1=25.0
+    Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham(L1)
+    HamV=Matrix{ComplexF64}(I,2,2)
+    #V0space=collect(0.005:0.0005:0.015)
+    V0space=collect(0.04:0.0005:0.06)
+    am=210
     scale=4π/(√3*am)
     Nq=30
     g1=scale*[1,0]
@@ -294,7 +304,8 @@ function main()
     gapdown=zeros(ComplexF64,length(V0space))
     direct_gapup=zeros(ComplexF64,length(V0space))
     direct_gapdown=zeros(ComplexF64,length(V0space))
-    
+    bandwidth=zeros(ComplexF64,length(V0space))
+
     
     ϕ=π/3
     g1T=Int.(round.(inv([T1 T2])*g1))
@@ -312,7 +323,7 @@ function main()
         end
     end
     dimension=length(wave)*2
-
+    bandindex=length(wave)+1
 
     Threads.@threads for jv in eachindex(V0space)
         V0=V0space[jv]
@@ -320,20 +331,20 @@ function main()
         eigenvalues=zeros(Float64,dimension,(Nq+1)^2)
      for ja in eachindex(chern_allowedq)
          k=[T1 T2]*chern_allowedq[ja]
-         MoireHam=get_MoireHam_thinfilm(k,wave,T1,T2,g1T,g2T,V0,ϕ,Ham0,Hamx,Hamy,Hamxx,Hamyy)
+         MoireHam=get_MoireHam_thinfilm(k,wave,T1,T2,g1T,g2T,V0,ϕ,Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV)
          FFF=eigen(MoireHam)
-         chern_eigenvector[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=FFF.vectors[:,Int(dimension/2)+1]
+         chern_eigenvector[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=FFF.vectors[:,bandindex]
          eigenvalues[:,ja]=real.(FFF.values)
      end
      trace_condition[jv],_,_,chern[jv],uniform[jv]=get_chern(Nq,T1,T2,chern_eigenvector)
-     gapup[jv]=sort(eigenvalues[Int(dimension/2)+2,:])[1]-sort(eigenvalues[Int(dimension/2)+1,:])[(Nq+1)^2]
-     gapdown[jv]=sort(eigenvalues[Int(dimension/2)+1,:])[1]-sort(eigenvalues[Int(dimension/2),:])[(Nq+1)^2]
-   
-     direct_gapup[jv]=sort(eigenvalues[Int(dimension/2)+2,:]-eigenvalues[Int(dimension/2)+1,:])[1]
-     direct_gapdown[jv]=sort(eigenvalues[Int(dimension/2)+1,:]-eigenvalues[Int(dimension/2),:])[1]
+     gapup[jv]=sort(eigenvalues[bandindex+1,:])[1]-sort(eigenvalues[bandindex,:])[(Nq+1)^2]
+     gapdown[jv]=sort(eigenvalues[bandindex,:])[1]-sort(eigenvalues[bandindex-1,:])[(Nq+1)^2]
+     bandwidth[jv]=-sort(eigenvalues[bandindex,:])[1]+sort(eigenvalues[bandindex,:])[(Nq+1)^2]
+     direct_gapup[jv]=sort(eigenvalues[bandindex+1,:]-eigenvalues[bandindex,:])[1]
+     direct_gapdown[jv]=sort(eigenvalues[bandindex,:]-eigenvalues[bandindex-1,:])[1]
    end
 
 
-   return V0space,am,L1,trace_condition,chern,uniform,gapup,gapdown,direct_gapup,direct_gapdown
+   return V0space,am,L1,trace_condition,chern,uniform,gapup,gapdown,direct_gapup,direct_gapdown,bandwidth
 
 end
