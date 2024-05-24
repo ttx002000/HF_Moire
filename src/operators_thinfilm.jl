@@ -279,12 +279,12 @@ function get_chern(Nq::Int64,T1::Vector{Float64},T2::Vector{Float64},chern_eigen
 end
 
 function main()
-    L1=25.0
+    L1=80.0
     Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham(L1)
     HamV=Matrix{ComplexF64}(I,2,2)
-    #V0space=collect(0.005:0.0005:0.015)
-    V0space=collect(0.04:0.0005:0.06)
-    am=210
+    V0space=collect(0.005:0.00025:0.015)
+    #V0space=collect(0.04:0.0005:0.06)
+    am=200
     scale=4π/(√3*am)
     Nq=30
     g1=scale*[1,0]
@@ -323,7 +323,7 @@ function main()
         end
     end
     dimension=length(wave)*2
-    bandindex=length(wave)+1
+    bandindex=length(wave)
 
     Threads.@threads for jv in eachindex(V0space)
         V0=V0space[jv]
