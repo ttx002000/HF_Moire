@@ -182,7 +182,7 @@ for ja in 1:Ncut, jb in 1:Ncut
  end
 
 HamVV_per=Pmatrix'*HamVV*Pmatrix;
-HamVV_proj=basis'*HamVV_per(1:2*Ncut,1:2*Ncut)*basis;
+HamVV_proj=basis'*HamVV_per[1:2*Ncut,1:2*Ncut]*basis;
               
 return Ham0_proj,Hamx_proj,Hamy_proj,Hamxx_proj,Hamyy_proj,HamVV_proj
 
