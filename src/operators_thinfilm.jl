@@ -40,7 +40,7 @@ end
 
 function kpprojected_Ham(L1::Float64,am::Float64)
     
-    #=
+ 
     #CdAS
 
     #L1=80;
@@ -53,10 +53,10 @@ function kpprojected_Ham(L1::Float64,am::Float64)
     C1=-0.0145;
     D1=10.59;
     D2=11.5;
-    =#
+    
 
 
-
+#=
   #SbTe
 
     #L1=25;
@@ -68,7 +68,7 @@ function kpprojected_Ham(L1::Float64,am::Float64)
     C1=0.001;
     D1=-12.39;
     D2=-10.78;
-
+=#
     
     sx=[0 1;1 0]
     sy=[0 -im;im 0]
