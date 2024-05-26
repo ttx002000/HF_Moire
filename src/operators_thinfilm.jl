@@ -40,7 +40,7 @@ end
 
 function kpprojected_Ham(L1::Float64,am::Float64)
     
- 
+ #=
     #CdAS
 
     #L1=80;
@@ -53,8 +53,8 @@ function kpprojected_Ham(L1::Float64,am::Float64)
     C1=-0.0145;
     D1=10.59;
     D2=11.5;
-  #=
-
+  
+=#
 
 
   #SbTe
@@ -69,7 +69,7 @@ function kpprojected_Ham(L1::Float64,am::Float64)
     D1=-12.39;
     D2=-10.78;
 
-=#
+
     sx=[0 1;1 0]
     sy=[0 -im;im 0]
     sz=[1 0;0 -1]
@@ -280,8 +280,8 @@ function get_chern(Nq::Int64,T1::Vector{Float64},T2::Vector{Float64},chern_eigen
 end
 
 function main()
-    L1=80.0
-    am=200
+    L1=25.0
+    am=210
     scale=4π/(√3*am)
     Nq=30
     g1=scale*[1,0]
@@ -291,9 +291,9 @@ function main()
 
     ϕ=π/3
     Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham(L1,Float64(am))
-    #HamV=Matrix{ComplexF64}(I,2,2)
-    V0space=collect(0.01:0.0001:0.06)
-    #V0space=collect(0.02:0.00025:0.06)
+    HamV=Matrix{ComplexF64}(I,2,2)
+    #V0space=collect(0.01:0.0001:0.06)
+    V0space=collect(0.03:0.0001:0.07)
     
     chern_allowedq=Vector{Int64}[]
     for ja in 0:Nq, jb in 0:Nq
@@ -318,7 +318,7 @@ function main()
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=6.01*scale
+    cutoffstandard=7.01*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*g1+jb*g2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -326,7 +326,7 @@ function main()
         end
     end
     dimension=length(wave)*2
-    bandindex=length(wave)+1
+    bandindex=length(wave)
 
     Threads.@threads for jv in eachindex(V0space)
         V0=V0space[jv]
