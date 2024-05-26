@@ -289,7 +289,7 @@ function main()
     T1=g1/Nq
     T2=g2/Nq
 
-    ϕ=π/3
+    ϕ=0.0
     Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham(L1,Float64(am))
     HamV=Matrix{ComplexF64}(I,2,2)
     #V0space=collect(0.01:0.0001:0.06)
