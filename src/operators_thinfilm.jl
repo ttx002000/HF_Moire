@@ -291,8 +291,8 @@ function main()
 
     ϕ=π/3
     Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham(L1,Float64(am))
-    HamV=Matrix{ComplexF64}(I,2,2)
-    V0space=collect(0.000:0.0001:0.02)
+    #HamV=Matrix{ComplexF64}(I,2,2)
+    V0space=collect(0.01:0.0001:0.06)
     #V0space=collect(0.02:0.00025:0.06)
     
     chern_allowedq=Vector{Int64}[]
