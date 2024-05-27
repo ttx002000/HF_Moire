@@ -16,7 +16,7 @@ constqspace=collect(0.1:0.1:0.8) #divide this by Nq^2
 V0space=collect(0.1:0.1:1.5)
 
 
-
+#=
 for ja in eachindex(fluxspace), jNq in eachindex(Nqspace), constq in constqspace,V0 in V0space
   arguments=[fluxspace[ja],V0,ϕ,Nqspace[jNq],scale,constq]
 for jb in 1:3
@@ -24,3 +24,10 @@ for jb in 1:3
 end
 end
 
+=#
+st=load(joinpath(@__DIR__, "missedjobs1.jlds"))
+index=st["index"]
+for ja in eachindex(index)
+  arguments=[0.7,index[ja][1],20.0,9.0,1.0,index[ja][3]]
+    submit_job(filepath, @__DIR__, job_prefix,arguments,Int(index[ja][4]); time="12:00:00",ntasks=16,mem=32)
+end
