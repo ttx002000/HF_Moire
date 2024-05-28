@@ -42,5 +42,10 @@ for ja in eachindex(fluxspace)
     submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="5:00:00",ntasks=16,mem=128)
  end
 
+ arguments=Float64.([fluxspace[ja],V0,ϕ,4.0,4.0,scale,constq])
+ for jb in 1:2
+    submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="5:00:00",ntasks=16,mem=128)
+ end
+
 end
 
