@@ -280,8 +280,8 @@ function get_chern(Nq::Int64,T1::Vector{Float64},T2::Vector{Float64},chern_eigen
 end
 
 function main(Nb::Int64)
-    L1=80.0
-    am=200
+    L1=80.0 #modify this
+    am=200  #modify this
     scale=4π/(√3*am)
     Nq=30
     g1=scale*[1,0]
@@ -289,11 +289,11 @@ function main(Nb::Int64)
     T1=g1/Nq
     T2=g2/Nq
 
-    ϕ=0.0
+    ϕ=0.0 #modifythis
     Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham(L1,Float64(am),Nb)
     #HamV=Matrix{ComplexF64}(I,Nb,Nb)
     #V0space=collect(0.01:0.0001:0.06)
-    V0space=collect(0.01:0.00025:0.05)
+    V0space=collect(0.01:0.00025:0.05) #modify this
     
     chern_allowedq=Vector{Int64}[]
     for ja in 0:Nq, jb in 0:Nq
@@ -325,8 +325,8 @@ function main(Nb::Int64)
             push!(wave,ja*g1T+jb*g2T)
         end
     end
-    dimension=length(wave)*Nb
-    bandindex=length(wave)*Int(Nb/2)
+    dimension=length(wave)*Nb#modify this
+    bandindex=length(wave)*Int(Nb/2) #modify this
 
     Threads.@threads for jv in eachindex(V0space)
         V0=V0space[jv]
