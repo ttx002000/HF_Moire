@@ -38,9 +38,9 @@ end
 
 
 
-function kpprojected_Ham(L1::Float64,am::Float64)
+function kpprojected_Ham(L1::Float64,am::Float64,Nb::Int64)
     
- #=
+ 
     #CdAS
 
     #L1=80;
@@ -54,9 +54,9 @@ function kpprojected_Ham(L1::Float64,am::Float64)
     D1=10.59;
     D2=11.5;
   
-=#
 
 
+#=
   #SbTe
 
     #L1=25;
@@ -68,12 +68,12 @@ function kpprojected_Ham(L1::Float64,am::Float64)
     C1=0.001;
     D1=-12.39;
     D2=-10.78;
-
+=#
 
     sx=[0 1;1 0]
     sy=[0 -im;im 0]
     sz=[1 0;0 -1]
-    Ncut=8;
+    Ncut=20;
      
 
   tsz=diagm([1.0,-1.0,-1.0,1.0])
@@ -117,7 +117,7 @@ function kpprojected_Ham(L1::Float64,am::Float64)
 
          Ham0_per=Pmatrix'*Ham0*Pmatrix;
          FFF=eigen(Ham0_per[1:2*Ncut,1:2*Ncut]);
-         basis=FFF.vectors[:,Ncut:Ncut+1];
+         basis=FFF.vectors[:,Ncut+1-Int(Nb/2):Ncut+Int(Nb/2)];
 
          Ham0_proj=basis'*Ham0_per[1:2*Ncut,1:2*Ncut]*basis;
 
@@ -193,14 +193,14 @@ end
 
 
 
-function get_MoireHam_thinfilm(k::Vector{Float64},wave::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},g1T::Vector{Int},g2T::Vector{Int},V0::Float64,ϕ::Float64,Ham0::Matrix{ComplexF64},Hamx::Matrix{ComplexF64},Hamy::Matrix{ComplexF64},Hamxx::Matrix{ComplexF64},Hamyy::Matrix{ComplexF64},HamV::Matrix{ComplexF64})
-    dimension=2*length(wave)
+function get_MoireHam_thinfilm(k::Vector{Float64},wave::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},g1T::Vector{Int},g2T::Vector{Int},V0::Float64,ϕ::Float64,Ham0::Matrix{ComplexF64},Hamx::Matrix{ComplexF64},Hamy::Matrix{ComplexF64},Hamxx::Matrix{ComplexF64},Hamyy::Matrix{ComplexF64},HamV::Matrix{ComplexF64},Nb::Int64)
+    dimension=Nb*length(wave)
     diagHam=zeros(ComplexF64,dimension,dimension)
 
 
     for ja in eachindex(wave)
        kvec=k+[T1 T2]*wave[ja]
-       diagHam[2*(ja-1)+1:2*ja,2*(ja-1)+1:2*ja]=Ham0+kvec[1]*Hamx+kvec[2]*Hamy+kvec[1]^2/2*Hamxx+kvec[2]^2/2*Hamyy
+       diagHam[Nb*(ja-1)+1:Nb*ja,Nb*(ja-1)+1:Nb*ja]=Ham0+kvec[1]*Hamx+kvec[2]*Hamy+kvec[1]^2/2*Hamxx+kvec[2]^2/2*Hamyy
     end
 
     MoirePo=zeros(ComplexF64,dimension,dimension)
@@ -208,18 +208,18 @@ function get_MoireHam_thinfilm(k::Vector{Float64},wave::Vector{Vector{Int64}},T1
     
        pos=findfirst(item->item==wave[ja]-g2T,wave)
        if pos≠nothing
-           MoirePo[2*(ja-1)+1:2*(ja-1)+2,2*(pos-1)+1:2*(pos-1)+2]=V0*exp(im*ϕ)*HamV
+           MoirePo[Nb*(ja-1)+1:Nb*(ja),Nb*(pos-1)+1:Nb*(pos)]=V0*exp(im*ϕ)*HamV
        end
        
      
        pos=findfirst(item->item==wave[ja]-g1T,wave)
        if pos≠nothing
-           MoirePo[2*(ja-1)+1:2*(ja-1)+2,2*(pos-1)+1:2*(pos-1)+2]=V0*exp(im*ϕ)*HamV
+           MoirePo[Nb*(ja-1)+1:Nb*(ja),Nb*(pos-1)+1:Nb*(pos)]=V0*exp(im*ϕ)*HamV
        end
    
        pos=findfirst(item->item==wave[ja]+g1T+g2T,wave)
        if pos≠nothing
-           MoirePo[2*(ja-1)+1:2*(ja-1)+2,2*(pos-1)+1:2*(pos-1)+2]=V0*exp(im*ϕ)*HamV
+           MoirePo[Nb*(ja-1)+1:Nb*(ja),Nb*(pos-1)+1:Nb*(pos)]=V0*exp(im*ϕ)*HamV
        end
     end
 
@@ -279,9 +279,9 @@ function get_chern(Nq::Int64,T1::Vector{Float64},T2::Vector{Float64},chern_eigen
 
 end
 
-function main()
-    L1=25.0
-    am=210
+function main(Nb::Int64)
+    L1=80.0
+    am=200
     scale=4π/(√3*am)
     Nq=30
     g1=scale*[1,0]
@@ -290,10 +290,10 @@ function main()
     T2=g2/Nq
 
     ϕ=0.0
-    Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham(L1,Float64(am))
-    HamV=Matrix{ComplexF64}(I,2,2)
+    Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham(L1,Float64(am),Nb)
+    #HamV=Matrix{ComplexF64}(I,Nb,Nb)
     #V0space=collect(0.01:0.0001:0.06)
-    V0space=collect(0.03:0.0001:0.07)
+    V0space=collect(0.01:0.00025:0.05)
     
     chern_allowedq=Vector{Int64}[]
     for ja in 0:Nq, jb in 0:Nq
@@ -318,15 +318,15 @@ function main()
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=7.01*scale
+    cutoffstandard=6.01*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*g1+jb*g2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
             push!(wave,ja*g1T+jb*g2T)
         end
     end
-    dimension=length(wave)*2
-    bandindex=length(wave)
+    dimension=length(wave)*Nb
+    bandindex=length(wave)*Int(Nb/2)
 
     Threads.@threads for jv in eachindex(V0space)
         V0=V0space[jv]
@@ -334,7 +334,7 @@ function main()
         eigenvalues=zeros(Float64,dimension,(Nq+1)^2)
      for ja in eachindex(chern_allowedq)
          k=[T1 T2]*chern_allowedq[ja]
-         MoireHam=get_MoireHam_thinfilm(k,wave,T1,T2,g1T,g2T,V0,ϕ,Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV)
+         MoireHam=get_MoireHam_thinfilm(k,wave,T1,T2,g1T,g2T,V0,ϕ,Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV,Nb)
          FFF=eigen(MoireHam)
          chern_eigenvector[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=FFF.vectors[:,bandindex]
          eigenvalues[:,ja]=real.(FFF.values)
