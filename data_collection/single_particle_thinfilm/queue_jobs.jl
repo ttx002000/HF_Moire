@@ -9,5 +9,5 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "thinfilm"
 
 for Nb in [10,12]
-  submit_job(filepath, @__DIR__, job_prefix,Nb; time="8:00:00",ntasks=64,mem=128)
+  submit_job(filepath, @__DIR__, job_prefix,Nb; time="5:00:00",ntasks=64,mem=128)
 end
