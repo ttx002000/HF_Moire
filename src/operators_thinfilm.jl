@@ -36,9 +36,145 @@ function get_MoireHam(k::Vector{Float64},δ::Float64,wave::Vector{Vector{Int64}}
 end
 
 
+function kpprojected_Ham_CdAs_zdependence(L1::Float64,am::Float64,Nb::Int64)
+    
+ 
+    #CdAS
+
+    #L1=80;
+    
+    M1=0.0205;
+    A1=0;
+    A2=0.889;
+    B1=18.77;
+    B2=13.5;
+    C1=-0.0145;
+    D1=10.59;
+    D2=11.5;
+  
 
 
-function kpprojected_Ham(L1::Float64,am::Float64,Nb::Int64)
+
+    sx=[0 1;1 0]
+    sy=[0 -im;im 0]
+    sz=[1 0;0 -1]
+    Ncut=20;
+     
+
+  tsz=diagm([1.0,-1.0,-1.0,1.0])
+  OP=zeros(Float64,4*Ncut,4*Ncut);
+    for jc in 1:Ncut, jd in 1:4
+    
+         OP[4*(jc-1)+jd,4*(jc-1)+jd]=(tsz[jd,jd]);
+
+    end
+     FFF=eigen(OP);
+     Pmatrix=FFF.vectors[:,1:2*Ncut];
+
+
+     #Let's construct the basis states at k=0
+
+
+
+
+     Ham0=zeros(ComplexF64,4*Ncut,4*Ncut);
+     kx=0;
+     ky=0;
+     k=0;
+ 
+ 
+ 
+     for jb in 1:Ncut, jc in 1:Ncut
+             if jc≠jb
+                 fac=jb*jc/(jc^2-jb^2)*((-1)^(jc+jb)-1)*2/L1;
+                 Ham0[4*(jb-1)+1:4*(jb-1)+4,4*(jc-1)+1:4*(jc-1)+4]+=
+                 [-im*A1*fac*sx zeros(ComplexF64,2,2);zeros(ComplexF64,2,2) +im*A1*fac*sx]; 
+         end
+     end
+ 
+ 
+         for jc in 1:Ncut
+             fac=-jc^2*pi^2/(2*L1)*2/L1;
+               Ham0[4*(jc-1)+1:4*(jc-1)+4,4*(jc-1)+1:4*(jc-1)+4]+=(C1-D1*fac+D2*k^2)*Matrix{Float64}(I,4,4)+[(M1-B2*k^2+B1*fac)*sz A2*(kx-im*ky)*sx; A2*(kx+im*ky)*sx (M1-B2*k^2+B1*fac)*sz]
+         end
+
+
+
+         Ham0_per=Pmatrix'*Ham0*Pmatrix;
+         FFF=eigen(Ham0_per[1:2*Ncut,1:2*Ncut]);
+         basis=FFF.vectors[:,Ncut+1-Int(Nb/2):Ncut+Int(Nb/2)];
+
+         Ham0_proj=basis'*Ham0_per[1:2*Ncut,1:2*Ncut]*basis;
+
+
+
+
+         #Constructing Hx now
+
+
+        Hamx=zeros(ComplexF64,4*Ncut,4*Ncut);
+        kx=0;
+        ky=0;
+        k=0;
+         
+        for jc in 1:Ncut
+            fac=-jc^2*pi^2/(2*L1)*2/L1
+            Hamx[4*(jc-1)+1:4*(jc-1)+4,4*(jc-1)+1:4*(jc-1)+4]+=[zeros(ComplexF64,2,2) A2*sx;A2*sx zeros(ComplexF64,2,2)];
+        end
+         Hamx_per=Pmatrix'*Hamx*Pmatrix
+         Hamx_proj=basis'*Hamx_per[1:2*Ncut,1:2*Ncut]*basis
+
+         #Constructing Hy now
+         Hamy=zeros(ComplexF64,4*Ncut,4*Ncut);
+            kx=0;
+            ky=0;
+            k=0;
+         
+         
+         
+                 for jc in 1:Ncut
+                     fac=-jc^2*pi^2/(2*L1)*2/L1;
+                     Hamy[4*(jc-1)+1:4*(jc-1)+4,4*(jc-1)+1:4*(jc-1)+4]+=[zeros(ComplexF64,2,2) -im*A2*sx; im*A2*sx zeros(ComplexF64,2,2)]; 
+                 end
+
+         Hamy_per=Pmatrix'*Hamy*Pmatrix;
+         Hamy_proj=basis'*Hamy_per[1:2*Ncut,1:2*Ncut]*basis;
+
+
+         #Constructing Hxx now
+
+
+
+   Hamxx=zeros(ComplexF64,4*Ncut,4*Ncut);
+      kx=0;
+      ky=0;
+      k=0;
+         for jc in 1:Ncut
+            fac=-jc^2*π^2/(2*L1)*2/L1;
+            Hamxx[4*(jc-1)+1:4*(jc-1)+4,4*(jc-1)+1:4*(jc-1)+4]+=(2*D2)*Matrix{Float64}(I,4,4)+[(-2*B2)*sz zeros(Float64,2,2);zeros(Float64,2,2) (-2*B2)*sz];
+        end
+
+ Hamxx_per=Pmatrix'*Hamxx*Pmatrix;
+ Hamxx_proj=basis'*Hamxx_per[1:2*Ncut,1:2*Ncut]*basis;
+ Hamyy_proj=Hamxx_proj;
+ HamVV=zeros(ComplexF64,4*Ncut,4*Ncut);
+ g=4*π/(am*√3)
+  for ja in 1:Ncut, jb in 1:Ncut
+    
+      fac1=g^2*L1^2+(ja-jb)^2*pi^2;
+      fac2=g^2*L1^2+(ja+jb)^2*pi^2;
+      HamVV[4*(ja-1)+1:4*(ja-1)+4,4*(jb-1)+1:4*(jb-1)+4]+=2*Matrix{Float64}(I,4,4)*exp(-g*L1)*(exp(g*L1)-(-1)^(ja+jb))*g*L1^2*ja*jb*pi^2/(fac1*fac2)*2/L1;
+  end
+
+  HamVV_per=Pmatrix'*HamVV*Pmatrix;
+  HamVV_proj=basis'*HamVV_per[1:2*Ncut,1:2*Ncut]*basis;
+              
+ return Ham0_proj,Hamx_proj,Hamy_proj,Hamxx_proj,Hamyy_proj,HamVV_proj
+
+
+ end
+
+function kpprojected_Ham(L1::Float64,am::Float64,Nb::Int64) #In principle, this only works well for two bands
     
  
     #CdAS
@@ -290,10 +426,10 @@ function main(Nb::Int64)
     T2=g2/Nq
 
     ϕ=0.0 #modifythis
-    Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham(L1,Float64(am),Nb)
-    HamV=Matrix{ComplexF64}(I,Nb,Nb)
+    Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham_CdAs_zdependence(L1,Float64(am),Nb)
+    #HamV=Matrix{ComplexF64}(I,Nb,Nb)
     #V0space=collect(0.01:0.0001:0.06)
-    V0space=collect(0.005:0.0001:0.03) #modify this
+    V0space=collect(0.005:0.00025:0.03) #modify this
     
     chern_allowedq=Vector{Int64}[]
     for ja in 0:Nq, jb in 0:Nq
