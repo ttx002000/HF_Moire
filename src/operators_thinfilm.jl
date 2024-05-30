@@ -318,7 +318,7 @@ function main(Nb::Int64)
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=6.01*scale
+    cutoffstandard=5.01*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*g1+jb*g2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
