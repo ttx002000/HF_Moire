@@ -12,7 +12,7 @@ Nband=Int(args[5])
 
 
 
-eigenvector,eigenvalue,wave,wave_diff,allowedq,allowedq_dic,T1,T2,form_factors,constq=single_particle(ϵr,θ,Nq,uD,Nband)
+eigenvector,eigenvalue,wave,wave_diff,allowedq,allowedq_dic,T1,T2,form_factors,constq,ϵ=single_particle(ϵr,θ,Nq,uD,Nband)
 println("Finished single particle")
 initial_projector,band_Ham=get_initial_projector(Nq,Nband,eigenvalue)
 

@@ -11,7 +11,8 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
     G2=2π/ac*[0,2/√3]
     #ϵ=0.2504/ac-1
     
-    ϵ=0.650313445592362/(norm(G1)-0.650313445592362)
+    #ϵ=0.650313445592362/(norm(G1)-0.650313445592362)
+    ϵ=0.66/(norm(G1)-0.66)
     NL=5
     #V0=28.9
     #V1=21.0
@@ -158,7 +159,7 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
       form_factors[ja,jb,jc]=form_factors_threads[ja][jb,jc]
    end
 
-   return eigenvector,eigenvalue,wave,wave_diff,allowedq,allowedq_dic,T1,T2,form_factors,constq
+   return eigenvector,eigenvalue,wave,wave_diff,allowedq,allowedq_dic,T1,T2,form_factors,constq,ϵ
 
 end
 
