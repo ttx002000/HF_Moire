@@ -181,7 +181,7 @@ function get_initial_projector(Nq::Int64,Nband::Int64,eigenvalue::Vector{Vector{
     
     for ja in 1:Nq^2
       A=randn(Nband,Nband)+im*randn(Nband,Nband)
-      initial_projector[ja]+=(A+A')*0.3
+      initial_projector[ja]+=(A+A')*1.0
     end
    
   return initial_projector,band_Ham
