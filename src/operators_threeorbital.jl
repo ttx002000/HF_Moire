@@ -471,8 +471,8 @@ function excecute_loop()
      
             HF_DensityMatrix,eoutmatrix[ja][jb],energymatrix[ja][jb],HF_eigenvalue[ja][jb],HF_eigenvector[ja][jb]=iteration_loop(Nq,nu,allowedq,T1,T2,single_Ham,U,Uprime,input_DensityMatrix)
             
-            overlap[ja][jb]=calculate_overlap(HF_eigenvector,single_eigenvector,Nq)
-            chern_matrix[ja][jb]=calculate_chern(HF_eigenvector,Nq,allowedq,T1,T2)
+            overlap[ja][jb]=calculate_overlap(HF_eigenvector[ja][jb],single_eigenvector,Nq)
+            chern_matrix[ja][jb]=calculate_chern(HF_eigenvector[ja][jb],Nq,allowedq,T1,T2)
             AdAmatrix[ja][jb],BdBmatrix[ja][jb],CdCmatrix[ja][jb],BdAmatrix[ja][jb],CdBmatrix[ja][jb],AdCmatrix[ja][jb]=calculate_observable(Nq,HF_DensityMatrix,T1,T2,allowedq)
         end
     end
