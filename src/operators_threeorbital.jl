@@ -201,9 +201,9 @@ function get_Ham(ϵA::Float64,ϵB::Float64,ϵC::Float64,t1::Float64,t2::Float64,
    
     H=zeros(ComplexF64,3,3)
    
-    H[3,1]+=t2*exp(im*π/3)+t2*exp(-im*π/3)*exp(im*dot(k,[0,-1]))+t2*exp(-im*π)*exp(im*dot(k,[√3/2,-1/2]))
-    H[2,1]+=t1*exp(im*dot(k,[-√3/2,-1/2]))+t1*exp(-im*2*π/3)*exp(im*dot(k,[0,-1]))+t1*exp(-im*4*π/3)
-    H[2,3]+=t3+t3*exp(im*dot(k,[-√3/2,-1/2]))+t3*exp(im*dot(k,[-√3/2,1/2]))
+    H[3,1]+=-(t2*exp(im*π/3)+t2*exp(-im*π/3)*exp(im*dot(k,[0,-1]))+t2*exp(-im*π)*exp(im*dot(k,[√3/2,-1/2])))
+    H[2,1]+=-(t1*exp(im*dot(k,[-√3/2,-1/2]))+t1*exp(-im*2*π/3)*exp(im*dot(k,[0,-1]))+t1*exp(-im*4*π/3))
+    H[2,3]+=-(t3+t3*exp(im*dot(k,[-√3/2,-1/2]))+t3*exp(im*dot(k,[-√3/2,1/2])))
 
     H=H+H'
  
@@ -253,7 +253,7 @@ function get_input(ϵA::Float64,ϵB::Float64,ϵC::Float64,t1::Float64,t2::Float6
         single_eigenvector[ja]=eigen(single_Ham[ja]).vectors
         single_eigenvalue[ja]=eigen(single_Ham[ja]).values
     
-        if (ja==1) && (t3==0) &(ϵB==ϵC)
+        if (ja==1) && (t3==0.0) &(ϵB==ϵC)
         
             single_eigenvector[ja][:,2]=[0.0,1/√2,-1/√2]
             single_eigenvector[ja][:,1]=[0.0,1/√2,1/√2]
@@ -372,19 +372,23 @@ function calculate_observable(Nq::Int64,input_DM::Vector{Matrix{ComplexF64}},T1:
 
 end
 
-function calculate_chern(HF_eigenvector::Vector{Matrix{ComplexF64}},Nq::Int64,allowedq::Vector{Vector{Int}})
+function calculate_chern(HF_eigenvector::Vector{Matrix{ComplexF64}},Nq::Int64,allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64})
   
   chern=zeros(ComplexF64,3)
   for jchern in 1:3
   
     Uonelink=zeros(ComplexF64,Nq,Nq+1)
     Utwolink=zeros(ComplexF64,Nq+1,Nq)
-  
+    Apos=[0.0,0.0]
+    Bpos=[-0.5,-√3/2]/√3
+    Cpos=[0.5,-√3/2]/√3
 
     eigenvector_bc=zeros(ComplexF64,3,Nq+1,Nq+1)
     for ja in 1:Nq+1, jb in 1:Nq+1
+      kvec=(ja-1)*T1+(jb-1)*T2
       pos=findfirst(item->item==[mod(ja-1,Nq),mod(jb-1,Nq)],allowedq)
-      eigenvector_bc[:,ja,jb]=HF_eigenvector[pos][:,jchern]
+      transfer_matrix=diagm([exp(-im*dot(kvec,Apos)),exp(-im*dot(kvec,Bpos)),exp(-im*dot(kvec,Cpos))])
+      eigenvector_bc[:,ja,jb]=transfer_matrix*HF_eigenvector[pos][:,jchern]
     end
 
     for ja in 1:Nq, jb in 1:Nq+1
@@ -411,20 +415,21 @@ end
 
 function excecute_loop()
    # ϵAspace=collect(0.0:0.2:6.0)
-    ϵAspace=collect(1.0:0.5:9.0)
+    ϵAspace=collect(1.0:1.0:9.0)
     ϵBspace=[0.0]
     ϵCspace=[0.0]
     t1space=[1.0]
     t2space=[1.0]
-    t3space=[0.02]
-    Nq=15
-    Uspace=collect(0.05:0.05:1.0)
+    t3space=[0.00]
+    Nq=24
+    Uspace=collect(0.1:0.1:0.8)
     #Uspace=[0.1]
     nu=1
     allowedq=0
 
     single_eigenvalue=[[[zeros(ComplexF64,3) for _ in 1:Nq^2] for _ in eachindex(Uspace)] for _ in eachindex(ϵAspace)]
     HF_eigenvalue=[[[zeros(ComplexF64,3) for _ in 1:Nq^2] for _ in eachindex(Uspace)] for _ in eachindex(ϵAspace)]
+    HF_eigenvector=[[[zeros(ComplexF64,3,3) for _ in 1:Nq^2] for _ in eachindex(Uspace)] for _ in eachindex(ϵAspace)]
 
     eoutmatrix=[zeros(ComplexF64,length(Uspace)) for _ in eachindex(ϵAspace)]
     energymatrix=[zeros(ComplexF64,length(Uspace)) for _ in eachindex(ϵAspace)]
@@ -464,10 +469,10 @@ function excecute_loop()
 
             single_AdAmatrix[ja][jb],single_BdBmatrix[ja][jb],single_CdCmatrix[ja][jb],single_BdAmatrix[ja][jb],single_CdBmatrix[ja][jb],single_AdCmatrix[ja][jb]=calculate_observable(Nq,single_DensityMatrix,T1,T2,allowedq)
      
-            HF_DensityMatrix,eoutmatrix[ja][jb],energymatrix[ja][jb],HF_eigenvalue[ja][jb],HF_eigenvector=iteration_loop(Nq,nu,allowedq,T1,T2,single_Ham,U,Uprime,input_DensityMatrix)
-          
+            HF_DensityMatrix,eoutmatrix[ja][jb],energymatrix[ja][jb],HF_eigenvalue[ja][jb],HF_eigenvector[ja][jb]=iteration_loop(Nq,nu,allowedq,T1,T2,single_Ham,U,Uprime,input_DensityMatrix)
+            
             overlap[ja][jb]=calculate_overlap(HF_eigenvector,single_eigenvector,Nq)
-            chern_matrix[ja][jb]=calculate_chern(HF_eigenvector,Nq,allowedq)
+            chern_matrix[ja][jb]=calculate_chern(HF_eigenvector,Nq,allowedq,T1,T2)
             AdAmatrix[ja][jb],BdBmatrix[ja][jb],CdCmatrix[ja][jb],BdAmatrix[ja][jb],CdBmatrix[ja][jb],AdCmatrix[ja][jb]=calculate_observable(Nq,HF_DensityMatrix,T1,T2,allowedq)
         end
     end
@@ -504,7 +509,7 @@ function excecute_loop()
     parameters["nu"]=nu
 
 
-  return observable,parameters,energymatrix,eoutmatrix,single_eigenvalue,HF_eigenvalue
+  return observable,parameters,energymatrix,eoutmatrix,single_eigenvalue,HF_eigenvalue,HF_eigenvector
 end
 
 function test_func()
