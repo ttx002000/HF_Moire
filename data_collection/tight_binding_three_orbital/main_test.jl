@@ -9,9 +9,9 @@ args=parse.(Int64,ARGS)
 trytime=args[1]
 include(joinpath(@__DIR__,"../../src/operators_threeorbital.jl"))
 
-observable,parameters,energymatrix,eoutmatrix,single_eigenvalue,HF_eigenvalue=excecute_loop()
+observable,parameters,energymatrix,eoutmatrix,single_eigenvalue,HF_eigenvalue,HF_eigenvector=excecute_loop()
 
-jldsave(joinpath(@__DIR__, "data_output/try$(trytime)_4/3phasediagram.jld2"),observable=observable,parameters=parameters,energymatrix=energymatrix,eoutmatrix=eoutmatrix,single_eigenvalue=single_eigenvalue,HF_eigenvalue=HF_eigenvalue,HF_eigenvalue=HF_eigenvector)
+jldsave(joinpath(@__DIR__, "data_output/try$(trytime)_4/3phasediagram.jld2"),observable=observable,parameters=parameters,energymatrix=energymatrix,eoutmatrix=eoutmatrix,single_eigenvalue=single_eigenvalue,HF_eigenvalue=HF_eigenvalue,HF_eigenvector=HF_eigenvector)
 
 
 
