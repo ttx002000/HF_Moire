@@ -26,7 +26,7 @@ constq=2.0
 scale=1.0
 Geonum=8
 for spin in spinspace,jtry in 1:3
-   arguments=[spin,0.0,0.0,Geomnum,scale,constq,jtry]
+   arguments=[spin,0.0,0.0,Geonum,scale,constq,jtry]
    submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",cpus_per_task=48)
 
 end
