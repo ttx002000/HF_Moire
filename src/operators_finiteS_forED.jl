@@ -332,8 +332,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
     println("startDIIS",itcount)
     bad_count=0
 
-    while (eout>10^-13) || (bad_count<4)
-        if  eout<1*10^-13 
+    while (eout>10^-14) || (bad_count<4)
+        if  eout<1*10^-14 
             bad_count+=1
         end
         tic=time()
