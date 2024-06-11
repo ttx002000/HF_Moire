@@ -16,7 +16,7 @@ scale=args[5];
 constq=args[6]/Nq^2
 trytimes=Int(args[7])
 spin=args[1]
-
+vf=8*sqrt(spin*sqrt(3)/(4*π))
 overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(spin,vf,V0,ϕ,scale,Nq)
 NoHFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,initial_DensityMatrix)
  
