@@ -18,7 +18,7 @@ spinspace=collect(1.0:0.5:10.0)
 for jb in eachindex(vfspace), jc in eachindex(constq)
    arguments=[spinspace[jb],V0,ϕ,Nq,scale,constq[jc]]
 for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="5:00:00",ntasks=36)
+     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="5:00:00",ntasks=36,mem=64)
 end
 end
 
