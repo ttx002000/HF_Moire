@@ -5,7 +5,7 @@ using LinearAlgebra
 include("submit_job.jl")
 
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "finiteS"
+job_prefix = "ED_finiteS"
 
 
 

@@ -5,7 +5,7 @@ using LinearAlgebra
 include("submit_job.jl")
 
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "finiteS"
+job_prefix = "chern_finiteS"
 
 
 ϕ=0.0 #convert this to radian 
@@ -18,7 +18,7 @@ spinspace=collect(1.0:0.5:10.0)
 for jb in eachindex(vfspace), jc in eachindex(constq)
    arguments=[spinspace[jb],V0,ϕ,Nq,scale,constq[jc]]
 for ja in 1:3
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="5:00:00",cpus_per_task=36)
+     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="5:00:00",ntasks=36)
 end
 end
 
