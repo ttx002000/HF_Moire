@@ -1,6 +1,6 @@
 
 
-function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time="00:120:00", cpus_per_task=1, mem=64, partition="owners,simes")
+function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time="00:120:00", mem=64, partition="owners,simes")
     outpath = joinpath(dirpath, "out")
     slurmpath = joinpath(dirpath, "slurmfiles")# Why is there a job_prefix semicolon there?
     mkpath(outpath)
@@ -15,7 +15,6 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     #SBATCH --time=$time
     #SBATCH --nodes=$nodes
     #SBATCH --ntasks=$ntasks
-    #SBATCH --cpus-per-task=$cpus_per_task
     #SBATCH --mem=$(mem)G
     #SBATCH --mail-type=BEGIN,FAIL,END
     #SBATCH --mail-user=ttx2000@stanford.edu
@@ -28,7 +27,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     ml julia/1.10.0
 
     # multithreading
-    export JULIA_NUM_THREADS=\$SLURM_CPUS_ON_NODE
+    export JULIA_NUM_THREADS=$(ntasks)
 
     # run the script
     julia $filepath $(args[1]) $(args[2]) $(args[3]) $(args[4]) $(args[5]) $(args[6]) $(args[7])"""
