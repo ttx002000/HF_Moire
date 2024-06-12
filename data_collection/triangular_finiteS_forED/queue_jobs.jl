@@ -21,7 +21,7 @@ constq=args[6]/(Nx*Ny)
 trytimes=Int(args[7])
 =#
 
-spinspace=collect(1.0:0.5:10.0)
+spinspace=collect(1.0:0.5:13.0)
 constq=2.0
 scale=1.0
 Geonum=9
