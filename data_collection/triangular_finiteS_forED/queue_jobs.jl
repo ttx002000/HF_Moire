@@ -24,10 +24,17 @@ trytimes=Int(args[7])
 spinspace=collect(1.0:0.5:10.0)
 constq=2.0
 scale=1.0
-Geonum=8
+Geonum=9
 for spin in spinspace,jtry in 1:3
    arguments=[spin,0.0,0.0,Geonum,scale,constq,jtry]
    submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=48,mem=128)
+
+end
+
+Geonum=10
+for spin in spinspace,jtry in 1:3
+   arguments=[spin,0.0,0.0,Geonum,scale,constq,jtry]
+   submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=16,mem=128)
 
 end
 
