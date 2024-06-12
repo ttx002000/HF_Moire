@@ -39,7 +39,7 @@ for spin in spinspace,jtry in 1:3
 end
 
 Geonum=8
-for spin in [2.0],jtry in 1:3
+for spin in spinspace,jtry in 1:3
    arguments=[spin,0.0,0.0,Geonum,scale,constq,jtry]
    submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",ntasks=48,mem=128)
 

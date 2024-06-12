@@ -5,8 +5,13 @@ using Random
 
 
 
+function overlap(k::Vector{Float64},q::Vector{Float64},spin::Float64,M::Float64)::ComplexF64
+    v=(M^2+norm(k)^2+k[1]*q[1]+k[2]*q[2]-im*(k[1]*q[2]-k[2]*q[1]))^(Int(2*spin))/((M^2+norm(k)^2)^spin*(M^2+norm(k+q)^2)^spin)
  
-
+    return v
+end
+ 
+#=
 function overlap(k::Vector{Float64},q::Vector{Float64},spin::Float64,M::Float64)::ComplexF64
     #v=(M^2+norm(k)^2+k[1]*q[1]+k[2]*q[2]-im*(k[1]*q[2]-k[2]*q[1]))^(Int(2*spin))/((M^2+norm(k)^2)^spin*(M^2+norm(k+q)^2)^spin)
     f1=-2*M^2*spin*(norm(q)^2)+(norm(k+q)^2+M^2)*(norm(k)^2+M^2)
@@ -15,7 +20,7 @@ function overlap(k::Vector{Float64},q::Vector{Float64},spin::Float64,M::Float64)
     f4=(norm(k+q)^2+M^2)^spin
     return f1*f2/(f3*f4)
 end
- 
+=#
  
 function Coulomb(k::Vector{Int64},T1::Vector{Float64},T2::Vector{Float64})::Float64
   

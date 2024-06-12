@@ -30,6 +30,6 @@ DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,ene
 HFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatrix[1])
 
 
-jldsave(joinpath(@__DIR__, "data_output/$(args[1])spin$(args[2])V0$(args[3])phi$(args[4])Geom$(args[5])scale$(args[6])constq$(args[7])try_idealvF.jld2"),HF_eigenvector=HF_eigenvector,HFdensity=HFdensity,NoHFdensity=NoHFdensity,arguments=args,energy=energy,HF_eigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,allowedq=allowedq,T1=T1,T2=T2,b1T=b1T,b2T=b2T,a1m=a1m,a2m=a2m)
+jldsave(joinpath(@__DIR__, "data_output/first_$(args[1])spin$(args[2])V0$(args[3])phi$(args[4])Geom$(args[5])scale$(args[6])constq$(args[7])try_idealvF.jld2"),HF_eigenvector=HF_eigenvector,HFdensity=HFdensity,NoHFdensity=NoHFdensity,arguments=args,energy=energy,HF_eigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,allowedq=allowedq,T1=T1,T2=T2,b1T=b1T,b2T=b2T,a1m=a1m,a2m=a2m)
 
 
