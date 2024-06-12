@@ -482,6 +482,20 @@ function Geometry(geonum::Int64)
         l1=[8,0]
         l2=[0,8]
     end
+
+    if geonum==11
+        Nx=8;
+        Ny=6;
+        l1=[8,0]
+        l2=[0,6]
+    end
+
+    if geonum==12
+        Nx=2
+        Ny=24;
+        l1=[2,8]
+        l2=[5,-4]
+    end
     
     
  
