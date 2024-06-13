@@ -21,27 +21,27 @@ constq=args[6]/(Nx*Ny)
 trytimes=Int(args[7])
 =#
 
-spinspace=collect(1.0:0.5:13.0)
+spinspace=[1.0]
 constq=2.0
 scale=1.0
 Geonum=10
 for spin in spinspace,jtry in 1:3
    arguments=[spin,0.0,0.0,Geonum,scale,constq,jtry]
-   submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",ntasks=32,mem=128)
+   submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=32,mem=128)
 
 end
 
 Geonum=11
 for spin in spinspace,jtry in 1:3
    arguments=[spin,0.0,0.0,Geonum,scale,constq,jtry]
-   submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",ntasks=24,mem=128)
+   submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=24,mem=128)
 
 end
 
 Geonum=12
 for spin in spinspace,jtry in 1:3
    arguments=[spin,0.0,0.0,Geonum,scale,constq,jtry]
-   submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",ntasks=24,mem=128)
+   submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=24,mem=128)
 
 end
 
