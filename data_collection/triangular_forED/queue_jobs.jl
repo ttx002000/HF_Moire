@@ -32,10 +32,6 @@ trytimes=Int(args[8])
 
 arguments=Float64.([flux,V0,ϕ,Nx,Ny,scale,constq])
  for jb in 1:3
-   submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="3:00:00",ntasks=16,mem=128)
+   submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="1:00:00",ntasks=16,mem=128)
 end
 
-arguments=Float64.([flux,V0,ϕ,Nx,Ny,scale,5.0])
- for jb in 1:3
-   submit_job(filepath, @__DIR__, job_prefix,arguments,jb; time="3:00:00",ntasks=16,mem=128)
-end
