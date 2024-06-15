@@ -144,6 +144,94 @@ function triangle_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,sc
 end
 
 
+function get_ansatz(flux::Float64,V0::Float64,ϕ::Float64,scale::Float64,Nx::Int64,Ny::Int64)
+    am=4*π/(√3*scale);
+    β=4*flux/(√3*scale^2)
+    mass=0.5;
+    
+    b1=4*π/(√3*am)*[0,1]
+    b2=4*π/(√3*am)*[√3/2,-1/2]
+
+
+    a1m=am*[1/2,√3/2]
+    a2m=am*[1,0]
+    
+    
+    T1=b1/(Nx)
+    T2=b2/(Ny)
+    
+    
+    
+    b1T=Int.(round.(inv([T1 T2])*b1))
+    b2T=Int.(round.(inv([T1 T2])*b2))
+    
+    
+    
+    allowedq=Vector{Int64}[]
+    for jb in 0:Ny-1,ja in 0:Nx-1
+        push!(allowedq,[ja,jb]) #Notice here I have made the change to comply with the convention of ED
+    end
+
+    
+    
+    
+    wave=Vector{Int64}[]
+    cutoff=18
+    cutoffstandard=6.01*scale
+    for ja in -cutoff:cutoff, jb in -cutoff:cutoff
+        gtest=ja*b1+jb*b2;
+        if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
+            push!(wave,ja*b1T+jb*b2T)
+        end
+    end
+   
+    
+    ED_vector=[zeros(ComplexF64,length(wave)) for _ in 1:Nx*Ny]
+    Abz=√3/2*scale^2
+    chi=1.5*scale
+
+    for ja in eachindex(allowedq)
+        for jb in eachindex(wave)
+            n1=wave[jb][1]/Nx
+            n2=wave[jb][2]/Ny
+            kvec=[T1 T2]*allowedq[ja]
+            gvec=[T1 T2]*wave[jb]
+            phase=exp(im*flux*((kvec[1]*gvec[2]-kvec[2]*gvec[1])/Abz+(n1-1)*(n2-1)))
+             ED_vector[ja][jb]=exp(-1/(4*chi^2)*norm([T1 T2]*(allowedq[ja]+wave[jb]))^2)*conj(phase)
+        end
+    end
+
+    for ja in eachindex(allowedq)
+       ED_vector[ja]=ED_vector[ja]/norm(ED_vector[ja])
+    end
+ 
+
+
+    #=
+    n1=wave[jc][1]/Nq
+      n2=wave[jc][2]/Nq
+      kvec=[T1 T2]*allowedq[ja]
+      gvec=[T1 T2]*wave[jc]
+    
+      phase=exp(im*flux*((kvec[1]*gvec[2]-kvec[2]*gvec[1])/Abz+(n1-1)*(n2-1)))
+      eigenvector[jchi][jc,ja]=exp(-1/(4*chispace[jchi]^2)*norm([T1 T2]*(allowedq[ja]+wave[jc]))^2)*conj(phase)
+    =#
+     
+    
+
+
+
+    
+
+    
+    return  wave,allowedq, T1, T2, a1m, a2m,cutoffstandard,ED_vector
+      
+
+       
+end
+
+
+
 
 
 
