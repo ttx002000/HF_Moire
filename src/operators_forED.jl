@@ -9,8 +9,8 @@ using Random
 function overlap(k::Vector{Float64},q::Vector{Float64},β::Float64)::ComplexF64
     v=q[1]^2+q[2]^2+2*im*(k[1]*q[2]-k[2]*q[1])
     #v=2*im*(k[1]*q[2]-k[2]*q[1])
-    #return exp(-β/4*v)*(1-β/2*norm(q)^2)
-    return exp(-β/4*v)
+    return exp(-β/4*v)*(1-β/2*norm(q)^2)
+    #return exp(-β/4*v)
  end
  
  

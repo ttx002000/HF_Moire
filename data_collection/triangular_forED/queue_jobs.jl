@@ -10,8 +10,8 @@ job_prefix = "ED"
 
 flux=2.0 #multiply this by pi
 ϕ=0.0 #convert this to radian 
-Nx=4.0
-Ny=6.0
+Nx=8.0
+Ny=4.0
 scale=1.0;
 constq=6.0 #divide this by Nq^2
 V0=0.0
