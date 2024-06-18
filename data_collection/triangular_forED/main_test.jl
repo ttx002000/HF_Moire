@@ -8,7 +8,7 @@ using CSV,DataFrames
 include("../../src/operators_forED.jl")
 
 #args=parse.(Float64,ARGS)
-args=[2.0,0.0,0.0,4.0,8.0,1.0,6.0,1.0]
+args=[2.0,0.0,0.0,6.0,6.0,1.0,6.0,1.0]
 flux=args[1]*π
 V0=args[2]
 ϕ=args[3]/180*π
@@ -38,4 +38,4 @@ chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uni
 energy,ED_vec,ED_val=calculate_energy(Nx,Ny,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq,overlapmatrix)
 jldsave(joinpath(@__DIR__, "data_output/$(args[4])Nx$(args[5])Ny$(args[1])flux$(args[2])V0$(args[3])phi$(args[6])scale$(args[7])constq_$(args[8])try_1LL.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,arguments=args,energy=energy,TC=trace_condition,TCS=trace_condition_single,HFeigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,uniform=uniform,uniform_single=uniform_single,ED_vec=ED_vec,ED_val=ED_val,cutoffstandard=cutoffstandard)
 =#
-jldsave(joinpath(@__DIR__, "data_output/ansatz_$(args[4])Nx$(args[5])Ny$(args[1])flux$(args[2])V0$(args[3])phi$(args[6])scale$(args[7])constq_$(args[8])try_1LL.jld2"),arguments=args,ED_vec=ED_vec,cutoffstandard=cutoffstandard)
+jldsave(joinpath(@__DIR__, "data_output/ansatz_$(args[4])Nx$(args[5])Ny$(args[1])flux$(args[2])V0$(args[3])phi$(args[6])scale$(args[7])constq_$(args[8])try_firstLL.jld2"),arguments=args,ED_vec=ED_vec,cutoffstandard=cutoffstandard)

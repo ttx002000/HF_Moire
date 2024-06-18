@@ -177,7 +177,7 @@ function get_ansatz(flux::Float64,V0::Float64,ϕ::Float64,scale::Float64,Nx::Int
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=6.01*scale
+    cutoffstandard=10.01*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
