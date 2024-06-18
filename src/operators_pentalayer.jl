@@ -9,7 +9,7 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
     R2=ac*[1/2,√3/2]
     G1=2π/ac*[1,-1/√3]
     G2=2π/ac*[0,2/√3]
-    #ϵ=0.2504/ac-1
+    ϵ=0.2504/ac-1
     
     #ϵ=0.650313445592362/(norm(G1)-0.650313445592362)
     #ϵ=0.66/(norm(G1)-0.66)
