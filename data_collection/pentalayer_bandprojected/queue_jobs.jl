@@ -10,10 +10,10 @@ job_prefix = "pentalayer"
 
 
 erspace=[4.0,5.0,6.0]
-θspace=[0.88,0.9]
+θspace=[0.77]
 Nband=12
 uDspace=[30.0,40.0,50.0]
-Nq=12
+Nq=15
 
 #=
 ϵr=args[1]
@@ -32,7 +32,12 @@ end
 
 for  jtry in 1:10, er in erspace, θ in θspace, uD in uDspace
   arguments=Float64.([er,θ,Nq,uD,Nband,jtry])
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=32,mem=64)
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=16,mem=64)
+end
+
+for  jtry in 1:10, er in erspace, θ in θspace, uD in uDspace
+  arguments=Float64.([er,θ,Nq,uD,7,jtry])
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=16,mem=64)
 end
 
 
