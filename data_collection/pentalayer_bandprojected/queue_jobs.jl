@@ -30,13 +30,23 @@ for  jtry in 1:15, er in erspace
 end
 =#
 
-for  jtry in 1:10, er in erspace, θ in θspace, uD in uDspace
+for  jtry in 1:5, er in erspace, θ in θspace, uD in uDspace
   arguments=Float64.([er,θ,Nq,uD,Nband,jtry])
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=16,mem=64)
 end
 
-for  jtry in 1:10, er in erspace, θ in θspace, uD in uDspace
+for  jtry in 1:5, er in erspace, θ in θspace, uD in uDspace
   arguments=Float64.([er,θ,Nq,uD,7,jtry])
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=16,mem=64)
+end
+
+for  jtry in 1:5, er in erspace, θ in θspace, uD in uDspace
+  arguments=Float64.([er,θ,Nq,uD,6,jtry])
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=16,mem=64)
+end
+
+for  jtry in 1:5, er in erspace, θ in θspace, uD in uDspace
+  arguments=Float64.([er,θ,Nq,uD,8,jtry])
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=16,mem=64)
 end
 
