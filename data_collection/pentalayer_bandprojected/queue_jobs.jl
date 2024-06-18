@@ -11,9 +11,9 @@ job_prefix = "pentalayer"
 
 erspace=[4.0,5.0,6.0]
 θspace=[0.88,0.9]
-Nband=14
+Nband=12
 uDspace=[30.0,40.0,50.0]
-Nq=15
+Nq=12
 
 #=
 ϵr=args[1]

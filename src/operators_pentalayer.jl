@@ -54,7 +54,7 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=3.1*norm(g1)
+    cutoffstandard=4.1*norm(g1)
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*g1+jb*g2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -66,7 +66,7 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
     
     wave_diff=Vector{Int64}[]
     cutoff=18
-    cutoffstandard_diff=10.1*norm(g1)
+    cutoffstandard_diff=8.1*norm(g1)
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*g1+jb*g2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard_diff^2
@@ -91,7 +91,7 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
 
 
    form_factors=Array{Matrix{ComplexF64}}(undef,Nq^2,Nq^2,length(wave_diff))
-   diff_eigenvector=zeros(ComplexF64,length(wave)*2*NL,Nband,Nq^2,length(wave_diff))
+   #diff_eigenvector=zeros(ComplexF64,length(wave)*2*NL,Nband,Nq^2,length(wave_diff))
    diff_eigenvector_threads=[zeros(ComplexF64,length(wave)*2*NL,Nband,Nq^2) for _ in 1:length(wave_diff)]
    form_factors_threads=[Array{Matrix{ComplexF64}}(undef,Nq^2,length(wave_diff)) for _ in 1:Nq^2]
 
