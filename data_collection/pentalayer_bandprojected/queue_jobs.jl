@@ -32,7 +32,7 @@ end
 
 for  jtry in 1:15, er in erspace, θ in θspace, uD in uDspace
   arguments=Float64.([er,θ,Nq,uD,Nband,jtry])
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=32,mem=64)
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=32,mem=128)
 end
 
 
