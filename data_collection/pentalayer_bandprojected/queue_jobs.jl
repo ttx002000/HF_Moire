@@ -9,10 +9,10 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "pentalayer"
 
 
-erspace=collect(3.0:0.5:10.0)
-θ=0.0
-Nband=7
-uD=50.0
+erspace=[4.0,5.0,6.0]
+θspace=[0.88,0.9]
+Nband=14
+uDspace=[30.0,40.0,50.0]
 Nq=15
 
 #=
@@ -29,17 +29,18 @@ for  jtry in 1:15, er in erspace
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=16,mem=64)
 end
 =#
-#=
-for  jtry in 1:20, er in erspace
+
+for  jtry in 1:10, er in erspace, θ in θspace, uD in uDspace
   arguments=Float64.([er,θ,Nq,uD,Nband,jtry])
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=16,mem=64)
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=32,mem=64)
 end
-=#
 
 
+#=
 st=load(joinpath(@__DIR__, "missedjobs.jld2"))
 index=st["index"]
 for ja in eachindex(index)
   arguments=Float64.(index[ja])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="10:00:00",ntasks=16,mem=64)
 end
+=#

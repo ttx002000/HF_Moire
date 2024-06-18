@@ -12,17 +12,17 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
     #ϵ=0.2504/ac-1
     
     #ϵ=0.650313445592362/(norm(G1)-0.650313445592362)
-    ϵ=0.66/(norm(G1)-0.66)
+    #ϵ=0.66/(norm(G1)-0.66)
     NL=5
-    #V0=28.9
-    #V1=21.0
-    V0=0.0
-    V1=0.0
+    V0=28.9
+    V1=21.0
+    #V0=0.0
+    #V1=0.0
 
     ψ=-0.29
     Rθ=[cos(θ) -sin(θ);sin(θ) cos(θ)]
-    g1=G1-(1+ϵ)^(-1)*Rθ*G1
-    g2=G2-(1+ϵ)^(-1)*Rθ*G2
+    g1=(G1-(1+ϵ)^(-1)*Rθ*G1)*1/2
+    g2=(G2-(1+ϵ)^(-1)*Rθ*G2)*1/2
     T1=g1/Nq
     T2=g2/Nq
     g1T=Int.(round.(inv([T1 T2])*g1))
@@ -66,7 +66,7 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
     
     wave_diff=Vector{Int64}[]
     cutoff=18
-    cutoffstandard_diff=6.1*norm(g1)
+    cutoffstandard_diff=10.1*norm(g1)
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*g1+jb*g2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard_diff^2
@@ -322,18 +322,18 @@ function get_MoireHam(k::Vector{Float64},wave::Vector{Vector{Int}},NL::Int,uD::F
         Moire=zeros(ComplexF64,length(wave)*2*NL,length(wave)*2*NL)
     
         for jc in eachindex(wave)
-           pos=findfirst(item->item==wave[jc]+g1T,wave)
+           pos=findfirst(item->item==wave[jc]+2*g1T,wave)
            if pos≠nothing
               Moire[2*NL*(pos-1)+1:2*NL*(pos-1)+2,2*NL*(jc-1)+1:2*NL*(jc-1)+2]+=V1*exp(-im*ψ)*[1 1;ω ω]
            end
     
-           pos=findfirst(item->item==wave[jc]+g2T,wave)
+           pos=findfirst(item->item==wave[jc]+2*g2T,wave)
            if pos≠nothing
               Moire[2*NL*(pos-1)+1:2*NL*(pos-1)+2,2*NL*(jc-1)+1:2*NL*(jc-1)+2]+=V1*exp(-im*ψ)*[1 ω^2;ω^2 ω]
     
            end
     
-           pos=findfirst(item->item==wave[jc]-g1T-g2T,wave)
+           pos=findfirst(item->item==wave[jc]-2*g1T-2*g2T,wave)
            if pos≠nothing
             Moire[2*NL*(pos-1)+1:2*NL*(pos-1)+2,2*NL*(jc-1)+1:2*NL*(jc-1)+2]+=V1*exp(-im*ψ)*[1 ω;1 ω]
            end
