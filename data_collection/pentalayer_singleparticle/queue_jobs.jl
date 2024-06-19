@@ -18,6 +18,6 @@ Vperiodspace=collect(2.5:2.5:20.0)
 
 for θ in θspace, uD in uDspace, jtry in 1:2, Vperiod in Vperiodspace
   arguments=Float64.([θ,Vperiod,uD,jtry])
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="10:00",ntasks=1,mem=16)
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="15:00",ntasks=1,mem=16)
 end
 
