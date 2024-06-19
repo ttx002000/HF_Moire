@@ -10,7 +10,7 @@ job_prefix = "sing"
 
 
 
-θspace=collect(0.9:0.05:1.0)
+θspace=collect(0.95:0.05:1.0)
 uDspace=collect(20.0:5.0:60.0)
 Nq=15
 Vperiodspace=collect(2.5:2.5:20.0)
