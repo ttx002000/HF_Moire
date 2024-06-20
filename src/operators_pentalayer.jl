@@ -177,7 +177,7 @@ function get_initial_projector(Nq::Int64,Nband::Int64,eigenvalue::Vector{Vector{
     
     initial_projector=[zeros(ComplexF64,Nband,Nband) for _ in 1:Nq^2]
     for ja in 1:Nq^2
-      initial_projector[ja]=band_eigenvector[:,1]*band_eigenvector[:,1]'
+      initial_projector[ja]=band_eigenvector[:,2]*band_eigenvector[:,2]'
     end
     
     for ja in 1:Nq^2
