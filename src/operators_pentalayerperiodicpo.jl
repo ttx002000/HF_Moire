@@ -1,4 +1,4 @@
-function single_particle_periodicpo(θ::Float64,Nq::Int64,uD::Float64,Nband::Int64,Vperiod::Float64)
+function single_particle_periodicpo(θ::Float64,Nq::Int64,uD::Float64,Nband::Int64,Vperiod::Float64,period::Float64)
 
     ac=0.246
     R1=ac*[1,0]
@@ -11,8 +11,10 @@ function single_particle_periodicpo(θ::Float64,Nq::Int64,uD::Float64,Nband::Int
  
 
     Rθ=[cos(θ) -sin(θ);sin(θ) cos(θ)]
-    g1=(G1-(1+ϵ)^(-1)*Rθ*G1)
-    g2=(G2-(1+ϵ)^(-1)*Rθ*G2)
+    #g1=(G1-(1+ϵ)^(-1)*Rθ*G1)
+    #g2=(G2-(1+ϵ)^(-1)*Rθ*G2)
+    g1=G1/norm(G1)*4π/(period*√3)
+    g2=G2/norm(G1)*4π/(period*√3)
     T1=g1/Nq
     T2=g2/Nq
     g1T=Int.(round.(inv([T1 T2])*g1))
