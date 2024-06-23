@@ -13,11 +13,11 @@ mass=args[6]
 M=args[7]
 
 
-directgap,BW,indirectgap,chern_eigenvector,wave,T1,T2=get_eigenvector(Nq,spin,scale,ϕ,V0,mass,M)
-chern,uniform,trace_condition=get_chern(Nq,wave,spin,M,T1,T2)
+#directgap,BW,indirectgap,chern_eigenvector,wave,T1,T2=get_eigenvector(Nq,spin,scale,ϕ,V0,mass,M)
+#chern,uniform,trace_condition=get_chern(Nq,wave,spin,M,T1,T2)
 
-#directgap,BW,indirectgap,chern_eigenvector,wave,T1,T2=get_eigenvector_square(Nq,spin,scale,ϕ,V0,mass,M)
-#chern,uniform,trace_condition=get_chern_square(Nq,wave,spin,M,T1,T2)
+directgap,BW,indirectgap,chern_eigenvector,wave,T1,T2=get_eigenvector_square(Nq,spin,scale,ϕ,V0,mass,M)
+chern,uniform,trace_condition=get_chern_square(Nq,wave,spin,M,T1,T2)
 
 
 jldsave(joinpath(@__DIR__, "data_output/square_$(args[1])Nq$(args[2])spin$(args[3])scale$(args[4])phi$(args[5])V0$(args[6])mass$(args[7])M.jld2"),chern=chern,directgap=directgap,BW=BW,indirectgap=indirectgap,uniform=uniform,trace_condition=trace_condition)

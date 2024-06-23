@@ -9,7 +9,8 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "sing"
 
 
-ϕspace=collect(0.0:2.5:60.0)
+#ϕspace=collect(0.0:2.5:60.0)
+ϕspace=[0.0]
 #ϕ=0.0
 spinspace=collect(0.0:0.5:10.0)
 Nq=180
