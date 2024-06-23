@@ -31,5 +31,5 @@ M=args[7]
 
 for  ϕ in ϕspace, jtry in 1:2, spin in spinspace
   arguments=Float64.([Nq,spin,scale,ϕ,V0,mass,M,jtry])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="10:00",ntasks=1,mem=64)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="20:00",ntasks=1,mem=64)
 end
