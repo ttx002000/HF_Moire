@@ -183,7 +183,7 @@ function get_eigenvector_square(Nq::Int64,spin::Float64,scale::Float64,ϕ::Float
     
     
     cutoff=18
-    cutoffstandard=6.01*scale
+    cutoffstandard=7.01*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*g1+jb*g2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2

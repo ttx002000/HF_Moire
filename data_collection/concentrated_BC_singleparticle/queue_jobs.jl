@@ -13,7 +13,7 @@ job_prefix = "sing"
 ϕ=0.0
 spinspace=collect(0.0:0.5:10.0)
 Nq=180
-V0=1.0
+V0=2.0
 mass=1.0
 M=0.5
 scale=9.0
@@ -32,5 +32,9 @@ M=args[7]
 
 for  jtry in 1:2, spin in spinspace
   arguments=Float64.([Nq,spin,scale,ϕ,V0,mass,M,jtry])
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="20:00",ntasks=1,mem=64)
+end
+for  jtry in 1:2, spin in spinspace
+  arguments=Float64.([Nq,spin,scale,ϕ,3.0,mass,M,jtry])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="20:00",ntasks=1,mem=64)
 end
