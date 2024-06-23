@@ -9,8 +9,8 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "sing"
 
 
-#ϕspace=collect(0.0:2.5:60.0)
-ϕ=0.0
+ϕspace=collect(0.0:2.5:60.0)
+#ϕ=0.0
 spinspace=collect(0.0:0.5:10.0)
 Nq=180
 V0=2.0
@@ -30,11 +30,8 @@ M=args[7]
 
 =#
 
-for  jtry in 1:2, spin in spinspace
+for  jtry in 1:2, spin in spinspace, ϕ in ϕspace
   arguments=Float64.([Nq,spin,scale,ϕ,V0,mass,M,jtry])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="20:00",ntasks=1,mem=64)
 end
-for  jtry in 1:2, spin in spinspace
-  arguments=Float64.([Nq,spin,scale,ϕ,3.0,mass,M,jtry])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="20:00",ntasks=1,mem=64)
-end
+

@@ -30,18 +30,18 @@ function get_MoireHam(k::Vector{Float64},mass::Float64,M::Float64,spin::Float64,
     
        pos=findfirst(item->item==wave[ja]-g2T,wave)
        if pos≠nothing
-           MoirePo[ja,pos]=V0*exp(im*ϕ)*overlap(k+[T1 T2]*wave[ja],[T1 T2]*g2T,spin,M)
+           MoirePo[ja,pos]=V0*exp(im*ϕ)*overlap(k+[T1 T2]*wave[ja],-[T1 T2]*g2T,spin,M)
        end
        
      
        pos=findfirst(item->item==wave[ja]-g1T,wave)
        if pos≠nothing
-           MoirePo[ja,pos]=V0*exp(im*ϕ)*overlap(k+[T1 T2]*wave[ja],[T1 T2]*g1T,spin,M)
+           MoirePo[ja,pos]=V0*exp(im*ϕ)*overlap(k+[T1 T2]*wave[ja],-[T1 T2]*g1T,spin,M)
        end
    
        pos=findfirst(item->item==wave[ja]+g1T+g2T,wave)
        if pos≠nothing
-           MoirePo[ja,pos]=V0*exp(im*ϕ)*overlap(k+[T1 T2]*wave[ja],-[T1 T2]*(g2T+g1T),spin,M)
+           MoirePo[ja,pos]=V0*exp(im*ϕ)*overlap(k+[T1 T2]*wave[ja],[T1 T2]*(g2T+g1T),spin,M)
        end
     end
 
@@ -236,13 +236,13 @@ function get_MoireHam_square(k::Vector{Float64},mass::Float64,M::Float64,spin::F
     
        pos=findfirst(item->item==wave[ja]-g2T,wave)
        if pos≠nothing
-           MoirePo[ja,pos]=V0*exp(im*ϕ)*overlap(k+[T1 T2]*wave[ja],[T1 T2]*g2T,spin,M)
+           MoirePo[ja,pos]=V0*exp(im*ϕ)*overlap(k+[T1 T2]*wave[ja],-[T1 T2]*g2T,spin,M)
        end
        
      
        pos=findfirst(item->item==wave[ja]-g1T,wave)
        if pos≠nothing
-           MoirePo[ja,pos]=V0*exp(im*ϕ)*overlap(k+[T1 T2]*wave[ja],[T1 T2]*g1T,spin,M)
+           MoirePo[ja,pos]=V0*exp(im*ϕ)*overlap(k+[T1 T2]*wave[ja],-[T1 T2]*g1T,spin,M)
        end
    
       
