@@ -1,4 +1,4 @@
-function single_particle_periodicpo(θ::Float64,Nq::Int64,uD::Float64,Nband::Int64,Vperiod::Float64,period::Float64)
+function single_particle_periodicpo(θ::Float64,Nq::Int64,uD::Float64,Nband::Int64,Vperiod::Float64,phaseangle::Float64,period::Float64)
 
     ac=0.246
     R1=ac*[1,0]
@@ -21,7 +21,6 @@ function single_particle_periodicpo(θ::Float64,Nq::Int64,uD::Float64,Nband::Int
     g2T=Int.(round.(inv([T1 T2])*g2))
     
 
-    phaseangle=0.0
     
     
     
