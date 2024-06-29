@@ -21,8 +21,10 @@ period=10.0
 
 for  uD in uDspace, jtry in 1:2, phaseangle in phaseanglespace
   arguments=Float64.([0.0,Vperiod,uD,period,phaseangle,jtry])
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="15:00",ntasks=1,mem=16)
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="25:00",ntasks=1,mem=16)
 end
+
+
 #=
 st=load("missedjobs.jld2")
 index=st["index"]

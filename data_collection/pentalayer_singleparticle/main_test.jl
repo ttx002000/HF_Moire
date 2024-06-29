@@ -5,7 +5,7 @@ using LinearAlgebra
 args=parse.(Float64,ARGS)
 
 θ=args[1]/180*π
-Nq=15
+Nq=30
 Vperiod=args[2]
 uD=args[3]
 period=args[4]
