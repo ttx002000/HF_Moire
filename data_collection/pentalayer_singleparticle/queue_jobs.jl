@@ -16,18 +16,19 @@ uDspace=collect(20.0:2.5:60.0)
 #periodspace=collect(8.0:0.35:15.0)
 phaseanglespace=collect(0.0:2.5:60.0)
 Vperiod=10.0
-period=10.0
-#=
-for  uD in uDspace, jtry in 1:2, phaseangle in phaseanglespace
+period=12.0
+
+for  uD in uDspace, jtry in 1:1, phaseangle in phaseanglespace
   arguments=Float64.([0.0,Vperiod,uD,period,phaseangle,jtry])
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="25:00",ntasks=1,mem=16)
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="10:00",ntasks=1,mem=16)
 end
-=#
 
 
+#=
 st=load("missedjob.jld2")
 index=st["index"]
 for ja in eachindex(index)
   arguments=index[ja]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="10:00",ntasks=1,mem=8)
 end
+=#
