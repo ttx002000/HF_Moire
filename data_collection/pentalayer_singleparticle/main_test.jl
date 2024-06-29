@@ -14,4 +14,4 @@ phaseangle=args[5]/180*π
 
 eigenvector,eigenvalue,wave,allowedq,allowedq_dic,T1,T2,BW,direct_gapup,direct_gapdown,indirect_gapup, indirect_gapdown=single_particle_periodicpo(θ,Nq,uD,Nband,Vperiod,phaseangle,period)
 trace_condition,tra,Flink,chern,uniform=get_chern(Nq,wave,allowedq,allowedq_dic,T1,T2,eigenvector)
-jldsave(joinpath(@__DIR__, "data_output/$(args[1])theta$(args[2])Vperiod$(args[3])uD$(args[4])period.jld2"),chern=chern,Flink=Flink,TC=trace_condition,TC_kresolved=tra,uniform=uniform,BW=BW,direct_gapup=direct_gapup,direct_gapdown=direct_gapdown,indirect_gapup=indirect_gapup,indirect_gapdown=indirect_gapdown)
+jldsave(joinpath(@__DIR__, "data_output/$(args[1])theta$(args[2])Vperiod$(args[3])uD$(args[4])period$(args[5])phaseangle.jld2"),chern=chern,Flink=Flink,TC=trace_condition,TC_kresolved=tra,uniform=uniform,BW=BW,direct_gapup=direct_gapup,direct_gapdown=direct_gapdown,indirect_gapup=indirect_gapup,indirect_gapdown=indirect_gapdown)
