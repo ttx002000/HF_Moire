@@ -67,12 +67,18 @@ function square_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,scal
    
     
     
-    overlapmatrix=zeros(ComplexF64,Nq^2,length(wave),Nq^2,length(wave))
-    for ja in 1:Nq^2, jb in eachindex(wave), jc in 1:Nq^2, jd in eachindex(wave)
-       overlapmatrix[ja,jb,jc,jd]=overlap([T1 T2]*(allowedq[ja]+wave[jb]),[T1 T2]*(allowedq[jc]+wave[jd]-wave[jb]-allowedq[ja]),β)
+    overlapmatrix_threaded=[zeros(ComplexF64,length(wave),Nq^2,length(wave)) for _ in 1:Nq^2]
+    Threads.@threads for ja in 1:Nq^2
+        for jb in eachindex(wave), jc in 1:Nq^2, jd in eachindex(wave)
+          overlapmatrix_threaded[ja][jb,jc,jd]=overlap([T1 T2]*(allowedq[ja]+wave[jb]),[T1 T2]*(allowedq[jc]+wave[jd]-wave[jb]-allowedq[ja]),β)
+        end
     end
-
-
+    
+    overlapmatrix=zeros(ComplexF64,Nq^2,length(wave),Nq^2,length(wave))
+    for ja in 1:Nq^2
+        overlapmatrix[ja,:,:,:]=overlapmatrix_threaded[ja]
+    end
+    overlapmatrix_threaded=nothing
     
      
     single_Ham=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
@@ -401,8 +407,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
     DIIS_input_DensityMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     input_DensityMatrix=initial_DensityMatrix
-    while (eout>1*10^-13) || (bad_count<1)
-      if eout<1*10^-13
+    while (eout>1*10^-8) || (bad_count<1)
+      if eout<1*10^-8
       bad_count+=1
       end
       tic=time()
@@ -416,7 +422,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
      
     
     end
-    #=
+    
     println("startDIIS",itcount)
     
     bad_count=0
@@ -447,7 +453,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},allowe
         println(toc-tic,"eout=$eout")
         flush(stdout)
     end
-=#
+
  
 
 
@@ -668,8 +674,7 @@ function square_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float
     loop_dic=construct_loop_dic(wave)
     
     
-    eigenvector_bc=zeros(ComplexF64,dimension,Nq+1,Nq+1)
-    eigenvector_bc_single=zeros(ComplexF64,dimension,Nq+1,Nq+1)
+
     eigenvector_intermediate_bc=Vector{Vector{ComplexF64}}(undef,(Nq+1)^2)
     eigenvector_intermediate_single=Vector{Vector{ComplexF64}}(undef,(Nq+1)^2)
 
@@ -703,58 +708,162 @@ function square_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float
     
     end
 
+    eigenvector_bc=zeros(ComplexF64,dimension,Nq+1,Nq+1)
+    eigenvector_bc_single=zeros(ComplexF64,dimension,Nq+1,Nq+1)
+    eigenvector_bc_conjugate=zeros(ComplexF64,dimension,Nq+1,Nq+1)
+
     for ja in eachindex(chern_allowedq)
-        eigenvector_bc[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=eigenvector_intermediate_bc[ja]
-        eigenvector_bc_single[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=eigenvector_intermediate_single[ja]
-     end
+       eigenvector_bc[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=eigenvector_intermediate_bc[ja]
+       eigenvector_bc_conjugate[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=conj.(eigenvector_intermediate_bc[ja])
+       eigenvector_bc_single[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=eigenvector_intermediate_single[ja]
+    end
+    
     
     Uonelink=zeros(ComplexF64,Nq,Nq+1)
     Utwolink=zeros(ComplexF64,Nq+1,Nq)
+    tra=zeros(ComplexF64,Nq,Nq)
+    tra_single=zeros(ComplexF64,Nq,Nq)
+    tra_conjugate=zeros(ComplexF64,Nq,Nq)
     
     for ja in 1:Nq, jb in 1:Nq+1
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
+        Amatrix=(metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2))
+     
        Uonelink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb]))
     end
+
+    
     
     for ja in 1:Nq+1, jb in 1:Nq
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
+        Amatrix=(metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2))
+    
      Utwolink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1]))
     end
     
+    dG=norm(T2)
+    for ja in 1:Nq, jb in 1:Nq
+        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
+        Bmatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
+   
+        A1=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])
+        B1=dot(eigenvector_bc[:,ja,jb],Bmatrix*eigenvector_bc[:,ja,jb+1])
+   
+       gyy=(1-abs(A1)^2)/dG^2
+       gxx=(1-abs(B1)^2)/(dG^2)
+       tra[ja,jb]+=(gxx+gyy)*dG^2
+
+        A1=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])
+        B1=dot(eigenvector_bc_single[:,ja,jb],Bmatrix*eigenvector_bc_single[:,ja,jb+1])
+      
+       gyy=(1-abs(A1)^2)/dG^2
+       gxx=(1-abs(B1)^2)/(dG^2)
+       tra_single[ja,jb]+=(gxx+gyy)*dG^2
+
+       A1=dot(eigenvector_bc_conjugate[:,ja,jb],Amatrix*eigenvector_bc_conjugate[:,ja+1,jb])
+       B1=dot(eigenvector_bc_conjugate[:,ja,jb],Bmatrix*eigenvector_bc_conjugate[:,ja,jb+1])
+     
+      gyy=(1-abs(A1)^2)/dG^2
+      gxx=(1-abs(B1)^2)/(dG^2)
+      tra_conjugate[ja,jb]+=(gxx+gyy)*dG^2
+     
+      
+      
+    end
+
+   
+
+
     Flink=zeros(ComplexF64,Nq,Nq)
     for ja in 1:Nq, jb in 1:Nq
      Flink[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
     end
     chern=sum(Flink)/(2*π*im)
-
+    aveF=sum(Flink)/Nq^2
+    uniform=0
+    for ja in 1:Nq, jb in 1:Nq
+        uniform+=(imag(Flink[ja,jb])-imag(aveF))^2*Nq^2/(2π)^2
+    end
 
 
     Uonelink=zeros(ComplexF64,Nq,Nq+1)
     Utwolink=zeros(ComplexF64,Nq+1,Nq)
+  
     
     for ja in 1:Nq, jb in 1:Nq+1
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
-       Uonelink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])/abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb]))
+        Amatrix=(metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2))
+     
+        Uonelink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])/abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb]))
     end
     
     for ja in 1:Nq+1, jb in 1:Nq
-        Amatrix=metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
+        Amatrix=(metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2))
+   
      Utwolink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1])/abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1]))
     end
     
+
+   
+
     Flink_single=zeros(ComplexF64,Nq,Nq)
     for ja in 1:Nq, jb in 1:Nq
      Flink_single[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
     end
     chern_single=sum(Flink_single)/(2*π*im)
+    aveF=sum(Flink_single)/Nq^2
+    uniform_single=0
+    for ja in 1:Nq, jb in 1:Nq
+        uniform_single+=(imag(Flink_single[ja,jb])-imag(aveF))^2*Nq^2/(2π)^2
+    end
+    
+
+
+
+    Uonelink=zeros(ComplexF64,Nq,Nq+1)
+    Utwolink=zeros(ComplexF64,Nq+1,Nq)
+  
+    
+    for ja in 1:Nq, jb in 1:Nq+1
+        Amatrix=(metric(wave,β,(ja-1)*T1+(jb-1)*T2,T1,T1,T2))
+     
+        Uonelink[ja,jb]=dot(eigenvector_bc_conjugate[:,ja,jb],Amatrix*eigenvector_bc_conjugate[:,ja+1,jb])/abs(dot(eigenvector_bc_conjugate[:,ja,jb],Amatrix*eigenvector_bc_conjugate[:,ja+1,jb]))
+    end
+    
+    for ja in 1:Nq+1, jb in 1:Nq
+        Amatrix=(metric(wave,β,(ja-1)*T1+(jb-1)*T2,T2,T1,T2))
+   
+     Utwolink[ja,jb]=dot(eigenvector_bc_conjugate[:,ja,jb],Amatrix*eigenvector_bc_conjugate[:,ja,jb+1])/abs(dot(eigenvector_bc_conjugate[:,ja,jb],Amatrix*eigenvector_bc_conjugate[:,ja,jb+1]))
+    end
+    
+
+   
+
+    Flink_conjugate=zeros(ComplexF64,Nq,Nq)
+    for ja in 1:Nq, jb in 1:Nq
+     Flink_conjugate[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
+    end
+    chern_conjugate=sum(Flink_conjugate)/(2*π*im)
+    aveF=sum(Flink_conjugate)/Nq^2
+    uniform_conjugate=0
+    for ja in 1:Nq, jb in 1:Nq
+        uniform_conjugate+=(imag(Flink_conjugate[ja,jb])-imag(aveF))^2*Nq^2/(2π)^2
+    end
+    
     
 
     
+  trace_condition=sum(tra)-sum(abs.(Flink))
+  trace_condition_single=sum(tra_single)-sum(abs.(Flink_single))
+  trace_condition_conjugate=sum(tra_conjugate)-sum(abs.(Flink_conjugate))
+
+
     
       
-   return chern,Flink,chern_single,Flink_single
+   return chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single,chern_conjugate,Flink_conjugate,trace_condition_conjugate,uniform_conjugate
 
 end
+
+
+
+
 
 
 function get_C3eig(Nq::Int,allowedq::Vector{Vector{Int}},wave::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},input_DM::Vector{Matrix{ComplexF64}})

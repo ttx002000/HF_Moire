@@ -3,20 +3,21 @@ Pkg.activate(joinpath(@__DIR__, "../.."))
 using LinearAlgebra
 
 
-flux=2 #I multiply it by pi when doing the calculation
-V0=0.5
+flux=1.5 #I multiply it by pi when doing the calculation
+V0=0.0
 ϕ=0.0 #I convert this degree to randian
-Nq=3.0;
+Nq=12.0;
 scale=1.0;
-constq=0.1 #I divide it by Nq^2 in the actual calculation
-arguments=[flux,V0,ϕ,Nq,scale,constq]
+constqspace=[1.5,2.0,2.5,3.0] #I divide it by Nq^2 in the actual calculation
+
 
 include("submit_job.jl")
 
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "HF"
+job_prefix = "square_HF"
 
 
-for ja in 1:1
-     submit_job(filepath, @__DIR__, job_prefix,arguments,ja; time="120:00",cpus_per_task=1)
+for jtry in 1:3,constq in constqspace
+     arguments=[flux,V0,ϕ,Nq,scale,constq,jtry]
+     submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=32,mem=64)
 end
