@@ -33,6 +33,6 @@ HFdensity=Densitymap(a1m,a2m,overlapmatrix,wave,DIIS_input_DensityMatrix[1])
 chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single,chern_conjugate,Flink_conjugate,trace_condition_conjugate,uniform_conjugate=square_chern(Nq,wave,scale,ϕ,flux,DIIS_input_DensityMatrix[1],constq)
 
 
-jldsave(joinpath(@__DIR__, "data_output/$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq$(args[7])try.jld2"),chern=chern,Flink=Flink,chern_single=chern_single,Flink_single=Flink_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,arguments=args,chern_conjugate=chern_conjugate,Flink_conjugate=Flink_conjugate,uniform_conjugate=uniform_conjugate,trace_condition_conjugate=trace_condition_conjugate,HF_eigenvec=HF_eigenvec)
+jldsave(joinpath(@__DIR__, "data_output/$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq$(args[7])try.jld2"),chern=chern,Flink=Flink,uniform=uniform,trace_condition=trace_codition,chern_single=chern_single,Flink_single=Flink_single,trace_condition_single=trace_condition_single,uniform_single=uniform_single,HFdensity=HFdensity,NoHFdensity=NoHFdensity,arguments=args,chern_conjugate=chern_conjugate,Flink_conjugate=Flink_conjugate,uniform_conjugate=uniform_conjugate,trace_condition_conjugate=trace_condition_conjugate,HF_eigenvec=HF_eigenvec)
 
 
