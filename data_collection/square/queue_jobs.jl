@@ -3,7 +3,7 @@ Pkg.activate(joinpath(@__DIR__, "../.."))
 using LinearAlgebra
 
 
-fluxspace=[0.3,0.5] #I multiply it by pi when doing the calculation
+fluxspace=[0.2,0.5] #I multiply it by pi when doing the calculation
 V0=0.0
 ϕ=0.0 #I convert this degree to randian
 Nq=12.0;
