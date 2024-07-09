@@ -19,5 +19,5 @@ job_prefix = "square_HF"
 
 for jtry in 1:3,constq in constqspace
      arguments=[flux,V0,ϕ,Nq,scale,constq,jtry]
-     submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=32,mem=64)
+     submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=32,mem=64)
 end
