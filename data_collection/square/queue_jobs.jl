@@ -8,7 +8,7 @@ V0=0.0
 ϕ=0.0 #I convert this degree to randian
 Nq=12.0;
 scale=1.0;
-constqspace=[0.5,1.0,1.5,2.0] #I divide it by Nq^2 in the actual calculation
+constqspace=[2.5,3.0] #I divide it by Nq^2 in the actual calculation
 
 
 include("submit_job.jl")
