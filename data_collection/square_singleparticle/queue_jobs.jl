@@ -8,7 +8,7 @@ Vspace=[2.0,10.0]
 ϕ=0.0 #I convert this degree to randian
 Nq=60.0;
 scale=1.0;
-maxg=9.01
+maxg=10.01
 
 
 include("submit_job.jl")
