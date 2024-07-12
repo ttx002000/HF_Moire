@@ -3,8 +3,8 @@ Pkg.activate(joinpath(@__DIR__, "../.."))
 using LinearAlgebra
 
 
-fluxspace=collect(0.0:0.05:2.0) #I multiply it by pi when doing the calculation
-Vspace=[2.0,10.0]
+fluxspace=[1.15] #I multiply it by pi when doing the calculation
+Vspace=[2.0]
 ϕ=0.0 #I convert this degree to randian
 Nq=60.0;
 scale=1.0;
@@ -19,5 +19,5 @@ job_prefix = "square_singleparticle"
 
 for flux in fluxspace, V0 in Vspace
      arguments=[flux,V0,ϕ,Nq,scale,maxg]
-     submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=16,mem=64)
+     submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=16,mem=32)
 end
