@@ -9,7 +9,7 @@ include("../../src/operators_singleparticle.jl")
 
 args=parse.(Float64,ARGS)
 #args=[2.0,0.0,0.0,3.0,1.0,1.0,1.0]
-#args=[2.0,0.0,0.0,12.0,1.0,6.0,1.0]
+#args=[2.0,0.0,0.0,12.0,1.0,6.01]
 flux=args[1]*π
 V0=args[2]
 ϕ=args[3]/180*π

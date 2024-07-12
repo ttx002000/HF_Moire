@@ -50,7 +50,7 @@ function square_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,scal
     
     
     wave=Vector{Int64}[]
-    cutoff=3*maxg
+    cutoff=3*floor(maxg)
     cutoffstandard=maxg*scale
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;

@@ -6,7 +6,7 @@ using LinearAlgebra
 fluxspace=collect(0.0:0.05:2.0) #I multiply it by pi when doing the calculation
 Vspace=[2.0,10.0]
 ϕ=0.0 #I convert this degree to randian
-Nq=30.0;
+Nq=60.0;
 scale=1.0;
 maxg=9.01
 
