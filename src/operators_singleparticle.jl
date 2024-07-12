@@ -102,18 +102,13 @@ function square_initial_Densitymatrix(flux::Float64,V0::Float64,ϕ::Float64,scal
     end
 
 
-    input_DensityMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-    for ja in 1:Nq^2
-     
-       input_DensityMatrix[ja]+=(single_eigenvector[ja][:,1]*(single_eigenvector[ja][:,1])')
-        
-    end
+
      
 
     
 
     
-    return  wave, input_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m
+    return  wave, single_MoirePo, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m
       
 
        
@@ -161,10 +156,7 @@ function square_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,ϕ::Float
         push!(chern_allowedq,[ja,jb])
     end
 
-    allowedq=Vector{Int64}[]
-    for ja in 0:Nq-1,jb in 0:Nq-1
-        push!(allowedq,[ja,jb])
-    end
+
     
 
 

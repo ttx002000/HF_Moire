@@ -21,7 +21,7 @@ maxg=args[6]
 β=flux/scale^2
 V0=V0*exp(β/4*scale^2)
 
-wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m=square_initial_Densitymatrix(flux,V0,ϕ,scale,Nq,maxg)
+wave,_,_, single_eigenvalue,allowedq, T1, T2, a1m, a2m=square_initial_Densitymatrix(flux,V0,ϕ,scale,Nq,maxg)
 chern_single,Flink_single,trace_condition_single,uniform_single=square_chern(Nq,wave,scale,ϕ,flux)
 
 
