@@ -18,6 +18,6 @@ job_prefix = "square_singleparticle"
 
 
 for flux in fluxspace, V0 in Vspace
-     arguments=[flux,V0,ϕ,Nq,scale,maxg,jtry]
+     arguments=[flux,V0,ϕ,Nq,scale,maxg]
      submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=16,mem=16)
 end

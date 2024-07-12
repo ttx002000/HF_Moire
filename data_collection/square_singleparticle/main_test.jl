@@ -16,7 +16,7 @@ V0=args[2]
 Nq=Int(args[4]);
 scale=args[5];
 maxg=args[6]
-trytimes=Int(args[7])
+
 
 β=flux/scale^2
 V0=V0*exp(β/4*scale^2)
@@ -25,6 +25,6 @@ wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,allow
 chern_single,Flink_single,trace_condition_single,uniform_single=square_chern(Nq,wave,scale,ϕ,flux)
 
 
-jldsave(joinpath(@__DIR__, "data_output/NormalizedV0_$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])maxg$(args[7])try.jld2"),chern_single=chern_single,Flink_single=Flink_single,trace_condition_single=trace_condition_single,uniform_single=uniform_single,arguments=args, single_eigenvalue=single_eigenvalue)
+jldsave(joinpath(@__DIR__, "data_output/NormalizedV0_$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])maxg.jld2"),chern_single=chern_single,Flink_single=Flink_single,trace_condition_single=trace_condition_single,uniform_single=uniform_single,arguments=args, single_eigenvalue=single_eigenvalue)
 
 
