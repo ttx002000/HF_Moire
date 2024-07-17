@@ -40,7 +40,7 @@ for Nq in 7:9,flux in fluxspace
      submit_job(filepath, @__DIR__, job_prefix,arguments; time="4:00:00",ntasks=16,mem=256)
 end
 =#
-st=load("missedjob.jld2")
+st=load("missedjobs.jld2")
 index=st["index"]
 for ja in eachindex(index)
   arguments=index[ja]
