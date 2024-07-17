@@ -10,7 +10,7 @@ include(joinpath(@__DIR__,"../../src/operators_ansatz.jl"))
 
 args=parse.(Float64,ARGS)
 
-args=[1.0,1.0,3.0,0.0,0.0,0.0,1.0,1.0]
+#args=[1.0,1.0,3.0,0.0,0.0,0.0,1.0,1.0]
 scale=args[1]
 flux=args[2]*π
 Nq=Int(args[3])
@@ -20,7 +20,7 @@ chistart=args[6]
 chiend=args[7]
 constq=args[8]/Nq^2
 
-chispace=collect(LinRange(chistart,chiend,2))#Notice the subtlety in the definition of chi
+chispace=collect(LinRange(chistart,chiend,200))#Notice the subtlety in the definition of chi
 
 single_Ham, eigenvector, wave, wave_diff, allowedq,T1,T2=get_wavefunction(scale,flux,Nq,V0,ϕ,chispace,constq)
 
