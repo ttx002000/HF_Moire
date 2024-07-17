@@ -11,7 +11,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     
     
 
-    name = "$(args[3])Nq"
+    name = "$(args[1])scale$(args[2])flux$(args[3])Nq$(args[4])V0$(args[5])phi$(args[6])chist$(args[7])chien$(args[8])Cq"
 
     filestr = """#!/bin/bash
     #SBATCH --job-name=$(job_prefix*"_"*name)
