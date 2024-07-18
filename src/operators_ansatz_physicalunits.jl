@@ -46,10 +46,10 @@ function overlap(k::Vector{Float64},q::Vector{Float64},β::Float64)::ComplexF64
 end
 
 
-function single_Hamiltonian(V0::Float64,ϕ::Float64,scale::Float64,Nq::Int64,wave::Vector{Vector{Int64}})
+function single_Hamiltonian(V0::Float64,ϕ::Float64,scale::Float64,Nq::Int64,wave::Vector{Vector{Int64}},mass::Float64)
     am=4*π/(√3*scale);
     β=4*π/(√3)
-    mass=0.5;
+
     
     b1=4*π/(√3*am)*[0,1]
     b2=4*π/(√3*am)*[√3/2,-1/2]
@@ -130,7 +130,7 @@ end
 
 
 
-function get_wavefunction(scale::Float64,flux::Float64,Nq::Int64,V0::Float64,ϕ::Float64,chispace::Vector{Float64},constq::Float64)
+function get_wavefunction(scale::Float64,Nq::Int64,V0::Float64,ϕ::Float64,chispace::Vector{Float64},mass::Float64)
  
    
     am=4*π/(√3*scale);
@@ -200,7 +200,7 @@ function get_wavefunction(scale::Float64,flux::Float64,Nq::Int64,V0::Float64,ϕ:
    end
 
 
-   single_Ham=single_Hamiltonian(V0,ϕ,scale,Nq,wave)
+   single_Ham=single_Hamiltonian(V0,ϕ,scale,Nq,wave,mass)
 
 
    return single_Ham, eigenvector, wave, wave_diff, allowedq, T1, T2
