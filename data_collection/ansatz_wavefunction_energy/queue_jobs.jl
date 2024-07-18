@@ -44,5 +44,5 @@ st=load("missedjobs.jld2")
 index=st["index"]
 for ja in eachindex(index)
   arguments=index[ja]
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="4:00:00",ntasks=32,mem=256)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=64,mem=128)
 end
