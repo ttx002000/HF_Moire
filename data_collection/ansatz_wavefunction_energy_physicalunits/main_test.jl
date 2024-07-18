@@ -41,4 +41,4 @@ gkpqmap,gkmqmap=get_gkpgmap(Nq,allowedq,wave_diff)
 
 Energy,kinetic,Fock=get_energy(chispace,constq,allowedq,form_overlapmatrix,single_Ham,eigenvector,wave,wave_diff,T1,T2,gkpqmap,gkmqmap)
       
-jldsave(joinpath(@__DIR__, "data_output/physicalunits_$(args[1])flux$(args[2])Nq$(args[3])V0$(args[4])phi$(args[5])chist$(args[6])chien$(args[7])Vc.jld2"),chispace=chispace,Vc=Vc,Nq=Nq,scale=scale,Energy=Energy,Fock=Fock,kinectic=kinetic)
+jldsave(joinpath(@__DIR__, "data_output/physicalunits_$(args[1])flux$(args[2])Nq$(args[3])V0$(args[4])phi$(args[5])chist$(args[6])chien$(args[7])Vc$(args[8])mass.jld2"),chispace=chispace,Vc=Vc,Nq=Nq,scale=scale,Energy=Energy,Fock=Fock,kinectic=kinetic)
