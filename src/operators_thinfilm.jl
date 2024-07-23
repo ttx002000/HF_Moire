@@ -172,7 +172,7 @@ function kpprojected_Ham_CdAs_zdependence(L1::Float64,am::Float64,Nb::Int64)
  return Ham0_proj,Hamx_proj,Hamy_proj,Hamxx_proj,Hamyy_proj,HamVV_proj
 
 
- end
+end
 
 function kpprojected_Ham(L1::Float64,am::Float64,Nb::Int64) #In principle, this only works well for two bands
     
@@ -325,6 +325,143 @@ return Ham0_proj,Hamx_proj,Hamy_proj,Hamxx_proj,Hamyy_proj,HamVV_proj
 
 end
 
+
+
+function kpprojected_Ham_SbTe_zdependence(L1::Float64,am::Float64,Nb::Int64) #In principle, this only works well for two bands
+    
+ 
+
+  #SbTe
+
+    #L1=25;
+    M1=-0.22;
+    A1=0.84;
+    A2=3.4;
+    B1=-19.64;
+    B2=-48.51;
+    C1=0.001;
+    D1=-12.39;
+    D2=-10.78;
+  
+
+    sx=[0 1;1 0]
+    sy=[0 -im;im 0]
+    sz=[1 0;0 -1]
+    Ncut=20;
+     
+
+  tsz=diagm([1.0,-1.0,-1.0,1.0])
+  OP=zeros(Float64,4*Ncut,4*Ncut);
+    for jc in 1:Ncut, jd in 1:4
+    
+         OP[4*(jc-1)+jd,4*(jc-1)+jd]=(-1)^(jc)*(tsz[jd,jd]);
+
+    end
+     FFF=eigen(OP);
+     Pmatrix=FFF.vectors[:,1:4*Ncut];
+
+
+     #Let's construct the basis states at k=0
+
+
+
+
+     Ham0=zeros(ComplexF64,4*Ncut,4*Ncut);
+     kx=0;
+     ky=0;
+     k=0;
+ 
+ 
+ 
+     for jb in 1:Ncut, jc in 1:Ncut
+             if jc≠jb
+                 fac=jb*jc/(jc^2-jb^2)*((-1)^(jc+jb)-1)*2/L1;
+                 Ham0[4*(jb-1)+1:4*(jb-1)+4,4*(jc-1)+1:4*(jc-1)+4]+=
+                 [-im*A1*fac*sx zeros(ComplexF64,2,2);zeros(ComplexF64,2,2) +im*A1*fac*sx]; 
+         end
+     end
+ 
+ 
+    for jc in 1:Ncut
+             fac=-jc^2*pi^2/(2*L1)*2/L1;
+               Ham0[4*(jc-1)+1:4*(jc-1)+4,4*(jc-1)+1:4*(jc-1)+4]+=(C1-D1*fac+D2*k^2)*Matrix{Float64}(I,4,4)+[(M1-B2*k^2+B1*fac)*sz A2*(kx-im*ky)*sx; A2*(kx+im*ky)*sx (M1-B2*k^2+B1*fac)*sz]
+    end
+
+
+
+         Ham0_per=Pmatrix'*Ham0*Pmatrix;
+         FFF=eigen(Ham0_per);
+         basis=FFF.vectors[:,2*Ncut+1-Int(Nb/2):2*Ncut+Int(Nb/2)];
+
+         Ham0_proj=basis'*Ham0_per*basis;
+
+
+
+
+         #Constructing Hx now
+
+
+        Hamx=zeros(ComplexF64,4*Ncut,4*Ncut);
+        kx=0;
+        ky=0;
+        k=0;
+         
+        for jc in 1:Ncut
+            fac=-jc^2*pi^2/(2*L1)*2/L1
+            Hamx[4*(jc-1)+1:4*(jc-1)+4,4*(jc-1)+1:4*(jc-1)+4]+=[zeros(ComplexF64,2,2) A2*sx;A2*sx zeros(ComplexF64,2,2)];
+        end
+         Hamx_per=Pmatrix'*Hamx*Pmatrix
+         Hamx_proj=basis'*Hamx_per*basis
+
+         #Constructing Hy now
+         Hamy=zeros(ComplexF64,4*Ncut,4*Ncut);
+            kx=0;
+            ky=0;
+            k=0;
+         
+         
+         
+                 for jc in 1:Ncut
+                     fac=-jc^2*pi^2/(2*L1)*2/L1;
+                     Hamy[4*(jc-1)+1:4*(jc-1)+4,4*(jc-1)+1:4*(jc-1)+4]+=[zeros(ComplexF64,2,2) -im*A2*sx; im*A2*sx zeros(ComplexF64,2,2)]; 
+                 end
+
+         Hamy_per=Pmatrix'*Hamy*Pmatrix;
+         Hamy_proj=basis'*Hamy_per*basis;
+
+
+         #Constructing Hxx now
+
+
+
+   Hamxx=zeros(ComplexF64,4*Ncut,4*Ncut);
+      kx=0;
+      ky=0;
+      k=0;
+         for jc in 1:Ncut
+            fac=-jc^2*π^2/(2*L1)*2/L1;
+            Hamxx[4*(jc-1)+1:4*(jc-1)+4,4*(jc-1)+1:4*(jc-1)+4]+=(2*D2)*Matrix{Float64}(I,4,4)+[(-2*B2)*sz zeros(Float64,2,2);zeros(Float64,2,2) (-2*B2)*sz];
+        end
+
+Hamxx_per=Pmatrix'*Hamxx*Pmatrix;
+Hamxx_proj=basis'*Hamxx_per*basis;
+Hamyy_proj=Hamxx_proj;
+HamVV=zeros(ComplexF64,4*Ncut,4*Ncut);
+g=4*π/(am*√3)
+for ja in 1:Ncut, jb in 1:Ncut
+    
+     fac1=g^2*L1^2+(ja-jb)^2*pi^2;
+     fac2=g^2*L1^2+(ja+jb)^2*pi^2;
+     HamVV[4*(ja-1)+1:4*(ja-1)+4,4*(jb-1)+1:4*(jb-1)+4]+=2*Matrix{Float64}(I,4,4)*exp(-g*L1)*(exp(g*L1)-(-1)^(ja+jb))*g*L1^2*ja*jb*pi^2/(fac1*fac2)*2/L1;
+ end
+
+HamVV_per=Pmatrix'*HamVV*Pmatrix;
+HamVV_proj=basis'*HamVV_per*basis;
+              
+return Ham0_proj,Hamx_proj,Hamy_proj,Hamxx_proj,Hamyy_proj,HamVV_proj
+
+
+end
 
 
 
@@ -485,5 +622,78 @@ function main(Nb::Int64)
 
 
    return V0space,am,L1,trace_condition,chern,uniform,gapup,gapdown,direct_gapup,direct_gapdown,bandwidth
+
+end
+
+
+
+function main_SbTe_zdependence(Nb::Int64)
+    L1=25.0 #modify this
+    am=210  #modify this
+    scale=4π/(√3*am)
+    Nq=30
+    g1=scale*[1,0]
+    g2=scale*[-1/2,√3/2]
+    T1=g1/Nq
+    T2=g2/Nq
+
+    ϕ=π/3 #modifythis
+    Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham_SbTe_zdependence(L1,Float64(am),Nb)
+
+    V0space=collect(0.05:0.0005:0.08) #modify this
+    
+    chern_allowedq=Vector{Int64}[]
+    for ja in 0:Nq, jb in 0:Nq
+       push!(chern_allowedq,[ja,jb])
+    end
+    
+   
+    gapup=zeros(ComplexF64,length(V0space))
+    gapdown=zeros(ComplexF64,length(V0space))
+    direct_gapup=zeros(ComplexF64,length(V0space))
+    direct_gapdown=zeros(ComplexF64,length(V0space))
+    bandwidth=zeros(ComplexF64,length(V0space))
+
+    
+   
+    g1T=Int.(round.(inv([T1 T2])*g1))
+    g2T=Int.(round.(inv([T1 T2])*g2))
+    
+    
+    
+    wave=Vector{Int64}[]
+    cutoff=18
+    cutoffstandard=5.01*scale
+    for ja in -cutoff:cutoff, jb in -cutoff:cutoff
+        gtest=ja*g1+jb*g2;
+        if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
+            push!(wave,ja*g1T+jb*g2T)
+        end
+    end
+    dimension=length(wave)*Nb#modify this
+    bandindex1=length(wave)*Int(Nb/2)+1 #modify this
+    bandindex2=length(wave)*Int(Nb/2)+2
+
+    Threads.@threads for jv in eachindex(V0space)
+        V0=V0space[jv]
+        chern_eigenvector=zeros(ComplexF64,dimension,Nq+1,Nq+1)
+        eigenvalues=zeros(Float64,dimension,(Nq+1)^2)
+     for ja in eachindex(chern_allowedq)
+         k=[T1 T2]*chern_allowedq[ja]
+         MoireHam=get_MoireHam_thinfilm(k,wave,T1,T2,g1T,g2T,V0,ϕ,Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV,Nb)
+         FFF=eigen(MoireHam)
+         
+         eigenvalues[:,ja]=real.(FFF.values)
+     end
+ 
+     gapup[jv]=sort(eigenvalues[bandindex2+1,:])[1]-sort(eigenvalues[bandindex2,:])[(Nq+1)^2]
+     gapdown[jv]=sort(eigenvalues[bandindex1,:])[1]-sort(eigenvalues[bandindex1-1,:])[(Nq+1)^2]
+     bandwidth[jv]=-sort(eigenvalues[bandindex1,:])[1]+sort(eigenvalues[bandindex2,:])[(Nq+1)^2]
+     direct_gapup[jv]=sort(eigenvalues[bandindex2+1,:]-eigenvalues[bandindex2,:])[1]
+     direct_gapdown[jv]=sort(eigenvalues[bandindex1,:]-eigenvalues[bandindex1-1,:])[1]
+   end
+
+
+   return V0space,am,L1,gapup,gapdown,direct_gapup,direct_gapdown,bandwidth
 
 end
