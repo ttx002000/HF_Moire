@@ -637,10 +637,10 @@ function main_SbTe_zdependence(Nb::Int64)
     T1=g1/Nq
     T2=g2/Nq
 
-    ϕ=π/3 #modifythis
+    ϕ=0.0 #modifythis
     Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham_SbTe_zdependence(L1,Float64(am),Nb)
 
-    V0space=collect(0.05:0.0005:0.08) #modify this
+    V0space=collect(0.05:0.0005:0.09) #modify this
     
     chern_allowedq=Vector{Int64}[]
     for ja in 0:Nq, jb in 0:Nq
@@ -671,8 +671,8 @@ function main_SbTe_zdependence(Nb::Int64)
         end
     end
     dimension=length(wave)*Nb#modify this
-    bandindex1=length(wave)*Int(Nb/2)+1 #modify this
-    bandindex2=length(wave)*Int(Nb/2)+2
+    bandindex1=length(wave)*Int(Nb/2)-1 #modify this
+    bandindex2=length(wave)*Int(Nb/2)
 
     Threads.@threads for jv in eachindex(V0space)
         V0=V0space[jv]
