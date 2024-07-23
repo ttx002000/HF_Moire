@@ -443,12 +443,12 @@ function kpprojected_Ham_SbTe_zdependence(L1::Float64,am::Float64,Nb::Int64) #In
             Hamxx[4*(jc-1)+1:4*(jc-1)+4,4*(jc-1)+1:4*(jc-1)+4]+=(2*D2)*Matrix{Float64}(I,4,4)+[(-2*B2)*sz zeros(Float64,2,2);zeros(Float64,2,2) (-2*B2)*sz];
         end
 
-Hamxx_per=Pmatrix'*Hamxx*Pmatrix;
-Hamxx_proj=basis'*Hamxx_per*basis;
-Hamyy_proj=Hamxx_proj;
-HamVV=zeros(ComplexF64,4*Ncut,4*Ncut);
-g=4*π/(am*√3)
-for ja in 1:Ncut, jb in 1:Ncut
+ Hamxx_per=Pmatrix'*Hamxx*Pmatrix;
+ Hamxx_proj=basis'*Hamxx_per*basis;
+ Hamyy_proj=Hamxx_proj;
+ HamVV=zeros(ComplexF64,4*Ncut,4*Ncut);
+ g=4*π/(am*√3)
+ for ja in 1:Ncut, jb in 1:Ncut
     
      fac1=g^2*L1^2+(ja-jb)^2*pi^2;
      fac2=g^2*L1^2+(ja+jb)^2*pi^2;
@@ -552,7 +552,7 @@ function get_chern(Nq::Int64,T1::Vector{Float64},T2::Vector{Float64},chern_eigen
 
 end
 
-function main(Nb::Int64)
+function main(Nb::Int64,ϕ::Float64)
     L1=80.0 #modify this
     am=200  #modify this
     scale=4π/(√3*am)
@@ -562,7 +562,7 @@ function main(Nb::Int64)
     T1=g1/Nq
     T2=g2/Nq
 
-    ϕ=0.0 #modifythis
+
     Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham_CdAs_zdependence(L1,Float64(am),Nb)
     #HamV=Matrix{ComplexF64}(I,Nb,Nb)
     #V0space=collect(0.01:0.0001:0.06)
@@ -627,7 +627,7 @@ end
 
 
 
-function main_SbTe_zdependence(Nb::Int64)
+function main_SbTe_zdependence(Nb::Int64,ϕ::Float64)
     L1=25.0 #modify this
     am=210  #modify this
     scale=4π/(√3*am)
@@ -637,10 +637,10 @@ function main_SbTe_zdependence(Nb::Int64)
     T1=g1/Nq
     T2=g2/Nq
 
-    ϕ=0.0 #modifythis
+  
     Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham_SbTe_zdependence(L1,Float64(am),Nb)
-
-    V0space=collect(0.05:0.0005:0.09) #modify this
+    HamV=Matrix{ComplexF64}(I,Nb,Nb)
+    V0space=collect(0.05:0.0005:0.07) #modify this
     
     chern_allowedq=Vector{Int64}[]
     for ja in 0:Nq, jb in 0:Nq
@@ -676,7 +676,7 @@ function main_SbTe_zdependence(Nb::Int64)
 
     Threads.@threads for jv in eachindex(V0space)
         V0=V0space[jv]
-        chern_eigenvector=zeros(ComplexF64,dimension,Nq+1,Nq+1)
+        
         eigenvalues=zeros(Float64,dimension,(Nq+1)^2)
      for ja in eachindex(chern_allowedq)
          k=[T1 T2]*chern_allowedq[ja]
