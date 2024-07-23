@@ -639,8 +639,8 @@ function main_SbTe_zdependence(Nb::Int64,ϕ::Float64)
 
   
     Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham_SbTe_zdependence(L1,Float64(am),Nb)
-    HamV=Matrix{ComplexF64}(I,Nb,Nb)
-    V0space=collect(0.05:0.0005:0.07) #modify this
+   
+    V0space=collect(0.07:0.0005:0.1) #modify this
     
     chern_allowedq=Vector{Int64}[]
     for ja in 0:Nq, jb in 0:Nq
