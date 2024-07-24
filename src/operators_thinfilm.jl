@@ -599,7 +599,7 @@ function main(Nb::Int64,ϕ::Float64)
         end
     end
     dimension=length(wave)*Nb#modify this
-    bandindex=length(wave)*Int(Nb/2) #modify this
+    bandindex=length(wave)*Int(Nb/2)+1 #modify this
 
     Threads.@threads for jv in eachindex(V0space)
         V0=V0space[jv]
