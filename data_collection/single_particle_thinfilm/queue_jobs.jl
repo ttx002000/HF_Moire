@@ -14,6 +14,4 @@ end
 =#
 
 
-submit_job(filepath, @__DIR__, job_prefix,[4,60]; time="30:00",ntasks=16,mem=64)
-submit_job(filepath, @__DIR__, job_prefix,[8,60]; time="4:00:00",ntasks=32,mem=64)
-submit_job(filepath, @__DIR__, job_prefix,[12,60]; time="6:00:00",ntasks=32,mem=128)
+submit_job(filepath, @__DIR__, job_prefix,[2,0]; time="30:00",ntasks=16,mem=64)
