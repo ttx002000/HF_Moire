@@ -554,7 +554,7 @@ end
 
 function main(Nb::Int64,ϕ::Float64)
     L1=80.0 #modify this
-    am=100  #modify this
+    am=200  #modify this
     scale=4π/(√3*am)
     Nq=30
     g1=scale*[1,0]
@@ -566,7 +566,7 @@ function main(Nb::Int64,ϕ::Float64)
     Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham_CdAs_zdependence(L1,Float64(am),Nb)
     HamV=Matrix{ComplexF64}(I,Nb,Nb)
     #V0space=collect(0.01:0.0001:0.06)
-    V0space=collect(0.01:0.00025:0.04) #modify this
+    V0space=collect(0.005:0.00025:0.02) #modify this
     
     chern_allowedq=Vector{Int64}[]
     for ja in 0:Nq, jb in 0:Nq
