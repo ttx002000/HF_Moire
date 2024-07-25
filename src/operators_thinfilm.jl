@@ -566,7 +566,7 @@ function main(Nb::Int64,ϕ::Float64)
     Ham0,Hamx,Hamy,Hamxx,Hamyy,HamV=kpprojected_Ham_CdAs_zdependence(L1,Float64(am),Nb)
     HamV=Matrix{ComplexF64}(I,Nb,Nb)
     #V0space=collect(0.01:0.0001:0.06)
-    V0space=collect(0.005:0.00025:0.03) #modify this
+    V0space=collect(0.005:0.00025:0.05) #modify this
     
     chern_allowedq=Vector{Int64}[]
     for ja in 0:Nq, jb in 0:Nq
