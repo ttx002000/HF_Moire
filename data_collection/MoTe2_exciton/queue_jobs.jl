@@ -7,7 +7,7 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "exciton"
 
 
-mt=collect(-0.6:0.1:-0.4)
+mtspace=collect(-0.6:0.1:-0.4)
 mm=0.62
 mb=0.62
 Vt=0.0
@@ -54,7 +54,7 @@ cutoffnum=parameters[17]
 
 
 
-for  Eg in Egspace,trytime in 1:10,ϵr in ϵrspace
+for  Eg in Egspace,trytime in 1:10,ϵr in ϵrspace, mt in mtspace
   arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,period,w,elecnum,trytime,geonum,cutoffnum])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",ntasks=8,mem=16)
 end
