@@ -440,8 +440,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
     bad_count=0
     Parnum=2*Nx*Ny*(length(wave))+elecnum*Nx*Ny
     bound=0.0
-    HF_vector=[Vector{Matrix{Float64}}(undef,2) for _ in 1:Nx*Ny]
-    HF_eigenvector_tosave=[Vector{Matrix{Float64}}(undef,2) for _ in 1:Nx*Ny]
+    HF_vector=[Vector{Matrix{ComplexF64}}(undef,2) for _ in 1:Nx*Ny]
+    HF_eigenvector_tosave=[Vector{Matrix{ComplexF64}}(undef,2) for _ in 1:Nx*Ny]
 
     while (eout>1*10^-14) || (bad_count<4)
       if  eout<1*10^-14 
@@ -495,7 +495,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
 
 
   for ja in 1:Nx*Ny, vi in 1:2
-    HF_eigenvector_tosave[ja][vi]=HF_vector[ja][vi][:,length(wave)-3,length(wave)+3]
+    HF_eigenvector_tosave[ja][vi]=HF_vector[ja][vi][:,length(wave)-3:length(wave)+3]
   end
 
   return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector_tosave,bound,energy
