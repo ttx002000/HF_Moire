@@ -7,7 +7,7 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "exciton"
 
 
-mt=-0.5
+mt=collect(-0.6:0.1:-0.4)
 mm=0.62
 mb=0.62
 Vt=0.0
@@ -16,8 +16,8 @@ Vm=-11.2
 ϕm=91.0
 Vb=-11.2
 ϕb=-91.0
-ϵrspace=collect(5.0:1.0:10.0)
-Egspace=collect(80.0:5.0:120.0)
+ϵrspace=[10.0]
+Egspace=collect(100.0:5.0:160.0)
 period=10.84
 w=-13.3
 elecnum=1.0

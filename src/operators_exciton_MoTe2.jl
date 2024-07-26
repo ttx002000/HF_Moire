@@ -388,7 +388,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
      HF_eigenvector[ja][jb]=FFF.vectors
    end
   
-   bound=sort(reduce(vcat,reduce(vcat,HF_eigenvalue)))[Parnum+1]
+   bound=(sort(reduce(vcat,reduce(vcat,HF_eigenvalue)))[Parnum+1]+sort(reduce(vcat,reduce(vcat,HF_eigenvalue)))[Parnum])/2
    
   
     for ja in 1:Nx*Ny,vi in 1:2     
@@ -440,8 +440,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
     bad_count=0
     Parnum=2*Nx*Ny*(length(wave))+elecnum*Nx*Ny
     bound=0.0
-    HF_vector=0.0
-
+    HF_vector=[Vector{Matrix{Float64}}(undef,2) for _ in 1:Nx*Ny]
+    HF_eigenvector_tosave=[Vector{Matrix{Float64}}(undef,2) for _ in 1:Nx*Ny]
 
     while (eout>1*10^-14) || (bad_count<4)
       if  eout<1*10^-14 
@@ -491,9 +491,14 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
     end
     
   =#
+   
 
 
-  return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_vector,bound,energy
+  for ja in 1:Nx*Ny, vi in 1:2
+    HF_eigenvector_tosave[ja][vi]=HF_vector[ja][vi][:,length(wave)-3,length(wave)+3]
+  end
+
+  return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector_tosave,bound,energy
 
 end
 
