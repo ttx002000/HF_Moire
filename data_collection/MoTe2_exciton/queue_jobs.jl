@@ -17,10 +17,10 @@ Vm=-11.2
 Vb=-11.2
 ϕb=-91.0
 ϵrspace=[10.0]
-Egspace=collect(100.0:5.0:160.0)
+Egspace=collect(100.0:5.0:200.0)
 period=10.84
 w=-13.3
-elecnum=1.0
+elecnum=0.0
 
 geonum=3
 cutoffnum=4.01
@@ -56,7 +56,7 @@ cutoffnum=parameters[17]
 
 for  Eg in Egspace,trytime in 1:10,ϵr in ϵrspace, mt in mtspace
   arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,period,w,elecnum,trytime,geonum,cutoffnum])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",ntasks=8,mem=16)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",ntasks=15,mem=16)
 end
 
 

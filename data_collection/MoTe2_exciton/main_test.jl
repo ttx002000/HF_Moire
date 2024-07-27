@@ -12,7 +12,7 @@ println("This is the arguments$args")
 
 
 
-#args=[-1.0,0.62,0.62,0.0,0.0,-11.2,91.0,-11.2,-91.0,1000.0,100.0,10.0,-13.3,0.0,1.0,1.0,3.01]
+args=[-1.0,0.62,0.62,0.0,0.0,-11.2,91.0,-11.2,-91.0,1000.0,100.0,10.084,-13.3,0.0,1.0,3.0,4.01]
 
 parameters=args[1:13]
 elecnum=Int(args[14])
@@ -59,4 +59,4 @@ savepath=joinpath(@__DIR__, "data_output/$(args[1])mt$(args[2])mm$(args[3])mb$(a
 
 
 
-jldsave(savepath,HFdensity=HFdensity,HF_vector=HF_vector_tosave,energy=energy,parameters=args,HF_eigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,bound=bound,a1m=a1m,a2m=a2m,dimension=3*length(wave),constq=constq)
+jldsave(savepath,HFdensity=HFdensity,HF_vector=HF_vector_tosave,energy=energy,parameters=args,HF_eigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,bound=bound,a1m=a1m,a2m=a2m,dimension=3*length(wave),constq=constq,single_eigenvector=single_eigenvector)
