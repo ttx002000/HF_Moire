@@ -17,8 +17,8 @@ Vm=-11.2
 Vb=-11.2
 ϕb=-91.0
 ϵrspace=[10.0]
-Egspace=collect(100.0:5.0:200.0)
-period=10.84
+Egspace=collect(100.0:10.0:200.0)
+period=10.084
 w=-13.3
 elecnum=0.0
 
