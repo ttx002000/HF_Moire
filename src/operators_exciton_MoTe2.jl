@@ -219,13 +219,13 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},geonum::Int6
     k=allowedq[ja][1]*T1+allowedq[ja][2]*T2
   
     for jb in eachindex(wave)
-     single_Ham[ja][1][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2-Km)^2*constt
+     single_Ham[ja][1][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2)^2*constt
      single_Ham[ja][1][3*(jb-1)+2,3*(jb-1)+2]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2-Kp)^2*constm+Eg
      single_Ham[ja][1][3*(jb-1)+3,3*(jb-1)+3]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2-Km)^2*constb+Eg
     end
   
     for jb in eachindex(wave)
-      single_Ham[ja][2][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+Km)^2*constt
+      single_Ham[ja][2][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2)^2*constt
       single_Ham[ja][2][3*(jb-1)+2,3*(jb-1)+2]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+Kp)^2*constm+Eg
       single_Ham[ja][2][3*(jb-1)+3,3*(jb-1)+3]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+Km)^2*constb+Eg
     end
