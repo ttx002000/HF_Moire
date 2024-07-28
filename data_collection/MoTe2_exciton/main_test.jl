@@ -59,4 +59,4 @@ savepath=joinpath(@__DIR__, "data_output/$(args[1])mt$(args[2])mm$(args[3])mb$(a
 
 
 
-jldsave(savepath,HFdensity=HFdensity,HF_vector=HF_vector_tosave,energy=energy,parameters=args,HF_eigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,bound=bound,a1m=a1m,a2m=a2m,dimension=3*length(wave),constq=constq,single_eigenvector=single_eigenvector)
+jldsave(savepath,HFdensity=HFdensity,HF_vector=HF_vector_tosave,energy=energy,parameters=args,HF_eigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,bound=bound,a1m=a1m,a2m=a2m,dimension=3*length(wave),constq=constq)
