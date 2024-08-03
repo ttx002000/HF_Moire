@@ -415,14 +415,14 @@ end
 
 function excecute_loop()
    # ϵAspace=collect(0.0:0.2:6.0)
-    ϵAspace=collect(1.0:1.0:9.0)
+    ϵAspace=collect(0.0:0.5:15.0)
     ϵBspace=[0.0]
     ϵCspace=[0.0]
     t1space=[1.0]
     t2space=[1.0]
     t3space=[0.00]
     Nq=24
-    Uspace=collect(0.1:0.1:0.8)
+    Uspace=collect(0.0:0.05:1.0)
     #Uspace=[0.1]
     nu=1
     allowedq=0
