@@ -422,7 +422,7 @@ function excecute_loop()
     t2space=[1.0]
     t3space=[0.00]
     Nq=24
-    Uspace=collect(0.0:0.05:1.0)
+    Uspace=collect(0.0:0.5:6.0)
     #Uspace=[0.1]
     nu=2
     allowedq=0
