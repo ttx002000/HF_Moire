@@ -424,7 +424,7 @@ function excecute_loop()
     Nq=24
     Uspace=collect(0.0:0.05:1.0)
     #Uspace=[0.1]
-    nu=1
+    nu=2
     allowedq=0
 
     single_eigenvalue=[[[zeros(ComplexF64,3) for _ in 1:Nq^2] for _ in eachindex(Uspace)] for _ in eachindex(ϵAspace)]
