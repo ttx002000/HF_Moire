@@ -42,9 +42,9 @@ bigQindex=Int(args[8])
  Smatrix=vcat(hcat(Amatrix,Bmatrix),hcat(Bmatrix',conj(AmQmatrix)))
  ω=eigvals(Totalmatrix)
  Sspectrum=eigvals(Smatrix)
+ Aspectrum=eigvals(Amatrix)
 
 
-
- jldsave(joinpath(@__DIR__, "data_output/spectrum$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq$(args[7])try$(args[8])bigQ.jld2"),omegaspectrum=ω,Sspectrum=Sspectrum)
+ jldsave(joinpath(@__DIR__, "data_output/spectrum$(args[4])Nq$(args[1])flux$(args[2])V0$(args[3])phi$(args[5])scale$(args[6])constq$(args[7])try$(args[8])bigQ.jld2"),omegaspectrum=ω,Sspectrum=Sspectrum,Aspectrum=Aspectrum)
 
 
