@@ -6,7 +6,6 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 
 job_prefix = "exciton"
 
-#parameters=[0.35,0.4,0.35,-10.0,70.0,10.0,80.0,10.0,1.0,10,100.0,2.0,5.0]
 mt=0.36
 mm=-0.6
 mb=-0.6
@@ -18,6 +17,7 @@ Vb=20.8
 ϕb=-107.7
 
 ϵr=6
+Eg=70.0
 θ=3.89
 w=-23.8
 holenum=1.0
