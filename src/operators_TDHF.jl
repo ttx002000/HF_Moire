@@ -222,15 +222,15 @@ function get_indexset(Flevel::Float64,HF_eigenvalue::Vector{Vector{Float64}},wav
 
  for ja in 1:Nq^2
    for jb in FLindex-num_bandbelow+1:FLindex
-       push!(Bandvector,[ja,jb])
+       push!(Bandvector,[ja,jb]) #I think this is the hole band
    end
-   kpQ=[mod(allowedq[ja][1]+bigQ[1],Nq),mod(allowedq[ja][2]+bigQ[2],Nq)]
-   kmQ=[mod(allowedq[ja][1]-bigQ[1],Nq),mod(allowedq[ja][2]-bigQ[2],Nq)]
-   kpQpos=findfirst(item->item==kpQ,allowedq)
-   kmQpos=findfirst(item->item==kmQ,allowedq)
+      kpQ=[mod(allowedq[ja][1]+bigQ[1],Nq),mod(allowedq[ja][2]+bigQ[2],Nq)]
+      kmQ=[mod(allowedq[ja][1]-bigQ[1],Nq),mod(allowedq[ja][2]-bigQ[2],Nq)]
+      kpQpos=findfirst(item->item==kpQ,allowedq)
+      kmQpos=findfirst(item->item==kmQ,allowedq)
     for jb in FLindex+1:FLindex+num_bandup
-    push!(Bandvector,[kpQpos,jb])
-    push!(Bandvector,[kmQpos,jb])
+      push!(Bandvector,[kpQpos,jb])#I think this is the electron band
+      push!(Bandvector,[kmQpos,jb])
     end
   end
  Bandvector=sort(unique(Bandvector))
@@ -326,7 +326,7 @@ function get_Fmatrix(Bandvector::Vector{Vector{Int64}},HF_eigenvector::Vector{Ma
 end
 
 
-function get_Velement(qindex::Int64,v1::Vector{Int64},v2::Vector{Int64},v3::Vector{Int64},v4::Vector{Int64},Fmatrix::Array{ComplexF64},gkpqmap::Array{Int64},gkmqmap::Array{Int64},T1::Vector{Float64},T2::Vector{Float64},wave_diff::Vector{Vector{Int64}})::ComplexF64
+function get_Velement(qindex::Int64,v1::Vector{Int64},v2::Vector{Int64},v3::Vector{Int64},v4::Vector{Int64},Fmatrix::Array{ComplexF64},gkpqmap::Array{Int64},gkmqmap::Array{Int64},T1::Vector{Float64},T2::Vector{Float64},wave_diff::Vector{Vector{Int64}},allowedq::Vector{Vector{Int64}},constq::Float64)::ComplexF64
     Velement=0 #v1v2v3v4 contains two informatin, which band and which momentum
    for ja in eachindex(wave_diff)
         qvec=allowedq[qindex]+wave_diff[ja]
@@ -337,7 +337,6 @@ function get_Velement(qindex::Int64,v1::Vector{Int64},v2::Vector{Int64},v3::Vect
 
    return Velement
 end
-
 
 
 
@@ -353,7 +352,7 @@ function test_function()
 end
 
 
-function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset::Vector{Vector{Vector{Int64}}},B2indexset::Vector{Vector{Vector{Int64}}},allowedq::Vector{Vector{Int64}},Fmatrix::Array{ComplexF64},gkpqmap::Array{Int64},gkmqmap::Array{Int64},T1::Vector{Float64},T2::Vector{Float64},wave_diff::Vector{Vector{Int64}},HF_eigenvalue::Vector{Vector{Float64}})::Tuple{Matrix{ComplexF64},Matrix{ComplexF64},Matrix{ComplexF64}}
+function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset::Vector{Vector{Vector{Int64}}},B2indexset::Vector{Vector{Vector{Int64}}},allowedq::Vector{Vector{Int64}},Fmatrix::Array{ComplexF64},gkpqmap::Array{Int64},gkmqmap::Array{Int64},T1::Vector{Float64},T2::Vector{Float64},wave_diff::Vector{Vector{Int64}},HF_eigenvalue::Vector{Vector{Float64}},Nq::Int64,constq::Float64)::Tuple{Matrix{ComplexF64},Matrix{ComplexF64},Matrix{ComplexF64}}
     #=
     Amatrix=zeros(ComplexF64,length(Aindexset),length(Aindexset))
  
@@ -446,7 +445,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
 
    deltaq2=allowedq[v1[2]]-allowedq[v4[2]]
    q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
-   Amatrixvec[ja][jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)
+   Amatrixvec[ja][jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,constq)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,constq)
   end
  end
 
@@ -476,7 +475,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
 
    deltaq2=allowedq[v1[2]]-allowedq[v4[2]]
    q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
-   AmQmatrixvec[ja][jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)
+   AmQmatrixvec[ja][jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,constq)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,constq)
  end
  end
 
@@ -509,7 +508,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
   
      deltaq2=allowedq[v1[2]]-allowedq[v4[2]]
      q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
-     Bmatrixvec[ja][jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff)
+     Bmatrixvec[ja][jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,constq)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,constq)
    end
    end
 
