@@ -226,9 +226,9 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
     end
   
     for jb in eachindex(wave)
-      single_Ham[ja][2][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κp-shift)^2*constt+Eg
-      single_Ham[ja][2][3*(jb-1)+2,3*(jb-1)+2]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κp-shift)^2*constm
-      single_Ham[ja][2][3*(jb-1)+3,3*(jb-1)+3]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κm-shift)^2*constb
+      single_Ham[ja][2][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κp+shift)^2*constt+Eg
+      single_Ham[ja][2][3*(jb-1)+2,3*(jb-1)+2]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κp+shift)^2*constm
+      single_Ham[ja][2][3*(jb-1)+3,3*(jb-1)+3]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κm+shift)^2*constb
      end
     
   
