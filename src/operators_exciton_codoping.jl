@@ -118,12 +118,12 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
   single_MoirePo=zeros(ComplexF64,dimension,dimension)
   tunnel=zeros(ComplexF64,dimension,dimension)
   M_tunnel=zeros(ComplexF64,dimension,dimension)
-  seed_tunnel=zeros(ComplexF64,dimension,dimension)
+  #seed_tunnel=zeros(ComplexF64,dimension,dimension)
   
   single_eigenvalue=[[zeros(Float64,dimension) for _ in 1:2] for _ in 1:Nq^2]
   single_eigenvector=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
   uncoupled_eigenvector=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
-  seed_eigenvector=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
+  #seed_eigenvector=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
  
   
   for jc in eachindex(wave)
@@ -184,7 +184,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
   end
   
   M_tunnel=M_tunnel+M_tunnel'
-
+#=
   for jc in eachindex(wave)
    
     seed_tunnel[3*(jc-1)+1,3*(jc-1)+2]+=2.0
@@ -210,7 +210,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
   end
   
   seed_tunnel=seed_tunnel+seed_tunnel'
-  
+  =#
   
   
   
@@ -226,13 +226,13 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
     end
   
     for jb in eachindex(wave)
-      single_Ham[ja][2][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κp+shift)^2*constt+Eg
-      single_Ham[ja][2][3*(jb-1)+2,3*(jb-1)+2]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κp+shift)^2*constm
-      single_Ham[ja][2][3*(jb-1)+3,3*(jb-1)+3]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κm+shift)^2*constb
+      single_Ham[ja][2][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κp-shift)^2*constt+Eg
+      single_Ham[ja][2][3*(jb-1)+2,3*(jb-1)+2]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κp-shift)^2*constm
+      single_Ham[ja][2][3*(jb-1)+3,3*(jb-1)+3]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κm-shift)^2*constb
      end
     
   
-     
+     #=
     FFF=eigen(single_Ham[ja][1])
      uncoupled_eigenvector[ja][1]=FFF.vectors
 
@@ -244,7 +244,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
 
     FFF=eigen(single_Ham[ja][2]+seed_tunnel)
      seed_eigenvector[ja][2]=FFF.vectors
-    
+    =#
   
   
     single_Ham[ja][1]+=single_MoirePo+tunnel
