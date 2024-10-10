@@ -47,7 +47,7 @@ Nq=parameters[16]
 
 for trytime in 1:2, Eg in Egspace,seednum in 1:8,ϵr in ϵrspace
   arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,Nq,seednum])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=8)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=8,mem=32)
 end
 
 
