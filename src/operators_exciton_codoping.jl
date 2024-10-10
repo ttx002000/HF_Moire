@@ -12,42 +12,27 @@ using Random
  
 function Coulomb(qab::Float64,k::Vector{Int64},Ld::Float64)::Float64
   
-   return k==[0,0] ? 0.0 : (exp(-qab*Ld)/qab)
-   
+   #return k==[0,0] ? 0.0 : (exp(-qab*Ld)/qab)
+   #return qab<0.5 ? 0.0 : (exp(-qab*Ld)/qab)
+   return exp(-qab*Ld)/(qab+1.0)
 end
 
 
 function CoulombMatrix(k::Vector{Int64},T1::Vector{Float64},T2::Vector{Float64})::Matrix{Float64}
   
-  vp=[2.73,0.73,0.0]
+  #vp=[2.73,0.73,0.0]
+  #vp=[0.0 2.0 2.0;2.0 0.0 0.73;2.0 0.73 0.0]
+  vp=[0.0 2.0 0.0;2.0 0.0 2.0;0.0 2.0 0.0]
   Cmatrix=Matrix{Float64}(undef,3,3)
   qab=norm(k[1]*T1+k[2]*T2)
   for L1 in 1:3, L2 in 1:3
-    Cmatrix[L1,L2]=Coulomb(qab,k,abs(vp[L1]-vp[L2]))
-  end
-  return Cmatrix
-  
-end
-#=
-function Coulomb_arbitrary(qab::Float64,Ld::Float64,cutoff::Float64)::Float64
-  
-  return qab<cutoff ? 0.0 : (exp(-qab*Ld)/qab)
-  
-end
-
-function CoulombMatrix_arbitrary(k::Vector{Float64},cutoff::Float64)::Matrix{Float64}
-  
-  vp=[2.73,0.73,0.0]
-  Cmatrix=Matrix{Float64}(undef,3,3)
-  qab=norm(k)
-  for L1 in 1:3, L2 in 1:3
-    Cmatrix[L1,L2]=Coulomb_arbitrary(qab,abs(vp[L1]-vp[L2]),cutoff)
+    #Cmatrix[L1,L2]=Coulomb(qab,k,abs(vp[L1]-vp[L2]))
+    Cmatrix[L1,L2]=Coulomb(qab,k,vp[L1,L2])
   end
   return Cmatrix
   
 end
 
-=#
 
 function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::Int64)
  
@@ -77,7 +62,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
 
   
   
-  bm=2*blattice*sin(θ/2)
+  bm=blattice*θ
   am=4*π/(√3*bm);
   constt=38.09981949*1/(mt)
   constm=38.09981949*1/(mm)
@@ -115,7 +100,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
   
   wave=Vector{Int64}[]
   cutoff=18
-  cutoffstandard=4.01*bm
+  cutoffstandard=3.01*bm
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*b1+jb*b2;
       if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -124,7 +109,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
   end
   dimension=3*length(wave)
  
-  
+  shift=1/2*T1+1/2*T2
 
 
 
@@ -133,12 +118,13 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
   single_MoirePo=zeros(ComplexF64,dimension,dimension)
   tunnel=zeros(ComplexF64,dimension,dimension)
   M_tunnel=zeros(ComplexF64,dimension,dimension)
+  seed_tunnel=zeros(ComplexF64,dimension,dimension)
   
   single_eigenvalue=[[zeros(Float64,dimension) for _ in 1:2] for _ in 1:Nq^2]
   single_eigenvector=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
   uncoupled_eigenvector=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
-  
-
+  seed_eigenvector=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
+ 
   
   for jc in eachindex(wave)
     pos=findfirst(item->item==wave[jc]-b1T,wave)
@@ -198,7 +184,32 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
   end
   
   M_tunnel=M_tunnel+M_tunnel'
+
+  for jc in eachindex(wave)
+   
+    seed_tunnel[3*(jc-1)+1,3*(jc-1)+2]+=2.0
+    seed_tunnel[3*(jc-1)+1,3*(jc-1)+3]+=2.0
+  end
+
+  for jc in eachindex(wave)
+    pos=findfirst(item->item==wave[jc]-b1T,wave)
+    if pos≠nothing
+      seed_tunnel[3*(jc-1)+1:3*jc,3*(pos-1)+1:3*pos]+=diagm([1*exp(im*ϕt),1*exp(im*ϕm),1*exp(im*ϕb)])
+    end
+    
   
+    pos=findfirst(item->item==wave[jc]+b2T+b1T,wave)
+    if pos≠nothing
+      seed_tunnel[3*(jc-1)+1:3*jc,3*(pos-1)+1:3*pos]+=diagm([1*exp(im*ϕt),1*exp(im*ϕm),1*exp(im*ϕb)])
+    end
+  
+    pos=findfirst(item->item==wave[jc]-b2T,wave)
+    if pos≠nothing
+      seed_tunnel[3*(jc-1)+1:3*jc,3*(pos-1)+1:3*pos]+=diagm([1*exp(im*ϕt),1*exp(im*ϕm),1*exp(im*ϕb)])
+    end
+  end
+  
+  seed_tunnel=seed_tunnel+seed_tunnel'
   
   
   
@@ -209,15 +220,15 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
     k=allowedq[ja][1]*T1+allowedq[ja][2]*T2
   
     for jb in eachindex(wave)
-     single_Ham[ja][1][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2)^2*constt+Eg
-     single_Ham[ja][1][3*(jb-1)+2,3*(jb-1)+2]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2-κp)^2*constm
-     single_Ham[ja][1][3*(jb-1)+3,3*(jb-1)+3]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2-κm)^2*constb
+     single_Ham[ja][1][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2-κp+shift)^2*constt+Eg #This is the configuration
+     single_Ham[ja][1][3*(jb-1)+2,3*(jb-1)+2]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2-κp+shift)^2*constm
+     single_Ham[ja][1][3*(jb-1)+3,3*(jb-1)+3]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2-κm+shift)^2*constb
     end
   
     for jb in eachindex(wave)
-      single_Ham[ja][2][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2)^2*constt+Eg
-      single_Ham[ja][2][3*(jb-1)+2,3*(jb-1)+2]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κp)^2*constm
-      single_Ham[ja][2][3*(jb-1)+3,3*(jb-1)+3]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κm)^2*constb
+      single_Ham[ja][2][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κp+shift)^2*constt+Eg
+      single_Ham[ja][2][3*(jb-1)+2,3*(jb-1)+2]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κp+shift)^2*constm
+      single_Ham[ja][2][3*(jb-1)+3,3*(jb-1)+3]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2+κm+shift)^2*constb
      end
     
   
@@ -227,6 +238,12 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
 
     FFF=eigen(single_Ham[ja][2])
      uncoupled_eigenvector[ja][2]=FFF.vectors
+    
+     FFF=eigen(single_Ham[ja][1]+seed_tunnel)
+     seed_eigenvector[ja][1]=FFF.vectors
+
+    FFF=eigen(single_Ham[ja][2]+seed_tunnel)
+     seed_eigenvector[ja][2]=FFF.vectors
     
   
   
@@ -241,8 +258,6 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
     single_eigenvalue[ja][2]=real(FFF.values)
     single_eigenvector[ja][2]=FFF.vectors
 
-    
-  
   end
   
 
@@ -253,16 +268,43 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
   BG_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
   for ja in 1:Nq^2, vi in 1:2, jb in 1:length(wave)*2
     BG_DensityMatrix[ja][vi]+=(uncoupled_eigenvector[ja][vi][:,jb]*(uncoupled_eigenvector[ja][vi][:,jb])') 
+    
   end
   
-  input_DensityMatrix=[[randn(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
+  input_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nq^2]
+  
+  for ja in 1:Nq^2, vi in 1:1
+    A=10^(-1)*randn(ComplexF64,dimension,dimension)
+      input_DensityMatrix[ja][vi]=A+A'
+  end
+
+  for ja in 1:Nq^2, vi in 2:2
+    A=10^(-1)*randn(ComplexF64,dimension,dimension)
+      input_DensityMatrix[ja][vi]=A+A'
+  end
   
 
- 
- single_chern=zeros(ComplexF64,2)
- single_chern[1]=calculate_chern(single_eigenvector,Nq,dimension,wave,allowedq,1,2*length(wave))
- single_chern[2]=calculate_chern(single_eigenvector,Nq,dimension,wave,allowedq,2,2*length(wave))
 
+
+#=
+  for ja in 1:Nq^2, vi in 1:1, jb in 1:length(wave)*2
+   input_DensityMatrix[ja][vi]+=(seed_eigenvector[ja][vi][:,jb]*(seed_eigenvector[ja][vi][:,jb])') 
+  end
+  for ja in 1:Nq^2, vi in 2:2, jb in 1:length(wave)*2-2
+    input_DensityMatrix[ja][vi]+=(seed_eigenvector[ja][vi][:,jb]*(seed_eigenvector[ja][vi][:,jb])') 
+  end
+  for ja in 1:Nq^2, vi in 2:2, jb in length(wave)*2+1:length(wave)*2+1
+    input_DensityMatrix[ja][vi]+=(seed_eigenvector[ja][vi][:,jb]*(seed_eigenvector[ja][vi][:,jb])') 
+  end
+
+  input_DensityMatrix-=BG_DensityMatrix
+ =#
+ single_chern=zeros(ComplexF64,4)
+ single_chern[1]=calculate_chern(single_eigenvector,Nq,dimension,wave,allowedq,1,2*length(wave)-1)
+ single_chern[2]=calculate_chern(single_eigenvector,Nq,dimension,wave,allowedq,1,2*length(wave))
+ single_chern[3]=calculate_chern(single_eigenvector,Nq,dimension,wave,allowedq,2,2*length(wave)-1)
+ single_chern[4]=calculate_chern(single_eigenvector,Nq,dimension,wave,allowedq,2,2*length(wave))
+ println("single_chern",single_chern)
   
  return  wave, input_DensityMatrix, BG_DensityMatrix, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m,constq,single_chern
     
@@ -591,21 +633,46 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
      HF_eigenvalue[ja][jb]=real(FFF.values)
      HF_eigenvector[ja][jb]=FFF.vectors
    end
-  
-   bound=sort(reduce(vcat,reduce(vcat,HF_eigenvalue)))[Parnum+1]
+
+
    
+    #=
+   htelement=sum(abs.(vec(HartreeMatrix)))
+ println("htelement",htelement)
+
+
+
+   fkelement=0
+    for ja in 1:Nq^2, jb in 1:2
+     fkelement+=sum(abs.(vec(FockMatrix[ja][jb])))/Nq^2
+    end
   
-    for ja in 1:Nq^2,vi in 1:2     
+  println("fkelement",fkelement)
+=#
+   bound=(sort(reduce(vcat,reduce(vcat,HF_eigenvalue)))[Parnum+1]+sort(reduce(vcat,reduce(vcat,HF_eigenvalue)))[Parnum])/2
+   
+   
+    for ja in 1:Nq^2,vi in 1:2   
          for jd in eachindex(HF_eigenvalue[ja][vi])
             if HF_eigenvalue[ja][vi][jd]<bound
                NewDensityMatrix[ja][vi]+=HF_eigenvector[ja][vi][:,jd]*(HF_eigenvector[ja][vi][:,jd])'
             end
          end
+         NewDensityMatrix[ja][vi]-=BG_DensityMatrix[ja][vi]
     end
   
-    NewDensityMatrix=NewDensityMatrix-BG_DensityMatrix
+
+
+   
     DeltaMatrix=NewDensityMatrix-input_DensityMatrix
-    output_DensityMatrix=0.0*input_DensityMatrix+1.0*NewDensityMatrix
+  
+    output_DensityMatrix=0.7*input_DensityMatrix+0.3*NewDensityMatrix
+
+    l3=0.0
+    for ja in 1:length(wave), jb in 1:Nq^2,vi in 1:2
+     l3+=NewDensityMatrix[jb][vi][3*(ja-1)+1,3*(ja-1)+1]
+    end
+   println("l3=",l3)
     
     e1=0.0
     for ja in 1:Nq^2,vi in 1:2
@@ -618,6 +685,18 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
       Energy_Matrix=single_Ham[ja][vi]+(constq*HartreeMatrix-constq*FockMatrix[ja][vi])/2
         energy+=tr(Energy_Matrix*input_DensityMatrix[ja][vi])
     end
+
+    HF_chern=zeros(ComplexF64,4)
+    dimension=3*length(wave)
+    HF_chern[1]=calculate_chern(HF_eigenvector,Nq,dimension,wave,allowedq,1,2*length(wave)-1)
+    HF_chern[2]=calculate_chern(HF_eigenvector,Nq,dimension,wave,allowedq,1,2*length(wave))
+    HF_chern[3]=calculate_chern(HF_eigenvector,Nq,dimension,wave,allowedq,2,2*length(wave)-1)
+    HF_chern[4]=calculate_chern(HF_eigenvector,Nq,dimension,wave,allowedq,2,2*length(wave))
+
+    println("HFchern",HF_chern)
+    
+
+
   
    return  eout,output_DensityMatrix,DeltaMatrix,HF_eigenvalue,HF_eigenvector,bound,real(energy)
 end
@@ -703,8 +782,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
     bound=0.0
     energy=0.0
 
-    while (eout>1*10^-14) || (bad_count<4)
-      if  eout<1*10^-14 
+    while (eout>1*10^-13) || (bad_count<4)
+      if  eout<1*10^-13
         bad_count+=1
       end
       tic=time()
@@ -719,11 +798,12 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
     
     end
     
-    HF_chern=zeros(ComplexF64,2)
+    HF_chern=zeros(ComplexF64,4)
     dimension=3*length(wave)
-    HF_chern[1]=calculate_chern(HF_eigenvector,Nq,dimension,wave,allowedq,1,2*length(wave))
-    HF_chern[2]=calculate_chern(HF_eigenvector,Nq,dimension,wave,allowedq,2,2*length(wave))
-   
+    HF_chern[1]=calculate_chern(HF_eigenvector,Nq,dimension,wave,allowedq,1,2*length(wave)-1)
+    HF_chern[2]=calculate_chern(HF_eigenvector,Nq,dimension,wave,allowedq,1,2*length(wave))
+    HF_chern[3]=calculate_chern(HF_eigenvector,Nq,dimension,wave,allowedq,2,2*length(wave)-1)
+    HF_chern[4]=calculate_chern(HF_eigenvector,Nq,dimension,wave,allowedq,2,2*length(wave))
 
 
   return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue, HF_eigenvector,bound,energy,HF_chern
