@@ -48,7 +48,7 @@ Nq=parameters[16]
 =#
 
 
-for trytime in 1:10
+for trytime in 1:15
   arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,Nq])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=8,mem=16)
 end
