@@ -21,7 +21,7 @@ Eg=70.0
 θ=3.89
 w=-23.8
 holenum=1.0
-Nq=3.0
+Nq=6.0
 
 #args=[0.36,-0.6,-0.6,0.0,0.0,20.8,107.7,20.8,-107.7,6,70.0,3.89,-23.8,1.0,1.0,3.0]
 
@@ -48,7 +48,7 @@ Nq=parameters[16]
 =#
 
 
-for trytime in 1:15
+for trytime in 1:6
   arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,Nq])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=8,mem=16)
 end
