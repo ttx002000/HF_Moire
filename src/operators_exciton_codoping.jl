@@ -246,20 +246,20 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},geon
   input_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nx*Ny]
   
   for ja in 1:Nx*Ny, vi in 1:1
-    A=10^(-2)*randn(ComplexF64,dimension,dimension)
+    A=10^(-4)*randn(ComplexF64,dimension,dimension)
       input_DensityMatrix[ja][vi]=A+A'
   end
 
   for ja in 1:Nx*Ny, vi in 2:2
-    A=10^(-2)*randn(ComplexF64,dimension,dimension)
+    A=10^(-4)*randn(ComplexF64,dimension,dimension)
       input_DensityMatrix[ja][vi]=A+A'
   end
   
 
 
-#=
+
   
-  for ja in 1:Nx*Ny, vi in 1:1, jb in 1:length(wave)*2
+  for ja in 1:Nx*Ny, vi in 1:1, jb in 1:length(wave)*2-1
    input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
   end
   for ja in 1:Nx*Ny, vi in 2:2, jb in 1:length(wave)*2-1
@@ -268,7 +268,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},geon
  
 
   input_DensityMatrix-=BG_DensityMatrix
- =#
+ 
  single_chern=zeros(ComplexF64,4)
  single_chern[1]=calculate_chern(single_eigenvector,Nx,Ny,Minv,dimension,wave,allowedq,1,2*length(wave)-1)
  single_chern[2]=calculate_chern(single_eigenvector,Nx,Ny,Minv,dimension,wave,allowedq,1,2*length(wave))
@@ -418,7 +418,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
    
     DeltaMatrix=NewDensityMatrix-input_DensityMatrix
   
-    output_DensityMatrix=0.5*input_DensityMatrix+0.5*NewDensityMatrix
+    output_DensityMatrix=0.6*input_DensityMatrix+0.4*NewDensityMatrix
 
     l3=0.0
     for ja in 1:length(wave), jb in 1:Nx*Ny,vi in 1:2
