@@ -12,9 +12,10 @@ using Random
  
 function Coulomb(qab::Float64,k::Vector{Int64},Ld::Float64)::Float64
   
-   #return k==[0,0] ? 0.0 : (exp(-qab*Ld)/qab)
+   #return k==[0,0] ? 0.0 : (1/qab)
    #return qab<0.5 ? 0.0 : (exp(-qab*Ld)/qab)
-   return exp(-qab*Ld)/(qab+1.0)
+  # return exp(-qab*Ld)/(qab+1.0)
+  return k==[0,0] ? 30.0 : (tanh(qab*30)/qab)
  
 end
 
@@ -22,12 +23,12 @@ end
 function CoulombMatrix(k::Vector{Int64},T1::Vector{Float64},T2::Vector{Float64})::Matrix{Float64}
   
   #vp=[2.73,0.73,0.0]
-  vp=[0.0 2.0 2.0;2.0 0.0 0.73;2.0 0.73 0.0]
+  #vp=[0.0 2.0 2.0;2.0 0.0 0.73;2.0 0.73 0.0]
   
   Cmatrix=Matrix{Float64}(undef,3,3)
   qab=norm(k[1]*T1+k[2]*T2)
   for L1 in 1:3, L2 in 1:3
-    Cmatrix[L1,L2]=Coulomb(qab,k,vp[L1,L2])
+    Cmatrix[L1,L2]=Coulomb(qab,k,0.0)
   end
   return Cmatrix
   
@@ -100,7 +101,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
   
   wave=Vector{Int64}[]
   cutoff=18
-  cutoffstandard=3.01*bm
+  cutoffstandard=3.51*bm
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*b1+jb*b2;
       if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -109,8 +110,8 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
   end
   dimension=3*length(wave)
  
-  shift=1/2*T1+1/2*T2
-
+  #shift=1/2*T1+1/2*T2
+ shift=[0,0]
 
 
 
@@ -639,15 +640,15 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
    println("l3=",l3)
     
     e1=0.0
-    #=
-    e2=0.0
+    
+    #e2=0.0
     for ja in 1:Nq^2,vi in 1:2
       e1+=tr(DeltaMatrix[ja][vi]'*DeltaMatrix[ja][vi])
-      e2+=sum((abs.(diag(DeltaMatrix[ja][vi],0))).^2)
+      #e2+=sum((abs.(diag(DeltaMatrix[ja][vi],0))).^2)
     end
     eout=real(e1)/(2*Nq^2)
-    println("e2=",sqrt(e2/(12*Nq^2*length(wave)^2)))
-   =#
+    #println("e2=",sqrt(e2/(12*Nq^2*length(wave)^2)))
+   
     energy=0.0
     for ja in 1:Nq^2, vi in 1:2
       Energy_Matrix=single_Ham[ja][vi]+(constq*HartreeMatrix-constq*FockMatrix[ja][vi])/2
@@ -751,8 +752,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
     bound=0.0
     energy=0.0
 
-    while (eout>1*10^-12) || (bad_count<4)
-      if  eout<1*10^-12
+    while (eout>1*10^(-11)) || (bad_count<3)
+      if  eout<1*10^(-11)
         bad_count+=1
       end
       tic=time()
@@ -791,9 +792,25 @@ end
 
 
 
+function calculate_layerpolarization(wave,HF_eigenvector,layer_num,Nq)
+  layer_pol=zeros(Float64,layer_num,2,Nq^2,layer_num*length(wave))
 
+    for ja in 1:layer_num, vi in 1:2, jc in 1:Nq^2, jd in 1:layer_num*length(wave),je in 1:length(wave)
+      layer_pol[ja,vi,jc,jd]+=abs(HF_eigenvector[jc][vi][layer_num*(je-1)+ja,jd])^2
+    end
+    return layer_pol
+end
 
+function get_holeband(wave,HF_eigenvector,Nq)
+   vec_1=Vector{Any}(undef,Nq^2)
+   vec_2=Vector{Any}(undef,Nq^2)
 
+   for ja in 1:Nq^2
+   vec_1[ja]=HF_eigenvector[ja][1][:,2*length(wave)]
+   vec_2[ja]=HF_eigenvector[ja][2][:,2*length(wave)]
+  end
+  return vec_1, vec_2
+end
 
 
 
