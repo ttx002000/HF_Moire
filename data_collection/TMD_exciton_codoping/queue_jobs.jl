@@ -48,16 +48,13 @@ geonum=parameters[16]
 =#
 
 
-for trytime in 1:15,ϵr in [15], Eg in [120,140,160]
+for trytime in 1:15,ϵr in [15], Eg in [105,110,115]
   arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,geonum])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="4:00:00",ntasks=4,mem=8)
 end
 
 
-for trytime in 1:15,ϵr in [18], Eg in [120,140,160]
-  arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,geonum])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="4:00:00",ntasks=4,mem=8)
-end
+
 
 
 
