@@ -87,7 +87,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},geon
 
   b1T=Int.(round.(inv([T1 T2])*b1))
   b2T=Int.(round.(inv([T1 T2])*b2))
-
+ 
   
   κp=bm*[-1/2,1/(2√3)]
   κm=bm*[-1/2,-1/(2√3)]
@@ -247,12 +247,12 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},geon
   
   for ja in 1:Nx*Ny, vi in 1:1
     A=10^(-1)*randn(ComplexF64,dimension,dimension)
-      input_DensityMatrix[ja][vi]=A+A'
+      input_DensityMatrix[ja][vi]+=A+A'
   end
 
   for ja in 1:Nx*Ny, vi in 2:2
     A=10^(-1)*randn(ComplexF64,dimension,dimension)
-      input_DensityMatrix[ja][vi]=A+A'
+      input_DensityMatrix[ja][vi]+=A+A'
   end
   
 
@@ -262,12 +262,14 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},geon
   for ja in 1:Nx*Ny, vi in 1:1, jb in 1:length(wave)*2
    input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
   end
-  for ja in 1:Nx*Ny, vi in 2:2, jb in 1:length(wave)*2-1
+  for ja in 1:Nx*Ny, vi in 2:2, jb in 1:length(wave)*2
     input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
   end
  
-
-  input_DensityMatrix-=BG_DensityMatrix
+  for ja in 1:Nx*Ny, vi in 1:2
+    input_DensityMatrix[ja][vi]-=BG_DensityMatrix[ja][vi]
+  end
+  
  
  single_chern=zeros(ComplexF64,4)
  single_chern[1]=calculate_chern(single_eigenvector,Nx,Ny,Minv,dimension,wave,allowedq,1,2*length(wave)-1)
@@ -481,8 +483,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
     bound=0.0
     energy=0.0
 
-    while (eout>1*10^(-11)) || (bad_count<3)
-      if  eout<1*10^(-11)
+    while (eout>1*10^(-12)) || (bad_count<3)
+      if  eout<1*10^(-12)
         bad_count+=1
       end
       tic=time()
@@ -586,7 +588,7 @@ end
 
 
 
-function Densitymap(a1m::Vector{Float64},a2m::Vector{Float64},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}})::Tuple{Array{ComplexF64},Array{ComplexF64},Array{ComplexF64}}
+function Densitymap(a1m::Vector{Float64},a2m::Vector{Float64},wave::Vector{Vector{Int}},input_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},T1::Vector{Float64},T2::Vector{Float64})::Tuple{Array{ComplexF64},Array{ComplexF64},Array{ComplexF64}}
   dimension=3*length(wave)  
      N3=50
     xgrid=zeros(Float64,N3,N3)
