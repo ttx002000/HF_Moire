@@ -9,7 +9,7 @@ include(joinpath(@__DIR__,"../../src/operators_exciton_codoping.jl"))
 
 args=parse.(Float64,ARGS)
 println("This is the arguments$args")
-#args=[0.6,-0.6,-0.6,0.0,0.0,20.8,107.7,20.8,-107.7,6.0,1000.0,3.89,-23.8,1.0,5.0,1.0]
+#args=[0.36,-0.6,-0.6,0.0,0.0,20.8,107.7,20.8,-107.7,15.0,120.0,3.89,-23.8,1.0,5.0,1.0]
 #args=[0.36,-0.62,-0.62,0.0,0.0,11.2,91,11.2,-91,8.0,1500.0,2.0,13.3,1.0,5.0,3.0]
 parameters=args[1:13]
 holenum=Int(args[14])

@@ -114,7 +114,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},geon
       end
   end
   dimension=3*length(wave)
- 
+
   #shift=1/2*T1+1/2*T2
  shift=[0,0]
 
@@ -234,7 +234,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},geon
   
 
 
-
+  println("values",single_eigenvalue[1][1][2*length(wave)-2:2*length(wave)+2])
 
    
   BG_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nx*Ny]
@@ -258,8 +258,8 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},geon
 
 
 
-  
-  for ja in 1:Nx*Ny, vi in 1:1, jb in 1:length(wave)*2-1
+  #=
+  for ja in 1:Nx*Ny, vi in 1:1, jb in 1:length(wave)*2
    input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
   end
   for ja in 1:Nx*Ny, vi in 2:2, jb in 1:length(wave)*2-1
@@ -268,7 +268,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},geon
  
 
   input_DensityMatrix-=BG_DensityMatrix
- 
+ =#
  single_chern=zeros(ComplexF64,4)
  single_chern[1]=calculate_chern(single_eigenvector,Nx,Ny,Minv,dimension,wave,allowedq,1,2*length(wave)-1)
  single_chern[2]=calculate_chern(single_eigenvector,Nx,Ny,Minv,dimension,wave,allowedq,1,2*length(wave))
