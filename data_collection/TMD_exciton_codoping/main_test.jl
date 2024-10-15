@@ -52,7 +52,7 @@ for ja in eachindex(DIIS_input_DensityMatrix[1]), vi in 1:2
      initial_DensityMatrix[ja][vi]+=(A+A')*10^(-3)
 end
  
-DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,bound,energy,HF_chern,dope_hole_DM=iteration_loop(initial_DensityMatrix,BG_DensityMatrix,allowedq,T1,T2,geonum,Minv,wave,single_Ham,constq,holenum,0.3)
+DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,bound,energy,HF_chern,dope_hole_DM=iteration_loop(initial_DensityMatrix,BG_DensityMatrix,allowedq,T1,T2,geonum,Minv,wave,single_Ham,constq,holenum,0.4)
 #### finish redo
 
 
