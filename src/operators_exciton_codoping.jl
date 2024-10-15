@@ -245,11 +245,18 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},geon
   
   input_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nx*Ny]
   
-  for ja in 1:Nx*Ny, vi in 1:2, statecount in 1:2
+  for ja in 1:Nx*Ny, vi in 1:1, statecount in 1:2
     A=10^(-1)*randn(ComplexF64,dimension)
     A=A/norm(A)
       input_DensityMatrix[ja][vi]+=A*A'
   end
+   
+  for ja in 1:Nx*Ny, vi in 2:2, statecount in 1:1
+    A=10^(-1)*randn(ComplexF64,dimension)
+    A=A/norm(A)
+      input_DensityMatrix[ja][vi]+=A*A'
+  end
+
    #=
   for ja in 1:Nx*Ny, vi in 2:2
     A=10^(-1)*randn(ComplexF64,dimension,dimension)
@@ -419,7 +426,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
    
     DeltaMatrix=NewDensityMatrix-input_DensityMatrix
   
-    output_DensityMatrix=0.6*input_DensityMatrix+0.4*NewDensityMatrix
+    output_DensityMatrix=0.0*input_DensityMatrix+1.0*NewDensityMatrix
 
     l3=0.0
     for ja in 1:length(wave), jb in 1:Nx*Ny,vi in 1:2
