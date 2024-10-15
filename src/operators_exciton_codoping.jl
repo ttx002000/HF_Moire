@@ -35,7 +35,7 @@ function CoulombMatrix(k::Vector{Int64},T1::Vector{Float64},T2::Vector{Float64})
 end
 
 
-function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},geonum::Int64)
+function triangle_initial_Densitymatrix_firstloop(parameters::Vector{Float64},geonum::Int64)
  
 
   mt=parameters[1]
@@ -303,6 +303,9 @@ end
 
 
 
+
+
+
 function construct_loop_dic(wave::Vector{Vector{Int}})::Dict{Vector{Int},Any}
     g_dic=Dict{Vector{Int},Int}()
     for ja in eachindex(wave)
@@ -338,7 +341,7 @@ end
 
 
 
-function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nx::Int64,Ny::Int64,Minv::Matrix{Int64},wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},BG_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},single_Ham::Vector{Vector{Matrix{ComplexF64}}},constq::Float64,Parnum::Int64)::Tuple{Float64,Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Vector{Float64}}},Vector{Vector{Matrix{ComplexF64}}},Float64,Float64}
+function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},Nx::Int64,Ny::Int64,Minv::Matrix{Int64},wave::Vector{Vector{Int64}},input_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},BG_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},single_Ham::Vector{Vector{Matrix{ComplexF64}}},constq::Float64,Parnum::Int64,update_rate::Float64)::Tuple{Float64,Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Matrix{ComplexF64}}},Vector{Vector{Vector{Float64}}},Vector{Vector{Matrix{ComplexF64}}},Float64,Float64}
   
  
     dimension=3*length(wave)
@@ -431,7 +434,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
    
     DeltaMatrix=NewDensityMatrix-input_DensityMatrix
   
-    output_DensityMatrix=0.0*input_DensityMatrix+1.0*NewDensityMatrix
+    output_DensityMatrix=(1-update_rate)*input_DensityMatrix+update_rate*NewDensityMatrix
 
     l3=0.0
     for ja in 1:length(wave), jb in 1:Nx*Ny,vi in 1:2
@@ -455,7 +458,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
         energy+=tr(Energy_Matrix*input_DensityMatrix[ja][vi])
     end
     println("energy=",energy)
-
+   #=
     HF_chern=zeros(ComplexF64,4)
     dimension=3*length(wave)
     HF_chern[1]=calculate_chern(HF_eigenvector,Nx,Ny,Minv,dimension,wave,allowedq,1,2*length(wave)-1)
@@ -464,7 +467,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
     HF_chern[4]=calculate_chern(HF_eigenvector,Nx,Ny,Minv,dimension,wave,allowedq,2,2*length(wave))
 
     println("HFchern",HF_chern)
-    
+    =#
 
 
   
@@ -478,7 +481,7 @@ end
 
 
 
-function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},BG_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},geonum::Int64,Minv::Matrix{Int64},wave::Vector{Vector{Int64}},single_Ham::Vector{Vector{Matrix{ComplexF64}}},constq::Float64,holenum::Int64)::Tuple{Vector{Vector{Vector{Matrix{ComplexF64}}}},Vector{Vector{Vector{Matrix{ComplexF64}}}},Vector{Vector{Vector{Float64}}},Vector{Vector{Matrix{ComplexF64}}},Float64,Float64,Vector{ComplexF64},Vector{Vector{Matrix{ComplexF64}}}}
+function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},BG_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},geonum::Int64,Minv::Matrix{Int64},wave::Vector{Vector{Int64}},single_Ham::Vector{Vector{Matrix{ComplexF64}}},constq::Float64,holenum::Int64,update_rate::Float64)::Tuple{Vector{Vector{Vector{Matrix{ComplexF64}}}},Vector{Vector{Vector{Matrix{ComplexF64}}}},Vector{Vector{Vector{Float64}}},Vector{Vector{Matrix{ComplexF64}}},Float64,Float64,Vector{ComplexF64},Vector{Vector{Matrix{ComplexF64}}}}
     
   Nx,Ny,l1,l2=Geometry(geonum)
     eout=1.0
@@ -494,12 +497,12 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
     bound=0.0
     energy=0.0
 
-    while (eout>1*10^(-13)) || (bad_count<3)
-      if  eout<1*10^(-13)
+    while (eout>1*10^(3)) || (bad_count<3)
+      if  eout<1*10^(3)
         bad_count+=1
       end
       tic=time()
-      eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue, HF_eigenvector,bound,energy=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nx,Ny,Minv,wave,input_DensityMatrix,BG_DensityMatrix,single_Ham,constq,Parnum)
+      eout,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue, HF_eigenvector,bound,energy=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nx,Ny,Minv,wave,input_DensityMatrix,BG_DensityMatrix,single_Ham,constq,Parnum,update_rate)
                                                                                                                                           
       DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
       input_DensityMatrix=output_DensityMatrix

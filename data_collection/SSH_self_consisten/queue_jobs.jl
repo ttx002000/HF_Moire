@@ -4,7 +4,7 @@ using JLD2
 include(joinpath(@__DIR__,"submit_job.jl"))
 filepath = joinpath(@__DIR__, "main_test.jl")
 
-job_prefix = "exciton"
+job_prefix = "SSH"
 
 Nx=18
 Ny=18
