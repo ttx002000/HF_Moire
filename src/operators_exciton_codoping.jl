@@ -489,8 +489,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
     bound=0.0
     energy=0.0
 
-    while (eout>1*10^(-12)) || (bad_count<3)
-      if  eout<1*10^(-12)
+    while (eout>1*10^(-13)) || (bad_count<3)
+      if  eout<1*10^(-13)
         bad_count+=1
       end
       tic=time()
