@@ -244,7 +244,7 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},geon
   end
   
   input_DensityMatrix=[[zeros(ComplexF64,dimension,dimension) for _ in 1:2] for _ in 1:Nx*Ny]
-  
+  #=
   for ja in 1:Nx*Ny, vi in 1:1, statecount in 1:2
     A=10^(-1)*randn(ComplexF64,dimension)
     A=A/norm(A)
@@ -256,20 +256,25 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},geon
     A=A/norm(A)
       input_DensityMatrix[ja][vi]+=A*A'
   end
+  =#
 
-   #=
-  for ja in 1:Nx*Ny, vi in 2:2
+   
+  for ja in 1:Nx*Ny, vi in 1:2
     A=10^(-1)*randn(ComplexF64,dimension,dimension)
       input_DensityMatrix[ja][vi]+=A+A'
   end
-  =#
+  
 
 
 
   
-  for ja in 1:Nx*Ny, vi in 1:2, jb in 1:length(wave)*2-2
+  for ja in 1:Nx*Ny, vi in 1:1, jb in 1:length(wave)*2
    input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
   end
+
+  for ja in 1:Nx*Ny, vi in 2:2, jb in 1:length(wave)*2-1
+    input_DensityMatrix[ja][vi]+=(single_eigenvector[ja][vi][:,jb]*(single_eigenvector[ja][vi][:,jb])') 
+   end
 
  
  
