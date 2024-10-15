@@ -27,6 +27,7 @@ H0, orbital_id, phonon_id, px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NN
 
 
 phonon_coor, Hph, grad_old, E_old, Eelec_new, Egap=iteration(Nx,Ny,Nelec,px_xbond,px_ybond,py_xbond,py_ybond,NNN_sp_d1,NNN_sp_d2,orbital_id,phonon_id,α,β,K,KNNN,H0)
-
+FFF=eigen(H0+Hph)
+spectrum=FFF.values
 savepath=joinpath(@__DIR__, "data_output/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])KNNN$(args[10])filling$(Int(args[11]))try.jld2")
-jldsave(savepath,phonon_id=phonon_id,orbital_id=orbital_id,phonon_coor=phonon_coor,E_total=E_old,Eelec=Eelec_new,H0=H0,Hph=Hph,Egap=Egap)
+jldsave(savepath,phonon_id=phonon_id,orbital_id=orbital_id,phonon_coor=phonon_coor,E_total=E_old,Eelec=Eelec_new,spectrum=spectrum,Egap=Egap)

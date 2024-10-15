@@ -40,3 +40,7 @@ for trytime in 1:6, filling in [1.0,0.25,1.25,1.7], α in [-0.001,-0.01,-0.1,-0.
 end
 
 
+for trytime in 1:6, filling in [1.0,0.25,1.25,1.7], α in [-0.001,-0.01,-0.1,-0.2,-0.4,-0.8]
+  arguments=Float64.([Nx,Ny,tper,tpa,tNNN,α,α,K*4,KNNN*4,filling,trytime])
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=1,mem=8)
+end
