@@ -31,12 +31,9 @@ Nelec=Int(round(Nx*Ny*filling))
 =#
 
 
-for trytime in 1:6, filling in [0.2,0.3,0.4], α in [-0.001,-0.01,-0.05,-0.1,-0.2,-0.4,-0.8]
+for trytime in 1:6, filling in [0.1,0.015], α in collect(-0.001:-0.025:-0.501)
   arguments=Float64.([Nx,Ny,tpa,α,α,K,KNNN,filling,trytime])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="20:00",ntasks=1,mem=8)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="25:00",ntasks=1,mem=8)
 end
 
-for trytime in 1:6, filling in [0.2,0.3,0.4], α in [-0.001,-0.01,-0.05,-0.1,-0.2,-0.4,-0.8]
-  arguments=Float64.([Nx,Ny,tpa,α,α,K,KNNN,filling,trytime])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="20:00",ntasks=1,mem=8)
-end
+
