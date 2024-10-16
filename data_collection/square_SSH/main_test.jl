@@ -9,7 +9,7 @@ using CSV,DataFrames
 include(joinpath(@__DIR__,"../../src/operators_square_SSH.jl"))
 
 args=parse.(Float64,ARGS)
-#args=[18,18,2.0,-0.4,-0.4,0.5,0.2,0.3,1.0]
+#args=[18.0, 18.0, 2.0, -0.201, -0.201, 0.5, 0.2, 0.2, 1.0]
 Nx=Int(args[1])
 Ny=Int(args[2])
 tpa=args[3]
