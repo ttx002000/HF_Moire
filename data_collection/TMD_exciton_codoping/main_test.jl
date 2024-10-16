@@ -49,10 +49,10 @@ wave, _,BG_DensityMatrix, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a
 initial_DensityMatrix=deepcopy(DIIS_input_DensityMatrix[1])
 for ja in eachindex(DIIS_input_DensityMatrix[1]), vi in 1:2
      A=randn(ComplexF64,3*length(wave),3*length(wave))
-     initial_DensityMatrix[ja][vi]+=(A+A')*10^(-3)
+     initial_DensityMatrix[ja][vi]+=(A+A')*10^(-2)
 end
  
-DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,bound,energy,HF_chern,dope_hole_DM=iteration_loop(initial_DensityMatrix,BG_DensityMatrix,allowedq,T1,T2,geonum,Minv,wave,single_Ham,constq,holenum,0.4)
+DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,bound,energy,HF_chern,dope_hole_DM=iteration_loop(initial_DensityMatrix,BG_DensityMatrix,allowedq,T1,T2,geonum,Minv,wave,single_Ham,constq,holenum,0.5)
 #### finish redo
 
 
