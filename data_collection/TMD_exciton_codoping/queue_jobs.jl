@@ -60,6 +60,10 @@ for trytime in 1:10,ϵr in [15], Eg in [110,100]
 end
 
 
+for trytime in 1:10,ϵr in [15], Eg in [110,100]
+  arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,1.0])
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=4,mem=8)
+end
 
 
 
