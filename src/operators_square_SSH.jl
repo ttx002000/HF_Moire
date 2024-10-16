@@ -176,7 +176,7 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
     
     
     itcount=0
-     while norm(grad_new)>10^(-6)
+     while norm(grad_new)>10^(-5)
       itcount+=1
        println("iterations",itcount)  
         Hph=construct_Ham(px_xbond,px_ybond,phonon_coor,Nx,Ny,α,β) #I modified the order between py_xbond and py_ybond
@@ -189,12 +189,9 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
           if E_new>E_old
             update_rate=0.8*update_rate
             println("update rate adjusted to be","$(update_rate)")
-          elseif (E_new<E_old)&&(norm(grad_old)>norm(grad_new)) &&(norm(grad_new)>10^(-4))
-            update_rate=update_rate*1.1
-            println("update rate adjusted to be","$(update_rate)")
-          elseif (E_new<E_old)&&(norm(grad_old)>norm(grad_new)) &&(norm(grad_new)<10^(-4))
-            update_rate=update_rate*0.8
-            println("update rate adjusted to be","$(update_rate)")
+          #elseif (E_new<E_old)&&(norm(grad_old)>norm(grad_new)) &&(norm(grad_new)>10^(-4))
+           # update_rate=update_rate*1.1
+            #println("update rate adjusted to be","$(update_rate)")
       
           end
       
