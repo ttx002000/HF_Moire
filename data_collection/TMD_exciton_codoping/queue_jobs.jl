@@ -50,27 +50,13 @@ geonum=parameters[16]
 
 
 
-for trytime in 1:10,ϵr in [15], Eg in [105,110]
+for trytime in 1:10,ϵr in [15], Eg in [105,110,115,120]
   arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,7.0])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",ntasks=8,mem=16)
 end
-for trytime in 1:10,ϵr in [15], Eg in [105,110]
-  arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,10.0])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",ntasks=16,mem=16)
-end
-
-
-for trytime in 1:10,ϵr in [15], Eg in [110,120]
-  arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,1.0])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=4,mem=8)
-end
 
 
 
-for trytime in 11:13,ϵr in [15], Eg in [105]
-  arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,7.0])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",ntasks=16,mem=16)
-end
 #=
 st=load(joinpath(@__DIR__, "missedjobs.jld2"))
 index=st["vector"]

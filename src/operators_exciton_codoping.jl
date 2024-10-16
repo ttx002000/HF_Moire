@@ -15,7 +15,7 @@ function Coulomb(qab::Float64,k::Vector{Int64},Ld::Float64)::Float64
    #return k==[0,0] ? 0.0 : (1/qab)
    #return qab<0.5 ? 0.0 : (exp(-qab*Ld)/qab)
    #return exp(-qab*Ld)/(qab+1.0)
-  return k==[0,0] ? 30.0 : (tanh(qab*30)/qab)
+  return k==[0,0] ? 50.0 : (tanh(qab*30)/qab)
  
 end
 
