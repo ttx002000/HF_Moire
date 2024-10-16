@@ -6,7 +6,7 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 
 job_prefix = "exciton"
 
-mt=0.36
+#mt=0.36
 mm=-0.6
 mb=-0.6
 Vt=0.0
@@ -17,7 +17,7 @@ Vb=20.8
 ϕb=-107.7
 
 #ϵr=6
-#Eg=70.0
+Eg=140.0
 θ=3.89
 w=-23.8
 holenum=1.0
@@ -50,7 +50,7 @@ geonum=parameters[16]
 
 
 
-for trytime in 1:10,ϵr in [15], Eg in [105,110,115,120]
+for trytime in 1:10,ϵr in [15], mt in [0.3,0.4,0.5,0.6,0.7]
   arguments=Float64.([mt,mm,mb,Vt,ϕt,Vm,ϕm,Vb,ϕb,ϵr,Eg,θ,w,holenum,trytime,7.0])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="8:00:00",ntasks=8,mem=16)
 end

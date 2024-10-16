@@ -9,7 +9,7 @@ include(joinpath(@__DIR__,"../../src/operators_exciton_codoping.jl"))
 
 args=parse.(Float64,ARGS)
 println("This is the arguments$args")
-#args=[0.36,-0.6,-0.6,0.0,0.0,20.8,107.7,20.8,-107.7,15.0,120.0,3.89,-23.8,1.0,5.0,1.0]
+#args=[0.36,-0.6,-0.6,0.0,0.0,20.8,107.7,20.8,-107.7,15.0,800.0,3.89,-23.8,1.0,5.0,1.0]
 #args=[0.36,-0.62,-0.62,0.0,0.0,11.2,91,11.2,-91,8.0,1500.0,2.0,13.3,1.0,5.0,3.0]
 parameters=args[1:13]
 holenum=Int(args[14])
@@ -37,17 +37,20 @@ trytime=parameters[15]
 geonum=parameters[16]
 =#
 
+
+
+
 parameters[11]=500.0
 wave, initial_DensityMatrix,BG_DensityMatrix, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m,Minv,constq,single_chern=triangle_initial_Densitymatrix_firstloop(parameters,geonum)
     
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,bound,energy,HF_chern,dope_hole_DM=iteration_loop(initial_DensityMatrix,BG_DensityMatrix,allowedq,T1,T2,geonum,Minv,wave,single_Ham,constq,holenum,1.0)
-                                                                                                                             
+                                                                                                                          
 #I need to redo the calculation after initial convergence
 println("startredo")
 parameters[11]=args[11]
 wave, _,BG_DensityMatrix, single_Ham, single_eigenvalue,allowedq, T1, T2, a1m, a2m,Minv,constq,single_chern=triangle_initial_Densitymatrix_firstloop(parameters,geonum)
 initial_DensityMatrix=deepcopy(DIIS_input_DensityMatrix[1])
-for ja in eachindex(DIIS_input_DensityMatrix[1]), vi in 1:2
+for ja in eachindex(initial_DensityMatrix), vi in 1:2
      A=randn(ComplexF64,3*length(wave),3*length(wave))
      initial_DensityMatrix[ja][vi]+=(A+A')*10^(-2)
 end
