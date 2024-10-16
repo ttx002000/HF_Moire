@@ -1,19 +1,19 @@
 using LinearAlgebra
 
 
-function construct_Ham(px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},py_ybond::Vector{Vector{Int}},phonon_coor::Vector{Float64},Nx::Int,Ny::Int,α::Float64,β::Float64)::Matrix{ComplexF64}
-    Hphonon=zeros(ComplexF64,2*Nx*Ny,2*Nx*Ny)
+function construct_Ham(px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},phonon_coor::Vector{Float64},Nx::Int,Ny::Int,α::Float64,β::Float64)::Matrix{ComplexF64}
+    Hphonon=zeros(ComplexF64,Nx*Ny,Nx*Ny)
 
 
     
-    for ja in eachindex(px_xbond)
+    for ja in eachindex(px_xbond) #alpha=\beta for this case
     Hphonon[px_xbond[ja][1],px_xbond[ja][2]]-=α*(phonon_coor[px_xbond[ja][3]]-phonon_coor[px_xbond[ja][4]])
-    Hphonon[py_xbond[ja][1],py_xbond[ja][2]]-=β*(phonon_coor[py_xbond[ja][3]]-phonon_coor[py_xbond[ja][4]])
+   
     end
 
     for ja in eachindex(px_ybond)
       Hphonon[px_ybond[ja][1],px_ybond[ja][2]]-=β*(phonon_coor[px_ybond[ja][3]]-phonon_coor[px_ybond[ja][4]])
-      Hphonon[py_ybond[ja][1],py_ybond[ja][2]]-=α*(phonon_coor[py_ybond[ja][3]]-phonon_coor[py_ybond[ja][4]])
+     
     end
 
     Hphonon+=Hphonon';
@@ -22,7 +22,7 @@ end
 
 
 
-function calculate_gradient(K::Float64,KNNN::Float64,NNN_sp_d1::Vector{Vector{Int}},NNN_sp_d2::Vector{Vector{Int}},px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},py_ybond::Vector{Vector{Int}},Htotal::Matrix{ComplexF64},Nx::Int,Ny::Int,orbital_id::Array{Int},phonon_id::Array{Int},phonon_coor::Vector{Float64},Nelec::Int,α::Float64,β::Float64)::Tuple{Vector{Float64},Float64,Float64,Float64}
+function calculate_gradient(K::Float64,KNNN::Float64,NNN_sp_d1::Vector{Vector{Int}},NNN_sp_d2::Vector{Vector{Int}},px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},Htotal::Matrix{ComplexF64},Nx::Int,Ny::Int,orbital_id::Array{Int},phonon_id::Array{Int},phonon_coor::Vector{Float64},Nelec::Int,α::Float64,β::Float64)::Tuple{Vector{Float64},Float64,Float64,Float64}
 
     
 
@@ -78,16 +78,12 @@ function calculate_gradient(K::Float64,KNNN::Float64,NNN_sp_d1::Vector{Vector{In
      gradient[px_xbond[ja][3]]-=2*α*real(conj(FFF.vectors[px_xbond[ja][1],jelec])*FFF.vectors[px_xbond[ja][2],jelec])
      gradient[px_xbond[ja][4]]+=2*α*real(conj(FFF.vectors[px_xbond[ja][1],jelec])*FFF.vectors[px_xbond[ja][2],jelec])
   
-     gradient[py_xbond[ja][3]]-=β*2*real(conj(FFF.vectors[py_xbond[ja][1],jelec])*FFF.vectors[py_xbond[ja][2],jelec])
-     gradient[py_xbond[ja][4]]+=β*2*real(conj(FFF.vectors[py_xbond[ja][1],jelec])*FFF.vectors[py_xbond[ja][2],jelec])
    end
   
    for ja in eachindex(px_ybond),jelec in 1:Nelec
      gradient[px_ybond[ja][3]]-=2*β*real(conj(FFF.vectors[px_ybond[ja][1],jelec])*FFF.vectors[px_ybond[ja][2],jelec])
      gradient[px_ybond[ja][4]]+=2*β*real(conj(FFF.vectors[px_ybond[ja][1],jelec])*FFF.vectors[px_ybond[ja][2],jelec])
   
-     gradient[py_ybond[ja][3]]-=2*α*real(conj(FFF.vectors[py_ybond[ja][1],jelec])*FFF.vectors[py_ybond[ja][2],jelec])
-     gradient[py_ybond[ja][4]]+=2*α*real(conj(FFF.vectors[py_ybond[ja][1],jelec])*FFF.vectors[py_ybond[ja][2],jelec])
   end
   
   
@@ -98,13 +94,13 @@ function calculate_gradient(K::Float64,KNNN::Float64,NNN_sp_d1::Vector{Vector{In
 end
 
 
-function initialize(Nx::Int64,Ny::Int64,tper::Float64,tpa::Float64,tNNN::Float64)
+function initialize(Nx::Int64,Ny::Int64,tpa::Float64)
    
    
     
-    orbital_id=zeros(Int,Nx,Ny,2)
-    for ja in 1:Nx, jb in 1:Ny, jo in 1:2
-        orbital_id[ja,jb,jo]=ja+(jb-1)*Nx+(jo-1)*Nx*Ny
+    orbital_id=zeros(Int,Nx,Ny)
+    for ja in 1:Nx, jb in 1:Ny
+        orbital_id[ja,jb]=ja+(jb-1)*Nx
     end
     
     
@@ -122,21 +118,18 @@ function initialize(Nx::Int64,Ny::Int64,tper::Float64,tpa::Float64,tNNN::Float64
     
     px_xbond=Vector{Int}[]
     px_ybond=Vector{Int}[]
-    py_xbond=Vector{Int}[]
-    py_ybond=Vector{Int}[]
+    
        
     NNN_sp_d1=Vector{Int}[]
     NNN_sp_d2=Vector{Int}[]
     
     
     for ja in 1:Nx,jb in 1:Ny
-       push!(px_xbond,[orbital_id[mod(ja,Nx)+1,jb,1],orbital_id[ja,jb,1],phonon_id[mod(ja,Nx)+1,jb,1],phonon_id[ja,jb,1]])
-       push!(py_xbond,[orbital_id[mod(ja,Nx)+1,jb,2],orbital_id[ja,jb,2],phonon_id[mod(ja,Nx)+1,jb,1],phonon_id[ja,jb,1]])
+       push!(px_xbond,[orbital_id[mod(ja,Nx)+1,jb],orbital_id[ja,jb],phonon_id[mod(ja,Nx)+1,jb,1],phonon_id[ja,jb,1]])
     end
     
     for ja in 1:Nx,jb in 1:Ny
-      push!(px_ybond,[orbital_id[ja,mod(jb,Ny)+1,1],orbital_id[ja,jb,1],phonon_id[ja,mod(jb,Ny)+1,2],phonon_id[ja,jb,2]])
-      push!(py_ybond,[orbital_id[ja,mod(jb,Ny)+1,2],orbital_id[ja,jb,2],phonon_id[ja,mod(jb,Ny)+1,2],phonon_id[ja,jb,2]])
+      push!(px_ybond,[orbital_id[ja,mod(jb,Ny)+1],orbital_id[ja,jb],phonon_id[ja,mod(jb,Ny)+1,2],phonon_id[ja,jb,2]])
     end
     
  
@@ -148,44 +141,23 @@ function initialize(Nx::Int64,Ny::Int64,tper::Float64,tpa::Float64,tNNN::Float64
     
     
     
-    H0=zeros(ComplexF64,2*Nx*Ny,2*Nx*Ny)
+    H0=zeros(ComplexF64,Nx*Ny,Nx*Ny)
     
     for ja in eachindex(px_xbond)
        H0[px_xbond[ja][1],px_xbond[ja][2]]-=tpa;
-      
-       H0[py_xbond[ja][1],py_xbond[ja][2]]-=tper;
-     
+       H0[px_ybond[ja][1],px_ybond[ja][2]]-=tpa;
     
     end
-
-    for ja in eachindex(px_ybond)
+    
+    
   
-      H0[py_ybond[ja][1],py_ybond[ja][2]]-=tpa;
-    
-      H0[px_ybond[ja][1],px_ybond[ja][2]]-=tper;
-   
-   end
-    
-    
-    
-    for ja in 1:Nx,jb in 1:Ny
-    
-      H0[orbital_id[mod(ja,Nx)+1,mod(jb,Ny)+1,2],orbital_id[ja,jb,1]]-=tNNN
-      H0[orbital_id[mod(ja,Nx)+1,mod(jb-2,Ny)+1,2],orbital_id[ja,jb,1]]-=(-tNNN) #for mirrow symmetry
-      H0[orbital_id[mod(ja-2,Nx)+1,mod(jb,Ny)+1,2],orbital_id[ja,jb,1]]-=(-tNNN)
-      H0[orbital_id[mod(ja-2,Nx)+1,mod(jb-2,Ny)+1,2],orbital_id[ja,jb,1]]-=tNNN
-    
-    end
-    
-    
-    
     H0+=H0';
     
     
-     return H0, orbital_id, phonon_id, px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NNN_sp_d2
+     return H0, orbital_id, phonon_id, px_xbond, px_ybond,NNN_sp_d1, NNN_sp_d2
 end
 
-function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},py_ybond::Vector{Vector{Int}},NNN_sp_d1::Vector{Vector{Int}},NNN_sp_d2::Vector{Vector{Int}},orbital_id::Array{Int},phonon_id::Array{Int},α::Float64,β::Float64,K::Float64,KNNN::Float64,H0::Matrix{ComplexF64})
+function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},NNN_sp_d1::Vector{Vector{Int}},NNN_sp_d2::Vector{Vector{Int}},orbital_id::Array{Int},phonon_id::Array{Int},α::Float64,β::Float64,K::Float64,KNNN::Float64,H0::Matrix{ComplexF64})
     phonon_coor=randn(2*Nx*Ny)
     
     E_old=10^8
@@ -207,8 +179,8 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
      while norm(grad_new)>10^(-6)
       itcount+=1
        println("iterations",itcount)  
-        Hph=construct_Ham(px_xbond,px_ybond,py_xbond,py_ybond,phonon_coor,Nx,Ny,α,β) #I modified the order between py_xbond and py_ybond
-          grad_new,E_new,Eelec_new,Egap=calculate_gradient(K,KNNN,NNN_sp_d1,NNN_sp_d2,px_xbond,px_ybond,py_xbond,py_ybond,H0+Hph,Nx,Ny,orbital_id,phonon_id,phonon_coor,Nelec,α,β)
+        Hph=construct_Ham(px_xbond,px_ybond,phonon_coor,Nx,Ny,α,β) #I modified the order between py_xbond and py_ybond
+          grad_new,E_new,Eelec_new,Egap=calculate_gradient(K,KNNN,NNN_sp_d1,NNN_sp_d2,px_xbond,px_ybond,H0+Hph,Nx,Ny,orbital_id,phonon_id,phonon_coor,Nelec,α,β)
           
           println("norm=",norm(grad_new))
            
