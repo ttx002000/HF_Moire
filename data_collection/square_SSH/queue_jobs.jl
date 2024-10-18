@@ -6,8 +6,8 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 
 job_prefix = "s_SSH"
 
-Nx=30
-Ny=30
+Nx=10
+Ny=10
 tpa=1.0
 #α=-0.05
 #β=-0.05
