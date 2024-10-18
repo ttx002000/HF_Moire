@@ -11,8 +11,8 @@ Ny=10
 tpa=1.0
 #α=-0.05
 #β=-0.05
-K=1.0;
-KNNN=1.0;
+K=4.0;
+KNNN=4.0;
 #filling=1.35;
 
 
@@ -33,17 +33,17 @@ Nelec=Int(round(Nx*Ny*filling))
 
 
 
-for trytime in 1:10, filling in [0.1,0.2,0.5], α in collect(-0.0:-0.05:-0.0)
+for trytime in 1:10, filling in [0.1,0.2,0.5], α in collect(-0.0:-0.05:-1.0)
   arguments=Float64.([15,15,tpa,α,α,K,KNNN,filling,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=1,mem=8)
 end
 
-for trytime in 1:10, filling in [0.1,0.2,0.5], α in collect(-0.0:-0.05:-0.0)
+for trytime in 1:10, filling in [0.1,0.2,0.5], α in collect(-0.0:-0.05:-1.0)
   arguments=Float64.([20,20,tpa,α,α,K,KNNN,filling,trytime])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=1,mem=8)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=1,mem=8)
 end
 
-for trytime in 1:10, filling in [0.1,0.2,0.5], α in collect(-0.0:-0.05:-0.0)
+for trytime in 1:10, filling in [0.1,0.2,0.5], α in collect(-0.0:-0.05:-1.0)
   arguments=Float64.([10,10,tpa,α,α,K,KNNN,filling,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=1,mem=8)
 end
