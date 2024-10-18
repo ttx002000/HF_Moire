@@ -33,7 +33,7 @@ Nelec=Int(round(Nx*Ny*filling))
 
 
 
-for trytime in 1:10, filling in [0.1,0.2], α in collect(-0.0:-0.05:-1.0)
+for trytime in 1:10, filling in [0.1,0.2,0.5], α in collect(-0.0:-0.05:-1.0)
   arguments=Float64.([Nx,Ny,tpa,α,α,K,KNNN,filling,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="20:00",ntasks=1,mem=8)
 end
