@@ -32,12 +32,12 @@ Nelec=Int(round(Nx*Ny*filling))
 
 
 
-
+#=
 for trytime in 1:10, filling in [0.5], α in collect(-0.0:-0.05:-1.0)
   arguments=Float64.([15,15,tpa,α,α,K,KNNN,filling,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=1,mem=8)
 end
-
+=#
 
 st=load(joinpath(@__DIR__, "missedjobs.jld2"))
 index=st["index"]
