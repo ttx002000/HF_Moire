@@ -270,7 +270,7 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
             update_rate=0.8*update_rate
             println("update rate adjusted to be","$(update_rate)")
           elseif (E_new<E_old)&&(norm(grad_old)>norm(grad_new))
-            update_rate=update_rate*1.05
+            update_rate=update_rate*1.2
             println("update rate adjusted to be","$(update_rate)")
       
           end
