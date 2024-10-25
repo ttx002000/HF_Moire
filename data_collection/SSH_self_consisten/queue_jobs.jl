@@ -6,8 +6,8 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 
 job_prefix = "SSH"
 
-Nx=20
-Ny=20
+Nx=30
+Ny=30
 tper=0.37
 tpa=2
 tNNN=0.16
@@ -45,18 +45,17 @@ for trytime in 1:10, filling in [1.25], α in collect(-0.0:-0.2:-2.4)
 end
 =#
 
-
+#=
 st=load(joinpath(@__DIR__, "missedjobs.jld2"))
 index=st["index"]
 for ja in eachindex(index)
   arguments=index[ja]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=1,mem=8)
 end
-
-#=
-
-for trytime in 1:10, filling in [1.22,1.24,1.26,1.28], α in collect(-0.9:-0.05:-1.3)
-  arguments=Float64.([18,18,tper,tpa,tNNN,α,α,K,KNNN,filling,trytime])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=1,mem=8)
-end
 =#
+
+
+for trytime in 1:10, filling in [1.22,1.24,1.25], α in [-0.9,-1.1]
+  arguments=Float64.([30,30,tper,tpa,tNNN,α,α,K,KNNN,filling,trytime])
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="4:00:00",ntasks=1,mem=16)
+end
