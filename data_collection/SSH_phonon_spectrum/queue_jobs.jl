@@ -34,7 +34,7 @@ filling=(args[10])
 
 
 
-for filling in [1.22,1.24,1.25], α in [-0.9,-1.1]
-  arguments=Float64.([30,30,tper,tpa,tNNN,α,α,K,KNNN,filling,temp])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="4:00:00",ntasks=1,mem=16)
+for filling in [1.25], α in collect(-0.0:-0.1:-1.5), β in collect(-0.0:-0.1:-1.5)
+  arguments=Float64.([40,40,tper,tpa,tNNN,α,β,K,KNNN,filling,temp])
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=1,mem=32)
 end
