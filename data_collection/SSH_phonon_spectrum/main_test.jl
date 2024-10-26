@@ -1,0 +1,33 @@
+
+using Pkg
+Pkg.activate(joinpath(@__DIR__, "../.."))
+using LinearAlgebra
+using JLD2
+using Plots
+using CSV,DataFrames
+
+include(joinpath(@__DIR__,"../../src/operators_SSH_phonon.jl"))
+
+args=parse.(Float64,ARGS)
+#args=[20,20,0.36,2.0,0.16,-1.0,-1.0,1.0,1.0,1.25,10^(-6)]
+Nx=Int(args[1])
+Ny=Int(args[2])
+tper=args[3]
+tpa=args[4]
+tNNN=args[5]
+α=args[6]
+β=args[7]
+K=args[8]
+KNNN=args[9]
+filling=(args[10])
+temp=args[11]
+
+Λset=get_Lambdaset(Nx,Ny,α,β)
+Λmatrix_bandbasis,electron_spectrum,FL=Lambdaset_to_matrix(Nx,Ny,Λset,tper,tpa,tNNN,temp)
+Λset=nothing
+Keff_momentum=Lambda_to_Keff(Λmatrix_bandbasis,electron_spectrum,FL,temp)
+Λmatrix_bandbasis=nothing
+Kbare_momentum=barephonon(Nx,Ny,K,KNNN)
+spectrum,unperturbed_spectrum=get_spectrum(Kbare_momentum,Keff_momentum,Nx,Ny)
+savepath=joinpath(@__DIR__, "data_output/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])KNNN$(args[10])filling$(args[11])temp.jld2")
+jldsave(savepath,spectrum=spectrum,unperturbed_spectrum=unperturbed_spectrum)

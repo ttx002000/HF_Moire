@@ -3,8 +3,6 @@ using LinearAlgebra
 
 function construct_Ham(px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},py_ybond::Vector{Vector{Int}},phonon_coor::Vector{Float64},Nx::Int,Ny::Int,α::Float64,β::Float64)::Matrix{ComplexF64}
     Hphonon=zeros(ComplexF64,2*Nx*Ny,2*Nx*Ny)
-
-
     
     for ja in eachindex(px_xbond)
     Hphonon[px_xbond[ja][1],px_xbond[ja][2]]-=α*(phonon_coor[px_xbond[ja][3]]-phonon_coor[px_xbond[ja][4]])
