@@ -5,7 +5,7 @@ include(joinpath(@__DIR__,"submit_job.jl"))
 filepath = joinpath(@__DIR__, "main_test.jl")
 
 job_prefix = "DOS"
-
+uDspace=collect(30.0:1.0:60.0)
 numsample=2*10^6
 θ=1.5
 rad=1.0
@@ -28,7 +28,7 @@ Density_end=args[8]
 
 
 
-for trytime in 1:10, filling in [0.1,0.2,0.5], α in collect(-0.0:-0.05:-1.0)
+for uD in uDspace
   arguments=Float64.([uD,numsample,θ,rad,DOS_n_binnum,DOS_E_binnum,Density_start,Density_end])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=8,mem=32)
 end
