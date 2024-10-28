@@ -119,13 +119,13 @@ function process_data(valuesset::Vector{Float64},ns::Float64,numsample::Int,rad:
     end
   
     if length(in_bin)>=1
-        push!(nE_bin_means, mean(Nstates[in_bin]))
+        push!(nE_bin_means,mean(Nstates[in_bin]))
     else
         push!(nE_bin_means, 0.0)
     end
  end
 
- return nE_bin_centers,nE_bin_means,bin_centers,nE
+ return nE_bin_centers,nE_bin_means,bin_centers,nE,Nstates
 
 
 end

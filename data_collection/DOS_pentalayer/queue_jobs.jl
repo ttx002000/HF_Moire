@@ -5,14 +5,14 @@ include(joinpath(@__DIR__,"submit_job.jl"))
 filepath = joinpath(@__DIR__, "main_test.jl")
 
 job_prefix = "DOS"
-uDspace=collect(30.0:1.0:60.0)
+uDspace=collect(30.0:0.5:60.0)
 numsample=2*10^6
 θ=1.5
 rad=1.0
 DOS_n_binnum=50
 DOS_E_binnum=5*10^4
 Density_start=0.2/4
-Density_end=5/4
+Density_end=6.0/4
 
 #=
 uD=args[1]
