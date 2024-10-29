@@ -63,21 +63,22 @@ function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut:
     
   
     gross_valuesset=[]
+    single_band_record=[]
     for ja in 1:numsample
-      ρ=rand()*gm*rad
-      ang=rand()*2*π
-      kvec=KGr+ρ*[cos(ang),sin(ang)]
+      kvec=KGr+[rand()-0.5,rand()-0.5]*gm*rad
       Hamiltonian=get_RNGham(kvec,NL,uD)
       FFF=real.(eigen(Hamiltonian).values)
       
-        push!(gross_valuesset,FFF[NL+1])
-    
+      push!(gross_valuesset,FFF[NL+1:2*NL])
+      push!(single_band_record,FFF[NL+1])
     end
     
     
     valuesset=Float64[]
     bandmin=sort(gross_valuesset)[1]
-    bandmax=sort(gross_valuesset)[end]
+    bandmax=sort(single_band_record)[end]
+
+    
     for ja in eachindex(gross_valuesset)
        if gross_valuesset[ja]<bandmin+Ecut
           push!(valuesset,gross_valuesset[ja])
@@ -96,7 +97,7 @@ function process_data(valuesset::Vector{Float64},ns::Float64,numsample::Int,rad:
     Nstates = h.weights
     bin_centers =collect(0.5* (bin_edges[1:end-1] + bin_edges[2:end]))
     NN=numsample*(bin_centers[2]-bin_centers[1])
-    Nstates=Nstates/(NN)*gm^2/(4π)*rad^2
+    Nstates=Nstates/(NN)*gm^2/(4π^2)*rad^2
   
     nE=zeros(Float64,length(bin_centers))
  for ja in eachindex(nE)

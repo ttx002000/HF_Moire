@@ -8,12 +8,12 @@ job_prefix = "DOS"
 uDspace=collect(10.0:0.5:40.0)
 numsample=10*10^6
 θ=1.5
-rad=1.5
+rad=3.0
 DOS_n_binnum=50
-DOS_E_binnum=1*10^5
+DOS_E_binnum=5*10^4
 Density_start=0.2/4
-Density_end=6.0/4
-Ecutoff=25
+Density_end=4.0/4
+Ecutoff=100
 
 #=
 uD=args[1]
