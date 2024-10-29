@@ -62,20 +62,20 @@ function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut:
     ns=1/(√3/2*am)^2
     
   
-    gross_valuesset=[Vector{Float64}() for _ in 1:Threads.nthreads()]
+    gross_valuesset=[Vector{Vector{Float64}}() for _ in 1:Threads.nthreads()]
     single_band_record=[Vector{Float64}() for _ in 1:Threads.nthreads()]
     
     Threads.@threads for ja in 1:numsample
       kvec=KGr+[rand()-0.5,rand()-0.5]*gm*rad
       Hamiltonian=get_RNGham(kvec,NL,uD)
       FFF=real.(eigen(Hamiltonian).values)
-      for tttt in 1:NL
-       push!(gross_valuesset[Threads.threadid()],FFF[NL+tttt])
-      end
+     
+      push!(gross_valuesset[Threads.threadid()],FFF[NL+1:2*NL])
+    
       push!(single_band_record[Threads.threadid()],FFF[NL+1])
     end
     
-    gross_valuesset=reduce(vcat,gross_valuesset)
+    gross_valuesset=reduce(vcat,reduce(vcat,gross_valuesset))
     single_band_record=reduce(vcat,single_band_record)
 
 
