@@ -77,6 +77,7 @@ function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut:
     
     valuesset=Float64[]
     bandmin=sort(gross_valuesset)[1]
+    bandmax=sort(gross_valuesset)[end]
     for ja in eachindex(gross_valuesset)
        if gross_valuesset[ja]<bandmin+Ecut
           push!(valuesset,gross_valuesset[ja])
@@ -84,7 +85,7 @@ function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut:
     end
     
 
-    return valuesset,ns,gm
+    return valuesset,ns,gm,bandmin,bandmax
 
 
 end
