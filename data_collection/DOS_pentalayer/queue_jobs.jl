@@ -31,7 +31,7 @@ Density_end=args[8]
 
 for uD in uDspace
   arguments=Float64.([uD,numsample,θ,rad,DOS_n_binnum,DOS_E_binnum,Density_start,Density_end,Ecutoff])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="20:00",ntasks=1,mem=8)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="25:00",ntasks=1,mem=8)
 end
 
 
