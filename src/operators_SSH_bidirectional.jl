@@ -235,17 +235,34 @@ end
 
 
 
-function from_momentum_to_real(Nx::Int,Ny::Int,relevant_q_set::Vector{Any},phonon_id) #I want to construct the phonon coordinates from the amplitudes
+function get_phonon_coor(Nx::Int,Ny::Int,relevant_qset::Vector{Int},relevant_qamplitude::Vector{ComplexF64},phonon_id::Array{Int})::Vector{Float64} #I want to construct the phonon coordinates from the amplitudes
   phonon_coor=zeros(Float64,2*Nx*Ny)
   for ja in eachindex(relevant_qset)
-     k=[2π*relevant_qset[ja][1]/Nx,2π*relevant_qset[ja][1]/Ny]
+     k=[relevant_qset[ja][1]/Nx,relevant_qset[ja][1]/Ny]*2π
      for jb in 1:Nx, jc in 1:Ny
-        phonon_coor[phonon_id[Nx,Ny,Int(relevant_qset[ja][3])]]+=2/sqrt(Nx*Ny)*real(relevant_qset[ja][4]*exp(im*dot(k,[jb,jc])))
+      Rvec=[jb,jc]
+        phonon_coor[phonon_id[jb,jc,relevant_qset[ja][3]]]+=2/sqrt(Nx*Ny)*real(relevant_qamplitude[ja]*exp(im*dot(k,Rvec)))
      end
   end
   
-
+  return phonon_coor
 end
+
+function get_grad_amplitude(grad_new::Vector{Float64},Nx::Int,Ny::Int,relevant_qset::Vector{Int},phonon_id::Array{Int})
+  grad_amplitude=zeros(ComplexF64,length(relevant_qset))
+
+  for ja in eachindex(grad_amplitude)
+    qvec=[2π*relevant_qset[ja][1]/Nx,2π*relevant_qset[ja][1]/Ny]
+    dir=Int(relevant_qset[ja][3])
+    for jb in 1:Nx,jc in 1:Ny
+      Rvec=[jb,jc]
+       grad_amplitude[ja]+=1/sqrt(Nx*Ny)*exp(im*dot(qvec,Rvec))*grad_new[phonon_id[jb,jc,dir]]
+    end
+  end
+  return grad_amplitude
+end
+
+
 
 
 function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},py_ybond::Vector{Vector{Int}},NNN_sp_d1::Vector{Vector{Int}},NNN_sp_d2::Vector{Vector{Int}},orbital_id::Array{Int},phonon_id::Array{Int},α::Float64,β::Float64,K::Float64,KNNN::Float64,H0::Matrix{ComplexF64})
@@ -290,9 +307,11 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
       
           E_old=E_new
           grad_old=grad_new
-      
+          grad_amplitude=get_grad_amplitude(grad_new,Nx,Ny,relevant_qset,phonon_id)
+          relevant_qamplitude=relevant_qamplitude-grad_amplitude*update_rate
+
          
-          phonon_coor=phonon_coor-grad_new*update_rate
+          phonon_coor=get_phonon_coor(Nx,Ny,relevant_qset,relevant_qamplitude,phonon_id)
           COM_x=sum(phonon_coor[vec(phonon_id[:,:,1])])/(Nx*Ny)
           COM_y=sum(phonon_coor[vec(phonon_id[:,:,2])])/(Nx*Ny)
           phonon_coor[vec(phonon_id[:,:,1])]=phonon_coor[vec(phonon_id[:,:,1])] .- COM_x
