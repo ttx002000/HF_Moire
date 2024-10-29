@@ -10,7 +10,7 @@ numsample=10*10^6
 θ=1.5
 rad=2.0
 DOS_n_binnum=50
-DOS_E_binnum=10^5
+DOS_E_binnum=10^4
 Density_start=0.2/4
 Density_end=4.0/4
 Ecutoff=100
@@ -31,7 +31,7 @@ Density_end=args[8]
 
 for uD in uDspace
   arguments=Float64.([uD,numsample,θ,rad,DOS_n_binnum,DOS_E_binnum,Density_start,Density_end,Ecutoff])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="25:00",ntasks=8,mem=32)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="15:00",ntasks=8,mem=32)
 end
 
 
