@@ -36,7 +36,7 @@ function get_RNGham(k::Vector{Float64},NL::Int,uD::Float64)
    return Ham
 end
 
-function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64)
+function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut::Float64)
    
 
 
@@ -78,7 +78,7 @@ function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64)
     valuesset=Float64[]
     bandmin=sort(gross_valuesset)[1]
     for ja in eachindex(gross_valuesset)
-       if gross_valuesset[ja]<bandmin+70
+       if gross_valuesset[ja]<bandmin+Ecut
           push!(valuesset,gross_valuesset[ja])
        end
     end
