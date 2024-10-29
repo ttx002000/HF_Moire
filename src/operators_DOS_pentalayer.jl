@@ -62,29 +62,33 @@ function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut:
     ns=1/(√3/2*am)^2
     
   
-    gross_valuesset=[]
-    single_band_record=[]
-    for ja in 1:numsample
+    gross_valuesset=[Vector{Float64}() for _ in 1:Threads.nthreads()]
+    single_band_record=[Vector{Float64}() for _ in 1:Threads.nthreads()]
+    
+    Threads.@threads for ja in 1:numsample
       kvec=KGr+[rand()-0.5,rand()-0.5]*gm*rad
       Hamiltonian=get_RNGham(kvec,NL,uD)
       FFF=real.(eigen(Hamiltonian).values)
       
-      push!(gross_valuesset,FFF[NL+1:2*NL])
-      push!(single_band_record,FFF[NL+1])
+      push!(gross_valuesset[Threads.threadid()],FFF[NL+1:2*NL])
+      push!(single_band_record[Threads.threadid()],FFF[NL+1])
     end
     
-    
+    gross_valuesset=reduce(vcat,gross_valuesset)
+    single_band_record=reduce(vcat,single_band_record)
+
+
     valuesset=Float64[]
     bandmin=sort(gross_valuesset)[1]
     bandmax=sort(single_band_record)[end]
 
-    
+
     for ja in eachindex(gross_valuesset)
        if gross_valuesset[ja]<bandmin+Ecut
           push!(valuesset,gross_valuesset[ja])
        end
     end
-    
+    println("finisheddiagonalization")
 
     return valuesset,ns,gm,bandmin,bandmax
 
