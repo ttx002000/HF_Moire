@@ -95,7 +95,7 @@ function process_data(valuesset::Vector{Float64},ns::Float64,numsample::Int,rad:
     Nstates = h.weights
     bin_centers =collect(0.5* (bin_edges[1:end-1] + bin_edges[2:end]))
     NN=numsample*(bin_centers[2]-bin_centers[1])
-    Nstates=Nstates/(NN)*gm^2/(2π)*rad^2
+    Nstates=Nstates/(NN)*gm^2/(4π)*rad^2
   
     nE=zeros(Float64,length(bin_centers))
  for ja in eachindex(nE)
