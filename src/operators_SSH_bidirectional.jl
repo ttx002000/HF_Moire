@@ -235,7 +235,15 @@ end
 
 
 
-function from_momentum_to_real(Nx::Int,Ny::Int)
+function from_momentum_to_real(Nx::Int,Ny::Int,relevant_q_set::Vector{Any},phonon_id) #I want to construct the phonon coordinates from the amplitudes
+  phonon_coor=zeros(Float64,2*Nx*Ny)
+  for ja in eachindex(relevant_qset)
+     k=[2π*relevant_qset[ja][1]/Nx,2π*relevant_qset[ja][1]/Ny]
+     for jb in 1:Nx, jc in 1:Ny
+        phonon_coor[phonon_id[Nx,Ny,Int(relevant_qset[ja][3])]]+=2/sqrt(Nx*Ny)*real(relevant_qset[ja][4]*exp(im*dot(k,[jb,jc])))
+     end
+  end
+  
 
 end
 
