@@ -318,7 +318,7 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
 
 
        
-      return phonon_coor, Hph, grad_old, E_old, Eelec_new, Egap,ave_npa
+      return phonon_coor, Hph, grad_old, E_old, Eelec_new, Egap,ave_npa, FL
 end
 
 
