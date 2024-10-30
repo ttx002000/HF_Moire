@@ -6,8 +6,8 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 
 job_prefix = "SSH"
 
-Nx=10
-Ny=10
+Nx=20
+Ny=20
 tper=0.37
 tpa=2
 tNNN=0.16
@@ -39,10 +39,6 @@ for trytime in 1:10, filling in [1.25], α in collect(-0.0:-0.2:-2.0)
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=1,mem=16)
 end
 
-for trytime in 1:10, filling in [1.25], α in collect(-0.0:-0.2:-2.0)
-  arguments=Float64.([10,10,tper,tpa,tNNN,α,α,K,KNNN,filling,trytime])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=1,mem=8)
-end
 
 
 #=
