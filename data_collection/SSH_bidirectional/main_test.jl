@@ -9,7 +9,7 @@ using CSV,DataFrames
 include(joinpath(@__DIR__,"../../src/operators_SSH_bidirectional.jl"))
 
 args=parse.(Float64,ARGS)
-args=[20,20,0.37,2.0,0.16,-1.2,-1.2,1.0,1.0,1.24,1.0,1.0]
+args=[10,10,0.37,2.0,0.16,-1.3,-1.3,1.0,1.0,1.24,2.0,1.0]
 Nx=Int(args[1])
 Ny=Int(args[2])
 tper=args[3]
@@ -33,5 +33,6 @@ dis_x,dis_y,max_record,average_record=resh_phonon(phonon_coor,phonon_id,Nx,Ny)
 
 FFF=eigen(H0+Hph)
 spectrum=FFF.values
+Echemical=E_old-FL*ave_npa/(Nx*Ny)
 savepath=joinpath(@__DIR__, "data_output/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])KNNN$(args[10])filling$(Int(args[11]))try$(Int(args[12]))seed.jld2")
-jldsave(savepath,phonon_id=phonon_id,orbital_id=orbital_id,phonon_coor=phonon_coor,E_total=E_old,Eelec=Eelec_new,spectrum=spectrum,Egap=Egap,ave_npa=ave_npa,max_record=max_record,average_record=average_record,FL=FL,relevant_qamplitude=relevant_qamplitude,relevant_qset=relevant_qset)
+jldsave(savepath,phonon_id=phonon_id,orbital_id=orbital_id,phonon_coor=phonon_coor,E_total=E_old,Eelec=Eelec_new,Echemical=Echemical,spectrum=spectrum,Egap=Egap,ave_npa=ave_npa,max_record=max_record,average_record=average_record,FL=FL,relevant_qamplitude=relevant_qamplitude,relevant_qset=relevant_qset)

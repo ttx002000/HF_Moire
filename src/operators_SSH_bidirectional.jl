@@ -269,27 +269,13 @@ function construct_qset(seednum::Int)
   relevant_qset=Vector{Int}[]
   if seednum==1 
    
-    push!(relevant_qset,[7,7,1])
-    push!(relevant_qset,[7,7,2])
-    push!(relevant_qset,[13,7,1])
-    push!(relevant_qset,[13,7,2])
-  end
-  
-  if seednum==2 
-    
-    push!(relevant_qset,[3,7,1])
-    push!(relevant_qset,[3,7,2])
     push!(relevant_qset,[3,3,1])
     push!(relevant_qset,[3,3,2])
+    #push!(relevant_qset,[7,3,1])
+    #push!(relevant_qset,[7,3,2])
   end
+  
 
-  if seednum==3
-   
-    push!(relevant_qset,[7,7,1])
-    push!(relevant_qset,[7,7,2])
-    push!(relevant_qset,[13,7,1])
-    push!(relevant_qset,[13,7,2])
-  end
 
   return relevant_qset
 end
@@ -300,8 +286,8 @@ end
 
 function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},py_ybond::Vector{Vector{Int}},NNN_sp_d1::Vector{Vector{Int}},NNN_sp_d2::Vector{Vector{Int}},orbital_id::Array{Int},phonon_id::Array{Int},α::Float64,β::Float64,K::Float64,KNNN::Float64,H0::Matrix{ComplexF64},relevant_qset::Vector{Vector{Int}})
     
-  relevant_qamplitude=randn(ComplexF64,length(relevant_qset))*0.3
-
+  #relevant_qamplitude=randn(ComplexF64,length(relevant_qset))*0.3
+  relevant_qamplitude=ComplexF64.([2.0,-2.0])
   phonon_coor=get_phonon_coor(Nx,Ny,relevant_qset,relevant_qamplitude,phonon_id)
     
     E_old=10^8
@@ -399,7 +385,7 @@ function findFL(Nelec::Int,spectrum::Vector{Float64},temp::Float64,val_s::Float6
     fd=1/(1+exp((spectrum[ja]- try_FL)/temp))
     fl+=real(fd)
   end
-    println(abs(fl-Nelec))
+
 
    if abs(fl-Nelec)<stan
     return try_FL
