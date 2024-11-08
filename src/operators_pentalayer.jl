@@ -54,7 +54,7 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=6.1*norm(g1)
+    cutoffstandard=3.1*norm(g1)
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*g1+jb*g2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
