@@ -66,7 +66,7 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
     
     wave_diff=Vector{Int64}[]
     cutoff=18
-    cutoffstandard_diff=6.1*norm(g1)
+    cutoffstandard_diff=5.1*norm(g1)
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*g1+jb*g2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard_diff^2
