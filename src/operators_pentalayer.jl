@@ -411,7 +411,7 @@ function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::V
   HartreeDensity=zeros(ComplexF64,length(wave_diff))
   zeropos=allowedq_dic[[0,0]]
   for jqg in eachindex(wave_diff), jb in 1:Nq^2
-     HartreeDensity[jqg]+=tr(projector[jb]*(form_factor[jb,zeropos,jqg])')# Is this wrong? Why didn't I have it here?
+     HartreeDensity[jqg]+=tr(projector[jb]*(form_factor[jb,zeropos,jqg]))# Is this wrong? Why didn't I have it here?
   end
 
   Threads.@threads for ja in eachindex(allowedq)
