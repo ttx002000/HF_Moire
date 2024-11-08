@@ -205,8 +205,8 @@ function iteration(Nq::Int64,Nband::Int64,initial_projector::Vector{Matrix{Compl
     DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     input_projector=initial_projector
     
-    while (eout>1*10^-15) || (bad_count<4) || (abs(energy_change)>1*10^-10)
-      if eout<1*10^-15
+    while (eout>1*10^-13) || (bad_count<4) || (abs(energy_change)>1*10^-10)
+      if eout<1*10^-13
        bad_count+=1
       end
       tic=time()
@@ -411,7 +411,7 @@ function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::V
   HartreeDensity=zeros(ComplexF64,length(wave_diff))
   zeropos=allowedq_dic[[0,0]]
   for jqg in eachindex(wave_diff), jb in 1:Nq^2
-     HartreeDensity[jqg]+=tr(projector[jb]*form_factor[jb,zeropos,jqg])
+     HartreeDensity[jqg]+=tr(projector[jb]*(form_factor[jb,zeropos,jqg])')# Is this wrong? Why didn't I have it here?
   end
 
   Threads.@threads for ja in eachindex(allowedq)
