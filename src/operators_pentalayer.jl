@@ -9,16 +9,16 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
     R2=ac*[1/2,√3/2]
     G1=2π/ac*[1,-1/√3]
     G2=2π/ac*[0,2/√3]
-    #ϵ=0.2504/ac-1 #This is the normal one
+    ϵ=0.2504/ac-1 #This is the normal one
     
     #ϵ=0.650313445592362/(norm(G1)-0.650313445592362) #This is the one that gives me the same period as the normal one at 0.77 degree
-    ϵ=0.66/(norm(G1)-0.66)#This is the one that gives me 11nm period
+    #ϵ=0.66/(norm(G1)-0.66)#This is the one that gives me 11nm period
   
     NL=5
-    #V0=28.9
-    #V1=21.0
-    V0=0.0
-    V1=0.0
+    V0=28.9
+    V1=21.0
+    #V0=0.0
+    #V1=0.0
 
     ψ=-0.29
     Rθ=[cos(θ) -sin(θ);sin(θ) cos(θ)]

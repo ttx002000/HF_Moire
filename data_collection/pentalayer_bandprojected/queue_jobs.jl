@@ -10,7 +10,7 @@ job_prefix = "pentalayer"
 
 
 erspace=collect(3.0:0.5:10.0)
-θspace=[0.0]
+θspace=[0.77]
 Nband=7
 uDspace=[50.0]
 Nq=15
