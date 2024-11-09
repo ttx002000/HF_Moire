@@ -9,10 +9,11 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
     R2=ac*[1/2,√3/2]
     G1=2π/ac*[1,-1/√3]
     G2=2π/ac*[0,2/√3]
-    ϵ=0.2504/ac-1
+    #ϵ=0.2504/ac-1 #This is the normal one
     
-    ϵ=0.650313445592362/(norm(G1)-0.650313445592362)
-    #ϵ=0.66/(norm(G1)-0.66)
+    #ϵ=0.650313445592362/(norm(G1)-0.650313445592362) #This is the one that gives me the same period as the normal one at 0.77 degree
+    ϵ=0.66/(norm(G1)-0.66)#This is the one that gives me 11nm period
+  
     NL=5
     #V0=28.9
     #V1=21.0
@@ -411,7 +412,7 @@ function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::V
   HartreeDensity=zeros(ComplexF64,length(wave_diff))
   zeropos=allowedq_dic[[0,0]]
   for jqg in eachindex(wave_diff), jb in 1:Nq^2
-     HartreeDensity[jqg]+=tr(projector[jb]*(form_factor[jb,zeropos,jqg]))# Is this wrong? Why didn't I have it here?
+     HartreeDensity[jqg]+=tr(projector[jb]*(form_factor[jb,zeropos,jqg])')# Is this wrong? Why didn't I have it here?
   end
 
   Threads.@threads for ja in eachindex(allowedq)
