@@ -16,19 +16,18 @@ uDspace=[50.0]
 Nq=15
 
 
-
+#=
 for  jtry in 1:15, er in erspace, θ in θspace, uD in uDspace
   arguments=Float64.([er,θ,Nq,uD,Nband,jtry])
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=16,mem=32)
 end
+=#
 
 
 
-#=
 st=load(joinpath(@__DIR__, "missedjobs.jld2"))
 index=st["index"]
 for ja in eachindex(index)
   arguments=Float64.(index[ja])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="10:00:00",ntasks=16,mem=64)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=16,mem=64)
 end
-=#
