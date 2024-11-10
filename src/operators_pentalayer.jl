@@ -16,9 +16,9 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
   
     NL=5
     V0=28.9
-    V1=21.0
+    #V1=21.0
     #V0=0.0
-    #V1=0.0
+    V1=0.0
 
     ψ=-0.29
     Rθ=[cos(θ) -sin(θ);sin(θ) cos(θ)]
@@ -206,7 +206,7 @@ function iteration(Nq::Int64,Nband::Int64,initial_projector::Vector{Matrix{Compl
     DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     input_projector=initial_projector
     
-    while (eout>1*10^-13) || (bad_count<4) || (abs(energy_change)>1*10^-10)
+    while (eout>1*10^-13) || (bad_count<4) || (abs(energy_change)>1*10^-8)
       if eout<1*10^-13
        bad_count+=1
       end
