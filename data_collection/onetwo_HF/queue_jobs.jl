@@ -40,7 +40,7 @@ filling=3*4+8
 
 for  jtry in 1:30, er in [8.0,5.0]
   arguments=Float64.([wAA,wAB,vF,lambda_MDT,Nb_up,Nb_down,θ,er,geonum,filling,jtry])
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="4:00:00",ntasks=16,mem=64)
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=16,mem=32)
 end
 
 

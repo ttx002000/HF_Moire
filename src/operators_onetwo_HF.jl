@@ -341,8 +341,8 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
   
   
   
-  while (eout>1*10^-12) || (bad_count<4) || (energy_change>1*10^-8)
-      if eout<1*10^-12
+  while (eout>1*10^-11) || (bad_count<4) || (energy_change>1*10^-7)
+      if eout<1*10^-11
        bad_count+=1
       end
       tic=time()
@@ -526,7 +526,7 @@ function plot_Chargedensity(eigenvector,total_projector,a1m,a2m,wave,T1,T2,allow
   zgrid_threaded=[zeros(Float64,N3,num_spin,num_valley,num_layer,num_sub) for _ in 1:N3]
 
  Threads.@threads for ja in 1:50
-  for jb in 1:50, spin_i in 1:num_spin, valley in 1:num_valley, sub_index in 1:num_sub, layer_index in 1:layer_index
+  for jb in 1:50, spin_i in 1:num_spin, valley in 1:num_valley, sub_index in 1:num_sub, layer_index in 1:num_layer
     rvec=ja/50*a1m+jb/50*a2m
     for jc in eachindex(wave), jd in eachindex(wave)
       gvec=[T1 T2]*(wave[jc]-wave[jd])

@@ -17,6 +17,7 @@ Nband=Nb_up+Nb_down
 geonum=Int(args[9])
 filling=Int(args[10])
 trytime=Int(args[11])
+
 #=
 wAA=75.0
 wAB=110.0
@@ -40,7 +41,8 @@ initial_projector, bg_projector, single_Ham=get_initial_proj(allowedq,eigenvalue
 
 
 HF_eigenvalue,HF_eigenvector,energy, DIIS_input_projector,bound=iteration(formfactors,initial_projector,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,Npa)
-xgrid,ygrid,HF_density=(eigenvector,DIIS_input_projector[1]-bg_projector,a1m,a2m,wave,T1,T2)
+xgrid,ygrid,HF_density=plot_Chargedensity(eigenvector,DIIS_input_projector[1]-bg_projector,a1m,a2m,wave,T1,T2,allowedq)
+
 
 savepath=joinpath(@__DIR__, "data_output/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])try.jld2")
 
