@@ -57,17 +57,17 @@ function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::F
    
     for jb in eachindex(wave)
      absolute_k=kvec+wave[jb][1]*T1+wave[jb][2]*T2
-     Moire[1,:,jb,2,:,jb]+=[wAA wAB;wAB wAA]*exp(-im*dot(qset[1],dt))*(1+lambda_MDT*dot(qper_set[1],absolute_k-Kset[1]))
+     Moire[1,:,jb,2,:,jb]+=[wAA wAB;wAB wAA]*exp(-im*dot(qset[1],dt))*(1+lambda_MDT*dot(qper_set[1],absolute_k+Kset[2]))
  
 
      pos=findfirst(item->item==wave[jb]+g1m_ps_int,wave)
      if pos≠nothing
-       Moire[1,:,pos,2,:,jb]+=[wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*dot(qset[2],dt))*(1+lambda_MDT*dot(qper_set[2],absolute_k-Kset[1]))
+       Moire[1,:,pos,2,:,jb]+=[wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*dot(qset[2],dt))*(1+lambda_MDT*dot(qper_set[2],absolute_k+Kset[2]))
      end
 
      pos=findfirst(item->item==wave[jb]+g2m_ps_int,wave)
      if pos≠nothing
-       Moire[1,:,pos,2,:,jb]+=[wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*dot(qset[3],dt))*(1+lambda_MDT*dot(qper_set[3],absolute_k-Kset[1]))
+       Moire[1,:,pos,2,:,jb]+=[wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*dot(qset[3],dt))*(1+lambda_MDT*dot(qper_set[3],absolute_k+Kset[2]))
      end
    end
 
@@ -75,17 +75,17 @@ function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::F
    for jb in eachindex(wave)
 
      absolute_k=kvec+wave[jb][1]*T1+wave[jb][2]*T2
-      Moire[3,:,jb,2,:,jb]+=[wAA wAB;wAB wAA]*exp(-im*2*dot(qset[1],db))*(1+lambda_MDT*dot(qper_set[1],absolute_k-Kset[3]))
+      Moire[3,:,jb,2,:,jb]+=[wAA wAB;wAB wAA]*exp(-im*2*dot(qset[1],db))*(1+lambda_MDT*dot(qper_set[1],absolute_k+Kset[2]))
 
 
       pos=findfirst(item->item==wave[jb]+2*g1m_ps_int,wave)
      if pos≠nothing
-         Moire[3,:,pos,2,:,jb]+=[wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*2*dot(qset[2],db))*(1+lambda_MDT*dot(qper_set[2],absolute_k-Kset[3]))
+         Moire[3,:,pos,2,:,jb]+=[wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*2*dot(qset[2],db))*(1+lambda_MDT*dot(qper_set[2],absolute_k+Kset[2]))
      end
 
       pos=findfirst(item->item==wave[jb]+2*g2m_ps_int,wave)
       if pos≠nothing
-         Moire[3,:,pos,2,:,jb]+=[wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*2*dot(qset[3],db))*(1+lambda_MDT*dot(qper_set[3],absolute_k-Kset[3]))
+         Moire[3,:,pos,2,:,jb]+=[wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*2*dot(qset[3],db))*(1+lambda_MDT*dot(qper_set[3],absolute_k+Kset[2]))
      end
    end
  end
@@ -172,7 +172,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   kθ=2*KGr*sin(θ/2)
   
   
-  Kset=[kθ*[0.0,0.0],[0.0,1.0],kθ*[0.0,-1.0]]
+  Kset=[kθ*[0.0,0.0],kθ*[0.0,1.0],kθ*[0.0,-1.0]]
   qset=[kθ*[0.0,-1.0],kθ*[√3/2,1/2],kθ*[-√3/2,1/2]]
   
   
@@ -235,7 +235,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   constq=1/(√3/2*norm(a1m)^2*ϵr*length(allowedq))*9047.5636
  
   wave=Vector{Int64}[]
-  cutoff=18
+  cutoff=18*3
   cutoffstandard=3.01*norm(g1m_ps)
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*g1m+jb*g2m;
@@ -256,7 +256,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   
   dimension=num_layer*length(wave)*num_sub
   wave_diff=Vector{Int64}[]
-  cutoff=18
+  cutoff=18*3
   cutoffstandard=4.51*norm(g1m_ps)
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*g1m+jb*g2m;
