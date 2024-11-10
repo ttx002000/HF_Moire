@@ -149,8 +149,8 @@ function Geometry(geonum::Int)
   if geonum==2
     l1=[9,0]
     l2=[0,9]
-    Nx=6;
-    Ny=6;
+    Nx=9;
+    Ny=9;
     
   end
 
