@@ -347,7 +347,7 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
       end
       
       tic=time()
-      if (itcount>30 && abs(energy_change)>1) || (itcount>30 && abs(eout)<10^(-7))
+      if (itcount>30 && abs(energy_change)>1) || (itcount>30 && abs(eout)<10^(-8))
 
         dmk=implement_DIIS(DIIS_input_projector,DIIS_input_DeltaMatrix,allowedq)
         eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy=Construct_projector(formfactors,dmk,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,energy,Npa)
