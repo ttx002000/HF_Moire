@@ -44,6 +44,9 @@ HF_eigenvalue,HF_eigenvector,energy, DIIS_input_projector,bound=iteration(formfa
 xgrid,ygrid,HF_density=plot_Chargedensity(eigenvector,DIIS_input_projector[1],a1m,a2m,wave,T1,T2,allowedq)
 
 
-savepath=joinpath(@__DIR__, "data_output/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])try.jld2")
+layer_pol=get_polarization(HF_eigenvector,eigenvector,allowedq,wave,Nband)
 
-jldsave(savepath,HF_eigenvalue=HF_eigenvalue,eigenvalue=eigenvalue,energy=energy,xgrid=xgrid,ygrid=ygrid,HF_density=HF_density,bound=bound)
+
+savepath=joinpath(@__DIR__, "data_output/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])try.jld2")
+#savepath=joinpath(@__DIR__, "data.jld2")
+jldsave(savepath,HF_eigenvalue=HF_eigenvalue,eigenvalue=eigenvalue,energy=energy,xgrid=xgrid,ygrid=ygrid,HF_density=HF_density,bound=bound,layer_pol=layer_pol)

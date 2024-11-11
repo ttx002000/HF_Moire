@@ -341,14 +341,33 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
   
   
   
-  while (eout>1*10^-11) || (bad_count<4) || (energy_change>1*10^-7)
-      if eout<1*10^-11
+  while (eout>1*10^(-11)) || (bad_count<4) || (energy_change>1*10^(-6))
+      if eout<1*10^(-11)
        bad_count+=1
       end
+      
       tic=time()
-      eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy=Construct_projector(formfactors,input_projector,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,energy,Npa)
-      DIIS_input_projector[mod(itcount,3)+1]=input_projector
-      input_projector=output_projector
+      if (itcount>30 && abs(energy_change)>1) || (itcount>30 && abs(eout)<10^(-7))
+
+        dmk=implement_DIIS(DIIS_input_projector,DIIS_input_DeltaMatrix,allowedq)
+        eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy=Construct_projector(formfactors,dmk,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,energy,Npa)
+        DIIS_input_projector[mod(itcount,3)+1]=dmk
+        input_projector=output_projector
+        println("using DIIS")
+       
+      else
+        eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy=Construct_projector(formfactors,input_projector,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,energy,Npa)
+        DIIS_input_projector[mod(itcount,3)+1]=input_projector
+        input_projector=output_projector 
+         
+     
+
+      end
+
+    
+
+
+
       itcount+=1
      
       toc=time()
@@ -356,12 +375,67 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
       flush(stdout)
      
     
-    end
+  end
+ 
+ 
+
+
   
   return HF_eigenvalue,HF_eigenvector,energy, DIIS_input_projector,bound
 
 
 end
+
+function implement_DIIS(DIIS_input_projector,DIIS_input_DeltaMatrix,allowedq)
+
+  num_spin=2
+  num_valley=2
+
+      Bmatrix=zeros(ComplexF64,4,4)
+      for ja in 1:3
+       Bmatrix[ja,4]=1
+       Bmatrix[4,ja]=1
+      end
+  
+      for ja in 1:3,jb in 1:3
+          for spin_i in 1:num_spin, valley in 1:num_valley,jc in eachindex(allowedq)
+             Bmatrix[ja,jb]+=tr((DIIS_input_DeltaMatrix[ja][spin_i,valley,jc])'*(DIIS_input_DeltaMatrix[jb][spin_i,valley,jc]))
+          end
+      end
+      coeff=inv(Bmatrix)*[0;0;0;1]
+     
+      dmk=coeff[1]*(DIIS_input_projector[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_projector[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_projector[3]+DIIS_input_DeltaMatrix[3])
+
+    return dmk
+end
+
+
+
+
+function get_polarization(HF_eigenvector,eigenvector,allowedq,wave,Nband)
+  num_spin=2
+  num_valley=2
+  num_layer=3
+  num_sub=2
+  PW_basis_eig=[zeros(ComplexF64,num_layer,num_sub,length(wave),Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+ 
+  for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
+   PW_basis_eig[spin_i,valley,ja]=reshape(eigenvector[spin_i,valley,ja]*HF_eigenvector[spin_i,valley,ja],num_layer,num_sub,length(wave),Nband)
+  end
+
+  layer_pol=[zeros(ComplexF64,num_layer,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+ 
+  for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
+    for layer_index in 1:num_layer, bandi in 1:Nband
+    layer_pol[spin_i,valley,ja][layer_index,bandi]=sum(vec(PW_basis_eig[spin_i,valley,ja][layer_index,:,:,bandi]).^2)
+    end
+  end
+
+  return layer_pol
+
+
+end
+
 
 
 
