@@ -427,7 +427,7 @@ function get_polarization(HF_eigenvector,eigenvector,allowedq,wave,Nband)
  
   for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
     for layer_index in 1:num_layer, bandi in 1:Nband
-    layer_pol[spin_i,valley,ja][layer_index,bandi]=sum(vec(PW_basis_eig[spin_i,valley,ja][layer_index,:,:,bandi]).^2)
+    layer_pol[spin_i,valley,ja][layer_index,bandi]=sum(abs.(vec(PW_basis_eig[spin_i,valley,ja][layer_index,:,:,bandi])).^2)
     end
   end
 
