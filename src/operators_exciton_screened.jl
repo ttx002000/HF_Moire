@@ -227,11 +227,11 @@ function triangle_initial_Densitymatrix_control(parameters::Vector{Float64},Nq::
   
   seed_tunnel=generate_seed(mod(seednum-1,4)+1,length(wave))
   
-  
+  shift=1/2*T1+1/2*T2
   Threads.@threads for ja in 1:Nq^2
     
     
-    k=allowedq[ja][1]*T1+allowedq[ja][2]*T2
+    k=allowedq[ja][1]*T1+allowedq[ja][2]*T2+shift
   
     for jb in eachindex(wave)
      single_Ham[ja][1][3*(jb-1)+1,3*(jb-1)+1]=norm(k+wave[jb][1]*T1+wave[jb][2]*T2-κt)^2*constt
@@ -491,8 +491,8 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
     
     
     
-    shift=1/2*b1m+1/2*b2m
-    
+    shift=1/2*T1+1/2*T2
+
     Threads.@threads for ja in 1:Nq^2
       
       
