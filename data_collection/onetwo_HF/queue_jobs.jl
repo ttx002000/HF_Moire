@@ -19,7 +19,7 @@ Nb_down=3
 er=8.0
 Nband=Nb_up+Nb_down
 geonum=2
-filling=3*4+8
+filling=3*4+7
 
 
 #=
