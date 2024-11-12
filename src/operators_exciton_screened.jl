@@ -404,7 +404,7 @@ function triangle_initial_Densitymatrix(parameters::Vector{Float64},Nq::Int64)
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=4.01*bm
+    cutoffstandard=3.01*bm
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -723,8 +723,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}
     bound=0.0
 
 
-    while (eout>1*10^-14) || (bad_count<4)
-      if  eout<1*10^-14 
+    while (eout>1*10^-12) || (bad_count<4)
+      if  eout<1*10^-12
         bad_count+=1
       end
       tic=time()
