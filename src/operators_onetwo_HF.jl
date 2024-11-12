@@ -2,7 +2,7 @@ using LinearAlgebra
 
 
 
-function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::Float64,qset::Vector{Vector{Float64}},Kset::Vector{Vector{Float64}},dt::Vector{Float64},db::Vector{Float64},T1::Vector{Float64},T2::Vector{Float64},vi::Int,kvec::Vector{Float64},g1m_ps_int::Vector{Int},g2m_ps_int::Vector{Int},lambda_MDT::Float64)
+function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::Float64,qset::Vector{Vector{Float64}},Kset::Vector{Vector{Float64}},dt::Vector{Float64},db::Vector{Float64},T1::Vector{Float64},T2::Vector{Float64},vi::Int,kvec::Vector{Float64},g1m_ps_int::Vector{Int},g2m_ps_int::Vector{Int},lambda_MDT::Float64,Dfield::Float64)
  
   num_layer=3
   num_sub=2
@@ -96,11 +96,11 @@ function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::F
  
  for jb in eachindex(wave)
    kvec1=kvec+wave[jb][1]*T1+wave[jb][2]*T2-vi*Kset[1]
-   Hamiltonian[1,:,jb,1,:,jb]+=vF*(σx*kvec1[1]+σy*kvec1[2])
+   Hamiltonian[1,:,jb,1,:,jb]+=vF*(σx*kvec1[1]+σy*kvec1[2])-Dfield*Matrix{Float64}(I,2,2)
    kvec2=kvec+wave[jb][1]*T1+wave[jb][2]*T2-vi*Kset[2]
    Hamiltonian[2,:,jb,2,:,jb]+=vF*(σx*kvec2[1]+σy*kvec2[2])
    kvec3=kvec+wave[jb][1]*T1+wave[jb][2]*T2-vi*Kset[3]
-   Hamiltonian[3,:,jb,3,:,jb]+=vF*(σx*kvec3[1]+σy*kvec3[2])
+   Hamiltonian[3,:,jb,3,:,jb]+=vF*(σx*kvec3[1]+σy*kvec3[2])+Dfield*Matrix{Float64}(I,2,2)
  end
 
 
@@ -161,7 +161,7 @@ function Geometry(geonum::Int)
 end
 
 
-function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF::Float64,ϵr::Float64,Nband::Int64,lambda_MDT::Float64,Nb_down::Int,Nb_up::Int)
+function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF::Float64,ϵr::Float64,Nband::Int64,lambda_MDT::Float64,Nb_down::Int,Nb_up::Int,Dfield::Float64)
 
 
   a0=0.246
@@ -274,7 +274,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   for ja in eachindex(allowedq), spin_i in 1:num_spin, valley in  1:num_spin
       vset=[1,-1]
       kvec=allowedq[ja][1]*T1+allowedq[ja][2]*T2
-      Moire, Ham=get_Moire_Ham(wave,wAA,wAB,vF,qset,Kset,dt,db,T1,T2,vset[valley],kvec,g1m_ps_int, g2m_ps_int,lambda_MDT)
+      Moire, Ham=get_Moire_Ham(wave,wAA,wAB,vF,qset,Kset,dt,db,T1,T2,vset[valley],kvec,g1m_ps_int, g2m_ps_int,lambda_MDT,Dfield)
       totalHam=reshape(Moire,dimension,dimension)+reshape(Moire,dimension,dimension)'+reshape(Ham,dimension,dimension)
       FFF=eigen(totalHam)
   

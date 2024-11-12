@@ -16,7 +16,8 @@ Nb_down=Int(args[6])
 Nband=Nb_up+Nb_down
 geonum=Int(args[9])
 filling=Int(args[10])
-trytime=Int(args[11])
+trytime=Int(args[12])
+Dfield=args[11]
 
 #=
 wAA=75.0
@@ -34,7 +35,7 @@ filling=3*4+8
 =#
 
 
-eigenvector,eigenvalue,wave,wave_diff,wave_dic,allowedq,allowedq_dic,T1,T2,constq,Minv,g1mT,g2mT,a1m,a2m=single_particle(geonum,θ,wAA,wAB,vF,ϵr,Nband,lambda_MDT,Nb_down,Nb_up)
+eigenvector,eigenvalue,wave,wave_diff,wave_dic,allowedq,allowedq_dic,T1,T2,constq,Minv,g1mT,g2mT,a1m,a2m=single_particle(geonum,θ,wAA,wAB,vF,ϵr,Nband,lambda_MDT,Nb_down,Nb_up,Dfield)
 Npa=length(allowedq)*filling
 formfactors=get_formfactors(allowedq,wave,wave_diff,wave_dic,Minv,Nband,eigenvector)
 initial_projector, bg_projector, single_Ham=get_initial_proj(allowedq,eigenvalue,Nband)
@@ -47,6 +48,6 @@ xgrid,ygrid,HF_density=plot_Chargedensity(eigenvector,DIIS_input_projector[1],a1
 layer_pol=get_polarization(HF_eigenvector,eigenvector,allowedq,wave,Nband)
 
 
-savepath=joinpath(@__DIR__, "data_output/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])try.jld2")
+savepath=joinpath(@__DIR__, "data_output/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])Dfield$(args[12])try.jld2")
 #savepath=joinpath(@__DIR__, "data.jld2")
 jldsave(savepath,HF_eigenvalue=HF_eigenvalue,eigenvalue=eigenvalue,energy=energy,xgrid=xgrid,ygrid=ygrid,HF_density=HF_density,bound=bound,layer_pol=layer_pol)
