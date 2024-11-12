@@ -122,7 +122,7 @@ function sendtomesh(Minv::Matrix{Int64},q1::Vector{Int})::Vector{Int}
 end
 
 
-function shuffle_vector(eg_vec::Matrix{ComplexF64},shuff_vec::Vector{Int},wave::Vector{Vector{Int}},wave_dic::Dict{Vector{Int64},Int64},Nband::Int)::Array{ComplexF64}
+function shuffle_vector(eg_vec::Matrix{ComplexF64},shuff_vec::Vector{Int},wave::Vector{Vector{Int}},wave_dic::Dict{Vector{Int64},Int64},Nband::Int)::Matrix{ComplexF64}
     num_layer=3 # shuff_vec is g, I am out putting eigvec*exp(igr)
     num_sub=2
     res_eigvec=reshape(eg_vec,num_layer,num_sub,length(wave),Nband)
@@ -134,6 +134,22 @@ function shuffle_vector(eg_vec::Matrix{ComplexF64},shuff_vec::Vector{Int},wave::
         end
     end
    return reshape(shuff_eigvec,num_layer*num_sub*length(wave),Nband)
+end
+
+
+
+function shuffle_vector_singlevector(eg_vec::Vector{ComplexF64},shuff_vec::Vector{Int},wave::Vector{Vector{Int}},wave_dic::Dict{Vector{Int64},Int64})::Vector{ComplexF64}
+  num_layer=3 # shuff_vec is g, I am out putting eigvec*exp(igr)
+  num_sub=2
+  res_eigvec=reshape(eg_vec,num_layer,num_sub,length(wave))
+  shuff_eigvec=zeros(ComplexF64,num_layer,num_sub,length(wave))
+  for ja in eachindex(wave)
+      if haskey(wave_dic,wave[ja]-shuff_vec)
+          pos=wave_dic[wave[ja]-shuff_vec]
+        shuff_eigvec[:,:,ja]=res_eigvec[:,:,pos]
+      end
+  end
+ return reshape(shuff_eigvec,num_layer*num_sub*length(wave))
 end
 
 
@@ -188,6 +204,8 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
 
   a1m=2*a1m_ps+a2m_ps
   a2m=2*a2m_ps+a1m_ps
+   #a1m=a1m_ps
+  #a2m=a2m_ps
   CC=2π*inv([a1m a2m])
   g1m=CC[1,:]
   g2m=CC[2,:]
@@ -233,10 +251,10 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   end
 
   constq=1/(√3/2*norm(a1m)^2*ϵr*length(allowedq))*9047.5636
- 
+ #constq=0.0
   wave=Vector{Int64}[]
-  cutoff=18*3
-  cutoffstandard=3.01*norm(g1m_ps)
+  cutoff=20*5
+  cutoffstandard=6.01*norm(g1m_ps)
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*g1m+jb*g2m;
       if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -256,8 +274,8 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   
   dimension=num_layer*length(wave)*num_sub
   wave_diff=Vector{Int64}[]
-  cutoff=18*3
-  cutoffstandard=4.51*norm(g1m_ps)
+  cutoff=20*5
+  cutoffstandard=9.01*norm(g1m_ps)
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*g1m+jb*g2m;
       if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -439,6 +457,71 @@ end
 
 
 
+function get_chernnumber(HF_eigenvector::Array{Matrix{ComplexF64}},eigenvector::Array{Matrix{ComplexF64}},allowedq::Vector{Vector{Int}},allowedq_dic,wave::Vector{Vector{Int}},wave_dic,Nband::Int,geonum::Int,Minv::Matrix{Int})
+  num_spin=2
+  num_valley=2
+ num_layer=3
+ num_sub=2
+ l1,l2,Nx,Ny=Geometry(geonum)
+
+  PW_basis_eig=[zeros(ComplexF64,num_layer*num_sub*length(wave),Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+ 
+  for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
+   PW_basis_eig[spin_i,valley,ja]=eigenvector[spin_i,valley,ja]*HF_eigenvector[spin_i,valley,ja]
+  end
+
+  chern_num=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley]
+
+  for spin_i in 1:num_spin, valley in 1:num_valley, bandin in 1:Nband
+  
+  
+    chern_eigenvector=zeros(ComplexF64,num_layer*num_sub*length(wave),Nx+1,Ny+1)
+    for ja in 1:Nx+1, jb in 1:Ny+1
+        
+        wavevec=sendtomesh(Minv,[ja-1,jb-1])
+        if wavevec==[ja-1,jb-1]
+          chern_eigenvector[:,ja,jb]=PW_basis_eig[spin_i,valley,allowedq_dic[wavevec]][:,bandin]
+        
+        else
+            shuffle_vec=[ja-1,jb-1]-wavevec
+            chern_eigenvector[:,ja,jb]=shuffle_vector_singlevector(PW_basis_eig[spin_i,valley,allowedq_dic[wavevec]][:,bandin],-shuffle_vec,wave,wave_dic)
+        end
+    end
+
+
+    Uonelink=zeros(ComplexF64,Nx,Ny+1)
+    Utwolink=zeros(ComplexF64,Nx+1,Ny)
+ 
+    for ja in 1:Nx, jb in 1:Ny+1
+        Uonelink[ja,jb]=dot(chern_eigenvector[:,ja,jb],chern_eigenvector[:,ja+1,jb])/abs(dot(chern_eigenvector[:,ja,jb],chern_eigenvector[:,ja+1,jb]))
+    end
+    
+        
+        
+    for ja in 1:Nx+1, jb in 1:Ny
+        Utwolink[ja,jb]=dot(chern_eigenvector[:,ja,jb],chern_eigenvector[:,ja,jb+1])/abs(dot(chern_eigenvector[:,ja,jb],chern_eigenvector[:,ja,jb+1]))
+    end
+        
+    Flink=zeros(ComplexF64,Nx,Ny)
+    for ja in 1:Nx, jb in 1:Ny
+     Flink[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
+    end
+    chern_num[spin_i,valley][bandin]=sum(Flink)/(2*π*im)
+  
+  
+  
+  end
+
+
+
+
+  return chern_num
+
+
+end
+
+
+
 
 
 
@@ -460,6 +543,7 @@ function get_formfactors(allowedq::Vector{Vector{Int}},wave::Vector{Vector{Int}}
       end
   end
 =#
+  tic=time()
  Threads.@threads for ja in eachindex(allowedq)
  for  valley in  1:num_valley, spin_i in 1:num_spin
    for qvec in eachindex(allowedq), gqindex in eachindex(wave_diff)
@@ -477,6 +561,8 @@ function get_formfactors(allowedq::Vector{Vector{Int}},wave::Vector{Vector{Int}}
   formfactors[:, :, ja, :, :]=formfactors_threaded[ja]
  end
  println("finish FF")
+ tic=time()
+ println("form factors takes time",toc-tic)
   return formfactors
 
 end

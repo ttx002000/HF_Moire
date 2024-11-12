@@ -25,15 +25,15 @@ wAB=110.0
 vF=579.2265 #unit meV*nm
 
 lambda_MDT=-0.2
-Nb_up=3
-Nb_down=3
+Nb_up=1
+Nb_down=1
 θ=1.23/180*π
 ϵr=8.0
 Nband=Nb_up+Nb_down
-geonum=Int(1)
-filling=3*4+8
+geonum=Int(2)
+filling=1
+Dfield=20.0
 =#
-
 
 eigenvector,eigenvalue,wave,wave_diff,wave_dic,allowedq,allowedq_dic,T1,T2,constq,Minv,g1mT,g2mT,a1m,a2m=single_particle(geonum,θ,wAA,wAB,vF,ϵr,Nband,lambda_MDT,Nb_down,Nb_up,Dfield)
 Npa=length(allowedq)*filling
@@ -46,8 +46,8 @@ xgrid,ygrid,HF_density=plot_Chargedensity(eigenvector,DIIS_input_projector[1],a1
 
 
 layer_pol=get_polarization(HF_eigenvector,eigenvector,allowedq,wave,Nband)
-
+chern_number=get_chernnumber(HF_eigenvector,eigenvector,allowedq,allowedq_dic,wave,wave_dic,Nband,geonum,Minv)
 
 savepath=joinpath(@__DIR__, "data_output/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])Dfield$(args[12])try.jld2")
 #savepath=joinpath(@__DIR__, "data.jld2")
-jldsave(savepath,HF_eigenvalue=HF_eigenvalue,eigenvalue=eigenvalue,energy=energy,xgrid=xgrid,ygrid=ygrid,HF_density=HF_density,bound=bound,layer_pol=layer_pol)
+jldsave(savepath,HF_eigenvalue=HF_eigenvalue,eigenvalue=eigenvalue,energy=energy,xgrid=xgrid,ygrid=ygrid,HF_density=HF_density,bound=bound,layer_pol=layer_pol,chern_number=chern_number)
