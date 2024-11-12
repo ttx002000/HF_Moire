@@ -692,7 +692,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
   
     NewDensityMatrix=NewDensityMatrix-BG_DensityMatrix
     DeltaMatrix=NewDensityMatrix-input_DensityMatrix
-    output_DensityMatrix=0.5*input_DensityMatrix+0.5*NewDensityMatrix
+    output_DensityMatrix=0.0*input_DensityMatrix+1.0*NewDensityMatrix
     
     e1=0.0
     for ja in 1:Nq^2,vi in 1:2
