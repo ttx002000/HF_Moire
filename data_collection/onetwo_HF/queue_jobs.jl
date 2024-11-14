@@ -18,7 +18,7 @@ Nb_down=3
 θ=1.23
 er=8.0
 Nband=Nb_up+Nb_down
-geonum=2
+geonum=1
 filling=3*4+7
 
 
@@ -40,7 +40,7 @@ filling=3*4+8
 
 for  jtry in 1:60, er in [8.0], Dfield in [0.0,10.0,20.0], filling in [19,20,21]
   arguments=Float64.([wAA,wAB,vF,lambda_MDT,Nb_up,Nb_down,θ,er,geonum,filling,Dfield,jtry])
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="6:00:00",ntasks=16,mem=64)
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=16,mem=32)
 end
 
 
