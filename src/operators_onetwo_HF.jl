@@ -254,7 +254,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
  #constq=0.0
   wave=Vector{Int64}[]
   cutoff=20*5
-  cutoffstandard=5.01*norm(g1m_ps)
+  cutoffstandard=5.51*norm(g1m_ps)
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*g1m+jb*g2m;
       if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -275,7 +275,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   dimension=num_layer*length(wave)*num_sub
   wave_diff=Vector{Int64}[]
   cutoff=20*5
-  cutoffstandard=8.51*norm(g1m_ps)
+  cutoffstandard=9.01*norm(g1m_ps)
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*g1m+jb*g2m;
       if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -579,19 +579,25 @@ function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::A
   Fock_threaded=[[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley] for _ in eachindex(allowedq)]
   New_projector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
   
-Threads.@threads for k2 in eachindex(allowedq)
+ Threads.@threads for k2 in eachindex(allowedq)
   for jqmesh in eachindex(allowedq)
    k1pos=allowedq_dic[sendtomesh(Minv,allowedq[k2]+allowedq[jqmesh])]
-   for jqg in eachindex(wave_diff), spin_i in 1:num_spin, valley in 1:num_valley
-     Fock_threaded[k2][spin_i,valley]+=Coulomb(allowedq[jqmesh]+wave_diff[jqg],T1,T2)*form_factor[spin_i,valley,k2,jqmesh,jqg]*projector[spin_i,valley,k1pos]*(form_factor[spin_i,valley,k2,jqmesh,jqg])'
+   for jqg in eachindex(wave_diff)
+    Cq=Coulomb(allowedq[jqmesh]+wave_diff[jqg],T1,T2)
+    for spin_i in 1:num_spin, valley in 1:num_valley
+     Fock_threaded[k2][spin_i,valley]+=Cq*form_factor[spin_i,valley,k2,jqmesh,jqg]*projector[spin_i,valley,k1pos]*(form_factor[spin_i,valley,k2,jqmesh,jqg])'
+    end
    end
   end
  end 
  
  HartreeDensity=zeros(ComplexF64,length(wave_diff))
  zeropos=allowedq_dic[[0,0]]
- for jqg in eachindex(wave_diff), jb in eachindex(allowedq),spin_i in 1:num_spin, valley in 1:num_valley
+
+ Threads.@threads for jqg in eachindex(wave_diff)
+ for  jb in eachindex(allowedq),spin_i in 1:num_spin, valley in 1:num_valley
     HartreeDensity[jqg]+=tr(projector[spin_i,valley,jb]*(form_factor[spin_i,valley,jb,zeropos,jqg])')
+ end
  end
 
  Threads.@threads for ja in eachindex(allowedq)
@@ -600,27 +606,31 @@ Threads.@threads for k2 in eachindex(allowedq)
  end
  end
 
- HF_eigenvalue=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
- HF_eigenvector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+ HF_eigenvalue=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley, _ in eachindex(allowedq)]
+ HF_eigenvector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley, _ in eachindex(allowedq)]
 
- for spin_i in 1:num_spin, valley in 1:num_valley,ja in eachindex(allowedq)
+ Threads.@threads for ja in eachindex(allowedq)
+ for spin_i in 1:num_spin, valley in 1:num_valley
     FFF=eigen(constq*Hartree_threaded[ja][spin_i,valley]+single_Ham[spin_i,valley,ja]-constq*Fock_threaded[ja][spin_i,valley])
     HF_eigenvalue[spin_i,valley,ja]=(FFF.values)
     HF_eigenvector[spin_i,valley,ja]=FFF.vectors
  end
+end
 
 
 
  sorted=sort(reduce(vcat,reduce(vcat,real.(HF_eigenvalue)))) 
  bound=(sorted[Npa+1]+sorted[Npa])/2
 
-  for spin_i in 1:num_spin, valley in 1:num_valley,ja in eachindex(allowedq)
+ Threads.@threads for ja in eachindex(allowedq)
+  for spin_i in 1:num_spin, valley in 1:num_valley
        for jd in eachindex(HF_eigenvalue[spin_i,valley,ja])
           if real(HF_eigenvalue[spin_i,valley,ja][jd])<bound
              New_projector[spin_i,valley,ja]+=HF_eigenvector[spin_i,valley,ja][:,jd]*(HF_eigenvector[spin_i,valley,ja][:,jd])'
           end
        end
   end
+end
 
  energy=0.0
   for spin_i in 1:num_spin, valley in 1:num_valley,ja in eachindex(allowedq)
@@ -683,22 +693,23 @@ function plot_Chargedensity(eigenvector,total_projector,a1m,a2m,wave,T1,T2,allow
     reshaped_Hartree_Density[spin_i,valley]=reshape(H_Density[spin_i,valley],num_layer,num_sub,length(wave),num_layer,num_sub,length(wave))
   end
   
-  zgrid_threaded=[zeros(Float64,N3,num_spin,num_valley,num_layer,num_sub) for _ in 1:N3]
+  #zgrid_threaded=[zeros(Float64,N3,num_spin,num_valley,num_layer,num_sub) for _ in 1:N3]
 
  Threads.@threads for ja in 1:50
   for jb in 1:50, spin_i in 1:num_spin, valley in 1:num_valley, sub_index in 1:num_sub, layer_index in 1:num_layer
     rvec=ja/50*a1m+jb/50*a2m
     for jc in eachindex(wave), jd in eachindex(wave)
       gvec=[T1 T2]*(wave[jc]-wave[jd])
-     zgrid_threaded[ja][jb,spin_i,valley,layer_index,sub_index]+=real(reshaped_Hartree_Density[spin_i,valley][layer_index,sub_index,jc,layer_index,sub_index,jd]*exp(im*(gvec[1]*rvec[1]+gvec[2]*rvec[2])))
+     zgrid[ja,jb,spin_i,valley,layer_index,sub_index]+=real(reshaped_Hartree_Density[spin_i,valley][layer_index,sub_index,jc,layer_index,sub_index,jd]*exp(im*(gvec[1]*rvec[1]+gvec[2]*rvec[2])))
     end
   
   end
  end
-
+#=
  for ja in 1:50
   zgrid[ja,:,:,:,:,:]=zgrid_threaded[ja]
  end
+ =#
 
   for ja in 1:50, jb in 1:50
     rvec=ja/50*a1m+jb/50*a2m
