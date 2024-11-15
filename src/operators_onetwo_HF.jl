@@ -254,7 +254,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
  #constq=0.0
   wave=Vector{Int64}[]
   cutoff=20*5
-  cutoffstandard=5.01*norm(g1m_ps)
+  cutoffstandard=5.51*norm(g1m_ps)
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*g1m+jb*g2m;
       if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -275,7 +275,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   dimension=num_layer*length(wave)*num_sub
   wave_diff=Vector{Int64}[]
   cutoff=20*5
-  cutoffstandard=8.01*norm(g1m_ps)
+  cutoffstandard=8.51*norm(g1m_ps)
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*g1m+jb*g2m;
       if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
