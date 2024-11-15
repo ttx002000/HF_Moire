@@ -334,7 +334,11 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
           grad_amplitude=get_grad_amplitude(grad_new,Nx,Ny,relevant_qset,phonon_id)
           relevant_qamplitude=relevant_qamplitude-conj.(grad_amplitude)*update_rate
 
-         
+         if norm(grad_amplitude)>10^6
+          update_rate=0.2
+          relevant_qamplitude=randn(ComplexF64,length(relevant_qset))*0.1
+         end
+
           phonon_coor=get_phonon_coor(Nx,Ny,relevant_qset,relevant_qamplitude,phonon_id)
           COM_x=sum(phonon_coor[vec(phonon_id[:,:,1])])/(Nx*Ny)
           COM_y=sum(phonon_coor[vec(phonon_id[:,:,2])])/(Nx*Ny)
