@@ -4,10 +4,10 @@ using JLD2
 include(joinpath(@__DIR__,"submit_job.jl"))
 filepath = joinpath(@__DIR__, "main_test.jl")
 
-job_prefix = "SSH"
+job_prefix = "SSH_bidirection"
 
-Nx=30
-Ny=30
+Nx=20
+Ny=20
 tper=0.37
 tpa=2
 tNNN=0.16
@@ -30,20 +30,20 @@ tNNN=args[5]
 K=args[8]
 KNNN=args[9]
 filling=(args[10])
+trytime=Int(args[11])
+seednum=Int(args[12])
+γ=args[13]
 Nelec=Int(round(Nx*Ny*filling))
 =#
 
-#=
-for trytime in 1:10, filling in [1.25], α in collect(-0.0:-0.2:-2.4)
-  arguments=Float64.([Nx,Ny,tper,tpa,tNNN,α,α,K,KNNN,filling,trytime])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=1,mem=16)
+
+
+
+for trytime in 1:10, filling in [1.25,1.25+0.0025,1.25-0.0025], α in [-1.2], γ in collect([0.0:0.25:4.0])
+  arguments=Float64.([Nx,Ny,tper,tpa,tNNN,α,α,K,KNNN,filling,trytime,seed,γ])
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=1,mem=8)
 end
 
-for trytime in 1:10, filling in [1.25], α in collect(-0.0:-0.2:-2.4)
-  arguments=Float64.([10,10,tper,tpa,tNNN,α,α,K,KNNN,filling,trytime])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=1,mem=8)
-end
-=#
 
 #=
 st=load(joinpath(@__DIR__, "missedjobs.jld2"))
@@ -55,7 +55,3 @@ end
 =#
 
 
-for trytime in 1:10, filling in [1.22,1.24,1.25], α in [-0.9,-1.1]
-  arguments=Float64.([30,30,tper,tpa,tNNN,α,α,K,KNNN,filling,trytime])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="4:00:00",ntasks=1,mem=16)
-end
