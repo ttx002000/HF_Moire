@@ -20,20 +20,22 @@ end
 
 
 
-function calculate_gradient(K::Float64,KNNN::Float64,NNN_sp_d1::Vector{Vector{Int}},NNN_sp_d2::Vector{Vector{Int}},px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},py_ybond::Vector{Vector{Int}},Htotal::Matrix{ComplexF64},Nx::Int,Ny::Int,orbital_id::Array{Int},phonon_id::Array{Int},phonon_coor::Vector{Float64},Nelec::Int,α::Float64,β::Float64,γ::Float64)::Tuple{Vector{Float64},Float64,Float64,Float64}
+function calculate_gradient(K::Float64,KNNN::Float64,NNN_sp_d1::Vector{Vector{Int}},NNN_sp_d2::Vector{Vector{Int}},px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},py_ybond::Vector{Vector{Int}},Htotal::Matrix{ComplexF64},Nx::Int,Ny::Int,orbital_id::Array{Int},phonon_id::Array{Int},phonon_coor::Vector{Float64},Nelec::Int,α::Float64,β::Float64,γ::Float64,temp::Float64)::Tuple{Vector{Float64},Float64,Float64,Float64}
 
     
 
     FFF=eigen(Htotal)
     spectrum=real.(FFF.values)
-    temp=10^(-7)
+
    
 
 
 
     Egap=real(FFF.values[Nelec+1]-FFF.values[Nelec])
 
-    FL=findFL(Nelec,spectrum,temp,min(spectrum[Nelec-10],spectrum[Nelec]-0.1),max(spectrum[Nelec+10],spectrum[Nelec]+0.1))
+    #FL=findFL(Nelec,spectrum,temp,min(spectrum[Nelec-10],spectrum[Nelec]-0.5),max(spectrum[Nelec+10],spectrum[Nelec]+0.1))
+    FL=findFL(Nelec,spectrum,temp,spectrum[1],spectrum[length(spectrum)])
+    
     println("gap=",Egap)
 
 
@@ -46,7 +48,6 @@ function calculate_gradient(K::Float64,KNNN::Float64,NNN_sp_d1::Vector{Vector{In
     
      FL_list[ja]=1/(1+exp((spectrum[ja]-FL)/temp))
     
-     
     end
     E0=real(sum(spectrum .* FL_list))
     E_elec=copy(E0)
@@ -286,20 +287,21 @@ end
 
 
 
-function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},py_ybond::Vector{Vector{Int}},NNN_sp_d1::Vector{Vector{Int}},NNN_sp_d2::Vector{Vector{Int}},orbital_id::Array{Int},phonon_id::Array{Int},α::Float64,β::Float64,K::Float64,KNNN::Float64,H0::Matrix{ComplexF64},relevant_qset::Vector{Vector{Int}},γ::Float64)
+function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},py_ybond::Vector{Vector{Int}},NNN_sp_d1::Vector{Vector{Int}},NNN_sp_d2::Vector{Vector{Int}},orbital_id::Array{Int},phonon_id::Array{Int},α::Float64,β::Float64,K::Float64,KNNN::Float64,H0::Matrix{ComplexF64},relevant_qset::Vector{Vector{Int}},γ::Float64,temp::Float64)
     
-  relevant_qamplitude=randn(ComplexF64,length(relevant_qset))*0.1
+  relevant_qamplitude=randn(ComplexF64,length(relevant_qset))*0.3
   #relevant_qamplitude=ComplexF64.([2.0,-2.0])
   phonon_coor=get_phonon_coor(Nx,Ny,relevant_qset,relevant_qamplitude,phonon_id)
     
     E_old=10^8
     E_new=0.0
+   
     grad_old=zeros(Float64,2*Nx*Ny).+10
     grad_new=zeros(Float64,2*Nx*Ny).+10
     grad_amplitude=zeros(Float64,length(relevant_qset)).+10
-    update_rate=0.2
+    update_rate=0.5
     Eelec_new=0.0
-    
+   
     Hph=0.0
     Egap=0.0
     
@@ -308,11 +310,11 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
     
     
     itcount=0
-     while norm(grad_amplitude)>10^(-5) && update_rate>10^(-6)
+     while norm(grad_amplitude)>10^(-5)
       itcount+=1
        println("iterations",itcount)  
         Hph=construct_Ham(px_xbond,px_ybond,py_xbond,py_ybond,phonon_coor,Nx,Ny,α,β) #I modified the order between py_xbond and py_ybond
-          grad_new,E_new,Eelec_new,Egap=calculate_gradient(K,KNNN,NNN_sp_d1,NNN_sp_d2,px_xbond,px_ybond,py_xbond,py_ybond,H0+Hph,Nx,Ny,orbital_id,phonon_id,phonon_coor,Nelec,α,β,γ)
+          grad_new,E_new,Eelec_new,Egap=calculate_gradient(K,KNNN,NNN_sp_d1,NNN_sp_d2,px_xbond,px_ybond,py_xbond,py_ybond,H0+Hph,Nx,Ny,orbital_id,phonon_id,phonon_coor,Nelec,α,β,γ,temp)
           
           println("norm=",norm(grad_amplitude))
            
@@ -334,9 +336,9 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
           grad_amplitude=get_grad_amplitude(grad_new,Nx,Ny,relevant_qset,phonon_id)
           relevant_qamplitude=relevant_qamplitude-conj.(grad_amplitude)*update_rate
 
-         if norm(grad_amplitude)>10^6
-          update_rate=0.2
-          relevant_qamplitude=randn(ComplexF64,length(relevant_qset))*0.1
+         if norm(grad_amplitude)>10^6 || (norm(grad_amplitude)>10^(-5) && update_rate<10^(-4))
+          update_rate=0.5
+          relevant_qamplitude=randn(ComplexF64,length(relevant_qset))*0.3
          end
 
           phonon_coor=get_phonon_coor(Nx,Ny,relevant_qset,relevant_qamplitude,phonon_id)
@@ -353,15 +355,15 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
 
 
 
-      temp=10^(-7)
+    
       FFF=eigen(H0+Hph)
       spectrum=FFF.values
     
-      FL=findFL(Nelec,spectrum,temp,min(spectrum[Nelec-10],spectrum[Nelec]-0.1),max(spectrum[Nelec+10],spectrum[Nelec]+0.1))
-   
+      #FL=findFL(Nelec,spectrum,temp,min(spectrum[Nelec-10],spectrum[Nelec]-0.1),max(spectrum[Nelec+10],spectrum[Nelec]+0.1))
+      FL=findFL(Nelec,spectrum,temp,spectrum[1],spectrum[length(spectrum)])
    
   
-       ave_npa=0
+      ave_npa=0
      
       for ja in eachindex(spectrum)
        fd=1/(1+exp((spectrum[ja]-FL)/temp))
@@ -369,16 +371,23 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
 
       end
 
+     grand_po=0.0
+     for ja in eachindex(spectrum)
+      if spectrum[ja]<FL
+         grand_po+=(spectrum[ja]-FL)-temp*log(1+exp((spectrum[ja]-FL)/temp))
+      else
+        grand_po+=-temp*log(1+exp(-(spectrum[ja]-FL)/temp))
+      end   
+     end
 
-
-
+     free_energy=(E_new-Eelec_new)+grand_po/(Nx*Ny)+FL*ave_npa/(Nx*Ny)
 
 
 
 
 
        
-      return phonon_coor, Hph, grad_old, E_old, Eelec_new, Egap,ave_npa,FL,relevant_qamplitude
+      return phonon_coor, Hph, grad_old, E_old, Eelec_new, Egap,ave_npa,FL,relevant_qamplitude,free_energy
 end
 
 
