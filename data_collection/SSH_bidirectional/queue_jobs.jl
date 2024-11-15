@@ -16,7 +16,7 @@ tNNN=0.16
 K=1.0;
 KNNN=1.0;
 #filling=1.35;
-
+seed=1.0
 
 
 #=
