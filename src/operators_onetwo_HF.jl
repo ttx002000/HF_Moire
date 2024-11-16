@@ -254,7 +254,8 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
  #constq=0.0
   wave=Vector{Int64}[]
   cutoff=20*5
-  cutoffstandard=5.51*norm(g1m_ps)
+  g_cutoff=6.01
+  cutoffstandard=g_cutoff*norm(g1m_ps)
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*g1m+jb*g2m;
       if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -275,7 +276,8 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   dimension=num_layer*length(wave)*num_sub
   wave_diff=Vector{Int64}[]
   cutoff=20*5
-  cutoffstandard=8.51*norm(g1m_ps)
+  q_cutoff=9.01
+  cutoffstandard=q_cutoff*norm(g1m_ps)
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*g1m+jb*g2m;
       if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -289,7 +291,8 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   
   
   
-  for ja in eachindex(allowedq), spin_i in 1:num_spin, valley in  1:num_spin
+  Threads.@threads for ja in eachindex(allowedq)
+    for spin_i in 1:num_spin, valley in  1:num_spin
       vset=[1,-1]
       kvec=allowedq[ja][1]*T1+allowedq[ja][2]*T2
       Moire, Ham=get_Moire_Ham(wave,wAA,wAB,vF,qset,Kset,dt,db,T1,T2,vset[valley],kvec,g1m_ps_int, g2m_ps_int,lambda_MDT,Dfield)
@@ -298,11 +301,12 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   
       eigenvalue[spin_i,valley,ja]=real.(FFF.values[Int(dimension/2)-Nb_down+1:Int(dimension/2)+Nb_up])
       eigenvector[spin_i,valley,ja]=FFF.vectors[:,Int(dimension/2)-Nb_down+1:Int(dimension/2)+Nb_up]
+    end
   end
   
   
 
- return  eigenvector,eigenvalue,wave,wave_diff,wave_dic,allowedq,allowedq_dic,T1,T2,constq,Minv,g1mT,g2mT,a1m,a2m
+ return  eigenvector,eigenvalue,wave,wave_diff,wave_dic,allowedq,allowedq_dic,T1,T2,constq,Minv,g1mT,g2mT,a1m,a2m,g_cutoff,q_cutoff
   
   
 
