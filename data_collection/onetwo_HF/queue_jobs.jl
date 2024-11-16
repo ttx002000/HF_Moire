@@ -19,7 +19,7 @@ Nb_down=3
 er=8.0
 Nband=Nb_up+Nb_down
 geonum=1
-filling=3*4+7
+filling=20
 
 
 #=
@@ -38,9 +38,9 @@ filling=3*4+8
 =#
 
 
-for  jtry in 1:1, er in [8.0], Dfield in collect(0.0:2.5:25.0), filling in [20]
+for  jtry in 1:100, er in [8.0], Dfield in collect(0.0:2.5:5.0)
   arguments=Float64.([wAA,wAB,vF,lambda_MDT,Nb_up,Nb_down,θ,er,geonum,filling,Dfield,jtry])
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=16,mem=32)
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=16,mem=32)
 end
 
 
