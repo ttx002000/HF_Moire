@@ -331,7 +331,7 @@ function get_initial_proj(allowedq::Vector{Vector{Int}},eigenvalue::Array{Vector
 
  for spin_i in 1:num_spin, valley in 1:num_valley, jc in eachindex(allowedq)
    A=randn(Nband,Nband)+im*randn(Nband,Nband)
-   initial_projector[spin_i,valley,jc]+=(A+A')*1.0
+   initial_projector[spin_i,valley,jc]+=(A+A')*1.5
    bg_projector[spin_i,valley,jc]+=1/2*Matrix{ComplexF64}(I,Nband,Nband)
  end 
 
