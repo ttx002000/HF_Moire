@@ -829,8 +829,8 @@ function plot_Chargedensity(eigenvector,total_projector,a1m,a2m,wave,T1,T2,allow
   for spin_i in 1:num_spin, valley in 1:num_valley
     reshaped_Hartree_Density[spin_i,valley]=reshape(H_Density[spin_i,valley],num_layer,num_sub,length(wave),num_layer,num_sub,length(wave))
   end
-  
-  #zgrid_threaded=[zeros(Float64,N3,num_spin,num_valley,num_layer,num_sub) for _ in 1:N3]
+  #=
+  zgrid_threaded=[zeros(Float64,N3,num_spin,num_valley,num_layer,num_sub) for _ in 1:N3]
 
  Threads.@threads for ja in 1:50
   for jb in 1:50, spin_i in 1:num_spin, valley in 1:num_valley, sub_index in 1:num_sub, layer_index in 1:num_layer
@@ -842,6 +842,21 @@ function plot_Chargedensity(eigenvector,total_projector,a1m,a2m,wave,T1,T2,allow
   
   end
  end
+ =#
+
+ Threads.@threads for ja in 1:50
+  for jb in 1:50
+    rvec=ja/50*a1m+jb/50*a2m
+    v1=[exp(-im*dot([T1 T2]*wave[jv],rvec)) for jv in eachindex(wave)]
+    for  spin_i in 1:num_spin, valley in 1:num_valley, sub_index in 1:num_sub, layer_index in 1:num_layer
+    
+     zgrid[ja,jb,spin_i,valley,layer_index,sub_index]+=real(v1'*reshaped_Hartree_Density[spin_i,valley][layer_index,sub_index,jc,layer_index,sub_index,jd]*v1)
+
+    end
+  
+  end
+ end
+
 #=
  for ja in 1:50
   zgrid[ja,:,:,:,:,:]=zgrid_threaded[ja]
