@@ -850,7 +850,7 @@ function plot_Chargedensity(eigenvector,total_projector,a1m,a2m,wave,T1,T2,allow
     v1=[exp(-im*dot([T1 T2]*wave[jv],rvec)) for jv in eachindex(wave)]
     for  spin_i in 1:num_spin, valley in 1:num_valley, sub_index in 1:num_sub, layer_index in 1:num_layer
     
-     zgrid[ja,jb,spin_i,valley,layer_index,sub_index]+=real(v1'*reshaped_Hartree_Density[spin_i,valley][layer_index,sub_index,jc,layer_index,sub_index,jd]*v1)
+     zgrid[ja,jb,spin_i,valley,layer_index,sub_index]+=real(v1'*reshaped_Hartree_Density[spin_i,valley][layer_index,sub_index,:,layer_index,sub_index,:]*v1)
 
     end
   
