@@ -8,7 +8,7 @@ using Plots
 
 include(joinpath(@__DIR__,"../../src/operators_SSH_bidirectional.jl"))
 args=parse.(Float64,ARGS)
-#args=[20,20,0.37,2.0,0.16,-1.2,-1.2,1.0,1.0,1.25,2.0,1.0,0.0,10^(-7)]
+#args=[20,20,0.37,2.0,0.16,-1.1,-1.1,1.0,1.0,1.25+0.005,2.0,1.0,0.0,10^(-7)]
 Nx=Int(args[1])
 Ny=Int(args[2])
 tper=args[3]

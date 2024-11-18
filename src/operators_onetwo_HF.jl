@@ -328,18 +328,18 @@ function  get_bias(g1mT,g2mT,T1,T2,eigenvector,allowedq,a1m,a2m,Nband)
  
       pos=findfirst(item->item==wave[jb]-g1mT-g2mT,wave)
       if pos≠nothing
-        perturb[:,sub_pick,pos,:,sub_pick,jb]+=Matrix{Float64}(I,num_layer,num_layer)*exp(im*phi)*exp(-im*dot(-g1m-g2m,1/3*a1m))
+        perturb[:,sub_pick,pos,:,sub_pick,jb]+=5*Matrix{Float64}(I,num_layer,num_layer)*exp(im*phi)*exp(-im*dot(-g1m-g2m,1/3*a1m))
       end
   
  
       pos=findfirst(item->item==wave[jb]+g1mT,wave)
       if pos≠nothing
-        perturb[:,sub_pick,pos,:,sub_pick,jb]+=Matrix{Float64}(I,num_layer,num_layer)*exp(im*phi)*exp(-im*dot(g1m,1/3*a1m))
+        perturb[:,sub_pick,pos,:,sub_pick,jb]+=5*Matrix{Float64}(I,num_layer,num_layer)*exp(im*phi)*exp(-im*dot(g1m,1/3*a1m))
       end
  
       pos=findfirst(item->item==wave[jb]+g2mT,wave)
       if pos≠nothing
-        perturb[:,sub_pick,pos,:,sub_pick,jb]+=Matrix{Float64}(I,num_layer,num_layer)*exp(im*phi)*exp(-im*dot(g2m,1/3*a1m))
+        perturb[:,sub_pick,pos,:,sub_pick,jb]+=5*Matrix{Float64}(I,num_layer,num_layer)*exp(im*phi)*exp(-im*dot(g2m,1/3*a1m))
       end
     end
      reshaped_perturb=reshape(perturb,num_layer*num_sub*length(wave),num_layer*num_sub*length(wave))+reshape(perturb,num_layer*num_sub*length(wave),num_layer*num_sub*length(wave))'
