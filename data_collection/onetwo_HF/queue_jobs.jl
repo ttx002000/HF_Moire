@@ -50,5 +50,5 @@ st=load(joinpath(@__DIR__, "missedjobs.jld2"))
 index=st["index"]
 for ja in eachindex(index)
   arguments=Float64.(index[ja])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=16,mem=32)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:30:00",ntasks=16,mem=32)
 end
