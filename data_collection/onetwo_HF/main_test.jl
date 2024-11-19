@@ -45,7 +45,7 @@ st=load(savepath)
 formfactors=st["formfactors"]
 
 perturb_Ham=get_bias(g1mT,g2mT,T1,T2,eigenvector,allowedq,a1m,a2m,Nband)
-initial_projector, bg_projector, single_Ham=get_initial_proj(allowedq,eigenvalue,Nband)
+initial_projector, bg_projector, single_Ham=get_initial_proj(allowedq,eigenvalue,Nband,perturb_Ham,Npa)
 
 
 HF_eigenvalue,HF_eigenvector,energy, DIIS_input_projector,bound=iteration(formfactors,initial_projector,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,perturb_Ham,Npa)
