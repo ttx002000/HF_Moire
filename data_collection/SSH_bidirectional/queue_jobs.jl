@@ -51,7 +51,7 @@ end
 
 st=load(joinpath(@__DIR__, "missedjobs.jld2"))
 index=st["index"]
-for ja in eachindex(index)
+for ja in 1:1000
   arguments=index[ja]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=1,mem=8)
 end
