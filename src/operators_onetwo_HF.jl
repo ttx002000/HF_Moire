@@ -349,7 +349,7 @@ function  get_bias(g1mT,g2mT,T1,T2,eigenvector,allowedq,a1m,a2m,Nband)
        perturb_Ham[spin_pick,valley_pick,ja]=eigenvector[spin_pick,valley_pick,ja]'*reshaped_perturb*eigenvector[spin_pick,valley_pick,ja]
     end
 
-    if only(rand(1))>0.7
+    if only(rand(1))>0.6
       return  [zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
     else
       return  perturb_Ham
@@ -454,8 +454,8 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
 
 
   
-  while (eout>1*10^(-11)) || (bad_count<4) || (energy_change>1*10^(-6))
-      if eout<1*10^(-11)
+  while (eout>1*10^(-12)) || (bad_count<4) || (energy_change>1*10^(-6))
+      if eout<1*10^(-12)
        bad_count+=1
       end
       
