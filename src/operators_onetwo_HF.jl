@@ -349,7 +349,7 @@ function  get_bias(g1mT,g2mT,T1,T2,eigenvector,allowedq,a1m,a2m,Nband)
        perturb_Ham[spin_pick,valley_pick,ja]=eigenvector[spin_pick,valley_pick,ja]'*reshaped_perturb*eigenvector[spin_pick,valley_pick,ja]
     end
 
-    if only(rand(1))>0.6
+    if only(rand(1))>0.0
       return  [zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
     else
       return  perturb_Ham
