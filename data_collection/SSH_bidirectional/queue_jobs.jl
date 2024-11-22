@@ -38,8 +38,8 @@ Nelec=Int(round(Nx*Ny*filling))
 =#
 
 
-#=
 
+#=
 for trytime in 1:10, filling in [1.25], α in collect(-1.1:-0.05:-1.4), γ in [0.1,0.5,1.0,5.0], temp in [0.1,10^(-2),10^(-3),10^(-4),10^(-5)]
   arguments=Float64.([Nx,Ny,tper,tpa,tNNN,α,α,K,KNNN,filling,trytime,seed,γ,temp])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=1,mem=8)
