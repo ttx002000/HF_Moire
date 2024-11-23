@@ -204,7 +204,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
 
   a1m=2*a1m_ps+a2m_ps
   a2m=2*a2m_ps+a1m_ps
-   #a1m=a1m_ps
+  #a1m=a1m_ps
   #a2m=a2m_ps
   CC=2π*inv([a1m a2m])
   g1m=CC[1,:]
@@ -626,6 +626,7 @@ function get_chernnumber(HF_eigenvector::Array{Matrix{ComplexF64}},eigenvector::
   end
 
   chern_num=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley]
+  chern_num_nonabelian=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley]
 
   for spin_i in 1:num_spin, valley in 1:num_valley, bandin in 1:Nband
   
@@ -669,8 +670,52 @@ function get_chernnumber(HF_eigenvector::Array{Matrix{ComplexF64}},eigenvector::
 
 
 
+  for spin_i in 1:num_spin, valley in 1:num_valley, bandin in 1:Nband
+  
+  
+    chern_eigenvector=zeros(ComplexF64,num_layer*num_sub*length(wave),bandin,Nx+1,Ny+1)
+    for ja in 1:Nx+1, jb in 1:Ny+1
+        
+        wavevec=sendtomesh(Minv,[ja-1,jb-1])
+        if wavevec==[ja-1,jb-1]
+          chern_eigenvector[:,:,ja,jb]=PW_basis_eig[spin_i,valley,allowedq_dic[wavevec]][:,1:bandin]
+        
+        else
+            shuffle_vec=[ja-1,jb-1]-wavevec
+            for ss in 1:bandin
+            chern_eigenvector[:,ss,ja,jb]=shuffle_vector_singlevector(PW_basis_eig[spin_i,valley,allowedq_dic[wavevec]][:,ss],-shuffle_vec,wave,wave_dic)
+            end
+        end
+    end
 
-  return chern_num
+
+    Uonelink=zeros(ComplexF64,Nx,Ny+1)
+    Utwolink=zeros(ComplexF64,Nx+1,Ny)
+ 
+    for ja in 1:Nx, jb in 1:Ny+1
+        Uonelink[ja,jb]=det(chern_eigenvector[:,:,ja,jb]'*chern_eigenvector[:,:,ja+1,jb])/abs(det(chern_eigenvector[:,:,ja,jb]'*chern_eigenvector[:,:,ja+1,jb]))
+    end
+    
+        
+        
+    for ja in 1:Nx+1, jb in 1:Ny
+        Utwolink[ja,jb]=det(chern_eigenvector[:,:,ja,jb]'*chern_eigenvector[:,:,ja,jb+1])/abs(det(chern_eigenvector[:,:,ja,jb]'*chern_eigenvector[:,:,ja,jb+1]))
+    end
+        
+    Flink=zeros(ComplexF64,Nx,Ny)
+    for ja in 1:Nx, jb in 1:Ny
+     Flink[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
+    end
+    chern_num_nonabelian[spin_i,valley][bandin]=sum(Flink)/(2*π*im)
+  
+  
+  
+  end
+
+
+
+
+  return chern_num,chern_num_nonabelian
 
 
 end

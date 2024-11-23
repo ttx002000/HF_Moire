@@ -55,8 +55,8 @@ xgrid,ygrid,HF_density=plot_Chargedensity(eigenvector,DIIS_input_projector[1],a1
 layer_pol,sub_pol=get_polarization(HF_eigenvector,eigenvector,allowedq,wave,Nband)
 sub_exp_HF,chernsub_HF,sub_eig_HF=get_chernsub(HF_eigenvector,eigenvector,allowedq,wave,Nband)
 
-chern_number=get_chernnumber(HF_eigenvector,eigenvector,allowedq,allowedq_dic,wave,wave_dic,Nband,geonum,Minv)
+chern_number,chern_num__nonabelian=get_chernnumber(HF_eigenvector,eigenvector,allowedq,allowedq_dic,wave,wave_dic,Nband,geonum,Minv)
 
 savepath=joinpath(@__DIR__, "data_output/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])Dfield$(args[12])try.jld2")
 
-jldsave(savepath,HF_eigenvalue=HF_eigenvalue,eigenvalue=eigenvalue,energy=energy,xgrid=xgrid,ygrid=ygrid,HF_density=HF_density,bound=bound,layer_pol=layer_pol,sub_pol=sub_pol,chern_number=chern_number,g_cutoff=g_cutoff,q_cutoff=q_cutoff,sub_exp_HF=sub_exp_HF,chernsub_HF=chernsub_HF,sub_eig_HF=sub_eig_HF)
+jldsave(savepath,HF_eigenvalue=HF_eigenvalue,eigenvalue=eigenvalue,energy=energy,xgrid=xgrid,ygrid=ygrid,HF_density=HF_density,bound=bound,layer_pol=layer_pol,sub_pol=sub_pol,chern_number=chern_number,g_cutoff=g_cutoff,q_cutoff=q_cutoff,sub_exp_HF=sub_exp_HF,chernsub_HF=chernsub_HF,sub_eig_HF=sub_eig_HF,chern_num__nonabelian=chern_num__nonabelian)
