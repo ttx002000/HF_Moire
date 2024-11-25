@@ -177,7 +177,7 @@ function Geometry(geonum::Int)
 end
 
 
-function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF::Float64,ϵr::Float64,Nband::Int64,lambda_MDT::Float64,Nb_down::Int,Nb_up::Int,Dfield::Float64)
+function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF::Float64,ϵr::Float64,Nband::Int64,lambda_MDT::Float64,Nb_down::Int,Nb_up::Int,Dfield::Float64,shift::Int64)
 
 
   a0=0.246
@@ -199,8 +199,22 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   a1m_ps=4π/(3*kθ)*[√3/2,1/2]
   a2m_ps=4π/(3*kθ)*[-√3/2,1/2]
   
-  db=[0.0,0.0]
-  dt=1/3*(a2m_ps-a1m_ps)
+
+
+
+  if shift==1
+    db=[0.0,0.0]
+    dt=1/3*(a2m_ps-a1m_ps)
+    gridshift=[0.0,0.0]
+  elseif  shift==2
+    db=[0.0,0.0]
+    dt=[0.0,0.0]
+    gridshift=[0.0,0.0]
+  elseif  shift==3
+    db=[0.0,0.0]
+    dt=1/2*(a2m_ps)
+    gridshift=[0.0,0.0]
+  end
 
   a1m=2*a1m_ps+a2m_ps
   a2m=2*a2m_ps+a1m_ps
@@ -292,7 +306,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   Threads.@threads for ja in eachindex(allowedq)
     for spin_i in 1:num_spin, valley in  1:num_spin
       vset=[1,-1]
-      kvec=allowedq[ja][1]*T1+allowedq[ja][2]*T2
+      kvec=allowedq[ja][1]*T1+allowedq[ja][2]*T2+gridshift
       Moire, Ham=get_Moire_Ham(wave,wAA,wAB,vF,qset,Kset,dt,db,T1,T2,vset[valley],kvec,g1m_ps_int, g2m_ps_int,lambda_MDT,Dfield)
       totalHam=reshape(Moire,dimension,dimension)+reshape(Moire,dimension,dimension)'+reshape(Ham,dimension,dimension)
       FFF=eigen(totalHam)
@@ -349,7 +363,7 @@ function  get_bias(g1mT,g2mT,T1,T2,eigenvector,allowedq,a1m,a2m,Nband)
        perturb_Ham[spin_pick,valley_pick,ja]=eigenvector[spin_pick,valley_pick,ja]'*reshaped_perturb*eigenvector[spin_pick,valley_pick,ja]
     end
 
-    if only(rand(1))>0.0
+    if only(rand(1))>0.4
       return  [zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
     else
       return  perturb_Ham
