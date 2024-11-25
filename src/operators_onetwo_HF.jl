@@ -423,7 +423,7 @@ end
 
 
 
-function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Array{Matrix{ComplexF64}},bg_projector::Array{Matrix{ComplexF64}},constq::Float64,Nband::Int,wave_diff::Vector{Vector{Int}},allowedq::Vector{Vector{Int}},allowedq_dic::Dict{Vector{Int},Int},T1::Vector{Float64},T2::Vector{Float64},single_Ham::Array{Matrix{ComplexF64}},perturb_Ham::Array{Matrix{ComplexF64}},Npa::Int)
+function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Array{Matrix{ComplexF64}},bg_projector::Array{Matrix{ComplexF64}},constq::Float64,Nband::Int,wave_diff::Vector{Vector{Int}},allowedq::Vector{Vector{Int}},allowedq_dic::Dict{Vector{Int},Int},T1::Vector{Float64},T2::Vector{Float64},single_Ham::Array{Matrix{ComplexF64}},perturb_Ham::Array{Matrix{ComplexF64}},Npa::Int,Minv::Matrix{Int})
   num_spin=2
   num_valley=2
 
@@ -438,14 +438,15 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
   DIIS_input_projector=Vector{Array{Matrix{ComplexF64}}}(undef,3)
   DIIS_input_DeltaMatrix=Vector{Array{Matrix{ComplexF64}}}(undef,3)
   input_projector=initial_projector
-  
+  Hartree_matrix=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in 1:length(allowedq)]
+  Fock_matrix=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in 1:length(allowedq)]
   
   while itcount<20
   
     
     tic=time()
 
-      eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy=Construct_projector(formfactors,input_projector,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham+perturb_Ham,energy,Npa)
+      eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy,Hartree_matrix,Fock_matrix=Construct_projector(formfactors,input_projector,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham+perturb_Ham,energy,Npa,Minv)
       DIIS_input_projector[mod(itcount,3)+1]=input_projector
       input_projector=output_projector 
 
@@ -477,13 +478,13 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
       if (itcount>30 && abs(energy_change)>0.1) || (itcount>30 && abs(eout)<10^(-8))
 
         dmk=implement_DIIS(DIIS_input_projector,DIIS_input_DeltaMatrix,allowedq)
-        eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy=Construct_projector(formfactors,dmk,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,energy,Npa)
+        eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy,Hartree_matrix,Fock_matrix=Construct_projector(formfactors,dmk,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,energy,Npa,Minv)
         DIIS_input_projector[mod(itcount,3)+1]=dmk
         input_projector=output_projector
         println("using DIIS")
        
       else
-        eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy=Construct_projector(formfactors,input_projector,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,energy,Npa)
+        eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy,Hartree_matrix,Fock_matrix=Construct_projector(formfactors,input_projector,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,energy,Npa,Minv)
         DIIS_input_projector[mod(itcount,3)+1]=input_projector
         input_projector=output_projector 
          
@@ -508,7 +509,7 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
 
 
   
-  return HF_eigenvalue,HF_eigenvector,energy, DIIS_input_projector,bound
+  return HF_eigenvalue,HF_eigenvector,energy, DIIS_input_projector,bound,Hartree_matrix,Fock_matrix
 
 
 end
@@ -592,7 +593,8 @@ function get_chernsub(HF_eigenvector,eigenvector,allowedq,wave,Nband)
 
   sub_exp_HF=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
   sub_eig_HF=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
- 
+  sub_eig_single=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+
   for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
    sd=PW_basis_eig[spin_i,valley,ja]'*reshape_subop*PW_basis_eig[spin_i,valley,ja]
    sub_exp_HF[spin_i,valley,ja]=diag(sd,0) #This can be checked with the sub_pol
@@ -605,6 +607,7 @@ function get_chernsub(HF_eigenvector,eigenvector,allowedq,wave,Nband)
  for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
   projected_subop=eigenvector[spin_i,valley,ja]'*reshape_subop*eigenvector[spin_i,valley,ja] #sigma z in the 6 by 6 basis
   FFF=eigen(projected_subop)
+  sub_eig_single[spin_i,valley,ja]=FFF.values
   chern_sub_eigenvectors=eigenvector[spin_i,valley,ja]*(FFF.vectors)
   for bandi in eachindex(FFF.values)
     chern_sub_operator[spin_i,valley,ja]+=sign(FFF.values[bandi])*chern_sub_eigenvectors[:,bandi]*chern_sub_eigenvectors[:,bandi]'
@@ -620,7 +623,7 @@ function get_chernsub(HF_eigenvector,eigenvector,allowedq,wave,Nband)
  end
  
 
- return sub_exp_HF,chern_exp_HF,sub_eig_HF
+ return sub_exp_HF,chern_exp_HF,sub_eig_HF,sub_eig_single
 
 end
 
@@ -782,14 +785,12 @@ function get_formfactors(allowedq::Vector{Vector{Int}},wave::Vector{Vector{Int}}
 end
 
 
-function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::Array{Matrix{ComplexF64}},bg_projector::Array{Matrix{ComplexF64}},constq::Float64,Nband::Int64,wave_diff::Vector{Vector{Int64}},allowedq::Vector{Vector{Int}},allowedq_dic::Dict{Vector{Int},Int},T1::Vector{Float64},T2::Vector{Float64},single_Ham::Array{Matrix{ComplexF64}},energy_input::Float64,Npa::Int64)
+function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::Array{Matrix{ComplexF64}},bg_projector::Array{Matrix{ComplexF64}},constq::Float64,Nband::Int64,wave_diff::Vector{Vector{Int64}},allowedq::Vector{Vector{Int}},allowedq_dic::Dict{Vector{Int},Int},T1::Vector{Float64},T2::Vector{Float64},single_Ham::Array{Matrix{ComplexF64}},energy_input::Float64,Npa::Int64,Minv::Matrix{Int})
   num_spin=2
   num_valley=2
   
   
- # Hartree=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
  Hartree_threaded=[[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley] for _ in eachindex(allowedq)]
- # Fock=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
   Fock_threaded=[[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley] for _ in eachindex(allowedq)]
   New_projector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
   
@@ -831,6 +832,8 @@ function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::A
  end
 end
 
+ Hartree_matrix=[constq*Hartree_threaded[ja][spin_i,valley] for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)]
+ Fock_matrix=[constq*Fock_threaded[ja][spin_i,valley] for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)]
 
 
  sorted=sort(reduce(vcat,reduce(vcat,real.(HF_eigenvalue)))) 
@@ -875,7 +878,7 @@ end
 
  energy_change=real(energy-energy_input)
 
-  return  eout,energy_change,output_projector,DeltaMatrix,HF_eigenvalue,bound, HF_eigenvector,real(energy)
+  return  eout,energy_change,output_projector,DeltaMatrix,HF_eigenvalue,bound, HF_eigenvector,real(energy),Hartree_matrix,Fock_matrix
  
 
 end
@@ -906,20 +909,7 @@ function plot_Chargedensity(eigenvector,total_projector,a1m,a2m,wave,T1,T2,allow
   for spin_i in 1:num_spin, valley in 1:num_valley
     reshaped_Hartree_Density[spin_i,valley]=reshape(H_Density[spin_i,valley],num_layer,num_sub,length(wave),num_layer,num_sub,length(wave))
   end
-  #=
-  zgrid_threaded=[zeros(Float64,N3,num_spin,num_valley,num_layer,num_sub) for _ in 1:N3]
 
- Threads.@threads for ja in 1:50
-  for jb in 1:50, spin_i in 1:num_spin, valley in 1:num_valley, sub_index in 1:num_sub, layer_index in 1:num_layer
-    rvec=ja/50*a1m+jb/50*a2m
-    for jc in eachindex(wave), jd in eachindex(wave)
-      gvec=[T1 T2]*(wave[jc]-wave[jd])
-     zgrid[ja,jb,spin_i,valley,layer_index,sub_index]+=real(reshaped_Hartree_Density[spin_i,valley][layer_index,sub_index,jc,layer_index,sub_index,jd]*exp(im*(gvec[1]*rvec[1]+gvec[2]*rvec[2])))
-    end
-  
-  end
- end
- =#
 
  Threads.@threads for ja in 1:50
   for jb in 1:50
@@ -934,11 +924,6 @@ function plot_Chargedensity(eigenvector,total_projector,a1m,a2m,wave,T1,T2,allow
   end
  end
 
-#=
- for ja in 1:50
-  zgrid[ja,:,:,:,:,:]=zgrid_threaded[ja]
- end
- =#
 
   for ja in 1:50, jb in 1:50
     rvec=ja/50*a1m+jb/50*a2m

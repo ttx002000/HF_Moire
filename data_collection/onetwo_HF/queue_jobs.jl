@@ -39,9 +39,9 @@ filling=3*4+8
 =#
 
 
-for  jtry in 1:1, er in [8.0], Dfield in collect(0.0:5.0:25.0),shift in [1,2,3]
+for  jtry in 1:100, er in [8.0], Dfield in collect(0.0:10.0:20.0),shift in [1,2,3]
   arguments=Float64.([wAA,wAB,vF,lambda_MDT,Nb_up,Nb_down,θ,er,geonum,filling,Dfield,shift,jtry])
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=16,mem=64)
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:30:00",ntasks=16,mem=32)
 end
 
 
