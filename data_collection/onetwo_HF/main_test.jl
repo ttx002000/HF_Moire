@@ -51,7 +51,7 @@ savepath=joinpath(scratch_dir, "onetwo/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf
 st=load(savepath)
 formfactors=st["formfactors"]
 
-perturb_Ham=get_bias(g1mT,g2mT,T1,T2,eigenvector,allowedq,a1m,a2m,Nband)
+perturb_Ham=get_bias(g1mT,g2mT,T1,T2,eigenvector,allowedq,a1m,a2m,Nband,shift)
 initial_projector, bg_projector, single_Ham=get_initial_proj(allowedq,eigenvalue,Nband,perturb_Ham,Npa)
 
 
