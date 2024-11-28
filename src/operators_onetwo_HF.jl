@@ -212,7 +212,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
     gridshift=[0.0,0.0]
   elseif  shift==3
     db=[0.0,0.0]
-    dt=1/2*(a2m_ps)
+    dt=1/4*(a2m_ps)
     gridshift=[0.0,0.0]
   end
 
