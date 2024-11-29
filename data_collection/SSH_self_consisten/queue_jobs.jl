@@ -16,6 +16,8 @@ tNNN=0.16
 K=1.0;
 KNNN=1.0;
 #filling=1.35;
+γ=0.0
+temp=0.0001
 
 
 
@@ -30,12 +32,14 @@ tNNN=args[5]
 K=args[8]
 KNNN=args[9]
 filling=(args[10])
+γ=args[11]
+temp=args[12]
 Nelec=Int(round(Nx*Ny*filling))
 =#
 
 
 for trytime in 1:10, filling in [1.25], α in [-1.4]
-  arguments=Float64.([Nx,Ny,tper,tpa,tNNN,α,α,K,KNNN,filling,trytime])
+  arguments=Float64.([Nx,Ny,tper,tpa,tNNN,α,α,K,KNNN,filling,γ,temp,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="4:00:00",ntasks=1,mem=16)
 end
 

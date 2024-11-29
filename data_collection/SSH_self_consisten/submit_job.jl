@@ -8,7 +8,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
 
  
     
-    name = "$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])KNNN$(args[10])filling$(Int(args[11]))try"
+    name = "$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])KNNN$(args[10])filling$(args[11])gamma$(args[12])temp$(Int(args[13]))try"
     filestr = """#!/bin/bash
     #SBATCH --job-name=$(job_prefix*"_"*name)
     #SBATCH --partition=$partition
@@ -31,7 +31,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     export JULIA_NUM_THREADS=$ntasks
 
     # run the script
-    julia $filepath $(args[1]) $(args[2]) $(args[3]) $(args[4]) $(args[5]) $(args[6]) $(args[7]) $(args[8]) $(args[9]) $(args[10]) $(args[11])"""
+    julia $filepath $(args[1]) $(args[2]) $(args[3]) $(args[4]) $(args[5]) $(args[6]) $(args[7]) $(args[8]) $(args[9]) $(args[10]) $(args[11]) $(args[12]) $(args[13])"""
 
     open("$slurmpath/$(name).slurm", "w") do io
         write(io, filestr)

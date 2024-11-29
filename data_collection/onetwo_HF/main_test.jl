@@ -60,7 +60,7 @@ xgrid,ygrid,HF_density=plot_Chargedensity(eigenvector,DIIS_input_projector[1],a1
 
 
 layer_pol,sub_pol=get_polarization(HF_eigenvector,eigenvector,allowedq,wave,Nband)
-sub_exp_HF,chernsub_HF,sub_eig_HF,sub_eig_single=get_chernsub(HF_eigenvector,eigenvector,allowedq,wave,Nband)
+sub_exp_HF,chernsub_HF,sub_eig_HF,sub_eig_single=get_chernsub(HF_eigenvector,eigenvector,allowedq,wave,Nband,Nb_up,Nb_down)
 
 chern_number,chern_num__nonabelian=get_chernnumber(HF_eigenvector,eigenvector,allowedq,allowedq_dic,wave,wave_dic,Nband,geonum,Minv)
 

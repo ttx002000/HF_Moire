@@ -573,7 +573,7 @@ end
 
 
 
-function get_chernsub(HF_eigenvector,eigenvector,allowedq,wave,Nband)
+function get_chernsub(HF_eigenvector,eigenvector,allowedq,wave,Nband,Nb_up,Nb_down)
   num_spin=2
   num_valley=2
   num_layer=3
@@ -604,11 +604,16 @@ function get_chernsub(HF_eigenvector,eigenvector,allowedq,wave,Nband)
   
  chern_sub_operator=[zeros(ComplexF64,num_layer*num_sub*length(wave),num_layer*num_sub*length(wave)) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
  
+ eigenvector_ex_remo=[eigenvector[spin_i,valley,ja][:,Nb_down-3+1:Nb_down+3] for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)]
+
+
+
+
  for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
-  projected_subop=eigenvector[spin_i,valley,ja]'*reshape_subop*eigenvector[spin_i,valley,ja] #sigma z in the 6 by 6 basis
+  projected_subop=eigenvector_ex_remo[spin_i,valley,ja]'*reshape_subop*eigenvector_ex_remo[spin_i,valley,ja] #I need to take into account to the case where I include the remote bands
   FFF=eigen(projected_subop)
   sub_eig_single[spin_i,valley,ja]=FFF.values
-  chern_sub_eigenvectors=eigenvector[spin_i,valley,ja]*(FFF.vectors)
+  chern_sub_eigenvectors=eigenvector_ex_remo[spin_i,valley,ja]*(FFF.vectors)
   for bandi in eachindex(FFF.values)
     chern_sub_operator[spin_i,valley,ja]+=sign(FFF.values[bandi])*chern_sub_eigenvectors[:,bandi]*chern_sub_eigenvectors[:,bandi]'
   end
