@@ -58,7 +58,7 @@ index=st["index"]
 for ja in eachindex(index)
   arguments=Float64.(index[ja])
   if arguments[5]==4.0
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="4:00:00",ntasks=16,mem=32)
+    submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:30:00",ntasks=16,mem=32)
   else
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:30:00",ntasks=16,mem=32)
   end
