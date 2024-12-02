@@ -623,7 +623,7 @@ function get_chernsub(HF_eigenvector,eigenvector,allowedq,wave,Nband,Nb_up,Nb_do
   sub_eig_single[spin_i,valley,ja]=FFF.values
   chern_sub_eigenvectors=eigenvector_ex_remo[spin_i,valley,ja]*(FFF.vectors)
   for bandi in eachindex(FFF.values)
-    chern_sub_operator[spin_i,valley,ja]+=sign(FFF.values[bandi])*chern_sub_eigenvectors[:,bandi]*chern_sub_eigenvectors[:,bandi]'
+    chern_sub_operator[spin_i,valley,ja]+=sign(real(FFF.values[bandi]))*chern_sub_eigenvectors[:,bandi]*chern_sub_eigenvectors[:,bandi]'
   end
  end
 
