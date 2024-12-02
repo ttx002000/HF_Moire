@@ -18,7 +18,7 @@ Nb_down=1
 θ=1.23
 er=8.0
 Nband=Nb_up+Nb_down
-geonum=1
+geonum=3
 filling=6
 #shift=1
 
