@@ -237,7 +237,17 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
     db=[0.0,0.0]
     dt=1/4*(a1m_ps)*(0.75)+1/6*(a1m_ps-a2m_ps)*(1-0.75)
     gridshift=[0.0,0.0]
+  elseif  shift==7
+    db=[0.0,0.0]
+    dt=1/4*(a1m_ps)*(1.0)+1/6*(a1m_ps-a2m_ps)*(1-1.0)
+    gridshift=[0.0,0.0]
+  elseif  shift==8
+    db=[0.0,0.0]
+    dt=1/4*(a1m_ps)*(0.0)+1/6*(a1m_ps-a2m_ps)*(1-0.0)
+    gridshift=[0.0,0.0]
   end
+
+  
 
   
   a1m=a1m_ps
