@@ -382,10 +382,10 @@ function get_initial_proj_background2(allowedq::Vector{Vector{Int}},eigenvalue::
 
   for spin_i in 1:num_spin, valley in 1:num_valley,ja in eachindex(allowedq)
     for bandin in Nb_down-3+1:Nb_down+3
-      bg_projector[spin_i,valley,ja][bandi,bandi]=1/2
+      bg_projector[spin_i,valley,ja][bandin,bandin]=1/2
     end
     for bandin in 1:Nb_down-3
-      bg_projector[spin_i,valley,ja][bandi,bandi]=1
+      bg_projector[spin_i,valley,ja][bandin,bandin]=1
     end
   end
   
