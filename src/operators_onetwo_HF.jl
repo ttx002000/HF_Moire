@@ -373,6 +373,63 @@ function  get_bias(g1mT,g2mT,T1,T2,eigenvector,allowedq,a1m,a2m,Nband,shift)
 end
 
 
+function get_initial_proj_background2(allowedq::Vector{Vector{Int}},eigenvalue::Array{Vector{Float64}},Nband::Int,perturb_Ham::Array{Matrix{ComplexF64}},Npa::Int)
+  num_spin=2
+  num_valley=2
+
+  initial_projector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+  bg_projector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+
+  for spin_i in 1:num_spin, valley in 1:num_valley,ja in eachindex(allowedq)
+    for bandin in Nb_down-3+1:Nb_down+3
+      bg_projector[spin_i,valley,ja][bandi,bandi]=1/2
+    end
+    for bandin in 1:Nb_down-3
+      bg_projector[spin_i,valley,ja][bandi,bandi]=1
+    end
+  end
+  
+
+
+ single_Ham=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+ single_eigenvector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+
+ single_eigenvalue=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley, _ in eachindex(allowedq)]
+
+ for spin_i in 1:num_spin, valley in 1:num_valley,ja in eachindex(allowedq)
+  single_Ham[spin_i,valley,ja]=diagm(eigenvalue[spin_i,valley,ja])
+  FFF=eigen(single_Ham[spin_i,valley,ja]+perturb_Ham[spin_i,valley,ja])
+  single_eigenvector[spin_i,valley,ja]=FFF.vectors
+  single_eigenvalue[spin_i,valley,ja]=FFF.values
+ end
+
+
+
+    
+ sorted=sort(reduce(vcat,reduce(vcat,real.(single_eigenvalue)))) 
+ bound=(sorted[Npa+1]+sorted[Npa])/2
+
+ Threads.@threads for ja in eachindex(allowedq)
+  for spin_i in 1:num_spin, valley in 1:num_valley
+       for jd in eachindex(single_eigenvalue[spin_i,valley,ja])
+          if real(single_eigenvalue[spin_i,valley,ja][jd])<bound
+            initial_projector[spin_i,valley,ja]+=single_eigenvector[spin_i,valley,ja][:,jd]*(single_eigenvector[spin_i,valley,ja][:,jd])'
+          end
+       end
+  end
+ end
+
+
+
+
+ for spin_i in 1:num_spin, valley in 1:num_valley, jc in eachindex(allowedq)
+   A=randn(Nband,Nband)+im*randn(Nband,Nband)
+   initial_projector[spin_i,valley,jc]+=(A+A')*0.3
+ end 
+
+ return initial_projector, bg_projector, single_Ham
+end
+
 function get_initial_proj(allowedq::Vector{Vector{Int}},eigenvalue::Array{Vector{Float64}},Nband::Int,perturb_Ham::Array{Matrix{ComplexF64}},Npa::Int)
   num_spin=2
   num_valley=2
