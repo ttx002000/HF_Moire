@@ -38,11 +38,12 @@ geonum=Int(1)
 filling=3*4+8
 =#
 
-
+#=
 for  jtry in 1:1, er in [8.0], Dfield in collect(0.0:10.0:20.0),shift in [9.0,10.0,11.0]
   arguments=Float64.([wAA,wAB,vF,lambda_MDT,Nb_up,Nb_down,θ,er,geonum,filling,Dfield,shift,jtry])
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=16,mem=32)
 end
+=#
 
 
 
@@ -51,7 +52,7 @@ end
 
 
 
-#=
+
 
 
 st=load(joinpath(@__DIR__, "missedjobs.jld2"))
@@ -59,14 +60,8 @@ index=st["index"]
 for ja in eachindex(index)
   arguments=Float64.(index[ja])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=16,mem=32)
-  #=
-  if arguments[5]==4.0
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:30:00",ntasks=16,mem=32)
-  else
-    submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:30:00",ntasks=16,mem=32)
-  end
-  =#
+
 
 end
 
-=#
+
