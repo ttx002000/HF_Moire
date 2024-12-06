@@ -381,9 +381,7 @@ function  get_bias(g1mT,g2mT,T1,T2,eigenvector,allowedq,a1m,a2m,Nband,shift)
   sub_pick=rand([1,2]) 
   valley_pick=rand([1,2])
   spin_pick=rand([1,2])
-  phi=rand([2/3*π,4/3*π,0.0])
-  g1m=g1mT[1]*T1+g1mT[2]*T2
-  g2m=g2mT[1]*T1+g2mT[2]*T2
+
 
   perturb_Ham=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
   
