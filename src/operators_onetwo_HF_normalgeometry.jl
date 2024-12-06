@@ -385,33 +385,16 @@ function  get_bias(g1mT,g2mT,T1,T2,eigenvector,allowedq,a1m,a2m,Nband,shift)
   g1m=g1mT[1]*T1+g1mT[2]*T2
   g2m=g2mT[1]*T1+g2mT[2]*T2
 
-    perturb=zeros(ComplexF64,num_layer,num_sub,length(wave),num_layer,num_sub,length(wave))
-    for jb in eachindex(wave)
- 
-      pos=findfirst(item->item==wave[jb]-g1mT-g2mT,wave)
-      if pos≠nothing
-        perturb[:,sub_pick,pos,:,sub_pick,jb]+=5*Matrix{Float64}(I,num_layer,num_layer)*exp(im*phi)*exp(-im*dot(-g1m-g2m,1/3*a1m))
-      end
+  perturb_Ham=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
   
- 
-      pos=findfirst(item->item==wave[jb]+g1mT,wave)
-      if pos≠nothing
-        perturb[:,sub_pick,pos,:,sub_pick,jb]+=5*Matrix{Float64}(I,num_layer,num_layer)*exp(im*phi)*exp(-im*dot(g1m,1/3*a1m))
-      end
- 
-      pos=findfirst(item->item==wave[jb]+g2mT,wave)
-      if pos≠nothing
-        perturb[:,sub_pick,pos,:,sub_pick,jb]+=5*Matrix{Float64}(I,num_layer,num_layer)*exp(im*phi)*exp(-im*dot(g2m,1/3*a1m))
-      end
-    end
-     reshaped_perturb=reshape(perturb,num_layer*num_sub*length(wave),num_layer*num_sub*length(wave))+reshape(perturb,num_layer*num_sub*length(wave),num_layer*num_sub*length(wave))'
+  
+  for ja in eachindex(allowedq)
+  perturb_Ham[spin_pick,valley_pick,ja]=10*Matrix{Float64}(I,Nband,Nband)
+  end
 
-    perturb_Ham=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
-    for ja in eachindex(allowedq)
-       perturb_Ham[spin_pick,valley_pick,ja]=eigenvector[spin_pick,valley_pick,ja]'*reshaped_perturb*eigenvector[spin_pick,valley_pick,ja]
-    end
+   
 
-    if only(rand(1))>0.0 || Int(shift)≠1
+    if only(rand(1))>0.5
       return  [zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
     else
       return  perturb_Ham
