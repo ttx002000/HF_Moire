@@ -46,7 +46,7 @@ Nelec=Int(round(Nx*Ny*filling))
 =#
 
 
-for trytime in 2:3, filling in [1.25], pol1 in collect(0.1:0.1:2.0), pol2 in collect(0.1:0.1:2.0)
+for trytime in 4:6, filling in [1.25], pol1 in collect(0.1:0.1:2.0), pol2 in collect(0.1:0.1:2.0)
  
    sum1=-2.5
    sum2=2.0
