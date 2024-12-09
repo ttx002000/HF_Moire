@@ -27,24 +27,31 @@ Ny=Int(args[2])
 tper=args[3]
 tpa=args[4]
 tNNN=args[5]
-α=args[6]
-β=args[7]
-K=args[8]
-KNNN=args[9]
+sum1=args[6]
+pol1=args[7]
+α=sum1*pol1/(1+pol1)
+β=sum1/(1+pol1)
+
+sum2=args[8]
+pol2=args[9]
+K=sum2/(1+pol2)
+gshear=sum2*pol2/(1+pol2)
+
+
 filling=(args[10])
-gshear=args[11]
+KNNN=args[11]
 temp=args[12]
+trytime=Int(args[13])
 Nelec=Int(round(Nx*Ny*filling))
 =#
 
 
 for trytime in 1:5, filling in [1.25], pol1 in collect(0.1:0.1:2.0), pol2 in collect(0.1:0.1:2.0)
-   α=-2.5*pol1/(pol1+1)
-   β=-2.5/(pol1+1)
-   K=2.0/(pol2+1)
-   gshear=2.0*pol2/(pol2+1)
+ 
+   sum1=-2.5
+   sum2=2.0
 
-  arguments=Float64.([Nx,Ny,tper,tpa,tNNN,α,β,K,KNNN,filling,gshear,temp,trytime])
+  arguments=Float64.([Nx,Ny,tper,tpa,tNNN,sum1,pol1,sum2,pol2,filling,KNNN,temp,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=1,mem=8)
 end
 

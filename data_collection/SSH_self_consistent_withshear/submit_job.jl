@@ -8,7 +8,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
 
  
     
-    name = "$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])KNNN$(args[10])filling$(args[11])gshear$(args[12])temp$(Int(args[13]))try"
+    name = "$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])sum1$(args[7])pol1$(args[8])sum2$(args[9])pol2$(args[10])filling$(args[11])KNNN$(args[12])temp$(Int(args[13]))try"
     filestr = """#!/bin/bash
     #SBATCH --job-name=$(job_prefix*"_"*name)
     #SBATCH --partition=$partition
