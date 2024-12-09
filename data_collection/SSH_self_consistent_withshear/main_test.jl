@@ -3,8 +3,8 @@ using Pkg
 Pkg.activate(joinpath(@__DIR__, "../.."))
 using LinearAlgebra
 using JLD2
-using Plots
-using CSV,DataFrames
+
+
 
 include(joinpath(@__DIR__,"../../src/operators_SSH_withshear.jl"))
 
