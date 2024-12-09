@@ -52,7 +52,7 @@ for trytime in 2:3, filling in [1.25], pol1 in collect(0.1:0.1:2.0), pol2 in col
    sum2=2.0
 
   arguments=Float64.([Nx,Ny,tper,tpa,tNNN,sum1,pol1,sum2,pol2,filling,KNNN,temp,trytime])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=1,mem=8)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="40:00",ntasks=1,mem=8)
 end
 
 
