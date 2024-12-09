@@ -42,7 +42,7 @@ for trytime in 1:5, filling in [1.25], pol1 in collect(0.1:0.1:2.0), pol2 in col
    α=-2.5*pol1/(pol1+1)
    β=-2.5/(pol1+1)
    K=2.0/(pol2+1)
-   g=2.0*pol2/(pol2+1)
+   gshear=2.0*pol2/(pol2+1)
 
   arguments=Float64.([Nx,Ny,tper,tpa,tNNN,α,β,K,KNNN,filling,gshear,temp,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=1,mem=8)
