@@ -45,7 +45,7 @@ trytime=Int(args[13])
 Nelec=Int(round(Nx*Ny*filling))
 =#
 
-
+#=
 for trytime in 7:8, filling in [1.25], pol1 in collect(0.1:0.1:2.0), pol2 in collect(0.1:0.1:2.0)
  
    sum1=-2.5
@@ -54,16 +54,16 @@ for trytime in 7:8, filling in [1.25], pol1 in collect(0.1:0.1:2.0), pol2 in col
   arguments=Float64.([Nx,Ny,tper,tpa,tNNN,sum1,pol1,sum2,pol2,filling,KNNN,temp,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="40:00",ntasks=1,mem=8)
 end
+=#
 
 
 
-#=
 st=load(joinpath(@__DIR__, "missedjobs.jld2"))
 index=st["index"]
-for ja in eachindex(index)
+for ja in 1:1000
   arguments=index[ja]
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=1,mem=16)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="40:00",ntasks=1,mem=8)
 end
-=#
+
 
 
