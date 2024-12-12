@@ -34,7 +34,7 @@ function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::F
    end
  end
 
-
+#=
  if vi==-1
    for jb in eachindex(wave)
 
@@ -56,16 +56,40 @@ function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::F
       end
     end
  end
+ =#
+
+ if vi==-1
+  for jb in eachindex(wave)
+
+    Moire[1,:,jb,2,:,jb]+=conj.([wAA wAB;wAB wAA]*exp(-im*dot(qset[1],dt)))
+    Moire[2,:,jb,3,:,jb]+=conj.([wAA wAB;wAB wAA]*exp(-im*dot(qset[1],db)))
+
+
+   pos=findfirst(item->item==wave[jb]-g1mT,wave)
+   if pos≠nothing
+      Moire[1,:,pos,2,:,jb]+=conj.([wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*dot(qset[2],dt)))
+      Moire[2,:,pos,3,:,jb]+=conj.([wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*dot(qset[2],db)))
+   end
+
+   pos=findfirst(item->item==wave[jb]-g2mT,wave)
+   if pos≠nothing
+     Moire[1,:,pos,2,:,jb]+=conj.([wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*dot(qset[3],dt)))
+     Moire[2,:,pos,3,:,jb]+=conj.([wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*dot(qset[3],db)))
+
+    end
+  end
+end
+
 
  Hamiltonian=zeros(ComplexF64,num_layer,num_sub,length(wave),num_layer,num_sub,length(wave))
  
  for jb in eachindex(wave)
    kvec1=kvec+wave[jb][1]*T1+wave[jb][2]*T2-vi*Kset[1]
-   Hamiltonian[1,:,jb,1,:,jb]+=vF*(σx*kvec1[1]+σy*kvec1[2])
+   Hamiltonian[1,:,jb,1,:,jb]+=vF*(vi*σx*kvec1[1]+σy*kvec1[2])
    kvec2=kvec+wave[jb][1]*T1+wave[jb][2]*T2-vi*Kset[2]
-   Hamiltonian[2,:,jb,2,:,jb]+=vF*(σx*kvec2[1]+σy*kvec2[2])
+   Hamiltonian[2,:,jb,2,:,jb]+=vF*(vi*σx*kvec2[1]+σy*kvec2[2])
    kvec3=kvec+wave[jb][1]*T1+wave[jb][2]*T2-vi*Kset[3]
-   Hamiltonian[3,:,jb,3,:,jb]+=vF*(σx*kvec3[1]+σy*kvec3[2])
+   Hamiltonian[3,:,jb,3,:,jb]+=vF*(vi*σx*kvec3[1]+σy*kvec3[2])
  end
 
 
@@ -186,7 +210,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   constq=1/(√3/2*norm(a1m)^2*ϵr*length(allowedq))*9035.4642
   wave=Vector{Int64}[]
   cutoff=18
-  cutoffstandard=3.01*norm(g1m)
+  cutoffstandard=4.04*norm(g1m)
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*g1m+jb*g2m;
       if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -207,7 +231,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   dimension=num_layer*length(wave)*num_sub
   wave_diff=Vector{Int64}[]
   cutoff=18
-  cutoffstandard=6.01*norm(g1m)
+  cutoffstandard=7.81*norm(g1m)
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*g1m+jb*g2m;
       if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2

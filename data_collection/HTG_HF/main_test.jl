@@ -8,7 +8,7 @@ args=parse.(Float64,ARGS)
 wAA=75.0
 wAB=110.0
 #vF=579.2265 #unit meV*nm
-vF=580.25
+vF=580.25 #This is to calibrate with Yves
 
 θ=1.8/180*π
 ϵr=8.0
