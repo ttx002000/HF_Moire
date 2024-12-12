@@ -47,7 +47,7 @@ Npa=length(allowedq)*filling
 
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "onetwo_corect/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(g_cutoff)gcut$(q_cutoff)qcut.jld2")
+savepath=joinpath(scratch_dir, "onetwo_correct/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(g_cutoff)gcut$(q_cutoff)qcut.jld2")
 st=load(savepath)
 formfactors=st["formfactors"]
 
