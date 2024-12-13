@@ -45,7 +45,7 @@ scratch_dir = ENV["SCRATCH"]
 savepath=joinpath(scratch_dir, "onetwo_normalgeometry_correct/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(g_cutoff)gcut$(q_cutoff)qcut.jld2")
 jldsave(savepath,formfactors=formfactors)
 
-
+#=
 scratch_dir = ENV["SCRATCH"]
 savepath=joinpath(scratch_dir, "onetwo_normalgeometry_correct/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(g_cutoff)gcut$(q_cutoff)qcut.jld2")
 st=load(savepath)
@@ -77,3 +77,4 @@ jldsave(savepath,
        chern_num__nonabelian=chern_num__nonabelian,
        Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,single_Ham=single_Ham)
 
+=#
