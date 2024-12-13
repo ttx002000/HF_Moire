@@ -168,6 +168,15 @@ function Geometry(geonum::Int)
     
   end
 
+  
+  if geonum==3
+    l1=[12,0]
+    l2=[0,12]
+    Nx=12;
+    Ny=12;
+    
+  end
+
 
 
   return l1,l2,Nx,Ny
@@ -212,12 +221,51 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
     db=[0.0,0.0]
     dt=1/4*(a2m_ps)
     gridshift=[0.0,0.0]
+  elseif  shift==4
+    db=[0.0,0.0]
+    dt=1/4*(a1m_ps)*(0.25)+1/6*(a1m_ps-a2m_ps)*(1-0.25)
+    gridshift=[0.0,0.0]
+
+  elseif  shift==5
+    db=[0.0,0.0]
+    dt=1/4*(a1m_ps)*(0.5)+1/6*(a1m_ps-a2m_ps)*(1-0.5)
+    gridshift=[0.0,0.0]
+
+  elseif  shift==6
+    db=[0.0,0.0]
+    dt=1/4*(a1m_ps)*(0.75)+1/6*(a1m_ps-a2m_ps)*(1-0.75)
+    gridshift=[0.0,0.0]
+  elseif  shift==7
+    db=[0.0,0.0]
+    dt=1/4*(a1m_ps)*(1.0)+1/6*(a1m_ps-a2m_ps)*(1-1.0)
+    gridshift=[0.0,0.0]
+  elseif  shift==8
+    db=[0.0,0.0]
+    dt=1/4*(a1m_ps)*(0.0)+1/6*(a1m_ps-a2m_ps)*(1-0.0)
+    gridshift=[0.0,0.0]
+  elseif  shift==9
+    db=[0.0,0.0]
+    dt=1/6*(a1m_ps-a2m_ps)*0.25
+    gridshift=[0.0,0.0]
+  elseif  shift==10
+    db=[0.0,0.0]
+    dt=1/6*(a1m_ps-a2m_ps)*0.5
+    gridshift=[0.0,0.0]
+  elseif  shift==11
+    db=[0.0,0.0]
+    dt=1/6*(a1m_ps-a2m_ps)*0.75
+    gridshift=[0.0,0.0]
+  elseif  shift==12
+    db=[0.0,0.0]
+    dt=1/6*(a1m_ps-a2m_ps)*0.1
+    gridshift=[0.0,0.0]
   end
 
-  a1m=2*a1m_ps+a2m_ps
-  a2m=2*a2m_ps+a1m_ps
-  #a1m=a1m_ps
-  #a2m=a2m_ps
+  
+
+  
+  a1m=a1m_ps
+  a2m=a2m_ps
   CC=2π*inv([a1m a2m])
   g1m=CC[1,:]
   g2m=CC[2,:]
@@ -331,102 +379,26 @@ function  get_bias(g1mT,g2mT,T1,T2,eigenvector,allowedq,a1m,a2m,Nband,shift)
   sub_pick=rand([1,2]) 
   valley_pick=rand([1,2])
   spin_pick=rand([1,2])
-  phi=rand([2/3*π,4/3*π,0.0])
-  g1m=g1mT[1]*T1+g1mT[2]*T2
-  g2m=g2mT[1]*T1+g2mT[2]*T2
 
-    perturb=zeros(ComplexF64,num_layer,num_sub,length(wave),num_layer,num_sub,length(wave))
-    for jb in eachindex(wave)
- 
-      pos=findfirst(item->item==wave[jb]-g1mT-g2mT,wave)
-      if pos≠nothing
-        perturb[:,sub_pick,pos,:,sub_pick,jb]+=5*Matrix{Float64}(I,num_layer,num_layer)*exp(im*phi)*exp(-im*dot(-g1m-g2m,1/3*a1m))
-      end
+
+  perturb_Ham=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
   
- 
-      pos=findfirst(item->item==wave[jb]+g1mT,wave)
-      if pos≠nothing
-        perturb[:,sub_pick,pos,:,sub_pick,jb]+=5*Matrix{Float64}(I,num_layer,num_layer)*exp(im*phi)*exp(-im*dot(g1m,1/3*a1m))
-      end
- 
-      pos=findfirst(item->item==wave[jb]+g2mT,wave)
-      if pos≠nothing
-        perturb[:,sub_pick,pos,:,sub_pick,jb]+=5*Matrix{Float64}(I,num_layer,num_layer)*exp(im*phi)*exp(-im*dot(g2m,1/3*a1m))
-      end
-    end
-     reshaped_perturb=reshape(perturb,num_layer*num_sub*length(wave),num_layer*num_sub*length(wave))+reshape(perturb,num_layer*num_sub*length(wave),num_layer*num_sub*length(wave))'
+  
+  for ja in eachindex(allowedq)
+  perturb_Ham[spin_pick,valley_pick,ja]=10*Matrix{Float64}(I,Nband,Nband)
+  end
 
-    perturb_Ham=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
-    for ja in eachindex(allowedq)
-       perturb_Ham[spin_pick,valley_pick,ja]=eigenvector[spin_pick,valley_pick,ja]'*reshaped_perturb*eigenvector[spin_pick,valley_pick,ja]
-    end
+   
 
-    if only(rand(1))>0.3 && Int(shift)==1
-      return  perturb_Ham
-    else
+    if only(rand(1))>0.5
       return  [zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+    else
+      return  perturb_Ham
     end
 
 
 end
 
-
-function get_initial_proj_background2(allowedq::Vector{Vector{Int}},eigenvalue::Array{Vector{Float64}},Nband::Int,perturb_Ham::Array{Matrix{ComplexF64}},Npa::Int)
-  num_spin=2
-  num_valley=2
-
-  initial_projector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
-  bg_projector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
-
-  for spin_i in 1:num_spin, valley in 1:num_valley,ja in eachindex(allowedq)
-    for bandin in Nb_down-3+1:Nb_down+3
-      bg_projector[spin_i,valley,ja][bandin,bandin]=1/2
-    end
-    for bandin in 1:Nb_down-3
-      bg_projector[spin_i,valley,ja][bandin,bandin]=1
-    end
-  end
-  
-
-
- single_Ham=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
- single_eigenvector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
-
- single_eigenvalue=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley, _ in eachindex(allowedq)]
-
- for spin_i in 1:num_spin, valley in 1:num_valley,ja in eachindex(allowedq)
-  single_Ham[spin_i,valley,ja]=diagm(eigenvalue[spin_i,valley,ja])
-  FFF=eigen(single_Ham[spin_i,valley,ja]+perturb_Ham[spin_i,valley,ja])
-  single_eigenvector[spin_i,valley,ja]=FFF.vectors
-  single_eigenvalue[spin_i,valley,ja]=FFF.values
- end
-
-
-
-    
- sorted=sort(reduce(vcat,reduce(vcat,real.(single_eigenvalue)))) 
- bound=(sorted[Npa+1]+sorted[Npa])/2
-
- Threads.@threads for ja in eachindex(allowedq)
-  for spin_i in 1:num_spin, valley in 1:num_valley
-       for jd in eachindex(single_eigenvalue[spin_i,valley,ja])
-          if real(single_eigenvalue[spin_i,valley,ja][jd])<bound
-            initial_projector[spin_i,valley,ja]+=single_eigenvector[spin_i,valley,ja][:,jd]*(single_eigenvector[spin_i,valley,ja][:,jd])'
-          end
-       end
-  end
- end
-
-
-
-
- for spin_i in 1:num_spin, valley in 1:num_valley, jc in eachindex(allowedq)
-   A=randn(Nband,Nband)+im*randn(Nband,Nband)
-   initial_projector[spin_i,valley,jc]+=(A+A')*0.3
- end 
-
- return initial_projector, bg_projector, single_Ham
-end
 
 function get_initial_proj(allowedq::Vector{Vector{Int}},eigenvalue::Array{Vector{Float64}},Nband::Int,perturb_Ham::Array{Matrix{ComplexF64}},Npa::Int)
   num_spin=2
@@ -659,7 +631,7 @@ function get_chernsub(HF_eigenvector,eigenvector,allowedq,wave,Nband,Nb_up,Nb_do
   
  chern_sub_operator=[zeros(ComplexF64,num_layer*num_sub*length(wave),num_layer*num_sub*length(wave)) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
  
- eigenvector_ex_remo=[eigenvector[spin_i,valley,ja][:,Nb_down-3+1:Nb_down+3] for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)]
+ eigenvector_ex_remo=[eigenvector[spin_i,valley,ja][:,Nb_down-1+1:Nb_down+1] for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)]
 
 
 
@@ -808,18 +780,7 @@ function get_formfactors(allowedq::Vector{Vector{Int}},wave::Vector{Vector{Int}}
  println("start FF")
   formfactors=Array{Matrix{ComplexF64}}(undef,num_spin,num_valley,length(allowedq),length(allowedq),length(wave_diff)) #The last two are q
   formfactors_threaded=[Array{Matrix{ComplexF64}}(undef,num_spin,num_valley,length(allowedq),length(wave_diff)) for _ in 1:length(allowedq)] 
-#=
-  for ja in eachindex(allowedq), valley in  1:num_spin
-      for qvec in eachindex(allowedq), gqindex in eachindex(wave_diff)
-          kplusq_pos=allowedq_dic[sendtomesh(Minv,allowedq[qvec]+allowedq[ja])]
-          gkplusq=allowedq[ja]+allowedq[qvec]+wave_diff[gqindex]-allowedq[kplusq_pos]
-  
-          prod=shuffle_vector(eigenvector[1,valley,ja],gkplusq,wave,wave_dic,Nband)'*eigenvector[1,valley,kplusq_pos]
-          formfactors[:, valley, ja, qvec, gqindex]=[prod for _ in 1:num_spin]
-    
-      end
-  end
-=#
+
   tic=time()
  Threads.@threads for ja in eachindex(allowedq)
  for  valley in  1:num_valley, spin_i in 1:num_spin

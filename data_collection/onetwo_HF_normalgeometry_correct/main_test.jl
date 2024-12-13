@@ -1,7 +1,7 @@
 using JLD2
-include("../../src/operators_onetwo_HF_correct.jl")
+include("../../src/operators_onetwo_HF_normalgeometry_correct.jl")
 using LinearAlgebra
-### I make this new onetwo_HF_correct to correct the Hamiltonian
+
 args=parse.(Float64,ARGS)
 
 #args=[75.0,110.0,500.0,-0.2,3,3,1.23,8,1,20,10,1,0.0]
@@ -42,12 +42,12 @@ eigenvector,eigenvalue,wave,wave_diff,wave_dic,allowedq,allowedq_dic,T1,T2,const
 Npa=length(allowedq)*filling
 formfactors=get_formfactors(allowedq,wave,wave_diff,wave_dic,Minv,Nband,eigenvector)
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "onetwo_correct/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(g_cutoff)gcut$(q_cutoff)qcut.jld2")
+savepath=joinpath(scratch_dir, "onetwo_normalgeometry_correct/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(g_cutoff)gcut$(q_cutoff)qcut.jld2")
 jldsave(savepath,formfactors=formfactors)
 
-#=
+
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "onetwo_correct/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(g_cutoff)gcut$(q_cutoff)qcut.jld2")
+savepath=joinpath(scratch_dir, "onetwo_normalgeometry_correct/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(g_cutoff)gcut$(q_cutoff)qcut.jld2")
 st=load(savepath)
 formfactors=st["formfactors"]
 
@@ -65,7 +65,7 @@ sub_exp_HF,chernsub_HF,sub_eig_HF,sub_eig_single=get_chernsub(HF_eigenvector,eig
 chern_number,chern_num__nonabelian=get_chernnumber(HF_eigenvector,eigenvector,allowedq,allowedq_dic,wave,wave_dic,Nband,geonum,Minv)
 
 #savepath=joinpath(@__DIR__, "data_output/shift$(Int(args[12]))/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])Dfield$(args[12])shift$(args[13])try.jld2")
-savepath=joinpath(scratch_dir, "onetwo_correct/data_output/shift$(Int(args[12]))/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])Dfield$(args[12])shift$(args[13])try.jld2")
+savepath=joinpath(scratch_dir, "onetwo_normalgeometry_correct/data_output/shift$(Int(args[12]))/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])Dfield$(args[12])shift$(args[13])try.jld2")
 
 jldsave(savepath,
         HF_eigenvalue=HF_eigenvalue,eigenvalue=eigenvalue,energy=energy,
@@ -77,4 +77,3 @@ jldsave(savepath,
        chern_num__nonabelian=chern_num__nonabelian,
        Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,single_Ham=single_Ham)
 
-=#
