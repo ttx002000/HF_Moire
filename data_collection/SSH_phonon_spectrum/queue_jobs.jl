@@ -13,11 +13,12 @@ tpa=2
 tNNN=0.16
 #α=-0.05
 #β=-0.05
-K=1.0;
-KNNN=1.0;
+#K=1.0;
+#KNNN=1.0;
 #filling=1.35;
 temp=10^(-6)
-
+Nx=80
+couplingset=[[-1.0,-1.0],[-2.0,-2.0],[-1.0,-2.0],[-2.0,-1.0],[-0.5,-2.0],[-2.0,-0.5],[-0.5,-1.5],[-1.5,-0.5]]
 
 #=
 Nx=Int(args[1])
@@ -34,9 +35,11 @@ filling=(args[10])
 
 
 
-for filling in [1.25], α in [-1.2], β in [-1.2], Nx in collect(10:1:25)
-  arguments=Float64.([Nx,Nx,tper,tpa,tNNN,α,β,K,KNNN,filling,temp])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="15:00",ntasks=1,mem=32)
+for filling in [1.25], coupling in couplingset, temp in [0.01,0.05,0.0001], shear in collect(0.0:0.2:1.0), KNNN in collect(0.0:0.2:1.0), K in [0.5,1.0]
+  α=coupling[1]
+  β=coupling[2]
+  arguments=Float64.([Nx,Nx,tper,tpa,tNNN,α,β,K,KNNN,filling,temp,shear])
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=1,mem=32)
 end
 
 #=

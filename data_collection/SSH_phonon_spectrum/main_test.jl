@@ -21,13 +21,17 @@ K=args[8]
 KNNN=args[9]
 filling=(args[10])
 temp=args[11]
+shearstrength=args[12]
 
 Λset=get_Lambdaset(Nx,Ny,α,β)
 Λmatrix_bandbasis,electron_spectrum,FL=Lambdaset_to_matrix(Nx,Ny,Λset,tper,tpa,tNNN,temp)
 Λset=nothing
 Keff_momentum=Lambda_to_Keff(Λmatrix_bandbasis,electron_spectrum,FL,temp)
 Λmatrix_bandbasis=nothing
-Kbare_momentum=barephonon(Nx,Ny,K,KNNN)
+Kbare_momentum=barephonon(Nx,Ny,K,KNNN,shearstrength)
 spectrum,unperturbed_spectrum=get_spectrum(Kbare_momentum,Keff_momentum,Nx,Ny)
-savepath=joinpath(@__DIR__, "data_output/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])KNNN$(args[10])filling$(args[11])temp.jld2")
-jldsave(savepath,spectrum=spectrum,unperturbed_spectrum=unperturbed_spectrum)
+
+scratch_dir = ENV["SCRATCH"]
+savepath=joinpath(scratch_dir, "SSH_phonon/test1/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])KNNN$(args[10])filling$(args[11])temp$(args[12])shear.jld2")
+
+jldsave(savepath,spectrum=spectrum,unperturbed_spectrum=unperturbed_spectrum,Keff_momentum=Keff_momentum,Kbare_momentum=Kbare_momentum)

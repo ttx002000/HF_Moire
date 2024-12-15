@@ -26,6 +26,9 @@ function initialize(Nx::Int64,Ny::Int64)
   px_ybond=Vector{Vector{Int}}[]
   py_xbond=Vector{Vector{Int}}[]
   py_ybond=Vector{Vector{Int}}[]
+
+  shear_xbond=Vector{Vector{Int}}[]
+  shear_ybond=Vector{Vector{Int}}[]
      
   NNN_sp_d1=Vector{Vector{Int}}[]
   NNN_sp_d2=Vector{Vector{Int}}[]
@@ -47,11 +50,17 @@ function initialize(Nx::Int64,Ny::Int64)
     push!(NNN_sp_d1,[[mod(ja,Nx)+1,mod(jb,Ny)+1,1],[mod(ja,Nx)+1,mod(jb,Ny)+1,2],[ja,jb,1],[ja,jb,2]])
     push!(NNN_sp_d2,[[mod(ja,Nx)+1,mod(jb-2,Ny)+1,1],[ja,jb,2],[mod(ja,Nx)+1,mod(jb-2,Ny)+1,2],[ja,jb,1]])
   end
+  for ja in 1:Nx,jb in 1:Ny
+    push!(shear_ybond,[[ja,mod(jb,Ny)+1,1],[ja,jb,1],[ja,mod(jb,Ny)+1,1],[ja,jb,1]])
+  end
+  for ja in 1:Nx,jb in 1:Ny
+    push!(shear_xbond,[[mod(ja,Nx)+1,jb,1],[ja,jb,1],[mod(ja,Nx)+1,jb,2],[ja,jb,2]]) #The first two are orbitals, the last two are phonons
+ end
+
   
   
   
-  
-   return  px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NNN_sp_d2,kxspace,kyspace
+   return  px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NNN_sp_d2,kxspace,kyspace,shear_xbond,shear_ybond
 end
 
 
@@ -59,7 +68,7 @@ end
 
 
 function get_Lambdaset(Nx::Int,Ny::Int,α::Float64,β::Float64)::Vector{Any}
-  px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NNN_sp_d2,kxspace,kyspace=initialize(Nx,Ny)
+  px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NNN_sp_d2,kxspace,kyspace,shear_xbond,shear_ybond=initialize(Nx,Ny)
   Λset=[]
   for ja in eachindex(px_xbond), ui in 3:4
    if px_xbond[ja][ui][1:2]==[1,1] #Λset records the real space Lambda
@@ -211,9 +220,9 @@ end
 
 
 
-function barephonon(Nx::Int64,Ny::Int64,K::Float64,KNNN::Float64)::Array{ComplexF64}
+function barephonon(Nx::Int64,Ny::Int64,K::Float64,KNNN::Float64,shearstrength::Float64)::Array{ComplexF64}
 
-  px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NNN_sp_d2,kxspace,kyspace=initialize(Nx,Ny)
+  px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NNN_sp_d2,kxspace,kyspace,shear_xbond,shear_ybond=initialize(Nx,Ny)
 
   Kbare_real=zeros(Float64,Nx,Ny,2,Nx,Ny,2)
   for ja in eachindex(px_xbond)
@@ -231,6 +240,20 @@ function barephonon(Nx::Int64,Ny::Int64,K::Float64,KNNN::Float64)::Array{Complex
      end
   end
   
+  for ja in eachindex(shear_xbond)
+    bond=shear_xbond[ja]
+    for jc in 3:4, jd in 3:4
+    Kbare_real[bond[jc][1],bond[jc][2],bond[jc][3],bond[jd][1],bond[jd][2],bond[jd][3]]+=shearstrength*(-1)^(jc+jd)
+    end
+ end
+ 
+ for ja in eachindex(shear_ybond)
+    bond=shear_ybond[ja]
+    for jc in 3:4, jd in 3:4
+    Kbare_real[bond[jc][1],bond[jc][2],bond[jc][3],bond[jd][1],bond[jd][2],bond[jd][3]]+=shearstrength*(-1)^(jc+jd)
+    end
+ end
+
   
   for ja in eachindex(NNN_sp_d1)
      bond=NNN_sp_d1[ja]
