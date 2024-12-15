@@ -285,7 +285,7 @@ function barephonon(Nx::Int64,Ny::Int64,K::Float64,KNNN::Float64,shearstrength::
 
 end
 
-function get_spectrum(Kbare_momentum::Array{ComplexF64},Keff_momentum::Array{ComplexF64},Nx::Int,Ny::Int)::Tuple{Array{ComplexF64},Array{ComplexF64}}
+function get_spectrum(Kbare_momentum::Array{ComplexF64},Keff_momentum::Array{ComplexF64},Nx::Int,Ny::Int)::Tuple{Array{ComplexF64},Array{ComplexF64},Array{ComplexF64}}
   spectrum=zeros(ComplexF64,2,Nx,Ny)
  for ja in 1:Nx, jb in 1:Ny
    FFF=eigen(Kbare_momentum[:,:,ja,jb]+Keff_momentum[:,:,ja,jb])
