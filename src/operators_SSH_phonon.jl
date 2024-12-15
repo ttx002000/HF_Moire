@@ -300,5 +300,16 @@ function get_spectrum(Kbare_momentum::Array{ComplexF64},Keff_momentum::Array{Com
    unperturbed_spectrum[:,ja,jb]=FFF.values
  end
 
- return spectrum,unperturbed_spectrum
+ χspectrum=zeros(ComplexF64,2,Nx,Ny)
+
+ for ja in 1:Nx, jb in 1:Ny
+  FFF=eigen(-Keff_momentum[:,:,ja,jb])
+  χspectrum[:,ja,jb]=FFF.values
+ end
+
+ 
+
+
+
+ return spectrum,unperturbed_spectrum,χspectrum
 end
