@@ -34,19 +34,19 @@ filling=(args[10])
 =#
 
 
-
+#=
 for filling in [1.25], coupling in couplingset, temp in [0.01,0.05,0.0001], shear in collect(0.0:0.2:1.0), KNNN in collect(0.0:0.2:1.0), K in [0.5,1.0]
   α=coupling[1]
   β=coupling[2]
   arguments=Float64.([Nx,Nx,tper,tpa,tNNN,α,β,K,KNNN,filling,temp,shear])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=1,mem=32)
 end
+=#
 
-#=
+
 st=load(joinpath(@__DIR__, "missedjobs.jld2"))
 index=st["index"]
 for ja in eachindex(index)
   arguments=index[ja]
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=1,mem=32)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:30:00",ntasks=1,mem=32)
 end
-=#
