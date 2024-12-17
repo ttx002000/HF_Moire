@@ -141,6 +141,106 @@ function get_Lambdaset(Nx::Int,Ny::Int,α::Float64,β::Float64)::Vector{Any}
 
 end
 
+
+
+
+
+function get_Lambdaset_reduandant(Nx::Int,Ny::Int,α::Float64,β::Float64)
+  px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NNN_sp_d2,kxspace,kyspace,shear_xbond,shear_ybond=initialize(Nx,Ny)
+  Λset=[]
+  for ja in eachindex(px_xbond), ui in 3:4
+   if px_xbond[ja][ui][1:2]==[1,1] #Λset records the real space Lambda
+      d=1
+      oi=px_xbond[ja][1][3]
+      oj=px_xbond[ja][2][3]
+      xi=px_xbond[ja][1][1]
+      yi=px_xbond[ja][1][2]
+      xj=px_xbond[ja][2][1]
+      yj=px_xbond[ja][2][2]
+      indexset=[d,oi,oj,xi,yi,xj,yj]
+       push!(Λset,[(-1)^(ui),indexset])
+      indexset=[d,oj,oi,xj,yj,xi,yi]
+      push!(Λset,[(-1)^(ui),indexset])
+   end
+  
+  end
+
+  for ja in eachindex(px_ybond), ui in 3:4
+    if px_ybond[ja][ui][1:2]==[1,1]
+       d=4
+       oi=px_ybond[ja][1][3]
+       oj=px_ybond[ja][2][3]
+       xi=px_ybond[ja][1][1]
+       yi=px_ybond[ja][1][2]
+       xj=px_ybond[ja][2][1]
+       yj=px_ybond[ja][2][2]
+       indexset=[d,oi,oj,xi,yi,xj,yj]
+        push!(Λset,[(-1)^(ui),indexset])
+       indexset=[d,oj,oi,xj,yj,xi,yi]
+       push!(Λset,[(-1)^(ui),indexset])
+    end
+
+  end
+
+  for ja in eachindex(py_ybond), ui in 3:4
+    if py_ybond[ja][ui][1:2]==[1,1]
+       d=3
+       oi=py_ybond[ja][1][3]
+       oj=py_ybond[ja][2][3]
+       xi=py_ybond[ja][1][1]
+       yi=py_ybond[ja][1][2]
+       xj=py_ybond[ja][2][1]
+       yj=py_ybond[ja][2][2]
+       indexset=[d,oi,oj,xi,yi,xj,yj]
+        push!(Λset,[(-1)^(ui),indexset])
+       indexset=[d,oj,oi,xj,yj,xi,yi]
+       push!(Λset,[(-1)^(ui),indexset])
+    end
+   
+  end
+
+  for ja in eachindex(py_xbond), ui in 3:4
+    if py_xbond[ja][ui][1:2]==[1,1] #We are considering terms coupling to phonons living on (1,1 site)
+       d=2
+       oi=py_xbond[ja][1][3]
+       oj=py_xbond[ja][2][3]
+       xi=py_xbond[ja][1][1]
+       yi=py_xbond[ja][1][2]
+       xj=py_xbond[ja][2][1]
+       yj=py_xbond[ja][2][2]
+       indexset=[d,oi,oj,xi,yi,xj,yj]
+        push!(Λset,[(-1)^(ui),indexset])
+       indexset=[d,oj,oi,xj,yj,xi,yi]
+       push!(Λset,[(-1)^(ui),indexset])
+    end   
+ end
+
+
+ gmatrix=zeros(Float64,4,2)
+ gmatrix[1,1]=α
+ gmatrix[2,1]=β
+
+ gmatrix[3,2]=α
+ gmatrix[4,2]=β
+
+ return  Λset,gmatrix
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function  get_pertur_factor(ea::Float64,eb::Float64,FL::Float64,temp::Float64)::ComplexF64
    
   f1=1/(exp((ea-FL)/temp)+1)
@@ -198,10 +298,57 @@ end
 
 
 
+function Lambdaset_to_matrix_redundant(Nx::Int,Ny::Int,Λset::Vector{Any},tper::Float64,tpa::Float64,tNNN::Float64,temp::Float64)
+  px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NNN_sp_d2,kxspace,kyspace= initialize(Nx,Ny)
+
+  Λmatrix=zeros(ComplexF64,4,2,2,Nx,Ny,Nx,Ny) # the index is d,o1,o2,k1,k2
+  for k1x in 1:Nx, k1y in 1:Ny, k2x in 1:Nx, k2y in 1:Ny
+     k1=[kxspace[k1x],kyspace[k1y]]
+     k2=[kxspace[k2x],kyspace[k2y]]
+     for ja in eachindex(Λset)
+       R1=[Λset[ja][2][4],Λset[ja][2][5]]-[1,1]
+       R2=[Λset[ja][2][6],Λset[ja][2][7]]-[1,1]
+       d=Λset[ja][2][1]
+       o1=Λset[ja][2][2]
+       o2=Λset[ja][2][3]
+       Λmatrix[d,o1,o2,k1x,k1y,k2x,k2y]+=1/sqrt(Nx*Ny)*exp(-im*dot(k1,R1))*exp(im*dot(k2,R2))*Λset[ja][1]
+     end
+  end
+
+  Λmatrix_bandbasis=zeros(ComplexF64,4,2,2,Nx,Ny,Nx,Ny) #the index order is d, n1,n2,k1x,k1y,k2x,k2y,q=k_1-k_2
+ for k1x in 1:Nx, k1y in 1:Ny, k2x in 1:Nx, k2y in 1:Ny
+  k1=[kxspace[k1x],kyspace[k1y]]
+  k2=[kxspace[k2x],kyspace[k2y]]
+  FFF=eigen(get_Hamiltonian(k1,tper,tpa,tNNN))
+  vectork1=FFF.vectors
+  FFF=eigen(get_Hamiltonian(k2,tper,tpa,tNNN))
+  vectork2=FFF.vectors
+  for di in 1:4
+    Λmatrix_bandbasis[di,:,:,k1x,k1y,k2x,k2y]+=vectork1'*Λmatrix[di,:,:,k1x,k1y,k2x,k2y]*vectork2
+  end
+ end
+
+
+ electron_spectrum=zeros(Float64,2,Nx,Ny)
+ for k1x in 1:Nx, k1y in 1:Ny
+    k1=[kxspace[k1x],kyspace[k1y]]
+    FFF=eigen(get_Hamiltonian(k1,tper,tpa,tNNN))
+    electron_spectrum[:,k1x,k1y]=real.(FFF.values)
+ end
+
+ FL=sort(vec(electron_spectrum))[Int(round(Nx*Ny*filling))]
+  return Λmatrix_bandbasis,electron_spectrum,FL
+
+end
+
+
+
+
+
 
 function Lambda_to_Keff(Λmatrix_bandbasis::Array{ComplexF64},electron_spectrum::Array{Float64},FL::Float64,temp::Float64)::Array{ComplexF64}
   Keff_momentum=zeros(ComplexF64,2,2,Nx,Ny)
- for d1 in 1:2, d2 in 1:2, qx in 1:Nx, qy in 1:Ny
+ for  qx in 1:Nx, qy in 1:Ny
     for k1x in 1:Nx, k1y in 1:Ny, n1 in 1:2, n2 in 1:2
         k2x=mod((k1x-1)+(qx-1),Nx)+1 #k2 is kalpha, k1 is kgamma
         k2y=mod((k1y-1)+(qy-1),Ny)+1
@@ -209,13 +356,31 @@ function Lambda_to_Keff(Λmatrix_bandbasis::Array{ComplexF64},electron_spectrum:
         e1=electron_spectrum[n1,k1x,k1y]
         factor=get_pertur_factor(e2,e1,FL,temp)
         
-        Keff_momentum[d1,d2,qx,qy]+=Λmatrix_bandbasis[d1,n1,n2,k1x,k1y,k2x,k2y]*Λmatrix_bandbasis[d2,n2,n1,k2x,k2y,k1x,k1y]*factor
+        Keff_momentum[:,:,qx,qy]+=Λmatrix_bandbasis[:,n1,n2,k1x,k1y,k2x,k2y]*transpose(Λmatrix_bandbasis[:,n2,n1,k2x,k2y,k1x,k1y])*factor
    
     end
  end
    return Keff_momentum
 end
 
+
+
+function Lambda_to_Keff_redundant(Λmatrix_bandbasis::Array{ComplexF64},electron_spectrum::Array{Float64},FL::Float64,temp::Float64)::Array{ComplexF64}
+  Keff_momentum=zeros(ComplexF64,4,4,Nx,Ny)
+ for  qx in 1:Nx, qy in 1:Ny
+    for k1x in 1:Nx, k1y in 1:Ny, n1 in 1:2, n2 in 1:2
+        k2x=mod((k1x-1)+(qx-1),Nx)+1 #k2 is kalpha, k1 is kgamma
+        k2y=mod((k1y-1)+(qy-1),Ny)+1
+        e2=electron_spectrum[n2,k2x,k2y]
+        e1=electron_spectrum[n1,k1x,k1y]
+        factor=get_pertur_factor(e2,e1,FL,temp)
+        
+        Keff_momentum[:,:,qx,qy]+=Λmatrix_bandbasis[:,n1,n2,k1x,k1y,k2x,k2y]*transpose(Λmatrix_bandbasis[:,n2,n1,k2x,k2y,k1x,k1y])*factor
+   
+    end
+ end
+   return Keff_momentum
+end
 
 
 
@@ -304,6 +469,36 @@ function get_spectrum(Kbare_momentum::Array{ComplexF64},Keff_momentum::Array{Com
 
  for ja in 1:Nx, jb in 1:Ny
   FFF=eigen(-Keff_momentum[:,:,ja,jb])
+  χspectrum[:,ja,jb]=FFF.values
+ end
+
+ 
+
+
+
+ return spectrum,unperturbed_spectrum,χspectrum
+end
+
+
+function get_spectrum_redundant(Kbare_momentum::Array{ComplexF64},Keff_momentum::Array{ComplexF64},Nx::Int,Ny::Int,gmatrix::Matrix{Float64})::Tuple{Array{ComplexF64},Array{ComplexF64},Array{ComplexF64}}
+  spectrum=zeros(ComplexF64,2,Nx,Ny)
+ for ja in 1:Nx, jb in 1:Ny
+   FFF=eigen(Kbare_momentum[:,:,ja,jb]+gmatrix'*Keff_momentum[:,:,ja,jb]*gmatrix)
+   spectrum[:,ja,jb]=FFF.values
+ end
+
+
+
+ unperturbed_spectrum=zeros(ComplexF64,2,Nx,Ny)
+ for ja in 1:Nx, jb in 1:Ny
+   FFF=eigen(Kbare_momentum[:,:,ja,jb])
+   unperturbed_spectrum[:,ja,jb]=FFF.values
+ end
+
+ χspectrum=zeros(ComplexF64,2,Nx,Ny)
+
+ for ja in 1:Nx, jb in 1:Ny
+  FFF=eigen(-gmatrix'*Keff_momentum[:,:,ja,jb]*gmatrix)
   χspectrum[:,ja,jb]=FFF.values
  end
 
