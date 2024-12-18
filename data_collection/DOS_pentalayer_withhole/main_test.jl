@@ -26,7 +26,7 @@ nE_bin_centers,nE_bin_means,bin_centers,nE,Nstates=process_data(valuesset,ns,num
 
 scratch_dir = ENV["SCRATCH"]
 
-savepath=joinpath(scratch_dir, "pentalayer_DOS/data_output/$(args[1])uD$(args[2])sample$(args[3])angle$(args[4])radius$(args[5])Dosnbin$(args[6])DosEbin$(args[7])denstart$(args[8])denend$(args[9])Ecut.jld2")
+savepath=joinpath(scratch_dir, "pentalayer_DOS/data_output/no_moire/$(args[1])uD$(args[2])sample$(args[3])angle$(args[4])radius$(args[5])Dosnbin$(args[6])DosEbin$(args[7])denstart$(args[8])denend$(args[9])Ecut.jld2")
 jldsave(savepath,nE_bin_centers=nE_bin_centers,
    ns=ns,nE_bin_means=nE_bin_means,
    bin_centers=bin_centers,nE=nE,
