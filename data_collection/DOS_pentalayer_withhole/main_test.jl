@@ -9,7 +9,7 @@ using CSV,DataFrames
 include(joinpath(@__DIR__,"../../src/operators_DOS_pentalayer_withhole.jl"))
 
 args=parse.(Float64,ARGS)
-args=[-50.0,10*10^5,1.5,1.5,50,10^4,0.2/4,4/4,200]
+#args=[-50.0,10*10^5,1.5,1.5,50,10^4,0.2/4,4/4,200]
 uD=args[1]
 numsample=Int(args[2])
 θ=args[3]/180*π
