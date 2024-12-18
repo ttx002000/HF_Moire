@@ -6,11 +6,11 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 
 job_prefix = "DOS"
 uDspace=collect(-60.0:1.0:60.0)
-numsample=10^6
+numsample=2*10^6
 θ=1.5
 rad=1.5
 DOS_n_binnum=120
-DOS_E_binnum=2*10^4
+DOS_E_binnum=4*10^4
 Density_start=-1.0
 Density_end=1.0
 Ecutoff=200
