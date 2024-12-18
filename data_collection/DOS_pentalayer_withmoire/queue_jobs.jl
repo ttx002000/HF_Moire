@@ -8,7 +8,6 @@ job_prefix = "DOS"
 uDspace=collect(-60.0:1.0:60.0)
 numsample=2*10^6
 θ=1.5
-rad=1.5
 DOS_n_binnum=120
 DOS_E_binnum=4*10^4
 Density_start=-1.0
@@ -19,18 +18,18 @@ Ecutoff=200
 uD=args[1]
 numsample=Int(args[2])
 θ=args[3]/180*π
-rad=args[4]
-DOS_n_binnum=Int(args[5])
-DOS_E_binnum=Int(args[6])
-Density_start=args[7]
-Density_end=args[8]
+DOS_n_binnum=Int(args[4])
+DOS_E_binnum=Int(args[5])
+Density_start=args[6]
+Density_end=args[7]
+Ecutoff=args[8]
 =#
 
 
 
 
 for uD in uDspace
-  arguments=Float64.([uD,numsample,θ,rad,DOS_n_binnum,DOS_E_binnum,Density_start,Density_end,Ecutoff])
+  arguments=Float64.([uD,numsample,θ,DOS_n_binnum,DOS_E_binnum,Density_start,Density_end,Ecutoff])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="4:00:00",ntasks=32,mem=64)
 end
 
