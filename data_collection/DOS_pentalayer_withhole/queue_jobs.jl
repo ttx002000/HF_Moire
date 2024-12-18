@@ -29,7 +29,7 @@ Density_end=args[8]
 
 
 
-for uD in collect(-60.0,1.0:-50.0)
+for uD in collect(-60.0:1.0:-50.0)
   arguments=Float64.([uD,numsample,θ,rad,DOS_n_binnum,DOS_E_binnum,Density_start,Density_end,Ecutoff])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:30:00",ntasks=16,mem=32)
 end
