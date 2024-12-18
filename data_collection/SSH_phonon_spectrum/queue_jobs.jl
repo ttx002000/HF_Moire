@@ -39,7 +39,7 @@ for filling in [1.25], coupling in couplingset[1:3], temp in [0.01,0.05,0.0001],
   α=coupling[1]
   β=coupling[2]
   arguments=Float64.([Nx,Nx,tper,tpa,tNNN,α,β,K,KNNN,filling,temp,shear])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=1,mem=32)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:30:00",ntasks=1,mem=32)
 end
 
 
