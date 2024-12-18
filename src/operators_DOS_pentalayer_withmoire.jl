@@ -36,7 +36,55 @@ function get_RNGham(k::Vector{Float64},NL::Int,uD::Float64)
    return Ham
 end
 
-function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut::Float64)
+
+
+
+
+function get_MoireHam(k::Vector{Float64},wave::Vector{Vector{Int}},NL::Int,uD::Float64,T1::Vector{Float64},T2::Vector{Float64},V1::Float64,V0::Float64,ψ::Float64,g1T::Vector{Int},g2T::Vector{Int})
+    
+  ω=exp(im*2π/3)
+    Hamiltonian=zeros(ComplexF64,length(wave)*2*NL,length(wave)*2*NL)
+    for jb in eachindex(wave)
+        kvec=k+[T1 T2]*wave[jb]
+        Hamiltonian[2*NL*(jb-1)+1:2*NL*jb,2*NL*(jb-1)+1:2*NL*jb]=get_RNGham(kvec,NL,uD)
+    end
+   
+    Moire=zeros(ComplexF64,length(wave)*2*NL,length(wave)*2*NL)
+
+    for jc in eachindex(wave)
+       pos=findfirst(item->item==wave[jc]+g1T,wave)
+       if pos≠nothing
+          Moire[2*NL*(pos-1)+1:2*NL*(pos-1)+2,2*NL*(jc-1)+1:2*NL*(jc-1)+2]+=V1*exp(-im*ψ)*[1 1;ω ω]
+       end
+
+       pos=findfirst(item->item==wave[jc]+g2T,wave)
+       if pos≠nothing
+          Moire[2*NL*(pos-1)+1:2*NL*(pos-1)+2,2*NL*(jc-1)+1:2*NL*(jc-1)+2]+=V1*exp(-im*ψ)*[1 ω^2;ω^2 ω]
+
+       end
+
+       pos=findfirst(item->item==wave[jc]-g1T-g2T,wave)
+       if pos≠nothing
+        Moire[2*NL*(pos-1)+1:2*NL*(pos-1)+2,2*NL*(jc-1)+1:2*NL*(jc-1)+2]+=V1*exp(-im*ψ)*[1 ω;1 ω]
+       end
+   
+       Moire[2*NL*(jc-1)+1:2*NL*(jc-1)+2,2*NL*(jc-1)+1:2*NL*(jc-1)+2]+=V0/2*[1 0; 0 1]
+    end
+
+
+
+    return Moire+Moire'+Hamiltonian
+
+
+
+
+end
+
+
+
+
+
+function sample_value(uD::Float64, numsample::Int,θ::Float64,Ecut::Float64)
    
 
 
@@ -52,8 +100,18 @@ function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut:
     Rθ=[cos(θ) -sin(θ);sin(θ) cos(θ)]
     g1=G1-(1+ϵ)^(-1)*Rθ*G1
     g2=G2-(1+ϵ)^(-1)*Rθ*G2
-    
 
+    T1=g1 
+    T2=g2
+
+    V0=28.9
+    V1=21.0
+   
+
+    ψ=-0.29
+    
+    g1T=Int.(round.(inv([T1 T2])*g1))
+    g2T=Int.(round.(inv([T1 T2])*g2))
   
     NL=5
     KGr=4π/(3*ac)*[1,0]
@@ -61,20 +119,36 @@ function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut:
     am=4π/(gm*√3)
     ns=1/(√3/2*am)^2
     
-  
+     
+    
+   
+    wave=Vector{Int64}[]
+    cutoff=18
+    cutoffstandard=3.1*norm(g1)
+    for ja in -cutoff:cutoff, jb in -cutoff:cutoff
+        gtest=ja*g1+jb*g2;
+        if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
+             push!(wave,ja*g1T+jb*g2T)
+         end
+    end
+
+
+
+
+
     gross_valuesset=[Vector{Vector{Float64}}() for _ in 1:Threads.nthreads()]
     conduction_band_record=[Vector{Float64}() for _ in 1:Threads.nthreads()]
     valence_band_record=[Vector{Float64}() for _ in 1:Threads.nthreads()]
     
     Threads.@threads for ja in 1:numsample
-      kvec=KGr+[rand()-0.5,rand()-0.5]*gm*rad
-      Hamiltonian=get_RNGham(kvec,NL,uD)
+      kvec=KGr+(rand()-1/2)*g1+(rand()-1/2)*g2
+      Hamiltonian=get_MoireHam(kvec,wave,NL,uD,T1,T2,V1,V0,ψ,g1T,g2T)
       FFF=real.(eigen(Hamiltonian).values)
      
-      push!(gross_valuesset[Threads.threadid()],FFF[1:2*NL])
+      push!(gross_valuesset[Threads.threadid()],FFF)
     
-      push!(conduction_band_record[Threads.threadid()],FFF[NL+1])
-      push!(valence_band_record[Threads.threadid()],FFF[NL])
+      push!(conduction_band_record[Threads.threadid()],FFF[length(wave)*NL+1])
+      push!(valence_band_record[Threads.threadid()],FFF[length(wave)*NL])
     end
     
     gross_valuesset=reduce(vcat,reduce(vcat,gross_valuesset))
@@ -101,13 +175,13 @@ function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut:
 
 end
 
-function process_data(valuesset::Vector{Float64},ns::Float64,numsample::Int,rad::Float64,DOS_n_binnum::Int64,DOS_E_binnum::Int64,Density_start::Float64,Density_end::Float64,gm::Float64,CNP_point::Float64)
+function process_data(valuesset::Vector{Float64},ns::Float64,numsample::Int,DOS_n_binnum::Int64,DOS_E_binnum::Int64,Density_start::Float64,Density_end::Float64,gm::Float64,CNP_point::Float64)
     h=fit(Histogram, valuesset, nbins=DOS_E_binnum) 
     bin_edges = collect(h.edges[1])
     Nstates = h.weights
     bin_centers =collect(0.5* (bin_edges[1:end-1] + bin_edges[2:end]))
     NN=numsample*(bin_centers[2]-bin_centers[1])
-    Nstates=Nstates/(NN)*gm^2/(4π^2)*rad^2
+    Nstates=Nstates/(NN)*gm^2*√3/2*1/(4π^2)
   
   
     num_below_CNP=0
@@ -116,7 +190,7 @@ function process_data(valuesset::Vector{Float64},ns::Float64,numsample::Int,rad:
          num_below_CNP+=1
       end 
     end
-   n_background=num_below_CNP/numsample*gm^2/(4π^2)*rad^2
+   n_background=num_below_CNP/numsample*gm^2*√3/2*1/(4π^2)
 
     nE=zeros(Float64,length(bin_centers))
  for ja in eachindex(nE)
