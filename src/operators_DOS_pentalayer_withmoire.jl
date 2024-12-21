@@ -135,12 +135,14 @@ function sample_value(uD::Float64, numsample::Int,θ::Float64,Ecut::Float64)
 
 
 
-
     gross_valuesset=[Vector{Vector{Float64}}() for _ in 1:Threads.nthreads()]
+    
+    
+    
     conduction_band_record=[Vector{Float64}() for _ in 1:Threads.nthreads()]
     valence_band_record=[Vector{Float64}() for _ in 1:Threads.nthreads()]
     
-    Threads.@threads for ja in 1:numsample
+    Threads.@threads for ja in 1:2000
       kvec=KGr+(rand()-1/2)*g1+(rand()-1/2)*g2
       Hamiltonian=get_MoireHam(kvec,wave,NL,uD,T1,T2,V1,V0,ψ,g1T,g2T)
       FFF=real.(eigen(Hamiltonian).values)
@@ -149,6 +151,41 @@ function sample_value(uD::Float64, numsample::Int,θ::Float64,Ecut::Float64)
     
       push!(conduction_band_record[Threads.threadid()],FFF[length(wave)*NL+1])
       push!(valence_band_record[Threads.threadid()],FFF[length(wave)*NL])
+    end
+    
+    conduction_band_record=reduce(vcat,conduction_band_record)
+    valence_band_record=reduce(vcat,valence_band_record)
+
+    conduction_bandmin=sort(conduction_band_record)[1]
+    conduction_bandmax=sort(conduction_band_record)[end]
+
+    valence_bandmin=sort(valence_band_record)[1]
+    valence_bandmax=sort(valence_band_record)[end]
+    
+   #I start over
+    conduction_band_record=[Vector{Float64}() for _ in 1:Threads.nthreads()]
+    valence_band_record=[Vector{Float64}() for _ in 1:Threads.nthreads()]
+    
+    
+    Threads.@threads for ja in 1:numsample
+      kvec=KGr+(rand()-1/2)*g1+(rand()-1/2)*g2
+      Hamiltonian=get_MoireHam(kvec,wave,NL,uD,T1,T2,V1,V0,ψ,g1T,g2T)
+      FFF=sort(real.(eigen(Hamiltonian).values))
+
+       # Range to search
+        lower_bound = valence_bandmax-Ecut-10
+        upper_bound = conduction_bandmin+Ecut+10
+
+
+        start_idx = searchsortedfirst(FFF, lower_bound)
+        end_idx = searchsortedlast(FFF, upper_bound)
+        elements_in_range = FFF[start_idx:end_idx]
+
+
+      
+        push!(gross_valuesset[Threads.threadid()],elements_in_range)
+        push!(conduction_band_record[Threads.threadid()],FFF[length(wave)*NL+1])
+        push!(valence_band_record[Threads.threadid()],FFF[length(wave)*NL])
     end
     
     gross_valuesset=reduce(vcat,reduce(vcat,gross_valuesset))
