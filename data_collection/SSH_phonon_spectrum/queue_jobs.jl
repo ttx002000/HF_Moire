@@ -8,9 +8,9 @@ job_prefix = "SSH"
 
 #Nx=30
 #Ny=30
-tper=0.37
+tper=-0.37
 tpa=2
-tNNN=0.16
+tNNN=0.08
 #α=-0.05
 #β=-0.05
 #K=1.0;
