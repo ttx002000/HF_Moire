@@ -45,7 +45,7 @@ spectrum,unperturbed_spectrum,χspectrum=get_spectrum_redundant(Kbare_momentum,K
 
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "SSH_phonon/test2/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])KNNN$(args[10])filling$(args[11])temp$(args[12])shear.jld2")
+savepath=joinpath(scratch_dir, "SSH_phonon/test3/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])KNNN$(args[10])filling$(args[11])temp$(args[12])shear.jld2")
 #savepath=joinpath(@__DIR__, "data_output/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])KNNN$(args[10])filling$(args[11])temp$(args[12])shear.jld2")
 
 
