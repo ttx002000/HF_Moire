@@ -41,7 +41,8 @@ for filling in [1.25], temp in [0.01,0.05,0.0001], shear in [1.0,0.5,0.1], KNNN 
   arguments=Float64.([Nx,Nx,tper,tpa,tNNN,α,β,K,KNNN,filling,temp,shear])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:30:00",ntasks=1,mem=32)
 end
-
+=#
+#=
 for filling in [1.25], temp in [0.01,0.05,0.0001], shear in [1.0,0.5,0.1], KNNN in [1.0,0.5,0.1], K in [1.0,0.5,0.1]
   α=couplingset[1][1]
   β=couplingset[1][2]
@@ -49,6 +50,14 @@ for filling in [1.25], temp in [0.01,0.05,0.0001], shear in [1.0,0.5,0.1], KNNN 
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:30:00",ntasks=1,mem=32)
 end
 =#
+
+
+st=load(joinpath(@__DIR__, "missedjobs.jld2"))
+index=st["index"]
+for ja in eachindex(index)
+  arguments=index[ja]
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=1,mem=32)
+end
 
 
 st=load(joinpath(@__DIR__, "missedjobs.jld2"))
