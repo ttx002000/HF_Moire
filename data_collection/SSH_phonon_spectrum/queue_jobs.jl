@@ -35,7 +35,7 @@ filling=(args[10])
 
 
 
-for filling in [1.25], coupling in couplingset[1:3], temp in [0.01,0.05,0.0001], shear in [0.0,0.2], KNNN in [1.0], K in [1.0]
+for filling in [1.25], coupling in couplingset[1], temp in [0.01,0.05,0.0001], shear in [1.0,0.5,0.1], KNNN in [1.0,0.5,0.1], K in [1.0,0.5,0.1]
   α=coupling[1]
   β=coupling[2]
   arguments=Float64.([Nx,Nx,tper,tpa,tNNN,α,β,K,KNNN,filling,temp,shear])
