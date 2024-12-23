@@ -15,15 +15,13 @@ Ny=Int(args[2])
 tper=args[3]
 tpa=args[4]
 tNNN=args[5]
-sum1=args[6]
-pol1=args[7]
-α=sum1*pol1/(1+pol1)
-β=sum1/(1+pol1)
 
-sum2=args[8]
-pol2=args[9]
-K=sum2/(1+pol2)
-gshear=sum2*pol2/(1+pol2)
+α=args[6]
+β=args[7]
+
+
+K=args[8]
+gshear=args[9]
 
 filling=(args[10])
 KNNN=args[11]
@@ -43,7 +41,7 @@ spectrum=FFF.values
 
 scratch_dir = ENV["SCRATCH"]
 
-savepath=joinpath(scratch_dir, "SSH/test3/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])sum1$(args[7])pol1$(args[8])sum2$(args[9])pol2$(args[10])filling$(args[11])KNNN$(args[12])temp$(Int(args[13]))try.jld2")
+savepath=joinpath(scratch_dir, "SSH/test3/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])gshear$(args[10])filling$(args[11])KNNN$(args[12])temp$(Int(args[13]))try.jld2")
 jldsave(savepath,phonon_id=phonon_id,orbital_id=orbital_id,
          phonon_coor=phonon_coor,E_total=E_old,Eelec=Eelec_new,
          free_energy=free_energy,spectrum=spectrum,
