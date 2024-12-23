@@ -42,7 +42,7 @@ Nelec=Int(round(Nx*Ny*filling))
 =#
 
 
-for trytime in 1:5, gshear in [0.1,0.5,1.0,2.0], α in collect(-1.0:-0.1:-1.5)
+for trytime in 6:10, gshear in [0.1,0.5,1.0,2.0], α in collect(-1.0:-0.1:-1.5)
  
   β=-α*0.37/2.0
 
@@ -51,7 +51,7 @@ for trytime in 1:5, gshear in [0.1,0.5,1.0,2.0], α in collect(-1.0:-0.1:-1.5)
 end
 
 
-for trytime in 1:5, gshear in [0.1,0.5,1.0,2.0], α in collect(-1.0:-0.1:-1.5)
+for trytime in 6:10, gshear in [0.1,0.5,1.0,2.0], α in collect(-1.0:-0.1:-1.5)
  
   β=-α*0.37/1.0
 
