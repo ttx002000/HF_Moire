@@ -62,10 +62,7 @@ for ja in eachindex(index)
   arguments=index[ja]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=1,mem=8)
 end
-for ja in eachindex(index)
-  arguments=index[ja]
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=1,mem=8)
-end
+
 
 
 
