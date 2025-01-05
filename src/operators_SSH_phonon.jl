@@ -408,7 +408,7 @@ function barephonon(Nx::Int64,Ny::Int64,K::Float64,KNNN::Float64,shearstrength::
   for ja in eachindex(shear_xbond)
     bond=shear_xbond[ja]
     for jc in 3:4, jd in 3:4
-    Kbare_real[bond[jc][1],bond[jc][2],bond[jc][3],bond[jd][1],bond[jd][2],bond[jd][3]]+=shearstrength*(-1)^(jc+jd)
+    Kbare_real[bond[jc][1],bond[jc][2],bond[jc][3],bond[jd][1],bond[jd][2],bond[jd][3]]+=shearstrength*(-1)^(jc+jd) #I think I missed a factor of 2 here
     end
  end
  

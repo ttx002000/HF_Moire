@@ -9,7 +9,7 @@ using JLD2
 include(joinpath(@__DIR__,"../../src/operators_SSH_withshear.jl"))
 
 args=parse.(Float64,ARGS)
-
+#args=[40,40,-0.37,2.0,-0.08,-1.2,0.12,1.0,0.1,1.25,0.0,0.01,1.0]
 Nx=Int(args[1])
 Ny=Int(args[2])
 tper=args[3]
