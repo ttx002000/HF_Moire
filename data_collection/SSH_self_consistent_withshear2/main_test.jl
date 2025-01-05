@@ -41,7 +41,7 @@ spectrum=FFF.values
 
 scratch_dir = ENV["SCRATCH"]
 
-savepath=joinpath(scratch_dir, "SSH/test4/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])gshear$(args[10])filling$(args[11])KNNN$(args[12])temp$(Int(args[13]))try.jld2")
+savepath=joinpath(scratch_dir, "SSH/test5/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])gshear$(args[10])filling$(args[11])KNNN$(args[12])temp$(Int(args[13]))try.jld2")
 jldsave(savepath,phonon_id=phonon_id,orbital_id=orbital_id,
          phonon_coor=phonon_coor,E_total=E_old,Eelec=Eelec_new,
          free_energy=free_energy,spectrum=spectrum,
