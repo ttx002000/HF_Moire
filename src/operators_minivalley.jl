@@ -279,9 +279,9 @@ end
 function calculate_energy(measureone::Vector{Float64},density_point::Vector{Float64},renormalized_density::Vector{Float64},
                           formfactors::Matrix{Float64},Coulommatrix::Matrix{Float64})
 
-    measuretwo=measureone*transpose(measureone)
+    #measuretwo=measureone*transpose(measureone)
     energy=zeros(Float64,length(density_point))
-    m1=(formfactors.*Coulommatrix.*measuretwo)
+    m1=(formfactors.*Coulommatrix.*(measureone*transpose(measureone)))
     Threads.@threads for ja in eachindex(density_point)
   
 

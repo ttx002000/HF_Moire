@@ -33,9 +33,9 @@ density_stop=0.5
 
 
 
-for  er in [5.0,10.0,15.0], pocket_num in [1,2,3]
+for  er in [5.0,10.0,15.0], pocket_num in [3]
   arguments=Float64.([uD,er,pocket_num,num_u_grid,num_theta_grid,density_start,density_stop])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=16,mem=64)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=16,mem=128)
 end
 
 
