@@ -36,7 +36,7 @@ temp=1.0
 
 for  er in erspace, trytime in collect(1:1:10)
   arguments=Float64.([uD,er,cutoff,num_u_grid,num_theta_grid,density_start,density_stop,temp,trytime])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="60:00",ntasks=16,mem=64)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="90:00",ntasks=16,mem=64)
 end
 
 
