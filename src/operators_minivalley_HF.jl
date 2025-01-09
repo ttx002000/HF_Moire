@@ -261,6 +261,7 @@ function calculate_energy(measureone::Vector{Float64},target_density::Float64,
  
 
  while abs(energy_new-energy_old)>10^(-5)
+   tic=time()
   itnum+=1
   energy_old=energy_new
   fermilevel,fermifactor,renormalized_density=find_FL(quasi_particle_energy_old,
@@ -274,12 +275,13 @@ function calculate_energy(measureone::Vector{Float64},target_density::Float64,
   energy_new=sum(eig_set_final.*measureone.*fermifactor)/renormalized_density
   energy_new-=transpose(fermifactor)*m1*fermifactor/(2*renormalized_density)
 
- 
+  toc=time()
   println("iterations",itnum)
   println("energy change",energy_new-energy_old)
   println("new energy",energy_new)
   println("renormalized_density",renormalized_density)
   println("fermilevel",fermilevel)
+ println("this iteration takes time",toc-tic)
   flush(stdout)
     
   end
