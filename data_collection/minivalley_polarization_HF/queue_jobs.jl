@@ -33,8 +33,8 @@ temp=1.0
 
 
 
-for  er in [1.0], trytime in collect(1:1:10),density_point in eachindex(density_range)
-  arguments=Float64.([uD,er,cutoff,num_u_grid,num_theta_grid,density_point,temp,trytime])
+for  er in [1.0], trytime in collect(1:1:10), jb in eachindex(density_range)
+  arguments=Float64.([uD,er,cutoff,num_u_grid,num_theta_grid,density_point[jb],temp,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=4,mem=64)
 end
 
