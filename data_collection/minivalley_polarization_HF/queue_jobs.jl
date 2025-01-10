@@ -21,7 +21,7 @@ erspace=[5.0,10.0,15.0]
 num_u_grid=250
 num_theta_grid=250
 density_range=collect(0.05:0.05:1.5)
-cutoff=116.0
+cutoff=110.0
 temp=1.0
 
 #er=5.0
