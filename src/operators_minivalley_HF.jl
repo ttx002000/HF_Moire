@@ -108,12 +108,10 @@ function find_Qlength(uD::Float64,bandindex::Int)
 end
 
 
-function sample_states(uD::Float64,num_u_grid::Int,num_theta_grid::Int,density_start::Float64,density_stop::Float64,cutoff::Float64)
+function sample_states(uD::Float64,num_u_grid::Int,num_theta_grid::Int,density_point::Float64,cutoff::Float64)
 
-  num_density_grid=15
-  density_point=collect(range(density_start, stop=density_stop, length=num_density_grid))*0.01 #The 0.01 is for unit conversion
   bandindex=5
-  chemical_potential=find_chemical_potential(density_point,uD,bandindex)
+  chemical_potential=find_chemical_potential([density_point],uD,bandindex)
   
 
 
@@ -180,7 +178,7 @@ function sample_states(uD::Float64,num_u_grid::Int,num_theta_grid::Int,density_s
 
 
 
-  return  eig_set_final,eig_vec_set_final,k_set_final,theta_set_final,u_set_final,umin,umax,Qlength,density_point,chemical_potential,ugrid,θgrid
+  return  eig_set_final,eig_vec_set_final,k_set_final,theta_set_final,u_set_final,umin,umax,Qlength,chemical_potential,ugrid,θgrid
 end
 
 
@@ -289,17 +287,13 @@ function calculate_energy(measureone::Vector{Float64},target_density::Float64,
   return fermifactor,fermilevel,renormalized_density,energy_new,quasi_particle_energy_new
 end
 
-function do_iterations(measureone::Vector{Float64},density_point::Vector{Float64},formfactors::Matrix{Float64},temp::Float64,eig_set_final::Vector{Float64})
+function do_iterations(measureone::Vector{Float64},density_point::Float64,formfactors::Matrix{Float64},temp::Float64,eig_set_final::Vector{Float64})
    m1=(formfactors.*(measureone*transpose(measureone)))
-   fermifactor_final=Vector{Vector{Float64}}(undef,length(density_point))
-   fermilevel_final=Vector{Float64}(undef,length(density_point))
-   renormalized_density_final=Vector{Float64}(undef,length(density_point))
-   energy_final=Vector{Float64}(undef,length(density_point))
-   quasi_particle_energy_final=Vector{Vector{Float64}}(undef,length(density_point))
+  
 
-   Threads.@threads for ja in eachindex(density_point)
-    fermifactor_final[ja],fermilevel_final[ja],renormalized_density_final[ja],energy_final[ja],quasi_particle_energy_final[ja]=calculate_energy(measureone,density_point[ja],formfactors,temp,m1,eig_set_final)
-   end
+   
+    fermifactor_final,fermilevel_final,renormalized_density_final,energy_final,quasi_particle_energy_final=calculate_energy(measureone,density_point,formfactors,temp,m1,eig_set_final)
+   
 
 
    return  fermifactor_final,fermilevel_final,renormalized_density_final,energy_final,quasi_particle_energy_final

@@ -20,8 +20,7 @@ uD=50.0
 erspace=[5.0,10.0,15.0]
 num_u_grid=250
 num_theta_grid=250
-density_start=0.1
-density_stop=1.0
+density_range=collect(0.05:0.05:1.5)
 cutoff=50.0
 temp=1.0
 
@@ -34,9 +33,9 @@ temp=1.0
 
 
 
-for  er in erspace, trytime in collect(1:1:10)
+for  er in [1.0], trytime in collect(1:1:1),density_point in density_range
   arguments=Float64.([uD,er,cutoff,num_u_grid,num_theta_grid,density_start,density_stop,temp,trytime])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="90:00",ntasks=16,mem=64)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="20:00",ntasks=16,mem=64)
 end
 
 
