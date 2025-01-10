@@ -108,7 +108,7 @@ function find_Qlength(uD::Float64,bandindex::Int)
 end
 
 
-function sample_states(uD::Float64,num_u_grid::Int,num_theta_grid::Int,density_point::Float64,cutoff::Float64)
+function sample_states(uD::Float64,num_u_grid::Int,num_theta_grid::Int,cutoff::Float64)
 
   bandindex=5
   #chemical_potential=find_chemical_potential([density_point],uD,bandindex)
