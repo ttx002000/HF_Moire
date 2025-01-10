@@ -33,13 +33,13 @@ formfactors,measureone=get_formfactors( eig_set_final,eig_vec_set_final,
                                         k_set_final,theta_set_final,
                                         u_set_final,ϵr,ugrid,θgrid)
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "minivalley/FF_$(args[1])uD1.0er$(args[3])cutoff$(args[4])num_u_grid$(args[5])num_theta_grid$(args[6])density.jld2")
+savepath=joinpath(scratch_dir, "minivalley/FF_$(args[1])uD1.0er$(args[3])cutoff$(args[4])num_u_grid$(args[5])num_theta_grid.jld2")
 jldsave(savepath,formfactors=formfactors,measureone=measureone)                                        
 
 
 #=
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "minivalley/FF_$(args[1])uD1.0er$(args[3])cutoff$(args[4])num_u_grid$(args[5])num_theta_grid$(args[6])density.jld2")
+savepath=joinpath(scratch_dir, "minivalley/FF_$(args[1])uD1.0er$(args[3])cutoff$(args[4])num_u_grid$(args[5])num_theta_grid.jld2")
 
 s1=load(savepath)
 formfactors=s1["formfactors"]/ϵr

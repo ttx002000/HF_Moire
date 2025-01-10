@@ -154,7 +154,7 @@ function sample_states(uD::Float64,num_u_grid::Int,num_theta_grid::Int,density_p
 
     for ja in eachindex(eig_set)
  
-        if eig_set[ja]<chemical_potential[end]+cutoff
+        if eig_set[ja]<cutoff  # I changed this
           push!(eig_set_final,eig_set[ja])
           push!(eig_vec_set_final,eig_vec_set[ja])
           push!(k_set_final,k_set[ja])
