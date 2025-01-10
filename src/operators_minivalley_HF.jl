@@ -111,7 +111,7 @@ end
 function sample_states(uD::Float64,num_u_grid::Int,num_theta_grid::Int,density_point::Float64,cutoff::Float64)
 
   bandindex=5
-  chemical_potential=find_chemical_potential([density_point],uD,bandindex)
+  #chemical_potential=find_chemical_potential([density_point],uD,bandindex)
   
 
 
@@ -178,7 +178,7 @@ function sample_states(uD::Float64,num_u_grid::Int,num_theta_grid::Int,density_p
 
 
 
-  return  eig_set_final,eig_vec_set_final,k_set_final,theta_set_final,u_set_final,umin,umax,Qlength,chemical_potential,ugrid,θgrid
+  return  eig_set_final,eig_vec_set_final,k_set_final,theta_set_final,u_set_final,umin,umax,Qlength,ugrid,θgrid
 end
 
 

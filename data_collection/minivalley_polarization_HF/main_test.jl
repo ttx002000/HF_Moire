@@ -22,7 +22,7 @@ trytime=args[8]
 
 
 
-eig_set_final,eig_vec_set_final,k_set_final,theta_set_final,u_set_final,umin,umax,Qlength,chemical_potential,ugrid,θgrid=sample_states(uD,num_u_grid,num_theta_grid,density_point,cutoff)
+eig_set_final,eig_vec_set_final,k_set_final,theta_set_final,u_set_final,umin,umax,Qlength,ugrid,θgrid=sample_states(uD,num_u_grid,num_theta_grid,density_point,cutoff)
 
 
 
