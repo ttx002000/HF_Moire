@@ -29,6 +29,7 @@ temp=0.5
 
 
 
+#=
 for  er in [5.0,10.0,15.0], trytime in collect(6:1:10), jb in eachindex(density_range)
   arguments=Float64.([uD,er,cutoff,num_u_grid,num_theta_grid,density_range[jb],temp,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="90:00",ntasks=4,mem=64)
@@ -42,23 +43,23 @@ for  er in [5.0,10.0,15.0], trytime in collect(6:1:10), jb in eachindex(density_
 end
 
 
-#=
-st=load(joinpath(@__DIR__, "missedjobs.jld2"))
-index=st["index"]
-for ja in eachindex(index)
-  arguments=Float64.(index[ja])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=4,mem=128)
-end
-=#
+
 
 
 for  er in [5.0,10.0,15.0], trytime in collect(6:1:10), jb in eachindex(density_range)
   arguments=Float64.([80.0,er,120.0,num_u_grid,num_theta_grid,density_range[jb],temp,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="90:00",ntasks=4,mem=64)
 end
+=#
 
 
 
 
 
 
+st=load(joinpath(@__DIR__, "missedjobs.jld2"))
+index=st["index"]
+for ja in eachindex(index)
+  arguments=Float64.(index[ja])
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:30:00",ntasks=4,mem=64)
+end
