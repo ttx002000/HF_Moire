@@ -27,7 +27,7 @@ eig_set_final,eig_vec_set_final,k_set_final,theta_set_final,u_set_final,umin,uma
 
 
 
-
+#=
 
 formfactors,measureone=get_formfactors( eig_set_final,eig_vec_set_final,
                                         k_set_final,theta_set_final,
@@ -35,9 +35,9 @@ formfactors,measureone=get_formfactors( eig_set_final,eig_vec_set_final,
 scratch_dir = ENV["SCRATCH"]
 savepath=joinpath(scratch_dir, "minivalley/FF_$(args[1])uD$(args[2])er$(args[3])cutoff$(args[4])num_u_grid$(args[5])num_theta_grid.jld2")
 jldsave(savepath,formfactors=formfactors,measureone=measureone)                                        
+=#
 
 
-#=
 scratch_dir = ENV["SCRATCH"]
 savepath=joinpath(scratch_dir, "minivalley/FF_$(args[1])uD$(args[2])er$(args[3])cutoff$(args[4])num_u_grid$(args[5])num_theta_grid.jld2")
 
@@ -49,10 +49,9 @@ s1=load(savepath)
 fermifactor_final,fermilevel_final,renormalized_density_final,energy_final,quasi_particle_energy_final=do_iterations(s1["measureone"],density_point,s1["formfactors"],temp,eig_set_final)
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "minivalley/data_output2/$(args[1])uD$(args[2])er$(args[3])cutoff$(args[4])num_u_grid$(args[5])num_theta_grid$(args[6])density$(args[7])temp$(args[8])try.jld2")
+savepath=joinpath(scratch_dir, "minivalley/data_output3/$(args[1])uD$(args[2])er$(args[3])cutoff$(args[4])num_u_grid$(args[5])num_theta_grid$(args[6])density$(args[7])temp$(args[8])try.jld2")
 
 
 jldsave(savepath,fermifactor=fermifactor_final,energy=energy_final,fermilevel=fermilevel_final,
                 renormalized_density=renormalized_density_final,quasi_particle_energy=quasi_particle_energy_final,
                 eig_set_final= eig_set_final,k_set_final=k_set_final,theta_set_final=theta_set_final,u_set_final=u_set_final)
-=#

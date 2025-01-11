@@ -22,21 +22,21 @@ num_u_grid=200
 num_theta_grid=250
 density_range=collect(0.1:0.025:1.5)
 cutoff=108.0 #use 75.0 if uD=20.0, use 120.0 if uD=20.0
-temp=1.0
+temp=0.5
 
 #er=5.0
 
 
 
 
-for  er in [5.0,10.0,15.0], trytime in collect(1:1:1), jb in [1]
+for  er in [5.0,10.0,15.0], trytime in collect(1:1:5), jb in eachindex(density_range)
   arguments=Float64.([uD,er,cutoff,num_u_grid,num_theta_grid,density_range[jb],temp,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="90:00",ntasks=4,mem=64)
 end
 
 
 
-for  er in [5.0,10.0,15.0], trytime in collect(1:1:1), jb in [1]
+for  er in [5.0,10.0,15.0], trytime in collect(1:1:5), jb in eachindex(density_range)
   arguments=Float64.([20.0,er,70.0,num_u_grid,num_theta_grid,density_range[jb],temp,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="90:00",ntasks=4,mem=64)
 end
@@ -52,7 +52,7 @@ end
 =#
 
 
-for  er in [5.0,10.0,15.0], trytime in collect(1:1:1), jb in [1]
+for  er in [5.0,10.0,15.0], trytime in collect(1:1:5), jb in eachindex(density_range)
   arguments=Float64.([80.0,er,120.0,num_u_grid,num_theta_grid,density_range[jb],temp,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="90:00",ntasks=4,mem=64)
 end
