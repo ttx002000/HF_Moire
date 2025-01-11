@@ -222,7 +222,7 @@ end
 function find_FL(quasi_particle_energy::Vector{Float64},measureone::Vector{Float64},target_density::Float64,val_s::Float64,val_e::Float64,temp::Float64)
    try_FL=(val_s+val_e)/2
  
-   stan=10^(-4)*target_density
+   stan=10^(-5)*target_density
  
    fermifactor=[1/(exp((quasi_particle_energy[ja]-try_FL)/temp)+1) for ja in eachindex(measureone)]
   
