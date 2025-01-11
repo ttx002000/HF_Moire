@@ -49,7 +49,7 @@ s1=load(savepath)
 fermifactor_final,fermilevel_final,renormalized_density_final,energy_final,quasi_particle_energy_final=do_iterations(s1["measureone"],density_point,s1["formfactors"],temp,eig_set_final)
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "minivalley/data_output3/$(args[1])uD$(args[2])er$(args[3])cutoff$(args[4])num_u_grid$(args[5])num_theta_grid$(args[6])density$(args[7])temp$(args[8])try.jld2")
+savepath=joinpath(scratch_dir, "minivalley/data_output3/uD=$(args[1])/$(args[1])uD$(args[2])er$(args[3])cutoff$(args[4])num_u_grid$(args[5])num_theta_grid$(args[6])density$(args[7])temp$(args[8])try.jld2")
 
 
 jldsave(savepath,fermifactor=fermifactor_final,energy=energy_final,fermilevel=fermilevel_final,
