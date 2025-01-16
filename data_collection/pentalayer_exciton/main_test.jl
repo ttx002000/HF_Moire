@@ -12,7 +12,7 @@ ildis=args[6]
 ϵr=args[7]
 trytime=args[8]
 
-CNP=-ildis/0.335*uD
+CNP=-ildis/0.335*uD-4*uD
 
 eig_set,k_set,k_index,eig_vec_set,Area,single_matrix=get_single_particle(vone,vtwo,radius,num_points,uD,CNP)
 println("finish1")
