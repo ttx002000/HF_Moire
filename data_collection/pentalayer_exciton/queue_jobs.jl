@@ -40,19 +40,18 @@ for jtry in 1:20, CNP in collect(-60.0:-10.0:-200.0)
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=8,mem=32)
 end
 =#
-
+#=
 for jtry in 1:20, CNP in collect(-100.0:-10.0:-250.0)
   arguments=Float64.([vone,-1,radius,num_points,50.0,CNP,ϵr,jtry])
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=8,mem=32)
 end
+=#
 
 
 
-#=
-st=load("missedjob.jld2")
+st=load("missedjobs.jld2")
 index=st["index"]
 for ja in eachindex(index)
   arguments=index[ja]
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="10:00",ntasks=1,mem=8)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="30:00",ntasks=8,mem=32)
 end
-=#
