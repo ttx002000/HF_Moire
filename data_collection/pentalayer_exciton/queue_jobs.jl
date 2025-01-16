@@ -14,7 +14,8 @@ vtwo=1
 radius=1.8
 num_points=100
 uD=30.0
-CNP=-100.0
+#CNP=-100.0
+ϵr=5.0
 
 #=
 vone=Int(args[1])
