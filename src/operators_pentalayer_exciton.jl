@@ -123,7 +123,7 @@ end
 
 function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::Float64,
                              density_matrix::Array{ComplexF64},single_matrix::Array{Float64},
-                             num_particle::Int,energy_input::Float64,BG_density_matrix::Array{ComplexF64},formfactors::Array{ComplexF64})
+                             num_particle::Int,energy_input::Float64,BG_density_matrix::Array{ComplexF64},formfactors::Array{ComplexF64},il_dis::Float64)
 
   Fock_matrix=zeros(ComplexF64,2,2,length(k_set))
  Hartree_matrix=zeros(ComplexF64,2,2)
@@ -143,7 +143,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::F
  =#
 
  for l1 in 1:2, l2 in 1:2
-  Hartree_matrix[l1,l1]+=1/(ϵr*Area)*Coulomb(l1,l2,[0.0,0.0],[0.0,0.0])*sum(density_matrix[l2,l2,:])
+  Hartree_matrix[l1,l1]+=1/(ϵr*Area)*Coulomb(l1,l2,[0.0,0.0],[0.0,0.0],il_dis)*sum(density_matrix[l2,l2,:])
  end
 
     
@@ -211,7 +211,7 @@ end
 
 
 
-function iteration(formfactors::Array{ComplexF64},initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{Float64})
+function iteration(formfactors::Array{ComplexF64},initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{Float64},il_dis::Float64)
   
   eout=1.0
   itcount=0
@@ -251,7 +251,7 @@ function iteration(formfactors::Array{ComplexF64},initial_density_matrix::Array{
 
         eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix=Construct_projector(k_set,ϵr,Area,
                                                                                                                                                               dmk,single_matrix,
-                                                                                                                                                              num_particle,energy,BG_density_matrix,formfactors)
+                                                                                                                                                              num_particle,energy,BG_density_matrix,formfactors,il_dis)
         DIIS_input_density_matrix[mod(itcount,3)+1]=dmk
         input_density_matrix=output_density_matrix
         println("using DIIS")
@@ -259,7 +259,7 @@ function iteration(formfactors::Array{ComplexF64},initial_density_matrix::Array{
       else
         eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix=Construct_projector(k_set,ϵr,Area,
                                                                                                                                                                                           input_density_matrix,single_matrix,
-                                                                                                                                                                                           num_particle,energy,BG_density_matrix,formfactors)
+                                                                                                                                                                                           num_particle,energy,BG_density_matrix,formfactors,il_dis)
         DIIS_input_density_matrix[mod(itcount,3)+1]=input_density_matrix
         input_density_matrix=output_density_matrix
          
