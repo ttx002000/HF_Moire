@@ -28,7 +28,7 @@ scratch_dir = ENV["SCRATCH"]
 savepath=joinpath(scratch_dir, "pentalayer_graphene_exciton/uD=$(args[5])/vone$(vone)vtwp$(vtwo)/$(args[1])vone$(args[2])vtwo$(args[3])radius$(args[4])num_points$(args[5])uD$(args[6])CNP$(args[7])er$(args[8])trytime.jld2")
 
   
-jldsave(joinpath(@__DIR__, "data_output/$(args[1])vone$(args[2])vtwo$(args[3])radius$(args[4])num_points$(args[5])uD$(args[6])CNP$(args[7])er$(args[8])trytime.jld2"),
+jldsave(savepath,
              DIIS_input_density_matrix=DIIS_input_density_matrix,HF_eigenvalues=HF_eigenvalues,
              k_set=k_set,eig_vec_set=eig_vec_set,HF_eigenvectors=HF_eigenvectors,fermi_level=fermi_level,energy=energy,eig_set=eig_set,
              single_matrix=single_matrix,Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix)
