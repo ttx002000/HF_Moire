@@ -30,7 +30,7 @@ trytime=args[8]
 
 
 for jtry in 1:20, CNP in collect(-60.0:-20.0:-200.0)
-  arguments=Float64.([vone,vtwo,radius,num_points,uD,CNP,ϵr,jtry])
+  arguments=Float64.([vone,-1,radius,num_points,uD,CNP,ϵr,jtry])
     submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=8,mem=32)
 end
 
