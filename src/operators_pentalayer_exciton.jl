@@ -243,7 +243,7 @@ function iteration(formfactors::Array{ComplexF64},initial_density_matrix::Array{
       
       tic=time()
 
-      if (itcount>30 && abs(energy_change)>0.1) || (itcount>30 && abs(eout)<10^(-8))
+      if (itcount>30 && abs(eout)>10^(-4)) || (itcount>30 && abs(eout)<10^(-8))
 
         dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
 
