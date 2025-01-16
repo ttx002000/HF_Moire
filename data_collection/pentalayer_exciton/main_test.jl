@@ -16,8 +16,10 @@ il_dis=CNP/uD*0.335
 
 eig_set,k_set,k_index,eig_vec_set,Area,single_matrix=get_single_particle(vone,vtwo,radius,num_points,uD,CNP)
 println("finish1")
+tic=time()
 formfactors=get_formfactors(k_set,eig_vec_set,il_dis)
-println("finish2")
+toc=time()
+println("finish2",toc-tic)
 initial_density_matrix, BG_density_matrix=get_initial_proj(k_set)
 HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix=iteration(formfactors,initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix)
 

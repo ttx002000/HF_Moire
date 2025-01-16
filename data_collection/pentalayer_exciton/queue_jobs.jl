@@ -11,7 +11,7 @@ job_prefix = "sing"
 
 vone=1
 vtwo=1
-radisu=1.8
+radius=1.8
 num_points=100
 uD=30.0
 CNP=-100.0
