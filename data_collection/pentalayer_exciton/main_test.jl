@@ -1,7 +1,7 @@
 using JLD2
 include("../../src/operators_pentalayer_exciton.jl")
 using LinearAlgebra
-
+args=parse.(Float64,ARGS)
 #args=[1,1,1.8,100.0,30.0,-160.0,5.0,1.0]
 vone=Int(args[1])
 vtwo=Int(args[2])
