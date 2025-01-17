@@ -52,7 +52,7 @@ function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,CNP::Float64,s
   Ham=Ham+Ham'
 
   for layer in 1:NL
-      Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[uD*(layer-(NL+1)/2) -t0*get_f((k+Kac)*stacking);-t0*conj(get_f((k+Kac)*stackings)) uD*(layer-(NL+1)/2)]
+      Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[uD*(layer-(NL+1)/2) -t0*get_f((k+Kac)*stacking);-t0*conj(get_f((k+Kac)*stacking)) uD*(layer-(NL+1)/2)]
   end
  return Ham+Matrix{Float64}(I,2*NL,2*NL)*CNP
 end
