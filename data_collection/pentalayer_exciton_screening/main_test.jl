@@ -16,8 +16,7 @@ trytime=args[10]
 
 
 
-eig_set,k_set,k_index,eig_vec_set,Area,single_matrix=get_single_particle(vone,vtwo,radius,num_points,uD,stackingtwo)
-eig_set[2]=eig_set[2].+CNP
+eig_set,k_set,k_index,eig_vec_set,Area,single_matrix=get_single_particle(vone,vtwo,radius,num_points,uD,stackingtwo,CNP)
 
 println("finish1")
 

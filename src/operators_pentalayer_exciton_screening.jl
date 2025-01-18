@@ -64,7 +64,7 @@ function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int)
  return Ham
 end
 
-function get_single_particle(vone::Int,vtwo::Int,radius::Float64,num_points::Int,uD::Float64,stackingtwo::Int64)
+function get_single_particle(vone::Int,vtwo::Int,radius::Float64,num_points::Int,uD::Float64,stackingtwo::Int64,CNP::Float64)
 
 
 
@@ -95,7 +95,7 @@ function get_single_particle(vone::Int,vtwo::Int,radius::Float64,num_points::Int
       
       Ham=Hamiltonian([kx_grid[ja],ky_grid[jb]],uD,vtwo,stackingtwo)
       FFF=eigen(Ham)
-      push!(eig_set[2],real(FFF.values[bandindex]))
+      push!(eig_set[2],real(FFF.values[bandindex])+CNP)
    
       push!(eig_vec_set[2],FFF.vectors[:,bandindex])
   end
