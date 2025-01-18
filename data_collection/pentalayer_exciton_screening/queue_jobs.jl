@@ -34,7 +34,7 @@ trytime=args[10]
 =#
 
 for uD=[10.0,20.0,30.0,40.0,50.0], trytime in [1.0]
-  arguments=[vone,vtwo,radius,num_points,uD,ildis,ϵr,stackingtwo,CNP,trytime]
+  arguments=[vone,-1,radius,num_points,uD,ildis,ϵr,stackingtwo,CNP,trytime]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=16,mem=32)
 end
 
