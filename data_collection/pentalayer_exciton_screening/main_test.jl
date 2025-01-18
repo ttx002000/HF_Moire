@@ -28,11 +28,11 @@ toc=time()
 println("finish2",toc-tic)
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "pentalayer_graphene_exciton/FF_$(args[1])vone$(args[2])vtwo$(args[3])radius$(args[4])num_points$(args[5])uD$(args[6])ildis$(args[8])stackingtwo.jld2")
+savepath=joinpath(scratch_dir, "pentalayer_exciton_phasediagram/FF_$(args[1])vone$(args[2])vtwo$(args[3])radius$(args[4])num_points$(args[5])uD$(args[6])ildis$(args[8])stackingtwo.jld2")
 jldsave(savepath,formfactors=formfactors,Hartree_formfactors=Hartree_formfactors)
 =#
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "pentalayer_graphene_exciton/FF_$(args[1])vone$(args[2])vtwo$(args[3])radius$(args[4])num_points$(args[5])uD$(args[6])ildis$(args[8])stackingtwo.jld2")
+savepath=joinpath(scratch_dir, "pentalayer_exciton_phasediagram/FF_$(args[1])vone$(args[2])vtwo$(args[3])radius$(args[4])num_points$(args[5])uD$(args[6])ildis$(args[8])stackingtwo.jld2")
 st=load(savepath)
 formfactors=st["formfactors"]
 Hartree_formfactors=st["Hartree_formfactors"]
@@ -42,7 +42,7 @@ HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Har
 
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "pentalayer_graphene_exciton/data_output1/uD=$(args[5])/vone$(vone)vtwo$(vtwo)/$(args[1])vone$(args[2])vtwo$(args[3])radius$(args[4])num_points$(args[5])uD$(args[6])ildis$(args[7])er$(args[8])stackingtwo$(args[9])CNP$(args[10])trytime.jld2")
+savepath=joinpath(scratch_dir, "pentalayer_exciton_phasediagram/data_output1/uD=$(args[5])/vone$(vone)vtwo$(vtwo)/$(args[1])vone$(args[2])vtwo$(args[3])radius$(args[4])num_points$(args[5])uD$(args[6])ildis$(args[7])er$(args[8])stackingtwo$(args[9])CNP$(args[10])trytime.jld2")
 
   
 jldsave(savepath,
