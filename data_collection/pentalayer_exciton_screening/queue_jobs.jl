@@ -32,7 +32,7 @@ stackingtwo=Int(args[8])
 CNP=args[9]-4*uD
 trytime=args[10]
 =#
-
+#=
 for uD=[60.0], trytime in [1.0]
   arguments=[vone,-1,radius,num_points,uD,ildis,ϵr,stackingtwo,CNP,trytime]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=16,mem=32)
@@ -40,13 +40,13 @@ for uD=[60.0], trytime in [1.0]
   arguments=[vone,1,radius,num_points,uD,ildis,ϵr,stackingtwo,CNP,trytime]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=16,mem=32)
 end
+=#
 
 
-#=
+
 st=load("missedjobs.jld2")
 index=st["index"]
 for ja in eachindex(index)
   arguments=index[ja]
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="50:00",ntasks=4,mem=16)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="50:00",ntasks=4,mem=24)
 end
-=#

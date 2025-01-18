@@ -20,6 +20,8 @@ eig_set,k_set,k_index,eig_vec_set,Area,single_matrix=get_single_particle(vone,vt
 eig_set[2]=eig_set[2].+CNP
 
 println("finish1")
+
+#=
 tic=time()
 formfactors,Hartree_formfactors=get_formfactors(k_set,eig_vec_set,ildis)
 toc=time()
@@ -28,8 +30,13 @@ println("finish2",toc-tic)
 scratch_dir = ENV["SCRATCH"]
 savepath=joinpath(scratch_dir, "pentalayer_graphene_exciton/FF_$(args[1])vone$(args[2])vtwo$(args[3])radius$(args[4])num_points$(args[5])uD$(args[6])ildis$(args[8])stackingtwo.jld2")
 jldsave(savepath,formfactors=formfactors,Hartree_formfactors=Hartree_formfactors)
+=#
+scratch_dir = ENV["SCRATCH"]
+savepath=joinpath(scratch_dir, "pentalayer_graphene_exciton/FF_$(args[1])vone$(args[2])vtwo$(args[3])radius$(args[4])num_points$(args[5])uD$(args[6])ildis$(args[8])stackingtwo.jld2")
+st=load(savepath)
+formfactors=st["formfactors"]
+Hartree_formfactors=st["Hartree_formfactors"]
 
-#=
 initial_density_matrix, BG_density_matrix=get_initial_proj(k_set)
 HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix=iteration(formfactors,initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,Hartree_formfactors)
 
@@ -42,4 +49,3 @@ jldsave(savepath,
              DIIS_input_density_matrix=DIIS_input_density_matrix,HF_eigenvalues=HF_eigenvalues,
              k_set=k_set,eig_vec_set=eig_vec_set,HF_eigenvectors=HF_eigenvectors,fermi_level=fermi_level,energy=energy,eig_set=eig_set,
              single_matrix=single_matrix,Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,k_index=k_index)
-=#
