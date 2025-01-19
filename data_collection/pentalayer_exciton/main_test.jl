@@ -21,7 +21,7 @@ formfactors=get_formfactors(k_set,eig_vec_set,ildis)
 toc=time()
 println("finish2",toc-tic)
 initial_density_matrix, BG_density_matrix=get_initial_proj(k_set)
-HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix=iteration(formfactors,initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,ildis)
+HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix=iteration(formfactors,initial_density_matrix,BG_density_matrix,Area,ϵr,k_set,single_matrix,ildis)
 
 
 scratch_dir = ENV["SCRATCH"]

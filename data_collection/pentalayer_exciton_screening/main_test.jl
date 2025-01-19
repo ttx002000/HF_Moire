@@ -37,7 +37,7 @@ formfactors=st["formfactors"]
 Hartree_formfactors=st["Hartree_formfactors"]
 
 initial_density_matrix, BG_density_matrix=get_initial_proj(k_set)
-HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix=iteration(formfactors,initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,Hartree_formfactors)
+HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix=iteration(formfactors,initial_density_matrix,BG_density_matrix,Area,ϵr,k_set,single_matrix,Hartree_formfactors)
 
 
 scratch_dir = ENV["SCRATCH"]

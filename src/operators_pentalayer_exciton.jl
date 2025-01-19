@@ -211,7 +211,7 @@ end
 
 
 
-function iteration(formfactors::Array{ComplexF64},initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{Float64},ildis::Float64)
+function iteration(formfactors::Array{ComplexF64},initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},Area::Float64,ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{Float64},ildis::Float64)
   
   eout=1.0
   itcount=0
