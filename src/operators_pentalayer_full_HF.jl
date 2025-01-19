@@ -157,23 +157,30 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::F
   HF_eigenvalues[:,ja]=real(FFF.values)
  end
 
-  val_s=sort(vec(HF_eigenvalues))[1]
-  val_e=sort(vec(HF_eigenvalues))[end]
- fermi_level,renormalized_density=find_FL(vec(HF_eigenvalues),target_density,val_s,val_e,temp,Area,bg_particle_density)
+  #val_s=sort(vec(HF_eigenvalues))[1]
+  #val_e=sort(vec(HF_eigenvalues))[end]
+ #fermi_level,renormalized_density=find_FL(vec(HF_eigenvalues),target_density,val_s,val_e,temp,Area,bg_particle_density)
+ s3=[ja/Area for ja in eachindex(vec(HF_eigenvalues))].-bg_particle_density
+ fermi_level=sort(vec(HF_eigenvalues))[searchsortedfirst(s3,target_density)]
+ renormalized_density=s3[searchsortedfirst(s3,target_density)]
+ println("RMdensity",renormalized_density)
 
  density_matrix_new=zeros(ComplexF64,40,40,length(k_set))
 
  Threads.@threads for ja in eachindex(k_set)
  for jb in 1:40
-
-   density_matrix_new[:,:,ja]+=HF_eigenvectors[:,jb,ja]*(HF_eigenvectors[:,jb,ja])'*1/(exp((HF_eigenvalues[jb,ja]-fermi_level)/temp)+1)
- end
+     if HF_eigenvalues[jb,ja]<fermi_level
+        #density_matrix_new[:,:,ja]+=HF_eigenvectors[:,jb,ja]*(HF_eigenvectors[:,jb,ja])'*1/(exp((HF_eigenvalues[jb,ja]-fermi_level)/temp)+1)
+        density_matrix_new[:,:,ja]+=HF_eigenvectors[:,jb,ja]*(HF_eigenvectors[:,jb,ja])'
+ 
+      end
+    end
  end
 
 
  density_matrix_new-=BG_density_matrix 
 
- output_density_matrix=density_matrix_new*1.0+density_matrix*0.0
+ output_density_matrix=density_matrix_new*0.5+density_matrix*0.5
 
  DeltaMatrix=density_matrix_new-density_matrix
  eout=0.0
@@ -238,7 +245,7 @@ function get_initial_proj(k_set::Vector{Vector{Float64}},eig_vec_set::Vector{Vec
 
  for ja in eachindex(k_set)
    A=randn(40,40)+im*randn(40,40)
-   initial_density_matrix[:,:,ja]+=(A+A')*0.1
+   initial_density_matrix[:,:,ja]+=(A+A')*0.01
  end
 
  return initial_density_matrix, BG_density_matrix
@@ -279,7 +286,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
       end
       
       tic=time()
-
+#=
       if (itcount>30 && abs(eout)>10^(-4)) || (itcount>30 && abs(eout)<10^(-8))
       
         dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
@@ -295,6 +302,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
         println("using DIIS")
        
       else
+  =#
         eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,renormalized_density,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix=Construct_projector(k_set,ϵr,Area,
                                                                                                                                                                                           input_density_matrix,single_matrix,
                                                                                                                                                                                            energy,BG_density_matrix,
@@ -304,7 +312,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
          
      
 
-      end
+    #  end
 
     
 

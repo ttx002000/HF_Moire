@@ -3,8 +3,7 @@ include("../../src/operators_pentalayer_full_HF.jl")
 using LinearAlgebra
 args=parse.(Float64,ARGS)
 #args=[1,1,1.4,20.0,30.0,10.0,1.0,5.0,1.0,-40.0,1.0]
-args=[1.4,20.0,30.0,0.02
-,5.0,0.5,1.0]
+args=[1.4,20.0,30.0,0.01,8.0,0.5,1.0]
 radius=args[1]
 num_points=Int(args[2])
 uD=args[3]
