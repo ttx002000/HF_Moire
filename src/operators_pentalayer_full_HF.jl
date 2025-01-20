@@ -190,7 +190,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::F
 
  energy=0.0
  for ja in eachindex(k_set)
-   energy+=real(tr(density_matrix[:,:,ja]*(Hartree_matrix/2-Fock_matrix[:,:,ja]/2+single_matrix[:,:,ja])))
+   energy+=real(tr(density_matrix[:,:,ja]*(Hartree_matrix/2-Fock_matrix[:,:,ja]/2+single_matrix[:,:,ja])))/length(k_set)
  end
 
  energy_change=real(energy-energy_input)
@@ -205,19 +205,19 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::F
   for ja in eachindex(k_set)
    num_pa+=real(tr(density_matrix_new[11:20,11:20,ja]))
   end
-   println("flavor one=",num_pa)
+   println("flavor 2=",num_pa)
 
    num_pa=0.0
    for ja in eachindex(k_set)
     num_pa+=real(tr(density_matrix_new[21:30,21:30,ja]))
    end
-    println("flavor one=",num_pa)
+    println("flavor 3=",num_pa)
 
     num_pa=0.0
     for ja in eachindex(k_set)
      num_pa+=real(tr(density_matrix_new[31:40,31:40,ja]))
     end
-     println("flavor one=",num_pa)
+     println("flavor 4=",num_pa)
 
 
 
