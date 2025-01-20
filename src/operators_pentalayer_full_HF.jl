@@ -138,15 +138,15 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::F
 
  Threads.@threads for ja in eachindex(k_set)
   for jb in eachindex(k_set)
-  cmatrix=Coulomb_matrix(z_pos,k_set[ja]-k_set[jb])
-  Fock_matrix[:,:,ja]+=1/(ϵr*Area)*(cmatrix.*density_matrix[:,:,jb])
+  fcmatrix=Coulomb_matrix(z_pos,k_set[ja]-k_set[jb])
+  Fock_matrix[:,:,ja]+=1/(ϵr*Area)*(fcmatrix.*density_matrix[:,:,jb])
   end
  end
 
 
 
-  cmatrix=Coulomb_matrix(z_pos,[0.0,0.0])
-  Hartree_matrix+=1/(ϵr*Area)*diagm(cmatrix*diag(dropdims(sum(density_matrix,dims=3),dims=3)))
+  hcmatrix=Coulomb_matrix(z_pos,[0.0,0.0])
+  Hartree_matrix+=1/(ϵr*Area)*diagm(hcmatrix*diag(dropdims(sum(density_matrix,dims=3),dims=3)))
 
 
 
@@ -311,7 +311,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
       
       tic=time()
 
-      if (itcount>30 && abs(eout)>10^(-4)) || (itcount>30 && abs(eout)<10^(-8))
+      if (itcount>50 && abs(eout)>10^(-4)) || (itcount>50 && abs(eout)<10^(-8))
       
         dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
 

@@ -10,7 +10,7 @@ job_prefix = "exciton"
 
 
 
-radius=1.8
+radius=1.6
 num_points=41
 #uD=20.0
 ϵr=5.0
