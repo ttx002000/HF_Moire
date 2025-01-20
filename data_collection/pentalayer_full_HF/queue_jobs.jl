@@ -15,7 +15,7 @@ num_points=50
 #uD=20.0
 ϵr=5.0
 temp=0.1
-traget_density=-0.02
+target_density=-0.02
 
 
 #=
