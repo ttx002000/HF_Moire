@@ -111,10 +111,10 @@ function get_single_particle(radius::Float64,num_points::Int,uD::Float64)
   
 
 
-  
-  single_matrix=zeros(ComplexF64,40,40,length(k_set))
+  dimension=40
+  single_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
   for findex in 1:4, ja in eachindex(k_set)
-    single_matrix[10*(findex-1)+1:10*(findex-1)+10,10*(findex-1)+1:10*(findex-1)+10,ja]=Ham_set[findex][ja]
+    single_matrix[10*(findex-1)+1:10*(findex-1)+10,10*(findex-1)+1:10*(findex-1)+10,ja]+=Ham_set[findex][ja]
   end
 
   return eig_set,k_set,k_index,eig_vec_set,Area,single_matrix
@@ -165,7 +165,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::F
  #renormalized_density=s3[searchsortedfirst(s3,target_density)]
  println("RMdensity",renormalized_density)
 
- density_matrix_new=zeros(ComplexF64,40,40,length(k_set))
+ density_matrix_new=zeros(ComplexF64,dimension,dimension,length(k_set))
 
  Threads.@threads for ja in eachindex(k_set)
  for jb in 1:40
@@ -259,16 +259,16 @@ end
 
 
 function get_initial_proj(k_set::Vector{Vector{Float64}},eig_vec_set::Vector{Vector{Matrix{ComplexF64}}})
- 
-   BG_density_matrix=zeros(ComplexF64,40,40,length(k_set))
+  dimension=40
+   BG_density_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
    for ja in eachindex(k_set), findex in 1:4, bandindex in 1:5
     BG_density_matrix[10*(findex-1)+1:10*(findex-1)+10,10*(findex-1)+1:10*(findex-1)+10,ja]+=eig_vec_set[findex][ja][:,bandindex]*(eig_vec_set[findex][ja][:,bandindex])'
    end
 
- initial_density_matrix=zeros(ComplexF64,40,40,length(k_set))
+ initial_density_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
 
  for ja in eachindex(k_set)
-   A=randn(40,40)+im*randn(40,40)
+   A=randn(dimension,dimension)+im*randn(dimension,dimension)
    initial_density_matrix[:,:,ja]+=(A+A')*0.01
  end
 
