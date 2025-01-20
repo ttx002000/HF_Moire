@@ -24,7 +24,7 @@ initial_density_matrix, BG_density_matrix=get_initial_proj(k_set,eig_vec_set)
 HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,renormalized_density,Hartree_matrix,Fock_matrix=iteration(initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,target_density,temp)
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "pentalayer_full_HF/data_output1/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])tg_density$(args[5])er$(args[6])temp$(args[7])trytime.jld2")
+savepath=joinpath(scratch_dir, "pentalayer_full_HF/data_output2/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])tg_density$(args[5])er$(args[6])temp$(args[7])trytime.jld2")
 
   
 jldsave(savepath,
