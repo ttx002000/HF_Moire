@@ -157,23 +157,23 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::F
   HF_eigenvalues[:,ja]=real(FFF.values)
  end
 
-  #val_s=sort(vec(HF_eigenvalues))[1]
-  #val_e=sort(vec(HF_eigenvalues))[end]
- #fermi_level,renormalized_density=find_FL(vec(HF_eigenvalues),target_density,val_s,val_e,temp,Area,bg_particle_density)
- s3=[ja/Area for ja in eachindex(vec(HF_eigenvalues))].-bg_particle_density
- fermi_level=sort(vec(HF_eigenvalues))[searchsortedfirst(s3,target_density)]
- renormalized_density=s3[searchsortedfirst(s3,target_density)]
+ val_s=sort(vec(HF_eigenvalues))[1]
+ val_e=sort(vec(HF_eigenvalues))[end]
+ fermi_level,renormalized_density=find_FL(vec(HF_eigenvalues),target_density,val_s,val_e,temp,Area,bg_particle_density)
+ #s3=[ja/Area for ja in eachindex(vec(HF_eigenvalues))].-bg_particle_density
+ #fermi_level=sort(vec(HF_eigenvalues))[searchsortedfirst(s3,target_density)]
+ #renormalized_density=s3[searchsortedfirst(s3,target_density)]
  println("RMdensity",renormalized_density)
 
  density_matrix_new=zeros(ComplexF64,40,40,length(k_set))
 
  Threads.@threads for ja in eachindex(k_set)
  for jb in 1:40
-     if HF_eigenvalues[jb,ja]<fermi_level
-        #density_matrix_new[:,:,ja]+=HF_eigenvectors[:,jb,ja]*(HF_eigenvectors[:,jb,ja])'*1/(exp((HF_eigenvalues[jb,ja]-fermi_level)/temp)+1)
-        density_matrix_new[:,:,ja]+=HF_eigenvectors[:,jb,ja]*(HF_eigenvectors[:,jb,ja])'
+     #if HF_eigenvalues[jb,ja]<fermi_level
+        density_matrix_new[:,:,ja]+=HF_eigenvectors[:,jb,ja]*(HF_eigenvectors[:,jb,ja])'*1/(exp((HF_eigenvalues[jb,ja]-fermi_level)/temp)+1)
+        #density_matrix_new[:,:,ja]+=HF_eigenvectors[:,jb,ja]*(HF_eigenvectors[:,jb,ja])'
  
-      end
+      #end
     end
  end
 
@@ -195,6 +195,30 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::F
 
  energy_change=real(energy-energy_input)
 
+ num_pa=0.0
+ for ja in eachindex(k_set)
+  num_pa+=real(tr(density_matrix_new[1:10,1:10,ja]))
+ end
+  println("flavor one=",num_pa)
+
+  num_pa=0.0
+  for ja in eachindex(k_set)
+   num_pa+=real(tr(density_matrix_new[11:20,11:20,ja]))
+  end
+   println("flavor one=",num_pa)
+
+   num_pa=0.0
+   for ja in eachindex(k_set)
+    num_pa+=real(tr(density_matrix_new[21:30,21:30,ja]))
+   end
+    println("flavor one=",num_pa)
+
+    num_pa=0.0
+    for ja in eachindex(k_set)
+     num_pa+=real(tr(density_matrix_new[31:40,31:40,ja]))
+    end
+     println("flavor one=",num_pa)
+
 
 
  return  eout,energy_change, output_density_matrix,DeltaMatrix,HF_eigenvalues,fermi_level,renormalized_density,HF_eigenvectors,real(energy),Hartree_matrix,Fock_matrix
@@ -209,9 +233,9 @@ function find_FL(quasi_particle_energy::Vector{Float64},target_density::Float64,
 
   #stan=10^(-5)*target_density
   if target_density==0.0
-    stan=10^(-7)
+    stan=10^(-9)
   else
-    stan=abs(10^(-5)*target_density)
+    stan=abs(10^(-8)*target_density)
   end
   fermifactor=[1/(exp((quasi_particle_energy[ja]-try_FL)/temp)+1) for ja in eachindex(quasi_particle_energy)]
  
@@ -220,13 +244,13 @@ function find_FL(quasi_particle_energy::Vector{Float64},target_density::Float64,
 
 
  if abs(fl-target_density)<stan
-  println("diff",fl-target_density)
+  
     return try_FL,fl
   elseif fl-target_density>=stan
-    println("diff",fl-target_density)
+ 
     return find_FL(quasi_particle_energy,target_density,val_s, try_FL,temp,Area,bg_particle_density)
   elseif fl-target_density<=-stan
-    println("diff",fl-target_density)
+ 
     return find_FL(quasi_particle_energy,target_density,try_FL,val_e,temp,Area,bg_particle_density)
    end
  
@@ -286,7 +310,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
       end
       
       tic=time()
-#=
+
       if (itcount>30 && abs(eout)>10^(-4)) || (itcount>30 && abs(eout)<10^(-8))
       
         dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
@@ -302,7 +326,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
         println("using DIIS")
        
       else
-  =#
+  
         eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,renormalized_density,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix=Construct_projector(k_set,ϵr,Area,
                                                                                                                                                                                           input_density_matrix,single_matrix,
                                                                                                                                                                                            energy,BG_density_matrix,
@@ -312,7 +336,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
          
      
 
-    #  end
+      end
 
     
 
