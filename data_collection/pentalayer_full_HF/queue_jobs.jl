@@ -30,7 +30,7 @@ trytime=args[7]
 =#
 
 for uD in [10.0],ϵr in [5.0,10.0], trytime in 1:20
-  arguments=Float64.([radius,num_points,uD,target_density,temp,trytime])
+  arguments=Float64.([radius,num_points,uD,target_density,ϵr,temp,trytime])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="90:00",ntasks=8,mem=24)
 end
 #=
