@@ -126,27 +126,34 @@ end
 
 function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::Float64,
   density_matrix::Array{ComplexF64},single_matrix::Array{ComplexF64},
-  energy_input::Float64,BG_density_matrix::Array{ComplexF64},bg_particle_density::Float64,target_density::Float64,temp::Float64)
+  energy_input::Float64,BG_density_matrix::Array{ComplexF64},bg_particle_density::Float64,target_density::Float64,temp::Float64,fcmatrix::Array{Float64})
  dimension=40
  Fock_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
  Hartree_matrix=zeros(ComplexF64,dimension,dimension)
  HF_eigenvalues=zeros(Float64,dimension,length(k_set))
  HF_eigenvectors=zeros(ComplexF64,dimension,dimension,length(k_set))
- z_pos=0.335*[0,0,1,1,2,2,3,3,4,4]
+ #z_pos=0.335*[0,0,1,1,2,2,3,3,4,4]
 
 
-
+ #=
  Threads.@threads for ja in eachindex(k_set)
   for jb in eachindex(k_set)
   fcmatrix=Coulomb_matrix(z_pos,k_set[ja]-k_set[jb])
   Fock_matrix[:,:,ja]+=1/(ϵr*Area)*(fcmatrix.*density_matrix[:,:,jb])
   end
  end
+ =#
+
+ Threads.@threads for ja in eachindex(k_set)
+  
+  Fock_matrix[:,:,ja]+=1/(ϵr*Area)*dropdims(sum((fcmatrix[:,:,ja,:].*density_matrix[:,:,jb]),dims=3),dims=3)
+
+ end
 
 
 
-  hcmatrix=Coulomb_matrix(z_pos,[0.0,0.0])
-  Hartree_matrix+=1/(ϵr*Area)*diagm(hcmatrix*diag(dropdims(sum(density_matrix,dims=3),dims=3)))
+  #hcmatrix=Coulomb_matrix(z_pos,[0.0,0.0])
+  Hartree_matrix+=1/(ϵr*Area)*diagm(fcmatrix[:,:,1,1]*diag(dropdims(sum(density_matrix,dims=3),dims=3)))
 
 
 
@@ -160,20 +167,16 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::F
  val_s=sort(vec(HF_eigenvalues))[1]
  val_e=sort(vec(HF_eigenvalues))[end]
  fermi_level,renormalized_density=find_FL(vec(HF_eigenvalues),target_density,val_s,val_e,temp,Area,bg_particle_density)
- #s3=[ja/Area for ja in eachindex(vec(HF_eigenvalues))].-bg_particle_density
- #fermi_level=sort(vec(HF_eigenvalues))[searchsortedfirst(s3,target_density)]
- #renormalized_density=s3[searchsortedfirst(s3,target_density)]
+
  println("RMdensity",renormalized_density)
 
  density_matrix_new=zeros(ComplexF64,dimension,dimension,length(k_set))
 
  Threads.@threads for ja in eachindex(k_set)
  for jb in 1:40
-     #if HF_eigenvalues[jb,ja]<fermi_level
+  
         density_matrix_new[:,:,ja]+=HF_eigenvectors[:,jb,ja]*(HF_eigenvectors[:,jb,ja])'*1/(exp((HF_eigenvalues[jb,ja]-fermi_level)/temp)+1)
-        #density_matrix_new[:,:,ja]+=HF_eigenvectors[:,jb,ja]*(HF_eigenvectors[:,jb,ja])'
- 
-      #end
+      
     end
  end
 
@@ -301,6 +304,11 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
 
   itcount=0
 
+  z_pos=0.335*[0,0,1,1,2,2,3,3,4,4]
+  fcmatrix=zeros(Float64,dimension,dimension,length(k_set),length(k_set))
+  for ja in eachindex(k_set), jb in eachindex(k_set)
+   fcmatrix[:,:,ja,jb]+=Coulomb_matrix(z_pos,k_set[ja]-k_set[jb])
+  end
 
 
 
@@ -320,7 +328,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
         eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,renormalized_density,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix=Construct_projector(k_set,ϵr,Area,
                                                                                                                                                               dmk,single_matrix,
                                                                                                                                                               energy,BG_density_matrix,
-                                                                                                                                                              bg_particle_density,target_density,temp)
+                                                                                                                                                              bg_particle_density,target_density,temp,fcmatrix)
         DIIS_input_density_matrix[mod(itcount,3)+1]=dmk
         input_density_matrix=output_density_matrix
         println("using DIIS")
@@ -330,7 +338,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
         eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,renormalized_density,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix=Construct_projector(k_set,ϵr,Area,
                                                                                                                                                                                           input_density_matrix,single_matrix,
                                                                                                                                                                                            energy,BG_density_matrix,
-                                                                                                                                                                                           bg_particle_density,target_density,temp)
+                                                                                                                                                                                           bg_particle_density,target_density,temp,fcmatrix)
         DIIS_input_density_matrix[mod(itcount,3)+1]=input_density_matrix
         input_density_matrix=output_density_matrix
          
