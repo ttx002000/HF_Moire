@@ -146,7 +146,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::F
 
  Threads.@threads for ja in eachindex(k_set)
   
-  Fock_matrix[:,:,ja]+=1/(ϵr*Area)*dropdims(sum((fcmatrix[:,:,ja,:].*density_matrix[:,:,jb]),dims=3),dims=3)
+  Fock_matrix[:,:,ja]+=1/(ϵr*Area)*dropdims(sum((fcmatrix[:,:,ja,:].*density_matrix[:,:,:]),dims=3),dims=3)
 
  end
 
