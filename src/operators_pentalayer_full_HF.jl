@@ -319,7 +319,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
       
       tic=time()
 
-      if (itcount>50 && abs(eout)>10^(-4)) || (itcount>50 && abs(eout)<10^(-8))
+      if (itcount>80 && abs(eout)>10^(-2)) || (itcount>50 && abs(eout)<10^(-7))
       
         dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
 
