@@ -143,12 +143,27 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::F
   end
  end
  =#
-
+  #=
  Threads.@threads for ja in eachindex(k_set)
   
   Fock_matrix[:,:,ja]+=1/(ϵr*Area)*dropdims(sum((fcmatrix[:,:,ja,:].*density_matrix[:,:,:]),dims=3),dims=3)
 
  end
+ =#
+
+ Threads.@threads for ja in 1:dimension
+  for jb in 1:ja-1
+  Fock_matrix[ja,jb,:]+=fcmatrix[ja,jb,:,:]*density_matrix[ja,jb,:]
+  end
+end
+ Threads.@threads for ja in eachindex(k_set)
+   Fock_matrix[:,:,ja]+=Fock_matrix[:,:,ja]'
+ end
+
+Threads.@threads for ja in 1:dimension
+    Fock_matrix[ja,ja,:]+=fcmatrix[ja,ja,:,:]*density_matrix[ja,ja,:]
+end
+Fock_matrix=Fock_matrix*1/(ϵr*Area)
 
 
 
@@ -159,9 +174,9 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::F
 
 
  Threads.@threads for ja in eachindex(k_set)
-  FFF=eigen(Hartree_matrix-Fock_matrix[:,:,ja]+single_matrix[:,:,ja])
-  HF_eigenvectors[:,:,ja]=FFF.vectors
-  HF_eigenvalues[:,ja]=real(FFF.values)
+  FFFF=eigen(Hartree_matrix-Fock_matrix[:,:,ja]+single_matrix[:,:,ja])
+  HF_eigenvectors[:,:,ja]=FFFF.vectors
+  HF_eigenvalues[:,ja]=real(FFFF.values)
  end
 
  val_s=sort(vec(HF_eigenvalues))[1]
@@ -197,7 +212,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::F
  end
 
  energy_change=real(energy-energy_input)
-
+ #=
  num_pa=0.0
  for ja in eachindex(k_set)
   num_pa+=real(tr(density_matrix_new[1:10,1:10,ja]))
@@ -221,7 +236,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,Area::F
      num_pa+=real(tr(density_matrix_new[31:40,31:40,ja]))
     end
      println("flavor 4=",num_pa)
-
+ =#
 
 
  return  eout,energy_change, output_density_matrix,DeltaMatrix,HF_eigenvalues,fermi_level,renormalized_density,HF_eigenvectors,real(energy),Hartree_matrix,Fock_matrix
