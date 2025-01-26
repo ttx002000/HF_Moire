@@ -288,11 +288,12 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
     
     free_energy_old=10
     free_energy_new=10
+    energychange=10
     
     
     
     itcount=0
-     while norm(grad_new)>1*10^(-4)
+     while norm(grad_new)>1*10^(-4) && abs(energychange)>10^(-8)
       itcount+=1
        println("iterations",itcount)  
         Hph=construct_Ham(px_xbond,px_ybond,py_xbond,py_ybond,phonon_coor,Nx,Ny,α,β) #I modified the order between py_xbond and py_ybond
@@ -315,8 +316,9 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
       
           end
       
-        
+          energychange=free_energy_old-free_energy_new
           free_energy_old=free_energy_new
+          
           E_old=E_new
           grad_old=grad_new
       
@@ -376,7 +378,7 @@ end
 
 function findFL(Nelec::Int,spectrum::Vector{Float64},temp::Float64,val_s::Float64,val_e::Float64)
   fl=0
-  stan=10^(-6)
+  stan=10^(-7)
 
   try_FL=(val_s+val_e)/2
   for ja in eachindex(spectrum)
