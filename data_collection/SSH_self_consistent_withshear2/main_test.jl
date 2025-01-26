@@ -34,7 +34,7 @@ Nelec=Int(round(Nx*Ny*filling))
 H0, orbital_id, phonon_id, px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NNN_sp_d2=initialize(Nx,Ny,tper,tpa,tNNN)
 
 
-phonon_coor, Hph, grad_old, E_old, Eelec_new, Egap,ave_npa,FL,free_energy=iteration(Nx,Ny,Nelec,px_xbond,px_ybond,py_xbond,py_ybond,NNN_sp_d1,NNN_sp_d2,orbital_id,phonon_id,α,β,K,KNNN,H0,gshear,temp)
+phonon_coor, Hph, grad_old, E_old, Eelec_new, Egap,ave_npa,FL,free_energy,record_cal=iteration(Nx,Ny,Nelec,px_xbond,px_ybond,py_xbond,py_ybond,NNN_sp_d1,NNN_sp_d2,orbital_id,phonon_id,α,β,K,KNNN,H0,gshear,temp)
 dis_x,dis_y,max_record,average_record=resh_phonon(phonon_coor,phonon_id,Nx,Ny)
 
 
@@ -47,5 +47,5 @@ savepath=joinpath(scratch_dir, "SSH/test$(Int(args[14]))/$(Int(args[1]))Nx$(Int(
 jldsave(savepath,phonon_id=phonon_id,orbital_id=orbital_id,
          phonon_coor=phonon_coor,E_total=E_old,Eelec=Eelec_new,
          free_energy=free_energy,spectrum=spectrum,
-         Egap=Egap,ave_npa=ave_npa,max_record=max_record,average_record=average_record,FL=FL,grad=grad_old)
+         Egap=Egap,ave_npa=ave_npa,max_record=max_record,average_record=average_record,FL=FL,grad=grad_old,record_cal=record_cal)
          

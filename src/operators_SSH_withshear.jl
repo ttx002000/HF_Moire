@@ -289,6 +289,9 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
     free_energy_old=10
     free_energy_new=10
     energychange=10
+    record_fE=[]
+    record_max=[]
+    record_UR=[]
     
     
     
@@ -306,6 +309,10 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
           println("norm=",norm(grad_new))
            
           println("Etotal=",E_new,"Eelec=",Eelec_new,"freeE",free_energy_new)
+
+          push!(record_fE,free_energy)
+          push!(record_max,sort(abs.(phonon_coor)[end]))
+          push!(record_UR,update_rate)
       
           if free_energy_new>free_energy_old
             update_rate=0.8*update_rate
@@ -365,14 +372,14 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
 
 
 
-
+      record_cal=[record_fE,record_max,record_UR]
 
 
 
 
 
        
-      return phonon_coor, Hph, grad_old, E_old, Eelec_new, Egap,ave_npa, FL,free_energy_new
+      return phonon_coor, Hph, grad_old, E_old, Eelec_new, Egap,ave_npa, FL,free_energy_new,record_cal
 end
 
 
