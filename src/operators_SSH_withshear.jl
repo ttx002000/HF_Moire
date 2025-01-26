@@ -310,7 +310,7 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
            
           println("Etotal=",E_new,"Eelec=",Eelec_new,"freeE",free_energy_new)
 
-          push!(record_fE,free_energy)
+          push!(record_fE,free_energy_new)
           push!(record_max,sort(abs.(phonon_coor)[end]))
           push!(record_UR,update_rate)
       
