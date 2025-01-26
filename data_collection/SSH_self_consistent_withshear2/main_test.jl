@@ -47,5 +47,5 @@ savepath=joinpath(scratch_dir, "SSH/test$(Int(args[14]))/$(Int(args[1]))Nx$(Int(
 jldsave(savepath,phonon_id=phonon_id,orbital_id=orbital_id,
          phonon_coor=phonon_coor,E_total=E_old,Eelec=Eelec_new,
          free_energy=free_energy,spectrum=spectrum,
-         Egap=Egap,ave_npa=ave_npa,max_record=max_record,average_record=average_record,FL=FL)
+         Egap=Egap,ave_npa=ave_npa,max_record=max_record,average_record=average_record,FL=FL,grad=grad_old)
          
