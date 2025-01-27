@@ -293,11 +293,16 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
     record_max=[]
     record_UR=[]
     
-    
+    badcount=0
     
     itcount=0
-     while norm(grad_new)>5*10^(-4) && abs(energychange)/update_rate>10^(-8)
+     while (norm(grad_new)>5*10^(-4) && abs(energychange)/update_rate>10^(-8)) || badcount<5
       itcount+=1
+       
+      if abs(energychange)/update_rate<10^(-8)
+        badcount+=1
+      end
+
        println("iterations",itcount)  
         Hph=construct_Ham(px_xbond,px_ybond,py_xbond,py_ybond,phonon_coor,Nx,Ny,α,β) #I modified the order between py_xbond and py_ybond
           grad_new,E_new,Eelec_new,Egap,free_energy_new=calculate_gradient(K,KNNN,NNN_sp_d1,NNN_sp_d2,
