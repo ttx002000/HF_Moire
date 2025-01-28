@@ -240,9 +240,8 @@ function initialize(Nx::Int64,Ny::Int64,tper::Float64,tpa::Float64,tNNN::Float64
     
     
     H0+=H0';
-    
-    
-     return H0, orbital_id, phonon_id, px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NNN_sp_d2
+
+    return H0, orbital_id, phonon_id, px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NNN_sp_d2
 end
 
 
