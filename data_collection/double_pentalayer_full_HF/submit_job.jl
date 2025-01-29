@@ -10,7 +10,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
 
  
 
-    name = "$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])trytime.jld2$(args[8])filepos"
+    name = "$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])trytime$(args[8])filepos"
     filestr = """#!/bin/bash
     #SBATCH --job-name=$(job_prefix*"_"*name)
     #SBATCH --partition=$partition
