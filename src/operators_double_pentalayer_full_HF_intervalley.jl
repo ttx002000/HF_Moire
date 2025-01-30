@@ -7,10 +7,10 @@ function Coulomb(dis::Float64,kvec::Vector{Float64})::Float64
   
   if norm(kvec)==0.0
       return 9047.5636*(-dis)
-    # return 9047.5636*0.0
+    
     else
      return 9047.5636/norm(kvec)*exp(-norm(kvec)*dis)
-     #return 9047.5636/norm(kvec)
+     
   end
   
 
@@ -105,8 +105,21 @@ function get_single_particle(radius::Float64,num_points::Int,uD::Float64,CNP::Fl
     push!(k_set,[kx_grid[ja],ky_grid[jb]])
     push!(k_index,[ja,jb])
 
-    for vi in 1:valley_num, si in 1:spin_num, li in 1:layer_num
+    for vi in 1:valley_num, si in 1:spin_num, li in 1:1
       Ham=Hamiltonian([kx_grid[ja],ky_grid[jb]],uD,vset[vi],1)
+      FFF=eigen(Ham)
+      push!(eig_set[si,li,vi],real(FFF.values).+offset[li])
+      push!(Ham_set[si,li,vi],Ham+offset[li]*Matrix{Float64}(I,sublattice_num,sublattice_num))
+      push!(eig_vec_set[si,li,vi],FFF.vectors)
+
+    end
+  end
+
+  for ja in eachindex(kx_grid),jb in eachindex(ky_grid)
+    
+
+    for vi in 1:valley_num, si in 1:spin_num, li in 2:2
+      Ham=Hamiltonian([kx_grid[ja],ky_grid[jb]],uD,-vset[vi],1)
       FFF=eigen(Ham)
       push!(eig_set[si,li,vi],real(FFF.values).+offset[li])
       push!(Ham_set[si,li,vi],Ham+offset[li]*Matrix{Float64}(I,sublattice_num,sublattice_num))
