@@ -6,7 +6,7 @@ using JLD2
 include("submit_job.jl")
 
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "double_pentalayer"
+job_prefix = "inter_double_pentalayer"
 
 
 
