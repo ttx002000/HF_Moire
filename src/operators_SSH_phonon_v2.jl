@@ -112,8 +112,13 @@ function get_Keff(qvec::Vector{Float64},k1set::Vector{Vector{Float64}},Nsites::I
   for k1vec in k1set
       k2vec=k1vec+qvec
       Λ1, evalk1, evalk2=get_Lambdamatrix_bandbasis(k1vec,k2vec,tper,tpa,tNNN)
-      Λ2, evalk3, evalk4=get_Lambdamatrix_bandbasis(k2vec,k1vec,tper,tpa,tNNN)
- 
+      #Λ2, evalk3, evalk4=get_Lambdamatrix_bandbasis(k2vec,k1vec,tper,tpa,tNNN)
+       
+      Λ2=zeros(ComplexF64,4,2,2)
+      for ja in 1:4
+        Λ2[ja,:,:]=Λ1[ja,:,:]'
+      end
+      
       for  n1 in 1:2, n2 in 1:2
          
           e2=real(evalk2[n2])
