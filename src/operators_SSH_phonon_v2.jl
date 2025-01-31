@@ -187,6 +187,8 @@ function runrunrun(α::Float64,β::Float64,Nx::Int64,Ny::Int64,
     for jb in eachindex(qyspace)
     Keff_set[ja,jb]=get_Keff([qxspace[ja],qyspace[jb]],k1set,Nsites,FL,temp,tper,tpa,tNNN)
     end
+    println(ja,jb)
+    flush(stdout)
   end
 
 
