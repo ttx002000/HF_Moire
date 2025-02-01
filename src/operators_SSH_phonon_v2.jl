@@ -180,14 +180,14 @@ function runrunrun(α::Float64,β::Float64,Nx::Int64,Ny::Int64,
     push!(qindex,[ja,jb])
   end
   
-  Kbare_momentum_set=Matrix{Matrix{ComplexF64}}(undef,length(qset))
+  Kbare_momentum_set=Vector{Matrix{ComplexF64}}(undef,length(qset))
   Threads.@threads for ja in eachindex(qset)
   
       Kbare_momentum_set[ja]=get_Kbare(K,KNNN,shearstrength,qset[ja])
  
   end
 
-  Keff_set=Matrix{Matrix{ComplexF64}}(undef,length(qset))
+  Keff_set=Vector{Matrix{ComplexF64}}(undef,length(qset))
   
 
   Threads.@threads for ja in eachindex(qset)
