@@ -172,27 +172,34 @@ function runrunrun(α::Float64,β::Float64,Nx::Int64,Ny::Int64,
 
   qxspace=collect(0:1:Nqx-1)*2*π/Nqx
   qyspace=collect(0:1:Nqy-1)*2*π/Nqy
+
+  qset=Vector{Float64}[]
+  qindex=Vector{Int}[]
+  for ja in eachindex(qxspace),jb in eachindex(qyspace)
+    push!(qset,[qxspace[ja],qyspace[jb]])
+    push!(qindex,[ja,jb])
+  end
   
-  Kbare_momentum_set=Matrix{Matrix{ComplexF64}}(undef,length(qxspace),length(qyspace))
-  Threads.@threads for ja in eachindex(qxspace)
-    for jb in eachindex(qyspace)
-      Kbare_momentum_set[ja,jb]=get_Kbare(K,KNNN,shearstrength,[qxspace[ja],qyspace[jb]])
-    end
+  Kbare_momentum_set=Matrix{Matrix{ComplexF64}}(undef,length(qset))
+  Threads.@threads for ja in eachindex(qset)
+  
+      Kbare_momentum_set[ja]=get_Kbare(K,KNNN,shearstrength,qset[ja])
+ 
   end
 
-  Keff_set=Matrix{Matrix{ComplexF64}}(undef,length(qxspace),length(qyspace))
+  Keff_set=Matrix{Matrix{ComplexF64}}(undef,length(qset))
   
 
-  Threads.@threads for ja in eachindex(qxspace)
-    for jb in eachindex(qyspace)
-    Keff_set[ja,jb]=get_Keff([qxspace[ja],qyspace[jb]],k1set,Nsites,FL,temp,tper,tpa,tNNN)
-    end
-    println(ja,jb)
+  Threads.@threads for ja in eachindex(qset)
+   
+    Keff_set[ja]=get_Keff(qset[ja],k1set,Nsites,FL,temp,tper,tpa,tNNN)
+    println(ja)
     flush(stdout)
+  
   end
 
 
-  return gmatrix,Keff_set, Kbare_momentum_set
+  return gmatrix,Keff_set, Kbare_momentum_set, qset, qindex
 end
 
 

@@ -28,7 +28,7 @@ filepos=Int(args[15])
 
 
 
-gmatrix,Keff_set, Kbare_momentum_set=runrunrun(α,β,Nx,Ny,
+gmatrix,Keff_set, Kbare_momentum_set,qset, qindex=runrunrun(α,β,Nx,Ny,
                                               Nqx,Nqy,temp,tper,tpa,tNNN,
                                                K,KNNN,shearstrength,filling)
 
@@ -40,4 +40,4 @@ savepath=joinpath(scratch_dir, "SSH_phonon_v2/data_output$(filepos)/$(Int(args[1
 
 
 
-jldsave(savepath,gmatrix=gmatrix,Keff_set=Keff_set,Kbare_momentum_set=Kbare_momentum_set)
+jldsave(savepath,gmatrix=gmatrix,Keff_set=Keff_set,Kbare_momentum_set=Kbare_momentum_set,qset=qset, qindex=qindex)
