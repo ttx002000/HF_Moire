@@ -6,9 +6,9 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     #mkpath(outpath)
     #mkpath(slurmpath)
 
-    outpath = ENV["SCRATCH"]
+    scratch_dir = ENV["SCRATCH"]
     outpath=joinpath(scratch_dir, "double_pentalayer_full_HF_allowcoherence/data_output$(Int(args[8]))/out")
-    outpath=joinpath(scratch_dir, "double_pentalayer_full_HF_allowcoherence/data_output$(Int(args[8]))/slurmfiles")
+    slurmpath=joinpath(scratch_dir, "double_pentalayer_full_HF_allowcoherence/data_output$(Int(args[8]))/slurmfiles")
     mkpath(outpath)
     mkpath(slurmpath)
  
