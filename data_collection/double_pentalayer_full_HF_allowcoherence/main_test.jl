@@ -2,7 +2,7 @@ using JLD2
 include("../../src/operators_double_pentalayer_full_HF_allowcoherence.jl")
 using LinearAlgebra,Plots
 args=parse.(Float64,ARGS)
-
+args=[1.4,15.0,10.0,0.0,8.0,1.0,1.0,1.0]
 radius=args[1]
 num_points=Int(args[2])
 uD=args[3]

@@ -295,9 +295,24 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
 
   z_pos=[0.335*[0,0,1,1,2,2,3,3,4,4],0.335*[-4,-4,-3,-3,-2,-2,-1,-1,0,0].-ildis]
   fcmatrix=zeros(Float64,dimension,dimension,length(k_set),length(k_set))
-  for ja in eachindex(k_set), jb in eachindex(k_set)
+
+
+  #for ja in eachindex(k_set), jb in eachindex(k_set)
+   #fcmatrix[:,:,ja,jb]+=Coulomb_matrix(z_pos,k_set[ja]-k_set[jb]) #need fix
+  #end
+  tic=time()
+  Threads.@threads for ja in eachindex(k_set) 
+    for jb in 1:ja
    fcmatrix[:,:,ja,jb]+=Coulomb_matrix(z_pos,k_set[ja]-k_set[jb]) #need fix
+    end
   end
+   
+  for ja in eachindex(k_set), jb in ja+1:length(k_set)
+    fcmatrix[:,:,ja,jb]+=fcmatrix[:,:,jb,ja]
+  end
+  toc=time()
+  println("formfactorstime",toc-tic)
+
 
 
 
