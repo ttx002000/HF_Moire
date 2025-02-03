@@ -1,13 +1,16 @@
 
 
 function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time="00:120:00", cpus_per_task=1, mem=64, partition="owners,simes")
-    outpath = joinpath(dirpath, "out")
-    slurmpath = joinpath(dirpath, "slurmfiles")# Why is there a job_prefix semicolon there?
+    #outpath = joinpath(dirpath, "out")
+    #slurmpath = joinpath(dirpath, "slurmfiles")# Why is there a job_prefix semicolon there?
+    #mkpath(outpath)
+    #mkpath(slurmpath)
+
+    outpath = ENV["SCRATCH"]
+    outpath=joinpath(scratch_dir, "double_pentalayer_full_HF_allowcoherence/data_output$(Int(args[8]))/out")
+    outpath=joinpath(scratch_dir, "double_pentalayer_full_HF_allowcoherence/data_output$(Int(args[8]))/slurmfiles")
     mkpath(outpath)
     mkpath(slurmpath)
-
- 
-
  
 
     name = "$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])trytime$(args[8])filepos"
