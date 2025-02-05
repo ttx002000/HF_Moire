@@ -440,9 +440,9 @@ function implement_DIIS(DIIS_input_projector::Vector{Array{ComplexF64}},DIIS_inp
           end
       end
 
-      inB=inv(Bmatrix)
+      inB=safeinv(Bmatrix)
       if inB≠0
-         coeff=inv(Bmatrix)*[0;0;0;1]
+         coeff=inB*[0;0;0;1]
          dmk=coeff[1]*(DIIS_input_projector[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_projector[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_projector[3]+DIIS_input_DeltaMatrix[3])
          return dmk
       else
