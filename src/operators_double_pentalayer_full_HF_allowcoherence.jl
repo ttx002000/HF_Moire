@@ -209,7 +209,7 @@ Fock_matrix=Fock_matrix*1/(ϵr*Area)
 
  density_matrix_new-=BG_density_matrix 
 
- output_density_matrix=density_matrix_new*0.8+density_matrix*0.2
+ output_density_matrix=density_matrix_new*0.5+density_matrix*0.5
 
 
  DeltaMatrix=density_matrix_new-density_matrix
