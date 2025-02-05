@@ -7,8 +7,8 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     #mkpath(slurmpath)
 
     scratch_dir = ENV["SCRATCH"]
-    outpath=joinpath(scratch_dir, "double_pentalayer_full_HF_allowcoherence/data_output$(Int(args[11]))/out")
-    slurmpath=joinpath(scratch_dir, "double_pentalayer_full_HF_allowcoherence/data_output$(Int(args[11]))/slurmfiles")
+    outpath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence/data_output$(Int(args[11]))/out")
+    slurmpath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence/data_output$(Int(args[11]))/slurmfiles")
     mkpath(outpath)
     mkpath(slurmpath)
  
