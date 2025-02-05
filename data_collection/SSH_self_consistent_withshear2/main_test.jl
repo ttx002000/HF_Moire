@@ -9,7 +9,7 @@ using JLD2
 include(joinpath(@__DIR__,"../../src/operators_SSH_withshear.jl"))
 
 args=parse.(Float64,ARGS)
-#args=[18,18,-0.37,2.0,-0.08,-1.3,1.3*0.5,1.0,0.1,1.25,0.0,0.05,1.0,1.0]
+#args=[18,18,-0.37,2.0,-0.08,-1.3,1.3*0.5,1.0,0.1,1.25,0.0,0.01,1.0,1.0]
 Nx=Int(args[1])
 Ny=Int(args[2])
 tper=args[3]
@@ -41,9 +41,10 @@ dis_x,dis_y,max_record,average_record=resh_phonon(phonon_coor,phonon_id,Nx,Ny)
 FFF=eigen(H0+Hph)
 spectrum=FFF.values
 
-scratch_dir = ENV["SCRATCH"]
+#scratch_dir = ENV["SCRATCH"]
 
-savepath=joinpath(scratch_dir, "SSH/test$(Int(args[14]))/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])gshear$(args[10])filling$(args[11])KNNN$(args[12])temp$(Int(args[13]))try.jld2")
+#savepath=joinpath(scratch_dir, "SSH/test$(Int(args[14]))/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])gshear$(args[10])filling$(args[11])KNNN$(args[12])temp$(Int(args[13]))try.jld2")
+savepath="test.jld2"
 jldsave(savepath,phonon_id=phonon_id,orbital_id=orbital_id,
          phonon_coor=phonon_coor,E_total=E_old,Eelec=Eelec_new,
          free_energy=free_energy,spectrum=spectrum,
