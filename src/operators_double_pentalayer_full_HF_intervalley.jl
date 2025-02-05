@@ -225,7 +225,7 @@ Fock_matrix=Fock_matrix*1/(ϵr*Area)
 
  density_matrix_new-=BG_density_matrix 
 
- output_density_matrix=density_matrix_new*0.8+density_matrix*0.2
+ output_density_matrix=density_matrix_new*0.5+density_matrix*0.5
 
 
  DeltaMatrix=density_matrix_new-density_matrix
@@ -324,7 +324,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
       
       tic=time()
 
-      if (itcount>60 && abs(eout)>10^(-2)) || (itcount>50 && abs(eout)<10^(-7))
+      if (itcount>60 && abs(eout)>10^(-3)) || (itcount>50 && abs(eout)<10^(-7))
       
         dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
 
