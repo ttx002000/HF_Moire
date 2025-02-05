@@ -313,7 +313,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
   energy=0.0
   energy_change=0.0
   fermi_level=0.0
- 
+  renormalized_density=0.0
   HF_eigenvalues=zeros(Float64,dimension,length(k_set))
   HF_eigenvectors=zeros(ComplexF64,dimension,dimension,length(k_set))
 
