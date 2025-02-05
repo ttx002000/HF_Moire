@@ -20,7 +20,7 @@ println("finish1")
 
 
 initial_density_matrix, BG_density_matrix=get_initial_proj(k_set,eig_vec_set)
-HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix=iteration(initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area)
+HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout=iteration(initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area)
 scratch_dir = ENV["SCRATCH"]
 savepath=joinpath(scratch_dir, "double_pentalayer_full_HF_intervalley/data_output$(Int(args[8]))/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])trytime.jld2")
 
@@ -28,4 +28,4 @@ savepath=joinpath(scratch_dir, "double_pentalayer_full_HF_intervalley/data_outpu
 jldsave(savepath,
              final_density_matrix=DIIS_input_density_matrix[1],HF_eigenvalues=HF_eigenvalues,
              k_set=k_set,eig_vec_set=eig_vec_set,HF_eigenvectors=HF_eigenvectors,fermi_level=fermi_level,energy=energy,eig_set=eig_set,
-             single_matrix=single_matrix,Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,k_index=k_index)
+             single_matrix=single_matrix,Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,k_index=k_index,eout=eout)

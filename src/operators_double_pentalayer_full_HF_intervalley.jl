@@ -225,7 +225,7 @@ Fock_matrix=Fock_matrix*1/(ϵr*Area)
 
  density_matrix_new-=BG_density_matrix 
 
- output_density_matrix=density_matrix_new*0.5+density_matrix*0.5
+ output_density_matrix=density_matrix_new*0.8+density_matrix*0.2
 
 
  DeltaMatrix=density_matrix_new-density_matrix
@@ -317,14 +317,14 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
 
 
 
-  while ((eout>1*10^(-12)) || (energy_change>1*10^(-6))) && itcount<150
+  while (eout>1*10^(-12)) || (bad_count<4) || (energy_change>1*10^(-6))
       if eout<1*10^(-12)
        bad_count+=1
       end
       
       tic=time()
 
-      if (itcount>30 && abs(eout)>10^(-3)) || (itcount>30 && abs(eout)<10^(-8))
+      if (itcount>60 && abs(eout)>10^(-2)) || (itcount>50 && abs(eout)<10^(-7))
       
         dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
 
@@ -370,7 +370,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
 
 
   
-  return HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix
+  return HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout
 
 
 end
