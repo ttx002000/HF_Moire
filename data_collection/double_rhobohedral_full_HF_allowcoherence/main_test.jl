@@ -10,8 +10,10 @@ CNP=args[4]
 ϵr=args[5]
 ildis=args[6]
 NL=Int(args[7])
-trytime=args[8]
-file_pos=args[9]
+target_density=args[8]
+temp=args[9]
+trytime=args[10]
+file_pos=args[11]
 
 
 eig_set,k_set,k_index,eig_vec_set,Area,single_matrix=get_single_particle(radius,num_points,uD,CNP,NL)
@@ -21,12 +23,12 @@ println("finish1")
 
 
 initial_density_matrix, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL)
-HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout=iteration(initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area,NL)
+HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density=iteration(initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area,NL,target_density,temp)
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence/data_output$(Int(args[9]))/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])NL$(args[8])trytime.jld2")
+savepath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence/data_output$(Int(args[11]))/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])NL$(args[8])tgden$(args[9])temp$(args[10])trytime.jld2")
 
   
 jldsave(savepath,
              final_density_matrix=DIIS_input_density_matrix[1],HF_eigenvalues=HF_eigenvalues,
              k_set=k_set,eig_vec_set=eig_vec_set,HF_eigenvectors=HF_eigenvectors,fermi_level=fermi_level,energy=energy,eig_set=eig_set,
-             single_matrix=single_matrix,Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,k_index=k_index,eout=eout)
+             single_matrix=single_matrix,Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,k_index=k_index,eout=eout,renormalized_density=renormalized_density)
