@@ -366,7 +366,14 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
       if (itcount>60 && abs(eout)>10^(-2)) || (itcount>50 && abs(eout)<10^(-7))
       
         dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
-
+        if dmk==0
+            itcount=0
+            dmk=zeros(ComplexF64,dimension,dimension,length(k_set))
+            for ja in eachindex(k_set)
+              A=randn(dimension,dimension)+im*randn(dimension,dimension)
+              dmk[:,:,ja]+=(A+A')*0.01
+            end
+        end
        
 
         eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix,renormalized_density=Construct_projector(k_set,ϵr,
@@ -432,9 +439,27 @@ function implement_DIIS(DIIS_input_projector::Vector{Array{ComplexF64}},DIIS_inp
              Bmatrix[ja,jb]+=real(tr((DIIS_input_DeltaMatrix[ja][:,:,jc])'*(DIIS_input_DeltaMatrix[jb][:,:,jc])))
           end
       end
-      coeff=inv(Bmatrix)*[0;0;0;1]
-     
-      dmk=coeff[1]*(DIIS_input_projector[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_projector[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_projector[3]+DIIS_input_DeltaMatrix[3])
 
-    return dmk
+      inB=inv(Bmatrix)
+      if inB≠0
+         coeff=inv(Bmatrix)*[0;0;0;1]
+         dmk=coeff[1]*(DIIS_input_projector[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_projector[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_projector[3]+DIIS_input_DeltaMatrix[3])
+         return dmk
+      else
+        return 0
+      end
+end
+
+
+function safe_inverse(A)
+  try
+      return inv(A)  # Attempt to compute inverse
+  catch e
+      if isa(e, SingularException)
+          println("Matrix is singular, doing randomstart again.")
+          return 0  # Use pseudoinverse as an alternative
+      else
+          rethrow(e)  # If another error occurs, propagate it
+      end
+  end
 end
