@@ -212,8 +212,12 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
 
 
  density_matrix_new-=BG_density_matrix 
+ if itcount<15
+  update_rate=0.2 
+ else
+  update_rate=rand()
 
- output_density_matrix=density_matrix_new*0.5+density_matrix*0.5
+ output_density_matrix=density_matrix_new*update_rate+density_matrix*(1-update_rate)
 
 
  DeltaMatrix=density_matrix_new-density_matrix
