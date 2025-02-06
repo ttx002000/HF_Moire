@@ -279,7 +279,7 @@ function get_initial_proj(k_set::Vector{Vector{Float64}},eig_vec_set::Array{Vect
    BG_density_matrix_complex=zeros(ComplexF64,valley_num,spin_num,sublattice_num,valley_num,spin_num,sublattice_num,length(k_set))
 
    for ja in eachindex(k_set), bandindex in 1:NL, vi in 1:valley_num, si in 1:spin_num
-    BG_density_matrix_complex[vi,si,li,:,vi,si,li,:,ja]+=eig_vec_set[si,li,vi][ja][:,bandindex]*(eig_vec_set[si,li,vi][ja][:,bandindex])'
+    BG_density_matrix_complex[vi,si,:,vi,si,:,ja]+=eig_vec_set[si,vi][ja][:,bandindex]*(eig_vec_set[si,vi][ja][:,bandindex])'
    end
 
    BG_density_matrix=reshape(BG_density_matrix_complex,(dimension,dimension,length(k_set)))
@@ -300,7 +300,7 @@ end
 
 
 function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},
-                           ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},ildis::Float64,Area::Float64,NL::Int,target_density::Float64,temp::Float64)
+                           ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},Area::Float64,NL::Int,target_density::Float64,temp::Float64)
   valley_num=2
   spin_num=2
   sublattice_num=2*NL
