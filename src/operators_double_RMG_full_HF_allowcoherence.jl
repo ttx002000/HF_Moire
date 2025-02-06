@@ -338,8 +338,8 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
 
   #z_pos=[0.335*[0,0,1,1,2,2,3,3,4,4],0.335*[-4,-4,-3,-3,-2,-2,-1,-1,0,0].-ildis]
   z_pos=Vector{Vector{Float64}}(undef,2)
-  z_pos[1]=0.355*[i for i in 0:NL for _ in 1:2]
-  z_pos[2]=0.355*[i for i in -NL:0 for _ in 1:2].-ildis
+  z_pos[1]=0.335*[i for i in 0:NL-1 for _ in 1:2]
+  z_pos[2]=0.335*[i for i in -NL+1:0 for _ in 1:2].-ildis
   
   fcmatrix=zeros(Float64,dimension,dimension,length(k_set),length(k_set))
 

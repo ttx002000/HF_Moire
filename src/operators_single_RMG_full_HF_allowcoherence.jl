@@ -328,7 +328,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
 
 
 
-  z_pos=0.355*[i for i in 0:NL for _ in 1:2]
+  z_pos=0.335*[i for i in 0:NL-1 for _ in 1:2] #Notice this place!
 
   
   fcmatrix=zeros(Float64,dimension,dimension,length(k_set),length(k_set))
