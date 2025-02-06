@@ -48,7 +48,7 @@ function find_FL(quasi_particle_energy::Vector{Float64},target_density::Float64,
 end
 
 
-function Coulomb_matrix(z_pos::Vector{Vector{Float64}},kvec::Vector{Float64},NL::Int)::Matrix{Float64}
+function Coulomb_matrix(z_pos::Vector{Float64},kvec::Vector{Float64},NL::Int)::Matrix{Float64}
  
     spin_num=2
     valley_num=2
