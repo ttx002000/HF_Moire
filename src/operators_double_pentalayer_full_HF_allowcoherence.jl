@@ -215,7 +215,8 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
  if itcount<15
   update_rate=0.2 
  else
-  update_rate=rand()
+    update_rate=rand() 
+ end
 
  output_density_matrix=density_matrix_new*update_rate+density_matrix*(1-update_rate)
 
