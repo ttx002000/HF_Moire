@@ -297,7 +297,7 @@ function get_initial_proj(k_set::Vector{Vector{Float64}},eig_vec_set::Array{Vect
  for ja in eachindex(k_set)
    A=randn(dimension,dimension)+im*randn(dimension,dimension)
 
-   initial_density_matrix[:,:,ja]+=(A+A')*0.01
+   initial_density_matrix[:,:,ja]+=(A+A')*0.1
  end
 
 
