@@ -1,0 +1,7 @@
+{
+  "files.exclude": {
+    "data_collection\\double_pentalayer_full_HF_allowcoherence": true,
+    "data_collection\\double_pentalayer_full_HF_intervalley": true,
+    "data_collection\\pentalayer_full_HF": true
+  }
+}
