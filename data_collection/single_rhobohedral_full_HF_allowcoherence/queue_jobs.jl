@@ -13,7 +13,7 @@ job_prefix = "single_RMG"
 
 st=load("missedjobs.jld2")
 index=st["index"]
-for ja in 100:600
+for ja in 601:length(index)
   arguments=index[ja]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:30:00",ntasks=8,mem=32)
 end
