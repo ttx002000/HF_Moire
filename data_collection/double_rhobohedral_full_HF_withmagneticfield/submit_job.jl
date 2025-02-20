@@ -13,7 +13,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     mkpath(slurmpath)
  
 
-    name = "$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])NL$(args[8])tgden$(args[9])temp$(args[10])B$(args[11])trytime"
+    name = "$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])NL$(args[8])tgden$(args[9])temp$(args[10])B$(args[11])trytime$(args[12])filepos"
     filestr = """#!/bin/bash
     #SBATCH --job-name=$(job_prefix*"_"*name)
     #SBATCH --partition=$partition
