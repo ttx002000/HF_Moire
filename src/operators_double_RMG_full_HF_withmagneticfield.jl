@@ -354,6 +354,49 @@ end
 
 
 
+function get_magnetic_initial_proj(k_set::Vector{Vector{Float64}},magnetic_single_matrix::Array{ComplexF64},NL::Int)
+ 
+  valley_num=2
+  spin_num=2
+  layer_num=2
+  sublattice_num=2*NL
+  dimension=valley_num*spin_num*layer_num*sublattice_num
+    magnetic_single_matrix_reshaped=reshape(magnetic_single_matrix,valley_num,spin_num,layer_num,sublattice_num,valley_num,spin_num,layer_num,sublattice_num,length(k_set))
+    BG_density_matrix_complex=zeros(ComplexF64,valley_num,spin_num,layer_num,sublattice_num,valley_num,spin_num,layer_num,sublattice_num,length(k_set))
+ 
+    for ja in eachindex(k_set), vi in 1:valley_num, si in 1:spin_num, li in 1:layer_num
+      FFF=eigen(magnetic_single_matrix_reshaped[vi,si,li,:,vi,si,li,:,ja]).vectors
+     for  bandindex in 1:NL
+
+       BG_density_matrix_complex[vi,si,li,:,vi,si,li,:,ja]+=FFF[:,bandindex]*(FFF[:,bandindex])'
+    end
+    end
+ 
+    BG_density_matrix=reshape(BG_density_matrix_complex,(dimension,dimension,length(k_set)))
+ 
+  
+  
+  
+  
+    initial_density_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
+ 
+  for ja in eachindex(k_set)
+    A=randn(dimension,dimension)+im*randn(dimension,dimension)
+ 
+    initial_density_matrix[:,:,ja]+=(A+A')*0.1
+  end
+ 
+ 
+ 
+  return initial_density_matrix, BG_density_matrix
+ end
+
+
+
+
+
+
+
 function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},
                            ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},ildis::Float64,Area::Float64,NL::Int,target_density::Float64,temp::Float64)
   valley_num=2
