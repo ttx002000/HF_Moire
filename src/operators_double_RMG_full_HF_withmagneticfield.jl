@@ -396,13 +396,13 @@ function load_seed(args::Vector{Float64},initial_density_matrix::Array{ComplexF6
   scratch_dir = ENV["SCRATCH"]
    seed_record=[]
   for ja in 1:20
-    savepath=joinpath(scratch_dir, "double_RMG_full_HF_withmagneticfield_v2/data_output$(Int(args[12]))/seeds/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])NL$(args[8])tgden$(args[9])temp$(args[10])B$(Float64(ja))seed.jld2")
+    savepath=joinpath(scratch_dir, "double_RMG_full_HF_withmagneticfield/data_output$(Int(args[12]))/seeds/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])NL$(args[8])tgden$(args[9])temp$(Float64(ja))seed.jld2")
     if isfile(savepath)
        push!(seed_record,savepath)
     end
   end
 
-  if rand()>0.5 && length(seed_record)>0
+  if rand()>0.6 && length(seed_record)>0
     seed_index=rand(collect(1:1:length(seed_record)))
     st=load(savepath[ seed_index])
     seed_density_matrix=st["final_density_matrix"]
