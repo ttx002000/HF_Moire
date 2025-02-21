@@ -410,6 +410,7 @@ function load_seed(args::Vector{Float64},initial_density_matrix::Array{ComplexF6
   else
     seed_index=0
     println("I am NOT taking seed",seed_index)
+    println("seed_record_length",length(seed_record))
     seed_density_matrix=initial_density_matrix
   end
 
