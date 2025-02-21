@@ -182,7 +182,7 @@ function get_magnetic_single(k_set::Vector{Vector{Float64}},eig_vec_set::Array{V
                elementthree=eig_vec_set[si,li,vi][ja][:,activeone]'*dky_Ham*eig_vec_set[si,li,vi][ja][:,remote]
                elementfour=eig_vec_set[si,li,vi][ja][:,remote]'*dkx_Ham*eig_vec_set[si,li,vi][ja][:,activetwo]
        
-             modification[activeone,activetwo]+=3.79814*im*10^(-4)*Bfield*(elementone*elementtwo-elementthree*elementfour)*(1/(eig_set[si,li,vi][ja][activeone]-eig_set[si,li,vi][ja][remote])+1/(eig_set[si,li,vi][ja][activetwo]-eig_set[si,li,vi][ja][remote]))
+             modification[activeone,activetwo]+=-3.79814*im*10^(-4)*Bfield*(elementone*elementtwo-elementthree*elementfour)*(1/(eig_set[si,li,vi][ja][activeone]-eig_set[si,li,vi][ja][remote])+1/(eig_set[si,li,vi][ja][activetwo]-eig_set[si,li,vi][ja][remote]))
            end
          end
 
@@ -389,7 +389,30 @@ function get_magnetic_initial_proj(k_set::Vector{Vector{Float64}},magnetic_singl
  
  
   return initial_density_matrix, BG_density_matrix
- end
+end
+
+
+function load_seed(args::Vector{Float64},initial_density_matrix::Array{ComplexF64})
+  scratch_dir = ENV["SCRATCH"]
+   seed_record=[]
+  for ja in 1:20
+    savepath=joinpath(scratch_dir, "double_RMG_full_HF_withmagneticfield_v2/data_output$(Int(args[12]))/seeds/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])NL$(args[8])tgden$(args[9])temp$(args[10])B$(Float64(ja))seed.jld2")
+    if isfile(savepath)
+       push!(seed_record,savepath)
+    end
+  end
+
+  if rand()>0.5 && length(seed_record)>0
+    seed_index=rand(collect(1:1:length(seed_record)))
+    st=load(savepath[ seed_index])
+    seed_density_matrix=st["final_density_matrix"]
+  else
+    seed_index=0
+    seed_density_matrix=initial_density_matrix
+  end
+
+ return  seed_index,seed_density_matrix
+end
 
 
 

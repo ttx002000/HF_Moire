@@ -25,6 +25,8 @@ magnetic_single_matrix=get_magnetic_single(k_set,eig_vec_set,single_matrix,Bfiel
 
 
 initial_density_matrix, BG_density_matrix=get_magnetic_initial_proj(k_set,magnetic_single_matrix,NL)
+seed_index,initial_density_matrix=load_seed(args,initial_density_matrix)
+
 
 HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density=iteration(initial_density_matrix,BG_density_matrix,ϵr,k_set,magnetic_single_matrix,ildis,Area,NL,target_density,temp)
 scratch_dir = ENV["SCRATCH"]
@@ -35,4 +37,4 @@ jldsave(savepath,
              final_density_matrix=DIIS_input_density_matrix[1],HF_eigenvalues=HF_eigenvalues,
              k_set=k_set,eig_vec_set=eig_vec_set,HF_eigenvectors=HF_eigenvectors,fermi_level=fermi_level,energy=energy,eig_set=eig_set,
              single_matrix=single_matrix,Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,k_index=k_index,eout=eout,
-             renormalized_density=renormalized_density,magnetic_single_matrix=magnetic_single_matrix)
+             renormalized_density=renormalized_density,magnetic_single_matrix=magnetic_single_matrix,seed_index=seed_index)
