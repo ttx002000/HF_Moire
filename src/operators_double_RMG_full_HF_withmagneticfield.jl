@@ -404,7 +404,7 @@ function load_seed(args::Vector{Float64},initial_density_matrix::Array{ComplexF6
 
   if rand()>0.6 && length(seed_record)>0
     seed_index=rand(collect(1:1:length(seed_record)))
-    st=load(savepath[ seed_index])
+    st=load(seed_record[seed_index])
     seed_density_matrix=st["final_density_matrix"]
   else
     seed_index=0
