@@ -14,13 +14,13 @@ job_prefix = "single_RMG"
 st=load("missedjobs.jld2")
 index=st["index"]
 count=0
-for ja in eachindex(index)
+for ja in 1500:length(index)
   global count+=1
   arguments=index[ja]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:30:00",ntasks=4,mem=24)
   if mod(count,200)==0
     sleep(1800)
   end
-  println(count)
+  println(ja)
 end
 
