@@ -29,12 +29,12 @@ file_pos=args[8]
 st=load("missedjobs.jld2")
 index=st["index"]
 count=0
-for ja in 1:length(index)
+for ja in 409:length(index)
   global count+=1
   arguments=index[ja]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="5:00:00",ntasks=8,mem=64)
   if mod(count,200)==0
-    sleep(100)
+    sleep(900)
   end
   println(count)
 end
