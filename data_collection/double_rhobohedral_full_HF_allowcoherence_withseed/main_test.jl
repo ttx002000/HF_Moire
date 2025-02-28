@@ -24,7 +24,7 @@ println("finish1")
 
 _, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL)
 scratch_dir = ENV["SCRATCH"]
-seed_num=rand[1,2,3,4,5]
+seed_num=mod(Int(trytime),5)+1
 savepath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence/data_output$(Int(args[11]))/seeds/seeds$(seed_num).jld2")
 st=load(savepath)
 
