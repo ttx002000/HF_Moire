@@ -305,6 +305,126 @@ function get_initial_proj(k_set::Vector{Vector{Float64}},eig_vec_set::Array{Vect
  return initial_density_matrix, BG_density_matrix
 end
 
+function iteration_noDIIS(initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},
+                           ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},ildis::Float64,Area::Float64,NL::Int,target_density::Float64,temp::Float64)
+  valley_num=2
+  spin_num=2
+  layer_num=2
+  sublattice_num=2*NL
+  dimension=valley_num*spin_num*layer_num*sublattice_num
+  eout=1.0
+  itcount=0
+  bad_count=0
+  energy=0.0
+  energy_change=0.0
+  fermi_level=0.0
+  renormalized_density=0.0
+  HF_eigenvalues=zeros(Float64,dimension,length(k_set))
+  HF_eigenvectors=zeros(ComplexF64,dimension,dimension,length(k_set))
+
+
+  DIIS_input_density_matrix=Vector{Array{ComplexF64}}(undef,3)
+  DIIS_input_DeltaMatrix=Vector{Array{ComplexF64}}(undef,3)
+
+  input_density_matrix=initial_density_matrix
+
+  Fock_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
+  Hartree_matrix=zeros(ComplexF64,dimension,dimension)
+
+  itcount=0
+
+
+  #z_pos=[0.335*[0,0,1,1,2,2,3,3,4,4],0.335*[-4,-4,-3,-3,-2,-2,-1,-1,0,0].-ildis]
+  z_pos=Vector{Vector{Float64}}(undef,2)
+  z_pos[1]=0.335*[i for i in 0:NL-1 for _ in 1:2]
+  z_pos[2]=0.335*[i for i in -NL+1:0 for _ in 1:2].-ildis
+  
+  fcmatrix=zeros(Float64,dimension,dimension,length(k_set),length(k_set))
+
+
+  #for ja in eachindex(k_set), jb in eachindex(k_set)
+   #fcmatrix[:,:,ja,jb]+=Coulomb_matrix(z_pos,k_set[ja]-k_set[jb]) #need fix
+  #end
+  tic=time()
+  Threads.@threads for ja in eachindex(k_set) 
+    for jb in 1:ja
+   fcmatrix[:,:,ja,jb]+=Coulomb_matrix(z_pos,k_set[ja]-k_set[jb],NL) #need fix
+    end
+  end
+   
+  for ja in eachindex(k_set), jb in ja+1:length(k_set)
+    fcmatrix[:,:,ja,jb]+=fcmatrix[:,:,jb,ja]
+  end
+  toc=time()
+  println("formfactorstime",toc-tic)
+
+
+
+
+  while (eout>1*10^(-12)) || (bad_count<4) || (energy_change>1*10^(-6))
+      if eout<1*10^(-12)
+       bad_count+=1
+      end
+      
+      tic=time()
+
+      if (itcount>60 && abs(eout)>10^(-2)) || (itcount>50 && abs(eout)<10^(-8))
+      
+        dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
+        if dmk==0
+            itcount=0
+            dmk=zeros(ComplexF64,dimension,dimension,length(k_set))
+            for ja in eachindex(k_set)
+              A=randn(dimension,dimension)+im*randn(dimension,dimension)
+              dmk[:,:,ja]+=(A+A')*0.01
+            end
+        end
+       
+
+        eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix,renormalized_density=Construct_projector(k_set,ϵr,
+                                                                                                                                                              dmk,single_matrix,
+                                                                                                                                                              energy,BG_density_matrix,
+                                                                                                                                                              fcmatrix,Area,dimension,target_density,temp,itcount)
+        DIIS_input_density_matrix[mod(itcount,3)+1]=dmk
+        input_density_matrix=output_density_matrix
+        println("using DIIS")
+       
+      else
+  
+        eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix,renormalized_density=Construct_projector(k_set,ϵr,
+                                                                                                                                                                                          input_density_matrix,single_matrix,
+                                                                                                                                                                                           energy,BG_density_matrix,
+                                                                                                                                                                                           fcmatrix,Area,dimension,target_density,temp,itcount)
+                                                                                                                                                                                           
+
+        DIIS_input_density_matrix[mod(itcount,3)+1]=input_density_matrix
+        input_density_matrix=output_density_matrix
+         
+     
+
+      end
+
+    
+
+
+
+      itcount+=1
+     
+      toc=time()
+      println(toc-tic,"eout=$eout","energy_change=$energy_change","itcount=$itcount")
+      flush(stdout)
+     
+    
+  end
+ 
+ 
+
+
+  
+  return HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density
+
+
+end
 
 
 function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},

@@ -30,7 +30,7 @@ st=load(savepath)
 
 initial_density_matrix=st["DS_seed"]
 
-HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density=iteration(initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area,NL,target_density,temp)
+HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density=iteration_noDIIS(initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area,NL,target_density,temp)
 scratch_dir = ENV["SCRATCH"]
 savepath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence/data_output$(Int(args[11]))/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])NL$(args[8])tgden$(args[9])temp$(args[10])trytime.jld2")
 
