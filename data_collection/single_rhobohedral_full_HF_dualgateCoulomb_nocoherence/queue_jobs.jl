@@ -14,10 +14,10 @@ job_prefix = "dual_gate"
 st=load("missedjobs.jld2")
 index=st["index"]
 count=0
-for ja in 1765:length(index)
+for ja in 1:length(index)
   global count+=1
   arguments=index[ja]
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=4,mem=24)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=4,mem=24)
   if mod(count,100)==0
     sleep(200)
   end
