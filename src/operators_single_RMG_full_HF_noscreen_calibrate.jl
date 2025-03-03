@@ -81,7 +81,7 @@ end
 function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,NL::Int)
  
   Ham=zeros(ComplexF64,2*NL,2*NL)
-  gamma1=3800
+  gamma1=380
   t0=3100
   ag=0.246
   v0=√3/2*ag*t0
