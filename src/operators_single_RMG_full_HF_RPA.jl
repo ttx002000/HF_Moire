@@ -6,7 +6,7 @@ using LinearAlgebra
 function Coulomb(dis::Float64,kvec::Vector{Float64})::Float64
   gatedis=20.0
   center=0.5
-  width=0.05
+  width=0.1
   if norm(kvec)==0.0
       return 9047.5636*gatedis*1/(1+exp(-(norm(kvec)-center)/width))
 
