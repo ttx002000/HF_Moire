@@ -317,6 +317,7 @@ function get_initial_proj_withansatz(k_set::Vector{Vector{Float64}},eig_vec_set:
   initial_density_complex=zeros(ComplexF64,valley_num,spin_num,sublattice_num,valley_num,spin_num,sublattice_num,length(k_set))
 
   ansatz_num=rand([1,2,3,4])
+  println("ansatz_num")
 
   if ansatz_num==1
  
