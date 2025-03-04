@@ -19,7 +19,7 @@ for ja in 100:length(index)
   arguments=index[ja]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:00:00",ntasks=4,mem=24)
   if mod(count,100)==0
-    sleep(0)
+    sleep(200)
   end
   println(ja)
 end

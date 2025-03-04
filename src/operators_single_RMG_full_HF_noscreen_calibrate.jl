@@ -77,7 +77,7 @@ function get_f(k::Vector{Float64})
 end
 
 
-
+#=
 function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,NL::Int)
  
   Ham=zeros(ComplexF64,2*NL,2*NL)
@@ -124,6 +124,41 @@ function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,
 
  return Ham
 end
+=#
+
+
+function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,NL::Int)
+ 
+  Ham=zeros(ComplexF64,2*NL,2*NL)
+  Kac=4π/(3*0.246)*[1,0]*valley
+  t0=3100
+  t1=380
+  t2=-21
+  t3=290
+  t4=141
+  for layer in 1:NL-1
+     Ham[2*layer-1:2*layer,2*layer+1:2*layer+2]=[t4*get_f((k+Kac)*stacking) t3*conj(get_f((k+Kac)*stacking));t1 t4*get_f((k+Kac)*stacking)]
+  end
+
+  if NL>2
+   for layer in 1:NL-2
+      Ham[2*layer-1:2*layer,2*layer+3:2*layer+4]=[0.0 t2/2;0.0 0.0]
+   end
+ end
+
+  Ham=Ham+Ham'
+
+  for layer in 1:NL
+      Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[uD*(layer-(NL+1)/2) -t0*get_f((k+Kac)*stacking);-t0*conj(get_f((k+Kac)*stacking)) uD*(layer-(NL+1)/2)]
+  end
+ return Ham
+end
+
+
+
+
+
+
 
 function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int)
 
@@ -337,7 +372,7 @@ function get_initial_proj_withansatz(k_set::Vector{Vector{Float64}},eig_vec_set:
   #initial_density_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
   initial_density_complex=zeros(ComplexF64,valley_num,spin_num,sublattice_num,valley_num,spin_num,sublattice_num,length(k_set))
 
-  ansatz_num=rand([1,2,3,4])
+  ansatz_num=rand([1,2,3,4,5])
   println("ansatz_num")
 
   if ansatz_num==1
@@ -369,6 +404,14 @@ function get_initial_proj_withansatz(k_set::Vector{Vector{Float64}},eig_vec_set:
            initial_density_complex[vi,si,:,vi,si,:,ja]+=eig_vec_set[si,vi][ja][:,bandindex]*(eig_vec_set[si,vi][ja][:,bandindex])'
         end
        end
+  elseif ansatz_num==5
+    initial_density_complex=reshape(initial_density_complex,dimension,dimension,length(k_set))
+ 
+   for ja in eachindex(k_set)
+     A=randn(dimension,dimension)+im*randn(dimension,dimension)
+ 
+     initial_density_complex[:,:,ja]+=(A+A')*10^(-3)
+    end
 
  end
 
