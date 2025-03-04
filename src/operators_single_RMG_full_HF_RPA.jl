@@ -3,15 +3,14 @@ using LinearAlgebra
 
 
 
-function Coulomb(dis::Float64,kvec::Vector{Float64})::Float64
+function Coulomb(kvec::Vector{Float64})::Float64
   gatedis=20.0
-  center=0.5
-  width=0.1
+ 
   if norm(kvec)==0.0
-      return 9047.5636*gatedis*1/(1+exp(-(norm(kvec)-center)/width))
+      return 9047.5636*gatedis
 
     else
-     return 9047.5636/norm(kvec)*tanh(norm(kvec)*gatedis)*1/(1+exp(-(norm(kvec)-center)/width))
+     return 9047.5636/norm(kvec)*tanh(norm(kvec)*gatedis)
   
   end
   
@@ -321,8 +320,158 @@ end
 
 
 
+function get_suscep(k_set::Vector{Vector{Float64}},k_index::Vector{Vector{Int}},NL::Int,uD::Float64,total_density::Float64,temp::Float64)
+   
+ 
+
+  key_set=Vector{Int}[]
+  qvec_set=Vector{Float64}[]
+
+  for ja in eachindex(k_set), jb in eachindex(k_set)
+    diff=k_index[ja]-k_index[jb]
+    pos1=findfirst(item->item==diff,key_set)
+    pos2=findfirst(item->item==-diff,key_set)
+    if isnothing(pos1) && isnothing(pos2)
+       push!(key_set,diff)
+       push!(qvec_set,k_set[ja]-k_set[jb])
+    end
+
+  end
+
+  piq_set=Vector{Float64}(undef,length(qvec_set))
+  println("lengthofpiq",length(piq_set))
+
+  @Threads.threads for ja in eachindex(key_set)
+     println(ja)
+     piq_set[ja]=get_piq(qvec_set[ja],NL,uD,total_density,temp)
+  end
+
+  piq_matrix=zeros(Float64,length(k_set),length(k_set))
+
+  
+  for ja in eachindex(k_set), jb in eachindex(k_set)
+    diff=k_index[ja]-k_index[jb]
+    pos1=findfirst(item->item==diff,key_set)
+    pos2=findfirst(item->item==-diff,key_set)
+    if !isnothing(pos2)
+      piq_matrix[ja,jb]=piq_set[pos2]
+    end
+
+    if !isnothing(pos1)
+      piq_matrix[ja,jb]=piq_set[pos1]
+    end
+
+  end
+
+
+
+  
+  
+  return piq_matrix
+
+end
+
+
+
+function  get_pertur_factor(ea::Float64,eb::Float64,FL::Float64,temp::Float64)::Float64
+  x=((ea+eb)/2-FL)/temp
+  y=(ea-eb)/temp
+  f1=1/(exp((ea-FL)/temp)+1)
+
+  f2=1/(exp((eb-FL)/temp)+1)
+  
+  return abs(y)>10^(-6) ? (f1-f2)/(ea-eb) : -1/(2*temp)*1/(cosh(x)+cosh(y/2))
+
+end
+
+function get_piq(q::Vector{Float64},NL::Int,uD::Float64,total_density::Float64,temp::Float64)
+
+  valley_num=2
+  spin_num=2
+  sublattice_num=2*NL
+  dimension=valley_num*spin_num*sublattice_num
+  radius=2.0
+  num_points=250
+ 
+
+  
+  kx_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
+  ky_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
+  
+  Area=4*π^2/((kx_grid[2]-kx_grid[1])*(ky_grid[2]-ky_grid[1]))
+  
+
+    eig_set=Vector{Float64}[]
+    k_set=Vector{Float64}[]
+    k_index=Vector{Int}[]
+    eig_vec_set=Matrix{ComplexF64}[]
+    Ham_set=Matrix{ComplexF64}[]
+          
+      for ja in eachindex(kx_grid),jb in eachindex(ky_grid)
+        push!(k_set,[kx_grid[ja],ky_grid[jb]])
+        push!(k_index,[ja,jb])
+    
+       
+          Ham=Hamiltonian([kx_grid[ja],ky_grid[jb]],uD,1,1,NL)
+          FFF=eigen(Ham)
+          push!(eig_set,real(FFF.values))
+          push!(Ham_set,Ham)
+          push!(eig_vec_set,FFF.vectors)
+    
+       
+      end
+
+   
+
+      eig_set_kpq=Vector{Float64}[]
+      eig_vec_set_kpq=Matrix{ComplexF64}[]
+      Ham_set_kpq=Matrix{ComplexF64}[]
+          
+            
+      for ja in eachindex(kx_grid),jb in eachindex(ky_grid)
+     
+          Ham=Hamiltonian([kx_grid[ja],ky_grid[jb]]+q,uD,1,1,NL)
+          FFF=eigen(Ham)
+          push!(eig_set_kpq,real(FFF.values))
+          push!(Ham_set_kpq,Ham)
+          push!(eig_vec_set_kpq,FFF.vectors)
+    
+ 
+      end
+      
+      
+  
+
+
+      energy_list=sort(reduce(vcat,reduce(vcat,eig_set)))
+      bg_particle_density=NL*length(k_set)/Area
+      
+      FL,_=find_FL(energy_list,total_density/4,energy_list[1],energy_list[end],temp,Area,bg_particle_density)
+
+   
+
+
+
+    piq=0.0
+   for ja in eachindex(k_set), bione in 1:2*NL, bitwo in 1:2*NL
+    piq+=-1/Area*get_pertur_factor(eig_set_kpq[ja][bione],eig_set[ja][bitwo],FL,temp)*abs(eig_vec_set_kpq[ja][:,bione]'*eig_vec_set[ja][:,bitwo])^2
+   end
+
+
+
+
+ return piq*4
+end
+
+
+
+
+
+
+
+
 function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},
-                           ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},Area::Float64,NL::Int,target_density::Float64,temp::Float64)
+                           ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},Area::Float64,NL::Int,target_density::Float64,temp::Float64,piq_matrix::Matrix{Float64})
   valley_num=2
   spin_num=2
   sublattice_num=2*NL
@@ -360,7 +509,9 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
   tic=time()
    
   for ja in eachindex(k_set), jb in eachindex(k_set)
-    fcmatrix[ja,jb]=Coulomb(0.0,k_set[ja]-k_set[jb])
+    screeningfactor=1+Coulomb(k_set[ja]-k_set[jb])/ϵr*piq_matrix[ja,jb]
+
+    fcmatrix[ja,jb]=Coulomb(k_set[ja]-k_set[jb])/screeningfactor
   end
   toc=time()
   println("formfactorstime",toc-tic)
