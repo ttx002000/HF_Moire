@@ -324,45 +324,75 @@ function get_suscep(k_set::Vector{Vector{Float64}},k_index::Vector{Vector{Int}},
    
  
 
-  key_set=Vector{Int}[]
-  qvec_set=Vector{Float64}[]
+  
+  half_key_set=Vector{Int}[]
+  half_qvec_set=Vector{Float64}[]
+ 
 
   for ja in eachindex(k_set), jb in eachindex(k_set)
     diff=k_index[ja]-k_index[jb]
-    pos1=findfirst(item->item==diff,key_set)
-    pos2=findfirst(item->item==-diff,key_set)
-    if isnothing(pos1) && isnothing(pos2)
-       push!(key_set,diff)
-       push!(qvec_set,k_set[ja]-k_set[jb])
-    end
+    qvec=k_set[ja]-k_set[jb]
 
+ 
+       push!(half_key_set,abs.(diff))
+       push!(half_qvec_set,abs.(qvec))
+
+
+  end
+
+ 
+  half_qvec_set=half_qvec_set[indexin(unique(half_key_set), half_key_set)]
+  half_key_set=unique(half_key_set)
+
+  qvec_set=deepcopy(half_qvec_set)
+  key_set=deepcopy(half_key_set)
+  
+
+  for ja in eachindex(half_key_set)
+    if half_key_set[ja]≠[0,0]
+    push!(qvec_set,[half_qvec_set[ja][1],-half_qvec_set[ja][2]])
+    push!(key_set,[half_key_set[ja][1],-half_key_set[ja][2]])
+    end
   end
 
   piq_set=Vector{Float64}(undef,length(qvec_set))
   println("lengthofpiq",length(piq_set))
 
+
+  eig_vec_set,eig_set,FL=get_piq_firsthalf(NL,uD,total_density,temp)
+
+
+
   @Threads.threads for ja in eachindex(key_set)
      println(ja)
-     piq_set[ja]=get_piq(qvec_set[ja],NL,uD,total_density,temp)
+     piq_set[ja]=get_piq_secondhalf(qvec_set[ja],NL,uD,temp,FL,eig_set,eig_vec_set)
   end
+
+  piq_matrix=zeros(Float64,length(k_set),length(k_set))
+
+  
+ 
+  piq_dic=Dict{Vector{Int},Float64}()
+  for ja in eachindex(piq_set)
+    piq_dic[key_set[ja]]=piq_set[ja]
+  end
+
 
   piq_matrix=zeros(Float64,length(k_set),length(k_set))
 
   
   for ja in eachindex(k_set), jb in eachindex(k_set)
     diff=k_index[ja]-k_index[jb]
-    pos1=findfirst(item->item==diff,key_set)
-    pos2=findfirst(item->item==-diff,key_set)
-    if !isnothing(pos2)
-      piq_matrix[ja,jb]=piq_set[pos2]
-    end
-
-    if !isnothing(pos1)
-      piq_matrix[ja,jb]=piq_set[pos1]
+   
+    if haskey(piq_dic,diff)
+      piq_matrix[ja,jb]=piq_dic[diff]
+    elseif  haskey(piq_dic,-diff)
+      piq_matrix[ja,jb]=piq_dic[-diff]
+    else
+      println("missing stuff")
     end
 
   end
-
 
 
   
@@ -384,12 +414,11 @@ function  get_pertur_factor(ea::Float64,eb::Float64,FL::Float64,temp::Float64)::
 
 end
 
-function get_piq(q::Vector{Float64},NL::Int,uD::Float64,total_density::Float64,temp::Float64)
 
-  valley_num=2
-  spin_num=2
-  sublattice_num=2*NL
-  dimension=valley_num*spin_num*sublattice_num
+
+function get_piq_firsthalf(NL::Int,uD::Float64,total_density::Float64,temp::Float64)
+
+
   radius=2.0
   num_points=250
  
@@ -422,10 +451,51 @@ function get_piq(q::Vector{Float64},NL::Int,uD::Float64,total_density::Float64,t
       end
 
    
+      energy_list=sort(reduce(vcat,reduce(vcat,eig_set)))
+      bg_particle_density=NL*length(k_set)/Area
+      
+      FL,_=find_FL(energy_list,total_density/4,energy_list[1],energy_list[end],temp,Area,bg_particle_density)
+
+
+ return eig_vec_set,eig_set,FL
+end
+
+
+
+
+
+
+
+function get_piq_secondhalf(q::Vector{Float64},NL::Int,uD::Float64,temp::Float64,FL::Float64,eig_set::Vector{Vector{Float64}},eig_vec_set::Vector{Matrix{ComplexF64}})
+
+ 
+  radius=2.0
+  num_points=250
+ 
+
+  
+  kx_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
+  ky_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
+  
+  Area=4*π^2/((kx_grid[2]-kx_grid[1])*(ky_grid[2]-ky_grid[1]))
+  
+
+   
+    k_set=Vector{Float64}[]
+    k_index=Vector{Int}[]
+  
+   
+          
+      for ja in eachindex(kx_grid),jb in eachindex(ky_grid)
+        push!(k_set,[kx_grid[ja],ky_grid[jb]])
+        push!(k_index,[ja,jb]) 
+      end
+
+   
 
       eig_set_kpq=Vector{Float64}[]
       eig_vec_set_kpq=Matrix{ComplexF64}[]
-      Ham_set_kpq=Matrix{ComplexF64}[]
+  
           
             
       for ja in eachindex(kx_grid),jb in eachindex(ky_grid)
@@ -433,7 +503,7 @@ function get_piq(q::Vector{Float64},NL::Int,uD::Float64,total_density::Float64,t
           Ham=Hamiltonian([kx_grid[ja],ky_grid[jb]]+q,uD,1,1,NL)
           FFF=eigen(Ham)
           push!(eig_set_kpq,real(FFF.values))
-          push!(Ham_set_kpq,Ham)
+        
           push!(eig_vec_set_kpq,FFF.vectors)
     
  
@@ -441,17 +511,6 @@ function get_piq(q::Vector{Float64},NL::Int,uD::Float64,total_density::Float64,t
       
       
   
-
-
-      energy_list=sort(reduce(vcat,reduce(vcat,eig_set)))
-      bg_particle_density=NL*length(k_set)/Area
-      
-      FL,_=find_FL(energy_list,total_density/4,energy_list[1],energy_list[end],temp,Area,bg_particle_density)
-
-   
-
-
-
     piq=0.0
    for ja in eachindex(k_set), bione in 1:2*NL, bitwo in 1:2*NL
     piq+=-1/Area*get_pertur_factor(eig_set_kpq[ja][bione],eig_set[ja][bitwo],FL,temp)*abs(eig_vec_set_kpq[ja][:,bione]'*eig_vec_set[ja][:,bitwo])^2

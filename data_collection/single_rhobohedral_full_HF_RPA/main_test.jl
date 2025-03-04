@@ -2,7 +2,7 @@ using JLD2
 include("../../src/operators_single_RMG_full_HF_RPA.jl")
 using LinearAlgebra,Plots
 args=parse.(Float64,ARGS)
-#args=[1.4,10.0,10.0,8.0,5.0,0.01,0.1,1.0,1.0]
+args=[1.4,10.0,10.0,8.0,5.0,0.01,0.1,1.0,1.0]
 radius=args[1]
 num_points=Int(args[2])
 uD=args[3]
@@ -20,7 +20,7 @@ println("finish1")
 
 piq_matrix=get_suscep(k_set,k_index,NL,uD,target_density,temp)
    
-
+scratch_dir = ENV["SCRATCH"]
 savepath=joinpath(scratch_dir, "single_RMG_full_HF_RPA/data_output$(Int(args[9]))/screening/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[5])NL$(args[6])tgden$(args[7])temp.jld2")
 jldsave(savepath,piq_matrix=piq_matrix)
 
