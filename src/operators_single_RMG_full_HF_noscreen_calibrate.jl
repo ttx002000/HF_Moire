@@ -319,6 +319,76 @@ end
 
 
 
+function get_initial_proj_withansatz(k_set::Vector{Vector{Float64}},eig_vec_set::Array{Vector{Matrix{ComplexF64}}},NL::Int)
+ 
+  valley_num=2
+  spin_num=2
+  sublattice_num=2*NL
+  dimension=valley_num*spin_num*sublattice_num
+ 
+    BG_density_matrix_complex=zeros(ComplexF64,valley_num,spin_num,sublattice_num,valley_num,spin_num,sublattice_num,length(k_set))
+ 
+    for ja in eachindex(k_set), bandindex in 1:NL, vi in 1:valley_num, si in 1:spin_num
+     BG_density_matrix_complex[vi,si,:,vi,si,:,ja]+=eig_vec_set[si,vi][ja][:,bandindex]*(eig_vec_set[si,vi][ja][:,bandindex])'
+    end
+ 
+    BG_density_matrix=reshape(BG_density_matrix_complex,(dimension,dimension,length(k_set)))
+ 
+  #initial_density_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
+  initial_density_complex=zeros(ComplexF64,valley_num,spin_num,sublattice_num,valley_num,spin_num,sublattice_num,length(k_set))
+
+  ansatz_num=rand([1,2,3,4])
+  println("ansatz_num")
+
+  if ansatz_num==1
+ 
+   for ja in eachindex(k_set), bandindex in NL+1:NL+1, vi in 1:1, si in 1:1
+    if norm(k_set[ja])<0.5
+       initial_density_complex[vi,si,:,vi,si,:,ja]+=eig_vec_set[si,vi][ja][:,bandindex]*(eig_vec_set[si,vi][ja][:,bandindex])'
+    end
+   end
+ elseif ansatz_num==2
+   
+  for ja in eachindex(k_set), bandindex in NL+1:NL+1, vi in 1:valley_num, si in 1:1
+    if norm(k_set[ja])<0.5
+       initial_density_complex[vi,si,:,vi,si,:,ja]+=eig_vec_set[si,vi][ja][:,bandindex]*(eig_vec_set[si,vi][ja][:,bandindex])'
+    end
+   end
+
+  elseif ansatz_num==3
+   
+    for ja in eachindex(k_set), bandindex in NL+1:NL+1, vi in 1:1, si in 1:spin_num
+      if norm(k_set[ja])<0.5
+         initial_density_complex[vi,si,:,vi,si,:,ja]+=eig_vec_set[si,vi][ja][:,bandindex]*(eig_vec_set[si,vi][ja][:,bandindex])'
+      end
+     end
+  elseif ansatz_num==4
+   
+      for ja in eachindex(k_set), bandindex in NL+1:NL+1, vi in 1:valley_num, si in 1:spin_num
+        if norm(k_set[ja])<0.5
+           initial_density_complex[vi,si,:,vi,si,:,ja]+=eig_vec_set[si,vi][ja][:,bandindex]*(eig_vec_set[si,vi][ja][:,bandindex])'
+        end
+       end
+
+ end
+
+
+ initial_density_complex=reshape(initial_density_complex,dimension,dimension,length(k_set))
+ 
+  for ja in eachindex(k_set)
+    A=randn(dimension,dimension)+im*randn(dimension,dimension)
+ 
+    initial_density_complex[:,:,ja]+=(A+A')*0.001
+  end
+ 
+ 
+ 
+  return initial_density_complex, BG_density_matrix
+end
+ 
+
+
+
 function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},
                            ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},Area::Float64,NL::Int,target_density::Float64,temp::Float64)
   valley_num=2
