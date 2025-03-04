@@ -378,7 +378,7 @@ function get_initial_proj_withansatz(k_set::Vector{Vector{Float64}},eig_vec_set:
   for ja in eachindex(k_set)
     A=randn(dimension,dimension)+im*randn(dimension,dimension)
  
-    initial_density_complex[:,:,ja]+=(A+A')*0.001
+    initial_density_complex[:,:,ja]+=(A+A')*10^(-5)
   end
  
  
