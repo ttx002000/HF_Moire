@@ -320,7 +320,7 @@ end
 
 
 
-function get_suscep(k_set::Vector{Vector{Float64}},k_index::Vector{Vector{Int}},NL::Int,uD::Float64,total_density::Float64,temp::Float64)
+function get_suscep(k_set::Vector{Vector{Float64}},k_index::Vector{Vector{Int}},NL::Int,total_density::Float64,temp::Float64,num_points::Int,eig_set::Matrix{Vector{Vector{Float64}}},eig_vec_set::Matrix{Vector{Matrix{ComplexF64}}},Area::Float64)
    
  
 
@@ -355,18 +355,46 @@ function get_suscep(k_set::Vector{Vector{Float64}},k_index::Vector{Vector{Int}},
     end
   end
 
-  piq_set=Vector{Float64}(undef,length(qvec_set))
+  piq_set=zeros(Float64,length(qvec_set))
   println("lengthofpiq",length(piq_set))
 
 
-  eig_vec_set,eig_set,FL=get_piq_firsthalf(NL,uD,total_density,temp)
 
+  eig_val_matrix=Matrix{Vector{Float64}}(undef,num_points,num_points)
+  eig_vec_matrix=Matrix{Matrix{ComplexF64}}(undef,num_points,num_points)
+  for ja in eachindex(k_set)
+   eig_val_matrix[k_index[ja][1],k_index[ja][2]]=eig_set[1,1][ja]
+   eig_vec_matrix[k_index[ja][1],k_index[ja][2]]=eig_vec_set[1,1][ja]
+  end
 
+  energy_list=sort(reduce(vcat,reduce(vcat,eig_set[1,1])))
+  bg_particle_density=NL*length(k_set)/Area
+  
+  FL,_=find_FL(energy_list,total_density/4,energy_list[1],energy_list[end],temp,Area,bg_particle_density)
 
   @Threads.threads for ja in eachindex(key_set)
-     println(ja)
-     piq_set[ja]=get_piq_secondhalf(qvec_set[ja],NL,uD,temp,FL,eig_set,eig_vec_set)
+    
+     for k1 in 1:num_points, k2 in 1:num_points
+       kpq1=k1+key_set[ja][1]
+       kpq2=k2+key_set[ja][2]
+     if 1<=kpq1<=num_points && 1<=kpq2<=num_points
+      for bione in 1:2*NL, bitwo in 1:2*NL
+        piq_set[ja]+=-4/Area*get_pertur_factor(eig_val_matrix[k1,k2][bione],eig_val_matrix[kpq1,kpq2][bitwo],FL,temp)*abs(eig_vec_matrix[k1,k2][:,bione]'*eig_vec_matrix[kpq1,kpq2][:,bitwo])^2
+      end
+     end
+
+    end
   end
+
+
+
+
+
+
+
+
+
+
 
   piq_matrix=zeros(Float64,length(k_set),length(k_set))
 
@@ -394,12 +422,13 @@ function get_suscep(k_set::Vector{Vector{Float64}},k_index::Vector{Vector{Int}},
 
   end
 
-
+  println("finish susceptability")
   
   
   return piq_matrix
 
 end
+
 
 
 
@@ -416,111 +445,12 @@ end
 
 
 
-function get_piq_firsthalf(NL::Int,uD::Float64,total_density::Float64,temp::Float64)
-
-
-  radius=2.0
-  num_points=250
- 
-
-  
-  kx_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
-  ky_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
-  
-  Area=4*π^2/((kx_grid[2]-kx_grid[1])*(ky_grid[2]-ky_grid[1]))
-  
-
-    eig_set=Vector{Float64}[]
-    k_set=Vector{Float64}[]
-    k_index=Vector{Int}[]
-    eig_vec_set=Matrix{ComplexF64}[]
-    Ham_set=Matrix{ComplexF64}[]
-          
-      for ja in eachindex(kx_grid),jb in eachindex(ky_grid)
-        push!(k_set,[kx_grid[ja],ky_grid[jb]])
-        push!(k_index,[ja,jb])
-    
-       
-          Ham=Hamiltonian([kx_grid[ja],ky_grid[jb]],uD,1,1,NL)
-          FFF=eigen(Ham)
-          push!(eig_set,real(FFF.values))
-          push!(Ham_set,Ham)
-          push!(eig_vec_set,FFF.vectors)
-    
-       
-      end
-
-   
-      energy_list=sort(reduce(vcat,reduce(vcat,eig_set)))
-      bg_particle_density=NL*length(k_set)/Area
-      
-      FL,_=find_FL(energy_list,total_density/4,energy_list[1],energy_list[end],temp,Area,bg_particle_density)
-
-
- return eig_vec_set,eig_set,FL
-end
 
 
 
 
 
 
-
-function get_piq_secondhalf(q::Vector{Float64},NL::Int,uD::Float64,temp::Float64,FL::Float64,eig_set::Vector{Vector{Float64}},eig_vec_set::Vector{Matrix{ComplexF64}})
-
- 
-  radius=2.0
-  num_points=250
- 
-
-  
-  kx_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
-  ky_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
-  
-  Area=4*π^2/((kx_grid[2]-kx_grid[1])*(ky_grid[2]-ky_grid[1]))
-  
-
-   
-    k_set=Vector{Float64}[]
-    k_index=Vector{Int}[]
-  
-   
-          
-      for ja in eachindex(kx_grid),jb in eachindex(ky_grid)
-        push!(k_set,[kx_grid[ja],ky_grid[jb]])
-        push!(k_index,[ja,jb]) 
-      end
-
-   
-
-      eig_set_kpq=Vector{Float64}[]
-      eig_vec_set_kpq=Matrix{ComplexF64}[]
-  
-          
-            
-      for ja in eachindex(kx_grid),jb in eachindex(ky_grid)
-     
-          Ham=Hamiltonian([kx_grid[ja],ky_grid[jb]]+q,uD,1,1,NL)
-          FFF=eigen(Ham)
-          push!(eig_set_kpq,real(FFF.values))
-        
-          push!(eig_vec_set_kpq,FFF.vectors)
-    
- 
-      end
-      
-      
-  
-    piq=0.0
-   for ja in eachindex(k_set), bione in 1:2*NL, bitwo in 1:2*NL
-    piq+=-1/Area*get_pertur_factor(eig_set_kpq[ja][bione],eig_set[ja][bitwo],FL,temp)*abs(eig_vec_set_kpq[ja][:,bione]'*eig_vec_set[ja][:,bitwo])^2
-   end
-
-
-
-
- return piq*4
-end
 
 
 

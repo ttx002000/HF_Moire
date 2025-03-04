@@ -18,13 +18,15 @@ eig_set,k_set,k_index,eig_vec_set,Area,single_matrix=get_single_particle(radius,
 
 println("finish1")
 
-piq_matrix=get_suscep(k_set,k_index,NL,uD,target_density,temp)
+piq_matrix=get_suscep(k_set,k_index,NL,target_density,temp,num_points,eig_set,eig_vec_set,Area)
    
+
+#=
 scratch_dir = ENV["SCRATCH"]
 savepath=joinpath(scratch_dir, "single_RMG_full_HF_RPA/data_output$(Int(args[9]))/screening/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[5])NL$(args[6])tgden$(args[7])temp.jld2")
 jldsave(savepath,piq_matrix=piq_matrix)
+=#
 
-#=
 initial_density_matrix, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL)
 HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density=iteration(initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,Area,NL,target_density,temp,piq_matrix)
 scratch_dir = ENV["SCRATCH"]
@@ -35,4 +37,3 @@ jldsave(savepath,
              final_density_matrix=DIIS_input_density_matrix[1],HF_eigenvalues=HF_eigenvalues,
              k_set=k_set,eig_vec_set=eig_vec_set,HF_eigenvectors=HF_eigenvectors,fermi_level=fermi_level,energy=energy,eig_set=eig_set,
              single_matrix=single_matrix,Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,k_index=k_index,eout=eout,renormalized_density=renormalized_density)
-=#
