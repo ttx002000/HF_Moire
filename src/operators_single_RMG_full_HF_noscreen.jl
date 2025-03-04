@@ -313,8 +313,8 @@ function get_initial_proj_withansatz(k_set::Vector{Vector{Float64}},eig_vec_set:
  
     BG_density_matrix=reshape(BG_density_matrix_complex,(dimension,dimension,length(k_set)))
  
-  initial_density_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
-  initial_density_complex=zeros(ComplexF64,dimension,dimension,length(k_set))
+  #initial_density_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
+  initial_density_complex=zeros(ComplexF64,valley_num,spin_num,sublattice_num,valley_num,spin_num,sublattice_num,length(k_set))
 
   ansatz_num=rand([1,2,3,4])
 
@@ -351,17 +351,17 @@ function get_initial_proj_withansatz(k_set::Vector{Vector{Float64}},eig_vec_set:
  end
 
 
-
+ initial_density_complex=reshape(initial_density_complex,dimension,dimension,length(k_set))
  
   for ja in eachindex(k_set)
     A=randn(dimension,dimension)+im*randn(dimension,dimension)
  
-    initial_density_matrix[:,:,ja]+=(A+A')*0.001
+    initial_density_complex[:,:,ja]+=(A+A')*0.001
   end
  
  
  
-  return initial_density_matrix, BG_density_matrix
+  return initial_density_complex, BG_density_matrix
  end
  
 
