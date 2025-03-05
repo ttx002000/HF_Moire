@@ -14,7 +14,7 @@ job_prefix = "dual_gate"
 st=load("missedjobs.jld2")
 index=st["index"]
 count=0
-sleep(3600*3)
+
 for ja in 1:length(index)
   global count+=1
   arguments=index[ja]
