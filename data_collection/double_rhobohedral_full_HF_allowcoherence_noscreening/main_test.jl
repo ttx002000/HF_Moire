@@ -1,14 +1,14 @@
 using JLD2
-include("../../src/operators_double_RMG_full_HF_allowcoherence.jl")
+include("../../src/operators_double_RMG_full_HF_allowcoherence_noscreen.jl")
 using LinearAlgebra,Plots
 args=parse.(Float64,ARGS)
-#args=[1.4,15.0,10.0,20.0,8.0,1.0,5.0,0.0,0.1,1.0,1.0]
+#args=[1.4,40.0,10.0,20.0,8.0,20.0,5.0,0.0,0.1,1.0,1.0]
 radius=args[1]
 num_points=Int(args[2])
 uD=args[3]
 CNP=args[4]
 ϵr=args[5]
-ildis=args[6]
+gatedis=args[6]
 NL=Int(args[7])
 target_density=args[8]
 temp=args[9]
@@ -23,9 +23,9 @@ println("finish1")
 
 
 initial_density_matrix, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL)
-HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density=iteration(initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area,NL,target_density,temp)
+HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density=iteration(initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,gatedis,Area,NL,target_density,temp)
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence/data_output$(Int(args[11]))/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])NL$(args[8])tgden$(args[9])temp$(args[10])trytime.jld2")
+savepath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence_noscreen/data_output$(Int(args[11]))/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])gatedis$(args[7])NL$(args[8])tgden$(args[9])temp$(args[10])trytime.jld2")
 
   
 jldsave(savepath,

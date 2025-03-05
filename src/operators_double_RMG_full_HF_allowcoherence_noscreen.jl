@@ -3,13 +3,14 @@ using LinearAlgebra
 
 
 
-function Coulomb(dis::Float64,kvec::Vector{Float64})::Float64
-  gatedis=20.0
+function Coulomb(gatedis::Float64,kvec::Vector{Float64})::Float64
+  
+  
   if norm(kvec)==0.0
-      return 9047.5636*gatedis
+      return 9047.5636*(gatedis)
 
     else
-     return 9047.5636/norm(kvec)*tanh(norm(kvec)*gatedis)
+     return 9047.5636/norm(kvec)*tanh(gatedis*norm(kvec))
   
   end
   
@@ -21,7 +22,7 @@ end
 function find_FL(quasi_particle_energy::Vector{Float64},target_density::Float64,val_s::Float64,val_e::Float64,temp::Float64,Area::Float64,bg_particle_density::Float64)
   try_FL=(val_s+val_e)/2
 
-  
+  #stan=10^(-5)*target_density
   if target_density==0.0
     stan=10^(-9)
   else
@@ -48,23 +49,7 @@ function find_FL(quasi_particle_energy::Vector{Float64},target_density::Float64,
 end
 
 
-function Coulomb_matrix(z_pos::Vector{Float64},kvec::Vector{Float64},NL::Int)::Matrix{Float64}
- 
-    spin_num=2
-    valley_num=2
-    sublattice_num=2*NL
-    dimension=spin_num*valley_num*sublattice_num
 
-  s1=[Coulomb(abs(z_pos[ja]-z_pos[jb]),kvec) for ja in 1:sublattice_num, jb in 1:sublattice_num]
-
-  cmatrix=zeros(Float64,valley_num,spin_num,sublattice_num,valley_num,spin_num,sublattice_num)
-  for sindex1 in 1:spin_num, sindex2 in 1:spin_num,vindex1 in 1:valley_num, vindex2 in 1:valley_num
-    cmatrix[vindex1,sindex1,:,vindex2,sindex2,:]+=s1
-  end
-  
-  return reshape(cmatrix,(dimension,dimension))
-
-end
 
 
 
@@ -77,55 +62,6 @@ function get_f(k::Vector{Float64})
 end
 
 
-#=
-function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,NL::Int)
- 
-  Ham=zeros(ComplexF64,2*NL,2*NL)
-  gamma1=380
-  t0=3100
-  ag=0.246
-  v0=√3/2*ag*t0
-
-  t1=380
-  v1=√3/2*ag*t1
-
-  t2=-15
-  v2=√3/2*ag*t2
-
-  
-
-  t3=-290
-  v3=√3/2*ag*t3
-
-  t4=-141
-  v4=√3/2*ag*t4
-
-  kp=(valley*k[1]+im*k[2])*stacking
-  
-
-  for layer in 1:NL-1
-     Ham[2*layer-1:2*layer,2*layer+1:2*layer+2]=[v4*kp' v3*kp;gamma1 v4*kp']
-  end
-
-  if NL>2
-   for layer in 1:NL-2
-      Ham[2*layer-1:2*layer,2*layer+3:2*layer+4]=[0.0 v2/2;0.0 0.0]
-   end
- end
-
-  Ham=Ham+Ham'
-
-  for layer in 1:NL
-      Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[uD*(layer-(NL+1)/2) v0*kp';v0*kp uD*(layer-(NL+1)/2)]
-  end
-
-  Ham[1,1]+=-10.5
-  Ham[2*NL,2*NL]+=-10.5
-
- return Ham
-end
-=#
-
 
 function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,NL::Int)
  
@@ -136,6 +72,7 @@ function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,
   t2=-21
   t3=290
   t4=141
+
   for layer in 1:NL-1
      Ham[2*layer-1:2*layer,2*layer+1:2*layer+2]=[t4*get_f((k+Kac)*stacking) t3*conj(get_f((k+Kac)*stacking));t1 t4*get_f((k+Kac)*stacking)]
   end
@@ -154,16 +91,10 @@ function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,
  return Ham
 end
 
-
-
-
-
-
-
-function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int)
+function get_single_particle(radius::Float64,num_points::Int,uD::Float64,CNP::Float64,NL::Int)
 
   vset=[1,-1]
-
+  offset=[0.0,-(NL-1)*uD+CNP]
 
   kx_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
   ky_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
@@ -171,34 +102,35 @@ function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int
 
   valley_num=2
   spin_num=2
+  layer_num=2
   sublattice_num=2*NL
-  dimension=valley_num*spin_num*sublattice_num
+  dimension=valley_num*spin_num*layer_num*sublattice_num
   
-  eig_set=[Vector{Float64}[] for _ in 1:spin_num,_ in 1:valley_num]
+  eig_set=[Vector{Float64}[] for _ in 1:spin_num, _ in 1:layer_num,_ in 1:valley_num]
   k_set=Vector{Float64}[]
   k_index=Vector{Int}[]
-  eig_vec_set=[Matrix{ComplexF64}[] for _ in 1:spin_num, _ in 1:valley_num]
-  Ham_set=[Matrix{ComplexF64}[] for _ in 1:spin_num, _ in 1:valley_num]
+  eig_vec_set=[Matrix{ComplexF64}[] for _ in 1:spin_num, _ in 1:layer_num, _ in 1:valley_num]
+  Ham_set=[Matrix{ComplexF64}[] for _ in 1:spin_num, _ in 1:layer_num, _ in 1:valley_num]
       
   for ja in eachindex(kx_grid),jb in eachindex(ky_grid)
     push!(k_set,[kx_grid[ja],ky_grid[jb]])
     push!(k_index,[ja,jb])
 
-    for vi in 1:valley_num, si in 1:spin_num
+    for vi in 1:valley_num, si in 1:spin_num, li in 1:layer_num
       Ham=Hamiltonian([kx_grid[ja],ky_grid[jb]],uD,vset[vi],1,NL)
       FFF=eigen(Ham)
-      push!(eig_set[si,vi],real(FFF.values))
-      push!(Ham_set[si,vi],Ham)
-      push!(eig_vec_set[si,vi],FFF.vectors)
+      push!(eig_set[si,li,vi],real(FFF.values).+offset[li])
+      push!(Ham_set[si,li,vi],Ham+offset[li]*Matrix{Float64}(I,sublattice_num,sublattice_num))
+      push!(eig_vec_set[si,li,vi],FFF.vectors)
 
     end
   end
   
-   single_matrix_complex=zeros(ComplexF64,valley_num,spin_num,sublattice_num,valley_num,spin_num,sublattice_num,length(k_set))
+   single_matrix_complex=zeros(ComplexF64,valley_num,spin_num,layer_num,sublattice_num,valley_num,spin_num,layer_num,sublattice_num,length(k_set))
   
 
-  for ja in eachindex(k_set), vi in 1:valley_num, si in 1:spin_num
-    single_matrix_complex[vi,si,:,vi,si,:,ja]+=Ham_set[si,vi][ja]
+  for ja in eachindex(k_set), vi in 1:valley_num, si in 1:spin_num, li in 1:layer_num
+    single_matrix_complex[vi,si,li,:,vi,si,li,:,ja]+=Ham_set[si,li,vi][ja]
   end
 
   single_matrix=reshape(single_matrix_complex,(dimension,dimension,length(k_set)))
@@ -212,8 +144,8 @@ end
 
 function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
   density_matrix::Array{ComplexF64},single_matrix::Array{ComplexF64},
-  energy_input::Float64,BG_density_matrix::Array{ComplexF64},fcmatrix::Array{Float64},Area::Float64,
-  dimension::Int,target_density::Float64,temp::Float64,itcount::Int)
+  energy_input::Float64,BG_density_matrix::Array{ComplexF64},fcmatrix::Array{Float64},Area::Float64,dimension::Int,
+  target_density::Float64,temp::Float64,itcount::Int)
  
   
 
@@ -255,7 +187,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
 
 
  
-  #Hartree_matrix+=1/(ϵr*Area)*diagm(fcmatrix[:,:,1,1]*diag(dropdims(sum(density_matrix,dims=3),dims=3))) Be careful, this expression is wrong here
+  #Hartree_matrix+=1/(ϵr*Area)*diagm(fcmatrix[:,:,1,1]*diag(dropdims(sum(density_matrix,dims=3),dims=3))) be careful, this eq
    
 
 
@@ -290,6 +222,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
 
 
  density_matrix_new-=BG_density_matrix 
+
  if itcount<15
   update_rate=0.2 
  else
@@ -328,13 +261,14 @@ function get_initial_proj(k_set::Vector{Vector{Float64}},eig_vec_set::Array{Vect
  
  valley_num=2
  spin_num=2
+ layer_num=2
  sublattice_num=2*NL
- dimension=valley_num*spin_num*sublattice_num
+ dimension=valley_num*spin_num*layer_num*sublattice_num
 
-   BG_density_matrix_complex=zeros(ComplexF64,valley_num,spin_num,sublattice_num,valley_num,spin_num,sublattice_num,length(k_set))
+   BG_density_matrix_complex=zeros(ComplexF64,valley_num,spin_num,layer_num,sublattice_num,valley_num,spin_num,layer_num,sublattice_num,length(k_set))
 
-   for ja in eachindex(k_set), bandindex in 1:NL, vi in 1:valley_num, si in 1:spin_num
-    BG_density_matrix_complex[vi,si,:,vi,si,:,ja]+=eig_vec_set[si,vi][ja][:,bandindex]*(eig_vec_set[si,vi][ja][:,bandindex])'
+   for ja in eachindex(k_set), bandindex in 1:NL, vi in 1:valley_num, si in 1:spin_num, li in 1:layer_num
+    BG_density_matrix_complex[vi,si,li,:,vi,si,li,:,ja]+=eig_vec_set[si,li,vi][ja][:,bandindex]*(eig_vec_set[si,li,vi][ja][:,bandindex])'
    end
 
    BG_density_matrix=reshape(BG_density_matrix_complex,(dimension,dimension,length(k_set)))
@@ -354,90 +288,14 @@ end
 
 
 
-function get_initial_proj_withansatz(k_set::Vector{Vector{Float64}},eig_vec_set::Array{Vector{Matrix{ComplexF64}}},NL::Int)
- 
-  valley_num=2
-  spin_num=2
-  sublattice_num=2*NL
-  dimension=valley_num*spin_num*sublattice_num
- 
-    BG_density_matrix_complex=zeros(ComplexF64,valley_num,spin_num,sublattice_num,valley_num,spin_num,sublattice_num,length(k_set))
- 
-    for ja in eachindex(k_set), bandindex in 1:NL, vi in 1:valley_num, si in 1:spin_num
-     BG_density_matrix_complex[vi,si,:,vi,si,:,ja]+=eig_vec_set[si,vi][ja][:,bandindex]*(eig_vec_set[si,vi][ja][:,bandindex])'
-    end
- 
-    BG_density_matrix=reshape(BG_density_matrix_complex,(dimension,dimension,length(k_set)))
- 
-  #initial_density_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
-  initial_density_complex=zeros(ComplexF64,valley_num,spin_num,sublattice_num,valley_num,spin_num,sublattice_num,length(k_set))
-
-  ansatz_num=rand([1,2,3,4,5])
-  println("ansatz_num")
-
-  if ansatz_num==1
- 
-   for ja in eachindex(k_set), bandindex in NL+1:NL+1, vi in 1:1, si in 1:1
-    if norm(k_set[ja])<0.5
-       initial_density_complex[vi,si,:,vi,si,:,ja]+=eig_vec_set[si,vi][ja][:,bandindex]*(eig_vec_set[si,vi][ja][:,bandindex])'
-    end
-   end
- elseif ansatz_num==2
-   
-  for ja in eachindex(k_set), bandindex in NL+1:NL+1, vi in 1:valley_num, si in 1:1
-    if norm(k_set[ja])<0.5
-       initial_density_complex[vi,si,:,vi,si,:,ja]+=eig_vec_set[si,vi][ja][:,bandindex]*(eig_vec_set[si,vi][ja][:,bandindex])'
-    end
-   end
-
-  elseif ansatz_num==3
-   
-    for ja in eachindex(k_set), bandindex in NL+1:NL+1, vi in 1:1, si in 1:spin_num
-      if norm(k_set[ja])<0.5
-         initial_density_complex[vi,si,:,vi,si,:,ja]+=eig_vec_set[si,vi][ja][:,bandindex]*(eig_vec_set[si,vi][ja][:,bandindex])'
-      end
-     end
-  elseif ansatz_num==4
-   
-      for ja in eachindex(k_set), bandindex in NL+1:NL+1, vi in 1:valley_num, si in 1:spin_num
-        if norm(k_set[ja])<0.5
-           initial_density_complex[vi,si,:,vi,si,:,ja]+=eig_vec_set[si,vi][ja][:,bandindex]*(eig_vec_set[si,vi][ja][:,bandindex])'
-        end
-       end
-  elseif ansatz_num==5
-    initial_density_complex=reshape(initial_density_complex,dimension,dimension,length(k_set))
- 
-   for ja in eachindex(k_set)
-     A=randn(dimension,dimension)+im*randn(dimension,dimension)
- 
-     initial_density_complex[:,:,ja]+=(A+A')*10^(-3)
-    end
-
- end
-
-
- initial_density_complex=reshape(initial_density_complex,dimension,dimension,length(k_set))
- 
-  for ja in eachindex(k_set)
-    A=randn(dimension,dimension)+im*randn(dimension,dimension)
- 
-    initial_density_complex[:,:,ja]+=(A+A')*10^(-5)
-  end
- 
- 
- 
-  return initial_density_complex, BG_density_matrix
-end
- 
-
-
 
 function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},
-                           ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},Area::Float64,NL::Int,target_density::Float64,temp::Float64)
+                           ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},gatedis::Float64,Area::Float64,NL::Int,target_density::Float64,temp::Float64)
   valley_num=2
   spin_num=2
+  layer_num=2
   sublattice_num=2*NL
-  dimension=valley_num*spin_num*sublattice_num
+  dimension=valley_num*spin_num*layer_num*sublattice_num
   eout=1.0
   itcount=0
   bad_count=0
@@ -460,19 +318,19 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
   itcount=0
 
 
-
-  z_pos=0.335*[i for i in 0:NL-1 for _ in 1:2] #Notice this place!
-
   
   fcmatrix=zeros(Float64,length(k_set),length(k_set))
 
 
 
   tic=time()
-   
-  for ja in eachindex(k_set), jb in eachindex(k_set)
-    fcmatrix[ja,jb]=Coulomb(0.0,k_set[ja]-k_set[jb])
+  Threads.@threads for ja in eachindex(k_set) 
+    for jb in eachindex(k_set)
+   fcmatrix[ja,jb]+=Coulomb(gatedis,k_set[ja]-k_set[jb]) #need fix
+    end
   end
+   
+ 
   toc=time()
   println("formfactorstime",toc-tic)
 
@@ -486,7 +344,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
       
       tic=time()
 
-      if (itcount>60 && abs(eout)>10^(-2)) || (itcount>50 && abs(eout)<10^(-7))
+      if (itcount>60 && abs(eout)>10^(-2)) || (itcount>50 && abs(eout)<10^(-6))
       
         dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
         if dmk==0
