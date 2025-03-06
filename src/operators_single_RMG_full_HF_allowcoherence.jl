@@ -47,7 +47,7 @@ function find_FL(quasi_particle_energy::Vector{Float64},target_density::Float64,
 
 end
 
-
+#=
 function Coulomb_matrix(z_pos::Vector{Float64},kvec::Vector{Float64},NL::Int)::Matrix{Float64}
  
     spin_num=2
@@ -65,6 +65,7 @@ function Coulomb_matrix(z_pos::Vector{Float64},kvec::Vector{Float64},NL::Int)::M
   return reshape(cmatrix,(dimension,dimension))
 
 end
+=#
 
 
 
@@ -157,7 +158,7 @@ end
 
 function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
   density_matrix::Array{ComplexF64},single_matrix::Array{ComplexF64},
-  energy_input::Float64,BG_density_matrix::Array{ComplexF64},fcmatrix::Array{Float64},Area::Float64,
+  energy_input::Float64,BG_density_matrix::Array{ComplexF64},fcmatrix::Array{Matrix{Float64}},Area::Float64,
   dimension::Int,target_density::Float64,temp::Float64,itcount::Int)
  
   
@@ -180,7 +181,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
 
  
 
-
+ #=
 
  Threads.@threads for ja in 1:dimension
   for jb in 1:ja-1
@@ -195,12 +196,49 @@ Threads.@threads for ja in 1:dimension
     Fock_matrix[ja,ja,:]+=fcmatrix[ja,ja,:,:]*density_matrix[ja,ja,:]
 end
 Fock_matrix=Fock_matrix*1/(ϵr*Area)
+ =#
+
+ Threads.@threads for ja in 1:dimension
+  for jb in 1:(ja - 1)
+      mul!(
+          @view(Fock_matrix[ja, jb, :]),
+          @view(fcmatrix[ja, jb][:, :]),
+          @view(density_matrix[ja, jb, :]),
+          1,
+          1,
+      )
+  end
+ end
  
 
+ Threads.@threads for ja in eachindex(k_set)
+  axpy!(1, @view(Fock_matrix[:, :, ja])', @view(Fock_matrix[:, :, ja]))
+ end
 
 
+ Threads.@threads for ja in 1:dimension
+  mul!(
+      @view(Fock_matrix[ja, ja, :]),
+      @view(fcmatrix[ja, ja][:, :]),
+      @view(density_matrix[ja, ja, :]),
+      1,
+      1,
+  )
+ end
+ Fock_matrix=Fock_matrix*1/(ϵr*Area)
  
-  Hartree_matrix+=1/(ϵr*Area)*diagm(fcmatrix[:,:,1,1]*diag(dropdims(sum(density_matrix,dims=3),dims=3)))
+
+  hfcmatrix=zeros(Float64,dimension,dimension)
+  for ja in 1:dimension
+     for jb in 1:ja
+        hfcmatrix[ja,jb]+=fcmatrix[ja,jb][1,1]
+     end
+     for jb in ja+1:dimension
+      hfcmatrix[ja,jb]+=fcmatrix[jb,ja][1,1]
+     end
+  end
+ 
+  Hartree_matrix+=1/(ϵr*Area)*diagm(hfcmatrix*diag(dropdims(sum(density_matrix,dims=3),dims=3)))
    
 
 
@@ -329,28 +367,45 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
 
 
   z_pos=0.335*[i for i in 0:NL-1 for _ in 1:2] #Notice this place!
+  sub_i=zeros(Int,valley_num,spin_num,sublattice_num)
+ for ja in 1:valley_num,jb in 1:spin_num, jc in 1:sublattice_num
+   sub_i[ja,jb,jc]=jc
+ end
+  sub_i=reshape(sub_i,dimension)
+
 
   
-  fcmatrix=zeros(Float64,dimension,dimension,length(k_set),length(k_set))
-
-
-  #for ja in eachindex(k_set), jb in eachindex(k_set)
-   #fcmatrix[:,:,ja,jb]+=Coulomb_matrix(z_pos,k_set[ja]-k_set[jb]) #need fix
-  #end
+  fcmatrix=Array{Matrix{Float64}}(undef,dimension,dimension)
+  smaller_fc=Matrix{Matrix{Float64}}(undef,sublattice_num,sublattice_num)
   tic=time()
-  Threads.@threads for ja in eachindex(k_set) 
+
+  Threads.@threads for ja in 1:sublattice_num
     for jb in 1:ja
-   fcmatrix[:,:,ja,jb]+=Coulomb_matrix(z_pos,k_set[ja]-k_set[jb],NL) #need fix
+       smaller_fc[ja,jb]=zeros(Float64,length(k_set),length(k_set))
+         for jc in 1:length(k_set), jd in 1:jc
+          smaller_fc[ja,jb][jc,jd]+=Coulomb(z_pos[ja]-z_pos[jb],k_set[jc]-k_set[jd])
+         end
+ 
+         for jc in 1:length(k_set), jd in jc+1:length(k_set)
+          smaller_fc[ja,jb][jc,jd]+=smaller_fc[ja,jb][jd,jc]
+         end
     end
-  end
-   
-  for ja in eachindex(k_set), jb in ja+1:length(k_set)
-    fcmatrix[:,:,ja,jb]+=fcmatrix[:,:,jb,ja]
-  end
-  toc=time()
-  println("formfactorstime",toc-tic)
+ end 
 
+ Threads.@threads for ja in 1:dimension
+  for jb in 1:ja
 
+     sub_one=max(sub_i[ja],sub_i[jb])
+     sub_two=min(sub_i[ja],sub_i[jb])
+    fcmatrix[ja,jb]=smaller_fc[sub_one,sub_two]
+      
+  end
+ end
+
+ smaller_fc=nothing
+
+ toc=time()
+ println("time for constructing fcmatrix is $(toc-tic)")
 
 
   while (eout>1*10^(-12)) || (bad_count<4) || (energy_change>1*10^(-6))
