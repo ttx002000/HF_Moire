@@ -49,25 +49,6 @@ function find_FL(quasi_particle_energy::Vector{Float64},target_density::Float64,
 end
 
 
-function Coulomb_matrix(z_pos::Vector{Float64},kvec::Vector{Float64},NL::Int)::Matrix{Float64}
- 
-    spin_num=2
-    valley_num=2
-    sublattice_num=2*NL
-    dimension=spin_num*valley_num*sublattice_num
-
-  s1=[Coulomb(abs(z_pos[ja]-z_pos[jb]),kvec) for ja in 1:sublattice_num, jb in 1:sublattice_num]
-
-  cmatrix=zeros(Float64,valley_num,spin_num,sublattice_num,valley_num,spin_num,sublattice_num)
-  for sindex1 in 1:spin_num, sindex2 in 1:spin_num,vindex1 in 1:valley_num, vindex2 in 1:valley_num
-    cmatrix[vindex1,sindex1,:,vindex2,sindex2,:]+=s1
-  end
-  
-  return reshape(cmatrix,(dimension,dimension))
-
-end
-
-
 
 function get_f(k::Vector{Float64})
   delta1=1/√3*0.246*[0,1]
@@ -202,7 +183,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
  
 
 
-
+  #=
  Threads.@threads for ja in 1:dimension
   for jb in 1:ja-1
   Fock_matrix[ja,jb,:]+=fcmatrix*density_matrix[ja,jb,:]
@@ -216,8 +197,36 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
     Fock_matrix[ja,ja,:]+=fcmatrix*density_matrix[ja,ja,:]
  end
  Fock_matrix=Fock_matrix*1/(ϵr*Area)
+ =#
+
+ Threads.@threads for ja in 1:dimension
+  for jb in 1:(ja - 1)
+      mul!(
+          @view(Fock_matrix[ja, jb, :]),
+          @view(fcmatrix[ja, jb, :, :]),
+          @view(density_matrix[ja, jb, :]),
+          1,
+          1,
+      )
+  end
+ end
  
 
+ Threads.@threads for ja in eachindex(k_set)
+  axpy!(1, @view(Fock_matrix[:, :, ja])', @view(Fock_matrix[:, :, ja]))
+ end
+
+
+ Threads.@threads for ja in 1:dimension
+  mul!(
+      @view(Fock_matrix[ja, ja, :]),
+      @view(fcmatrix[ja, ja, :, :]),
+      @view(density_matrix[ja, ja, :]),
+      1,
+      1,
+  )
+ end
+ Fock_matrix=Fock_matrix*1/(ϵr*Area)
 
 
  
