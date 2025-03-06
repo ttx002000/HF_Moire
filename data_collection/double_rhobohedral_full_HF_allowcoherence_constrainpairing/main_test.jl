@@ -30,6 +30,7 @@ println("finish first iterations")
 final_density_matrix=DIIS_input_density_matrix[1]
 DIIS_input_density_matrix=nothing
 initial_density_matrix=nothing
+GC.gc()
 println("start second iterations")
 
 parent_HF_eigenvalues,parent_HF_eigenvectors,_, parent_DIIS_input_density_matrix,_,parent_Hartree_matrix,parent_Fock_matrix,_,_=iteration(final_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area,NL,target_density,temp,-1)
