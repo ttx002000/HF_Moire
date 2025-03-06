@@ -249,23 +249,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
  end
 
 
- density_matrix_new=reshape(density_matrix_new,valley_num,spin_num,layer_num,sublattice_num,valley_num,spin_num,layer_num,sublattice_num,length(k_set))
- if pairing==0 #intravalley
-  for vione in 1:valley_num, vitwo in 1:valley_num
-    if vione≠vitwo
-       density_matrix_new[vione,:,1,:,vitwo,:,2,:,:].=0.0
-       density_matrix_new[vione,:,2,:,vitwo,:,1,:,:].=0.0
-    end
-  end
- elseif pairing==1 #intervalley
-  for vione in 1:valley_num, vitwo in 1:valley_num
-    if vione==vitwo
-       density_matrix_new[vione,:,1,:,vitwo,:,2,:,:].=0.0
-       density_matrix_new[vione,:,2,:,vitwo,:,1,:,:].=0.0
-    end
-  end
- end
-  density_matrix_new=reshape(density_matrix_new,dimension,dimension,length(k_set))
+ 
 
  output_density_matrix=density_matrix_new*update_rate+density_matrix*(1-update_rate)
 
@@ -369,7 +353,6 @@ end
 
 
 
-
 function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},
                            ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},ildis::Float64,Area::Float64,NL::Int,target_density::Float64,temp::Float64,pairing::Int)
   valley_num=2
@@ -423,7 +406,28 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
   toc=time()
   println("formfactorstime",toc-tic)
 
+  function process_pairing(density_matrix_new::Array{ComplexF64},pairing::Int)
+    density_matrix_new=reshape(density_matrix_new,valley_num,spin_num,layer_num,sublattice_num,valley_num,spin_num,layer_num,sublattice_num,length(k_set))
+    if pairing==0 #intravalley
+       for vione in 1:valley_num, vitwo in 1:valley_num
+       if vione≠vitwo
+          density_matrix_new[vione,:,1,:,vitwo,:,2,:,:].=0.0
+          density_matrix_new[vione,:,2,:,vitwo,:,1,:,:].=0.0
+       end
+     end
+   elseif pairing==1 #intervalley
+      for vione in 1:valley_num, vitwo in 1:valley_num
+        if vione==vitwo
+          density_matrix_new[vione,:,1,:,vitwo,:,2,:,:].=0.0
+          density_matrix_new[vione,:,2,:,vitwo,:,1,:,:].=0.0
+        end
+      end
+   elseif pairing==-1 #no interlayer coherence
+      density_matrix_new[:,:,1,:,:,:,2,:,:].=0.0
+   end
+   density_matrix_new=reshape(density_matrix_new,dimension,dimension,length(k_set))
 
+  end
 
 
   while (eout>1*10^(-12)) || (bad_count<4) || (energy_change>1*10^(-6))
@@ -438,8 +442,11 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
         dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
         if dmk==0
             itcount=0
-            dmk,_=get_initial_proj(k_set,eig_vec_set,NL,pairing)
-      
+            dmk=zeros(ComplexF64,dimension,dimension,length(k_set))
+            for ja in eachindex(k_set)
+              A=randn(dimension,dimension)+im*randn(dimension,dimension)
+              dmk[:,:,ja]+=(A+A')*0.01
+            end
         end
        
 
@@ -447,6 +454,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
                                                                                                                                                               dmk,single_matrix,
                                                                                                                                                               energy,BG_density_matrix,
                                                                                                                                                               fcmatrix,Area,dimension,target_density,temp,itcount,pairing)
+        output_density_matrix=process_pairing(output_density_matrix,pairing)
         DIIS_input_density_matrix[mod(itcount,3)+1]=dmk
         input_density_matrix=output_density_matrix
         println("using DIIS")
@@ -458,7 +466,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
                                                                                                                                                                                            energy,BG_density_matrix,
                                                                                                                                                                                            fcmatrix,Area,dimension,target_density,temp,itcount,pairing)
                                                                                                                                                                                            
-
+        output_density_matrix=process_pairing(output_density_matrix,pairing)
         DIIS_input_density_matrix[mod(itcount,3)+1]=input_density_matrix
         input_density_matrix=output_density_matrix
          
@@ -478,7 +486,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
      
     
   end
-  
+ 
  
 
 
@@ -487,6 +495,9 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
 
 
 end
+
+
+
 
 
 

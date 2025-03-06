@@ -2,7 +2,7 @@ using JLD2
 include("../../src/operators_double_RMG_full_HF_allowcoherence_constrainedpairing.jl")
 using LinearAlgebra,Plots
 args=parse.(Float64,ARGS)
-#args=[1.4,15.0,10.0,20.0,8.0,1.0,5.0,0.0,0.1,1.0,1.0]
+#args=[1.4,15.0,10.0,20.0,8.0,1.0,5.0,0.0,0.1,1.0,1.0,1.0]
 radius=args[1]
 num_points=Int(args[2])
 uD=args[3]
@@ -26,6 +26,8 @@ println("finish1")
 initial_density_matrix, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL,pairing)
 HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density=iteration(initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area,NL,target_density,temp,pairing)
 
+parent_HF_eigenvalues,parent_HF_eigenvectors,_, parent_DIIS_input_density_matrix,_,parent_Hartree_matrix,parent_Fock_matrix,_,_=iteration(DIIS_input_density_matrix[1],BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area,NL,target_density,temp,-1)
+
 
 
 
@@ -40,4 +42,6 @@ savepath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence_constrainedpai
 jldsave(savepath,
              final_density_matrix=DIIS_input_density_matrix[1],HF_eigenvalues=HF_eigenvalues,
              k_set=k_set,eig_vec_set=eig_vec_set,HF_eigenvectors=HF_eigenvectors,fermi_level=fermi_level,energy=energy,eig_set=eig_set,
-             single_matrix=single_matrix,Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,k_index=k_index,eout=eout,renormalized_density=renormalized_density)
+             single_matrix=single_matrix,Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,k_index=k_index,eout=eout,renormalized_density=renormalized_density,
+             parent_HF_eigenvalues=parent_HF_eigenvalues,parent_HF_eigenvectors=parent_HF_eigenvectors,parent_DS=parent_DIIS_input_density_matrix[1],
+             parent_Hartree_matrix=parent_Hartree_matrix,parent_Fock_matrix=parent_Fock_matrix)
