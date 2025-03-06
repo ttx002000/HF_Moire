@@ -7,13 +7,13 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     #mkpath(slurmpath)
 
     scratch_dir = ENV["SCRATCH"]
-    outpath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence_noscreen/data_output$(Int(args[11]))/out")
-    slurmpath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence_noscreen/data_output$(Int(args[11]))/slurmfiles")
+    outpath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence_constrainedpairing/data_output$(Int(args[11]))/out")
+    slurmpath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence_constrainedpairing/data_output$(Int(args[11]))/slurmfiles")
     mkpath(outpath)
     mkpath(slurmpath)
  
 
-    name = "$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])gatedis$(args[7])NL$(args[8])tgden$(args[9])temp$(args[10])trytime$(args[11])filepos"
+    name = "$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])NL$(args[8])tgden$(args[9])temp$(args[10])trytime$(args[11])filepos"
     filestr = """#!/bin/bash
     #SBATCH --job-name=$(job_prefix*"_"*name)
     #SBATCH --partition=$partition
