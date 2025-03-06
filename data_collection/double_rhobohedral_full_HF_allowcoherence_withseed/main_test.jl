@@ -22,13 +22,13 @@ println("finish1")
 
 
 
-_, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL)
+rd, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL)
 scratch_dir = ENV["SCRATCH"]
-seed_num=mod(Int(trytime),5)+1
+seed_num=mod(Int(trytime),2)+1
 savepath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence/data_output$(Int(args[11]))/seeds/seeds$(seed_num).jld2")
 st=load(savepath)
 
-initial_density_matrix=st["DS_seed"]
+initial_density_matrix=st["DS_seed"]+rd*10^(-2)
 
 HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density=iteration_noDIIS(initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area,NL,target_density,temp)
 scratch_dir = ENV["SCRATCH"]
