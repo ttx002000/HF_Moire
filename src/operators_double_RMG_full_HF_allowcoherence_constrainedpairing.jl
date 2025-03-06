@@ -200,13 +200,13 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
  Threads.@threads for ja in 1:dimension
     Fock_matrix[ja,ja,:]+=fcmatrix[ja,ja,:,:]*density_matrix[ja,ja,:]
  end
- Fock_matrix=Fock_matrix*1/(ϵr*Area)
+ Fock_matrix=Fock_matrix*1/(ϵr*Area)*0.0
  
 
 
 
  
-  Hartree_matrix+=1/(ϵr*Area)*diagm(fcmatrix[:,:,1,1]*diag(dropdims(sum(density_matrix,dims=3),dims=3)))
+  Hartree_matrix+=1/(ϵr*Area)*diagm(fcmatrix[:,:,1,1]*diag(dropdims(sum(density_matrix,dims=3),dims=3)))*0.0
    
 
 
@@ -243,9 +243,9 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
  density_matrix_new-=BG_density_matrix 
 
  if itcount<15
-  update_rate=0.2 
+  update_rate=1.0
  else
-    update_rate=rand() 
+    update_rate=1.0 
  end
 
 
@@ -382,7 +382,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
   itcount=0
 
 
-  #z_pos=[0.335*[0,0,1,1,2,2,3,3,4,4],0.335*[-4,-4,-3,-3,-2,-2,-1,-1,0,0].-ildis]
+  
   z_pos=Vector{Vector{Float64}}(undef,2)
   z_pos[1]=0.335*[i for i in 0:NL-1 for _ in 1:2]
   z_pos[2]=0.335*[i for i in -NL+1:0 for _ in 1:2].-ildis
@@ -426,6 +426,8 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
       density_matrix_new[:,:,1,:,:,:,2,:,:].=0.0
    end
    density_matrix_new=reshape(density_matrix_new,dimension,dimension,length(k_set))
+   
+   return density_matrix_new
 
   end
 
@@ -487,7 +489,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
     
   end
  
- 
+   fcmatrix=nothing
 
 
   
