@@ -200,13 +200,13 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
  Threads.@threads for ja in 1:dimension
     Fock_matrix[ja,ja,:]+=fcmatrix[ja,ja,:,:]*density_matrix[ja,ja,:]
  end
- Fock_matrix=Fock_matrix*1/(ϵr*Area)*0.0
+ Fock_matrix=Fock_matrix*1/(ϵr*Area)
  
 
 
 
  
-  Hartree_matrix+=1/(ϵr*Area)*diagm(fcmatrix[:,:,1,1]*diag(dropdims(sum(density_matrix,dims=3),dims=3)))*0.0
+  Hartree_matrix+=1/(ϵr*Area)*diagm(fcmatrix[:,:,1,1]*diag(dropdims(sum(density_matrix,dims=3),dims=3)))
    
 
 
@@ -243,9 +243,9 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
  density_matrix_new-=BG_density_matrix 
 
  if itcount<15
-  update_rate=1.0
+  update_rate=0.2
  else
-    update_rate=1.0 
+    update_rate=rand()
  end
 
 
