@@ -2,7 +2,7 @@ using JLD2
 include("../../src/operators_double_RMG_full_HF_allowcoherence_constrainedpairing.jl")
 using LinearAlgebra,Plots
 args=parse.(Float64,ARGS)
-#args=[1.4,15.0,10.0,20.0,8.0,1.0,5.0,0.0,0.1,1.0,1.0,1.0]
+args=[1.4,15.0,10.0,20.0,8.0,1.0,5.0,0.0,0.1,1.0,1.0,1.0]
 radius=args[1]
 num_points=Int(args[2])
 uD=args[3]
@@ -28,12 +28,14 @@ HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Har
 println("finish first iterations")
 
 final_density_matrix=DIIS_input_density_matrix[1]
+second_input=deepcopy(final_density_matrix)
+
 DIIS_input_density_matrix=nothing
 initial_density_matrix=nothing
 GC.gc()
 println("start second iterations")
 
-parent_HF_eigenvalues,parent_HF_eigenvectors,_, parent_DIIS_input_density_matrix,_,parent_Hartree_matrix,parent_Fock_matrix,_,_=iteration(final_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area,NL,target_density,temp,-1)
+parent_HF_eigenvalues,parent_HF_eigenvectors,_, parent_DIIS_input_density_matrix,parent_fermi_level,parent_Hartree_matrix,parent_Fock_matrix,_,_=iteration(second_input,BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area,NL,target_density,temp,-1)
 
 println("finish second iterations")
 
