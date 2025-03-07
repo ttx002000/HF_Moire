@@ -111,8 +111,8 @@ end
 function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int)
 
   vset=[1,-1]
-  b1=4π/(√3*0.246)*[√3/2,1/2]
-  b2=4π/(√3*0.246)*[-√3/2,1/2]
+  b1=[√3/2,1/2]
+  b2=[-√3/2,1/2]
 
 
   karea=√3/2*(norm(b1)/num_points)^2
