@@ -226,7 +226,7 @@ Fock_matrix=Fock_matrix*1/(ϵr*Area)
   )
  end
  Fock_matrix=Fock_matrix*1/(ϵr*Area)
- 
+
 
   hfcmatrix=zeros(Float64,dimension,dimension)
   for ja in 1:dimension
@@ -383,7 +383,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
     for jb in 1:ja
        smaller_fc[ja,jb]=zeros(Float64,length(k_set),length(k_set))
          for jc in 1:length(k_set), jd in 1:jc
-          smaller_fc[ja,jb][jc,jd]+=Coulomb(z_pos[ja]-z_pos[jb],k_set[jc]-k_set[jd])
+          smaller_fc[ja,jb][jc,jd]+=Coulomb(abs(z_pos[ja]-z_pos[jb]),k_set[jc]-k_set[jd])
          end
  
          for jc in 1:length(k_set), jd in jc+1:length(k_set)
