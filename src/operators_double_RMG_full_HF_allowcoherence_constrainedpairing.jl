@@ -207,7 +207,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
   for jb in 1:(ja - 1)
       mul!(
           @view(Fock_matrix[ja, jb, :]),
-          @view(fcmatrix[ja, jb, :, :]),
+          @view(fcmatrix[ja, jb][:, :]),
           @view(density_matrix[ja, jb, :]),
           1,
           1,
@@ -224,7 +224,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
  Threads.@threads for ja in 1:dimension
   mul!(
       @view(Fock_matrix[ja, ja, :]),
-      @view(fcmatrix[ja, ja, :, :]),
+      @view(fcmatrix[ja, ja][:, :]),
       @view(density_matrix[ja, ja, :]),
       1,
       1,
