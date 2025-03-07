@@ -11,7 +11,7 @@ function Coulomb(z1::Float64,z2::Float64,dsc::Float64,kvec::Vector{Float64})::Fl
     else
       q=norm(kvec)
       dis=abs(z1-z2)
-      p1=cosh(q*(z1-z2))-exp(2*q*dsc)*cosh(q*(z1+z2))
+      p1=(cosh(q*(z1-z2))-exp(2*q*dsc)*cosh(q*(z1+z2)))*2
      return 9047.5636/q*(exp(-q*dis)+p1/(exp(4*q*dsc)-1))
     
   end
