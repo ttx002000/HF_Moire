@@ -32,9 +32,9 @@ count=0
 for ja in 1:length(index)
   global count+=1
   arguments=index[ja]
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=8,mem=48)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=8,mem=36)
   if mod(count,200)==0
-    sleep(0)
+    sleep(300)
   end
   println(count)
 end
