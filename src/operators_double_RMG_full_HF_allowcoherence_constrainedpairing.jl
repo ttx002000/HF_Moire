@@ -481,6 +481,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
       end
    elseif pairing==-1 #no interlayer coherence
       density_matrix_new[:,:,1,:,:,:,2,:,:].=0.0
+      density_matrix_new[:,:,2,:,:,:,1,:,:].=0.0
    end
    density_matrix_new=reshape(density_matrix_new,dimension,dimension,length(k_set))
    
@@ -507,25 +508,26 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
               dmk[:,:,ja]+=(A+A')*0.01
             end
         end
-       
+         dmk=process_pairing(dmk,pairing)
 
         eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix,renormalized_density=Construct_projector(k_set,ϵr,
                                                                                                                                                               dmk,single_matrix,
                                                                                                                                                               energy,BG_density_matrix,
                                                                                                                                                               fcmatrix,Area,dimension,target_density,temp,itcount)
-        output_density_matrix=process_pairing(output_density_matrix,pairing)
+        #output_density_matrix=process_pairing(output_density_matrix,pairing)
         DIIS_input_density_matrix[mod(itcount,3)+1]=dmk
         input_density_matrix=output_density_matrix
         println("using DIIS")
        
       else
   
+        input_density_matrix=process_pairing(input_density_matrix,pairing)
         eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix,renormalized_density=Construct_projector(k_set,ϵr,
                                                                                                                                                                                           input_density_matrix,single_matrix,
                                                                                                                                                                                            energy,BG_density_matrix,
                                                                                                                                                                                            fcmatrix,Area,dimension,target_density,temp,itcount)
                                                                                                                                                                                            
-        output_density_matrix=process_pairing(output_density_matrix,pairing)
+        #output_density_matrix=process_pairing(output_density_matrix,pairing)
         DIIS_input_density_matrix[mod(itcount,3)+1]=input_density_matrix
         input_density_matrix=output_density_matrix
          
