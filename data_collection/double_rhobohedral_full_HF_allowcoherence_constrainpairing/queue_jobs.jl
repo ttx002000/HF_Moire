@@ -6,7 +6,7 @@ using JLD2
 include("submit_job.jl")
 
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "double_pentalayer"
+job_prefix = "constrained"
 
 
 
@@ -32,7 +32,7 @@ count=0
 for ja in 1:length(index)
   global count+=1
   arguments=index[ja]
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="4:00:00",ntasks=8,mem=48)
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=8,mem=36)
   if mod(count,100)==0
     sleep(0)
   end
