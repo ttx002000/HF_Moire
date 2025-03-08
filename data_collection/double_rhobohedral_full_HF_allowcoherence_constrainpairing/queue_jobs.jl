@@ -34,7 +34,7 @@ for ja in 1:length(index)
   arguments=index[ja]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="3:00:00",ntasks=8,mem=36)
   if mod(count,100)==0
-    sleep(0)
+    sleep(500)
   end
   println(count)
 end
