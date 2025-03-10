@@ -25,9 +25,22 @@ DOS_E_binnum=Int(args[6])
 Density_start=args[7]
 Density_end=args[8]
 =#
+st=load("missedjobs.jld2")
+index=st["index"]
+count=0
+
+for ja in 1:length(index)
+  global count+=1
+  arguments=index[ja]
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="2:30:00",ntasks=16,mem=32)
+  if mod(count,300)==0
+    sleep(500)
+  end
+  println(ja)
+end
 
 
-
+#=
 
 for uD in collect(-60.0:1.0:-50.0)
   arguments=Float64.([uD,numsample,θ,rad,DOS_n_binnum,DOS_E_binnum,Density_start,Density_end,Ecutoff])
@@ -38,6 +51,7 @@ for uD in collect(50.0:1.0:60.0)
   arguments=Float64.([uD,numsample,θ,rad,DOS_n_binnum,DOS_E_binnum,Density_start,Density_end,Ecutoff])
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:30:00",ntasks=16,mem=32)
 end
+=#
 
 
 #=

@@ -32,11 +32,11 @@ function get_RNGham(k::Vector{Float64},NL::Int,uD::Float64)
         #Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[uD*(layer+1-(NL-1)/2) -t0*get_f(k);-t0*conj(get_f(k)) uD*(layer+1-(NL-1)/2)]
         Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[uD*(layer-(NL+1)/2) -t0*get_f(k);-t0*conj(get_f(k)) uD*(layer-(NL+1)/2)]
  
-      end
+    end
    return Ham
 end
 
-function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut::Float64)
+function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut::Float64,perturb::Int)
    
 
 
@@ -54,6 +54,10 @@ function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut:
     g2=G2-(1+ϵ)^(-1)*Rθ*G2
     
 
+    
+
+
+
   
     NL=5
     KGr=4π/(3*ac)*[1,0]
@@ -61,6 +65,30 @@ function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut:
     am=4π/(gm*√3)
     ns=1/(√3/2*am)^2
     
+    perturb_Ham=zeros(Float64,2*NL,2*NL)
+    if perturb==1
+      for layer in 1:1
+        perturb_Ham[2*layer-1:2*layer,2*layer-1:2*layer]=15.0*[1 0;0 -1]
+      end
+      for layer in NL:NL
+        perturb_Ham[2*layer-1:2*layer,2*layer-1:2*layer]=15.0*[1 0;0 -1]
+      end
+    elseif perturb==2
+      for layer in 1:1
+        perturb_Ham[2*layer-1:2*layer,2*layer-1:2*layer]=15.0*[1 0;0 -1]
+      end
+      for layer in NL:NL
+        perturb_Ham[2*layer-1:2*layer,2*layer-1:2*layer]=-15.0*[1 0;0 -1]
+      end
+    
+    end
+
+    
+
+
+
+
+
   
     gross_valuesset=[Vector{Vector{Float64}}() for _ in 1:Threads.nthreads()]
     conduction_band_record=[Vector{Float64}() for _ in 1:Threads.nthreads()]
@@ -68,7 +96,7 @@ function sample_value(uD::Float64, numsample::Int,θ::Float64,rad::Float64,Ecut:
     
     Threads.@threads for ja in 1:numsample
       kvec=KGr+[rand()-0.5,rand()-0.5]*gm*rad
-      Hamiltonian=get_RNGham(kvec,NL,uD)
+      Hamiltonian=get_RNGham(kvec,NL,uD)+perturb_Ham
       FFF=real.(eigen(Hamiltonian).values)
      
       push!(gross_valuesset[Threads.threadid()],FFF[1:2*NL])

@@ -1,14 +1,20 @@
 
 
 function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time="00:120:00", cpus_per_task=1, mem=64, partition="owners,simes")
-    outpath = joinpath(dirpath, "out")
-    slurmpath = joinpath(dirpath, "slurmfiles")# Why is there a job_prefix semicolon there?
+    #outpath = joinpath(dirpath, "out")
+    #slurmpath = joinpath(dirpath, "slurmfiles")# Why is there a job_prefix semicolon there?
+    #mkpath(outpath)
+    #mkpath(slurmpath)
+    
+    scratch_dir = ENV["SCRATCH"]
+    outpath=joinpath(scratch_dir, "pentalayer_DOS/data_output$(Int(args[11]))/out")
+    slurmpath=joinpath(scratch_dir, "pentalayer_DOS/data_output$(Int(args[11]))/slurmfiles")
     mkpath(outpath)
     mkpath(slurmpath)
-
+ 
  
     
-    name = "$(args[1])uD$(args[2])sample$(args[3])angle$(args[4])radius$(args[5])Dosnbin$(args[6])DosEbin$(args[7])denstart$(args[8])denend$(args[9])Ecutoff"
+    name = "$(args[1])uD$(args[2])sample$(args[3])angle$(args[4])radius$(args[5])Dosnbin$(args[6])DosEbin$(args[7])denstart$(args[8])denend$(args[9])Ecutoff$(args[10])perturb$(args[11])perturb"
     filestr = """#!/bin/bash
     #SBATCH --job-name=$(job_prefix*"_"*name)
     #SBATCH --partition=$partition
@@ -31,7 +37,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     export JULIA_NUM_THREADS=$ntasks
 
     # run the script
-    julia $filepath $(args[1]) $(args[2]) $(args[3]) $(args[4]) $(args[5]) $(args[6]) $(args[7]) $(args[8]) $(args[9])"""
+    julia $filepath $(args[1]) $(args[2]) $(args[3]) $(args[4]) $(args[5]) $(args[6]) $(args[7]) $(args[8]) $(args[9])  $(args[10])  $(args[11])"""
 
     open("$slurmpath/$(name).slurm", "w") do io
         write(io, filestr)
