@@ -19,7 +19,7 @@ DOS_E_binnum=Int(args[6])
 Density_start=args[7]
 Density_end=args[8]
 Ecutoff=args[9]
-perturb=args[10]
+perturb=Int(args[10])
 file_pos=args[11]
 
 valuesset,ns,gm,conduction_bandmin,conduction_bandmax,valence_bandmin,valence_bandmax=sample_value(uD, numsample,θ,rad,Ecutoff,perturb)
