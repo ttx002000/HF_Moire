@@ -42,10 +42,12 @@ end
 
 st=load("missedjobs.jld2")
 index=st["index"]
+start=1000
+ee=length(index)
 
 count=1
 while (count-1)*1000+1<=length(index)
-  submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*1000+1:min(count*1000,length(index))]; time="3:00:00",ntasks=8,mem=36)
+  submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*1000+start:min(count*1000+start,ee)]; time="3:00:00",ntasks=8,mem=36)
   println((count-1)*1000+1,min(count*1000,length(index)))
   sleep(5)
   global count+=1
