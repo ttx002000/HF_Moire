@@ -3,7 +3,7 @@ Pkg.activate(joinpath(@__DIR__, "../.."))
 using LinearAlgebra
 using JLD2
 
-include("submit_job.jl")
+include("submit_job_v2.jl")
 
 filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "constrained"
@@ -25,7 +25,7 @@ trytime=args[7]
 file_pos=args[8]
 =#
 
-
+#=
 st=load("missedjobs.jld2")
 index=st["index"]
 count=0
@@ -38,5 +38,10 @@ for ja in 1:length(index)
   end
   println(count)
 end
+=#
+
+st=load("missedjobs.jld2")
+index=st["index"]
 
 
+  submit_job(filepath, @__DIR__, job_prefix,index; time="3:00:00",ntasks=8,mem=36)
