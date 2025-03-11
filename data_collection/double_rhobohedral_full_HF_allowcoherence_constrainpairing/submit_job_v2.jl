@@ -1,5 +1,5 @@
 
-
+using Dates
 function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, time="00:120:00", cpus_per_task=1, mem=64, partition="owners,simes")
    
 
