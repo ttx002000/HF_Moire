@@ -1,7 +1,7 @@
 using Pkg
 Pkg.activate(joinpath(@__DIR__, "../.."))
 using JLD2
-include(joinpath(@__DIR__,"submit_job.jl"))
+include(joinpath(@__DIR__,"submit_job_v2.jl"))
 filepath = joinpath(@__DIR__, "main_test.jl")
 
 job_prefix = "DOS_v2"
@@ -9,7 +9,7 @@ job_prefix = "DOS_v2"
 st=load("missedjobs.jld2")
 index=st["index"]
 count=0
-
+#=
 for ja in 1:length(index)
   global count+=1
   arguments=index[ja]
@@ -19,9 +19,9 @@ for ja in 1:length(index)
   end
   println(ja)
 end
-
-#=
-submit_job(filepath, @__DIR__, job_prefix,index; time="30:00",ntasks=4,mem=48)
 =#
+
+submit_job(filepath, @__DIR__, job_prefix,index; time="30:00",ntasks=4,mem=32)
+
 
 
