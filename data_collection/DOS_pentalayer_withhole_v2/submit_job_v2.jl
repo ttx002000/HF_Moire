@@ -40,7 +40,7 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     # multithreading
     export JULIA_NUM_THREADS=$ntasks
      
-    PARAMS_FILE="job_parameters.txt"
+    PARAMS_FILE=$(param_file)
     PARAMS=\$(sed -n "\${SLURM_ARRAY_TASK_ID}p" \$PARAMS_FILE)
     # run the script
     julia $filepath \$PARAMS """
