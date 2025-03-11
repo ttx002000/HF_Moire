@@ -24,7 +24,7 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     #SBATCH --job-name=$(job_prefix*"_"*"array")
     #SBATCH --partition=$partition
     #SBATCH --time=$time
-    #SBATCH --array=1-$num_jobs  
+    #SBATCH --array=1-$num_jobs%300
     #SBATCH --nodes=$nodes
     #SBATCH --requeue
     #SBATCH --ntasks=$ntasks
