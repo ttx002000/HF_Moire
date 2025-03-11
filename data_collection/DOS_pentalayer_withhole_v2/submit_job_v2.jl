@@ -1,5 +1,5 @@
 
-
+using Dates
 function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, time="00:120:00", cpus_per_task=1, mem=64, partition="owners,simes")
 
     
@@ -11,7 +11,8 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     mkpath(slurmpath)
     num_jobs = length(args_list)
 
-    param_file = joinpath(slurmpath, "job_parameters.txt")
+    unique_id = Dates.format(now(), "yyyy-mm-dd_THH:MM:SS") 
+    param_file = joinpath(slurmpath, "job_parameters_$(unique_id).txt")
     open(param_file, "w") do io
         for args in args_list
             println(io, join(args, " "))  # Store each job's arguments as a line
@@ -45,7 +46,7 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     # run the script
     julia $filepath \$PARAMS """
     
-    slurmfile = joinpath(slurmpath, "job_array.slurm")
+    slurmfile = joinpath(slurmpath, "$(job_prefix)_array_$(unique_id)")
     open(slurmfile, "w") do io
         write(io, filestr)
     end
