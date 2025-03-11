@@ -13,7 +13,7 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     mkpath(slurmpath)
     num_jobs = length(args_list)
     unique_id = Dates.format(now(), "yyyy-mm-dd_THH:MM:SS") 
-    param_file = joinpath(slurmpath, "job_parameters_$(uniqueid).txt")
+    param_file = joinpath(slurmpath, "job_parameters_$(unique_id).txt")
 
     open(param_file, "w") do io
         for args in args_list
@@ -48,7 +48,7 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     # run the script
     julia $filepath \$PARAMS """
     
-    slurmfile = joinpath(slurmpath, "$(job_prefix)_array_$unique_id")
+    slurmfile = joinpath(slurmpath, "$(job_prefix)_array_$(unique_id)")
     open(slurmfile, "w") do io
         write(io, filestr)
     end
