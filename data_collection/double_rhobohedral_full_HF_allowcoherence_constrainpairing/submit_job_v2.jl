@@ -13,7 +13,8 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     mkpath(slurmpath)
     num_jobs = length(args_list)
     unique_id = Dates.format(now(), "yyyy-mm-dd_THH:MM:SS") 
-    param_file = joinpath(slurmpath, "job_parameters.txt")
+    param_file = joinpath(slurmpath, "job_parameters_$(uniqueid).txt")
+
     open(param_file, "w") do io
         for args in args_list
             println(io, join(args, " "))  # Store each job's arguments as a line
