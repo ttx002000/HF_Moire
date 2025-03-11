@@ -1,10 +1,7 @@
 
 
 function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time="00:120:00", cpus_per_task=1, mem=64, partition="owners,simes")
-    #outpath = joinpath(dirpath, "out")
-    #slurmpath = joinpath(dirpath, "slurmfiles")# Why is there a job_prefix semicolon there?
-    #mkpath(outpath)
-    #mkpath(slurmpath)
+
     
     scratch_dir = ENV["SCRATCH"]
     outpath=joinpath(scratch_dir, "pentalayer_DOS_v2/data_output$(Int(args[8]))/out")

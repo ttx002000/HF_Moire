@@ -9,6 +9,7 @@ using CSV,DataFrames
 include(joinpath(@__DIR__,"../../src/operators_DOS_pentalayer_withhole_v2.jl"))
 
 args=parse.(Float64,ARGS)
+println("here is my parameters",args)
 #args=[10.0,10*10^5,-0.02,0.02,1,120,0.01,1]
 uD=args[1]
 numsample=Int(args[2])

@@ -20,5 +20,8 @@ for ja in 1:length(index)
   println(ja)
 end
 
+#=
+submit_job(filepath, @__DIR__, job_prefix,index; time="30:00",ntasks=4,mem=48)
+=#
 
 
