@@ -1,10 +1,10 @@
 
 
-function submit_job(filepath, dirpath, job_prefix,arg_list; nodes=1, ntasks=1, time="00:120:00", cpus_per_task=1, mem=64, partition="owners,simes")
+function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, time="00:120:00", cpus_per_task=1, mem=64, partition="owners,simes")
 
     
     scratch_dir = ENV["SCRATCH"]
-    filepos=Int(arg_list[1][8]) #ensure that all the jobs are to the same file positions
+    filepos=Int(args_list[1][8]) #ensure that all the jobs are to the same file positions
     outpath=joinpath(scratch_dir, "pentalayer_DOS_v2/data_output$(filepos)/out")
     slurmpath=joinpath(scratch_dir, "pentalayer_DOS_v2/data_output$(filepos)/slurmfiles")
     mkpath(outpath)
