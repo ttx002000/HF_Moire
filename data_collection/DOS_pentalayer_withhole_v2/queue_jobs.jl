@@ -21,7 +21,7 @@ for ja in 1:length(index)
 end
 =#
 
-submit_job(filepath, @__DIR__, job_prefix,index; time="30:00",ntasks=4,mem=32)
+submit_job(filepath, @__DIR__, job_prefix,index; time="2:30:00",ntasks=16,mem=48)
 
 
 
