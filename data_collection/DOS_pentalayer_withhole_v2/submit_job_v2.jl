@@ -44,10 +44,11 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     PARAMS=\$(sed -n "\${SLURM_ARRAY_TASK_ID}p" \$PARAMS_FILE)
     # run the script
     julia $filepath \$PARAMS """
-
-    open("$slurmpath/$(name).slurm", "w") do io
+    
+    slurmfile = joinpath(slurmpath, "job_array.slurm")
+    open(slurmfile, "w") do io
         write(io, filestr)
     end
-    run(`sbatch $(slurmpath)/$(name).slurm`)
+    run(`sbatch $slurmfile`)
 end
 
