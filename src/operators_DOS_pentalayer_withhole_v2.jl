@@ -158,6 +158,10 @@ function get_perturb_Ham(perturb::Int)
     for layer in 1:1
       perturb_Ham[2*layer-1:2*layer,2*layer-1:2*layer]=15.0*[1 0;0 -1]
     end
+  elseif perturb==6
+    for layer in 1:1
+      perturb_Ham[2*layer-1:2*layer,2*layer-1:2*layer]=100.0*[1 0;0 1]
+    end
  
   
   end
