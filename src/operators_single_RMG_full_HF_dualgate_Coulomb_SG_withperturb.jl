@@ -128,6 +128,13 @@ function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int
     for layer in NL:NL
       perturb_Ham[2*layer-1:2*layer,2*layer-1:2*layer]=-15.0*[1 0;0 -1]
     end
+  elseif perturb==3
+    for layer in 1:1
+      perturb_Ham[2*layer-1:2*layer,2*layer-1:2*layer]=15.0*[1 0;0 -1]+30*[1 0;0 1]
+    end
+    for layer in NL:NL
+      perturb_Ham[2*layer-1:2*layer,2*layer-1:2*layer]=15.0*[1 0;0 -1]+30*[1 0;0 1]
+    end
   
   end
 
