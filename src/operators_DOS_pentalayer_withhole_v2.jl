@@ -212,7 +212,7 @@ function sample_value(uD::Float64, numsample::Int,E_lower::Float64,E_upper::Floa
 
   valuesset=[Float64[] for _ in 1:Threads.nthreads()]
 
-  N_valence=0
+  N_valence_tt=[0 for _ in 1:Threads.nthreads()]
   Threads.@threads for ja in 1:numsample
     kvec=KGr+[rand()-0.5,rand()-0.5]*2*kradius
     Hamiltonian=get_RNGham(kvec,NL,uD)+perturb_Ham
@@ -221,12 +221,13 @@ function sample_value(uD::Float64, numsample::Int,E_lower::Float64,E_upper::Floa
       if FFF[jb]>E_lower && FFF[jb]<E_upper
         push!(valuesset[Threads.threadid()],FFF[jb])
         if jb<NL+1
-          N_valence+=1
+          N_valence_tt[Threads.threadid()]+=1
         end
 
       end
     end
   end
+  N_valence=sum(N_valence_tt)
   
   valuesset=reduce(vcat,valuesset)
   DOS_E_binnum=Int(round((E_upper-E_lower)/Einterval))
