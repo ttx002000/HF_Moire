@@ -72,7 +72,7 @@ Eval=[]
 N_BG=0
 for ja in eachindex(kx_grid),jb in eachindex(ky_grid)
     kvec=[kx_grid[ja],ky_grid[jb]]
-    Hamiltonian=get_RNGham(KGr+kvec,NL,uD)
+    Hamiltonian=get_RNGham(KGr+kvec,NL,uD)+perturb_Ham
     FFF=eigen(Hamiltonian)
     for jc in eachindex(FFF.values)
         if valence_edge<FFF.values[jc]<conduction_edge
@@ -115,7 +115,7 @@ end
 kradius=sort(k1)[end]
 
 
-return E_lower-5,E_upper+5, kradius*1.1
+return E_lower-10,E_upper+10, kradius*1.1
 end
 
 
