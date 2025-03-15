@@ -27,7 +27,7 @@ println("finish1")
 
 rd, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL,pairing)
 
-
+scratch_dir = ENV["SCRATCH"]
 savepath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence_constrainedpairing/data_output$(Int(args[12]))/seeds/seed1.jld2")
 st=load(savepath)
 
