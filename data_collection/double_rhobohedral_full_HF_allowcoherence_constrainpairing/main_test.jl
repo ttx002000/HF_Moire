@@ -25,7 +25,17 @@ println("finish1")
 
 
 
-initial_density_matrix, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL,pairing)
+rd, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL,pairing)
+
+
+savepath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence_constrainedpairing/data_output$(Int(args[12]))/seeds/seed1.jld2")
+st=load(savepath)
+
+initial_density_matrix=st["DS_seed"]+rd*10^(-2)
+
+
+
+
 HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density=iteration(initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area,NL,target_density,temp,pairing)
 println("finish first iterations")
 
