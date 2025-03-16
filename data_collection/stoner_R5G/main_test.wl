@@ -1,11 +1,10 @@
 (* ::Package:: *)
 
 (* ::Input:: *)
-(*(*Read number of kernels from environment*)numKernels=1;*)
+(*numKernels=ToExpression[Environment["NUM_KERNELS"],InputForm,1];*)
 (**)
 (*(*Launch that many kernels*)*)
 (*LaunchKernels[numKernels];*)
-(**)
 (*(*Print available kernels*)*)
 (*Print["Available Kernels: ",Length[Kernels[]]];*)
 (**)
@@ -32,6 +31,3 @@
 (*Export[outputpath,dataoutput1]*)
 (**)
 (**)
-
-
-IntegerPart[3.0]
