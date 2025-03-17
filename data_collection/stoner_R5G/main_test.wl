@@ -4,7 +4,7 @@ numKernels= $ProcessorCount;
 
 
 LaunchKernels[numKernels];
-
+myPrint[x_]:=Print[NumberForm[x,{20,1}]];
 Print["Available Kernels: ",Length[Kernels[]]];
 Print["scriptcommandline",$ScriptCommandLine]
 params=Rest[$ScriptCommandLine];
@@ -19,7 +19,7 @@ Print["J ",J];
 Print["uD ",Dfield];
 Print["filepos ",filepos];
 scratchDir=Environment["SCRATCH"]
-outputfilename=numericParams[[1]]<>"U"<>numericParams[[2]]<>"J"<>numericParams[[3]]<>"uD"<>numericParams[[4]]<>"perturb.csv"
+outputfilename=ToString[myPrint[numericParams[[1]]]]<>"U"<>ToString[myPrint[numericParams[[2]]]]<>"J"<>ToString[myPrint[numericParams[[3]]]]<>"uD"<>ToString[myPrint[numericParams[[4]]]]<>"perturb.csv"
 inputpath=FileNameJoin[{scratchDir, "stoner_RMG", "data_output"<>ToString[filepos],"stoner_perturb"<>perturbtype<>"_input","uD"<>IntegerPart[numericParams[[3]]]<>".csv"}];
 outputpath=FileNameJoin[{scratchDir, "stoner_RMG", "data_output"<>ToString[filepos],outputfilename}];
 
