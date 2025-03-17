@@ -33,12 +33,12 @@ x=uniqueData[[All,1]];
 y=uniqueData[[All,2]];
 interp=Interpolation[uniqueData,InterpolationOrder->2];
 totalE[n1_,n2_,n3_,n4_,U_,J_]:=interp[n1]+interp[n2]+interp[n3]+interp[n4]-U*(n1^2+n2^2+n3^2+n4^2)+J*(n1+n2)*(n3+n4);
+totaldensityrange=Range[-0.05,0.05,0.00025];   
 minValues=ConstantArray[Null,Length[totaldensityrange]];
 n1Values=ConstantArray[Null,Length[totaldensityrange]];   
 n2Values=ConstantArray[Null,Length[totaldensityrange]];  
 n3Values=ConstantArray[Null,Length[totaldensityrange]];   
 n4Values=ConstantArray[Null,Length[totaldensityrange]];
-totaldensityrange=Range[-0.05,0.05,0.00025];   
 SetSharedVariable[minValues,n1Values,n2Values,n3Values,n4Values];
 
 ParallelDo[
