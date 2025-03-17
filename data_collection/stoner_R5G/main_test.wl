@@ -1,4 +1,7 @@
 (* ::Package:: *)
 
 (* ::Input:: *)
-(*Print["I am doing somthing"]*)
+(**)
+
+
+Print["I am doing something"]

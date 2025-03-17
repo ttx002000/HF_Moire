@@ -46,7 +46,7 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     PARAMS_FILE=$(param_file)
     PARAMS=\$(sed -n "\${SLURM_ARRAY_TASK_ID}p" \$PARAMS_FILE)
     # run the script
-    math $filepath \$PARAMS """
+    math -script $filepath \$PARAMS """
     
     slurmfile = joinpath(slurmpath, "$(job_prefix)_array_$(unique_id)")
     open(slurmfile, "w") do io
