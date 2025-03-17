@@ -27,6 +27,7 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     #SBATCH --time=$time
     #SBATCH --array=1-$num_jobs%300
     #SBATCH --nodes=$nodes
+     #SBATCH --cpus-per-task=$cpus_per_task
     #SBATCH --requeue
     #SBATCH --ntasks=$ntasks
     #SBATCH --mem=$(mem)G

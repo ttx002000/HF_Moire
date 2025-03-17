@@ -9,6 +9,7 @@ Print["Available Kernels: ",Length[Kernels[]]];
 
 (*Example parallel computation*)
 result=ParallelTable[i^2,{i,1,1000}];
+Print["scriptcommandline",$ScriptCommandLine]
 params=Rest[$ScriptCommandLine];
 numericParams=ToExpression/@params;
 Print[numericParams]
