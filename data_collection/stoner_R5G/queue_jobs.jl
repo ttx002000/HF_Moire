@@ -20,7 +20,7 @@ ba_size=2
 count=1
 while (count-1)*ba_size+1<=ee
   submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*ba_size+start:min(count*ba_size+start-1,ee)]; time="30:00",cpus_per_task=1,mem=8)
-  println((count-1)*ba_size+1,min(count*ba_size+start,ee))
+  println((count-1)*ba_size+1,min(count*ba_size+start-1,ee))
   sleep(5)
   global count+=1
 end

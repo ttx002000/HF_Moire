@@ -4,7 +4,7 @@ numKernels= $ProcessorCount;
 
 
 LaunchKernels[numKernels];
-myPrint[x_]:=Print[NumberForm[x,{20,1}]];
+myPrint[x_]:=NumberForm[x,{20,1}];
 Print["Available Kernels: ",Length[Kernels[]]];
 Print["scriptcommandline",$ScriptCommandLine];
 params=Rest[$ScriptCommandLine];
