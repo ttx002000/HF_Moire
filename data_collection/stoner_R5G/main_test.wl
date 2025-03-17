@@ -41,11 +41,12 @@ n3Values=ConstantArray[Null,Length[totaldensityrange]];
 n4Values=ConstantArray[Null,Length[totaldensityrange]];
 SetSharedVariable[minValues,n1Values,n2Values,n3Values,n4Values];
 
-ParallelDo[
-Print["Processing density: ",totaldensityrange[[index]]," on kernel ",$KernelID]
+Do[
+Print["Processing density: ",totaldensityrange[[index]]];
 result=NMinimize[
 {totalE[n1,n2,n3,n4,U,J],Min[x]<=n1<=Max[x],
 Min[x]<=n2<=Max[x],Min[x]<=n3<=Max[x],Min[x]<=n4<=Max[x],n1+n2+n3+n4==totaldensityrange[[index]],n1<=n2<=n3<=n4},{n1,n2,n3,n4},MaxIterations->1000,Method->"RandomSearch"];
+Print["result ",result]
 minValues[[index]]=result[[1]];    (*Store the minimum function value*)
 n1Values[[index]]=(n1/. result[[2]]);
 n2Values[[index]]=(n2/. result[[2]]); 
