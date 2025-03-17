@@ -21,12 +21,15 @@ Print["U ",U];
 Print["J ",J];
 Print["filepos ",filepos];
 scratchDir=Environment["SCRATCH"]
-inputpath=scratchDir<>"stonerRMG\\data_output"<>ToString[filepos]<>"\\random_input\\input.csv"
-outputpath=scratchDir<>"stonerRMG\\data_output"<>ToString[filepos]<>"\\random_output\\output.csv"
-data=Import[inputpath]
+inputpath=FileNameJoin[{scratchDir, "stonerRMG", "data_output"<>ToString[filepos],"random_input","input.csv"}];
+outputpath=FileNameJoin[{scratchDir, "stonerRMG", "data_output"<>ToString[filepos],"random_output","output.csv"}];data=Import[inputpath]
+Print["This is my outputpath",outputpath]
 data=Rest[data];
 Print["inputdata",data]
 uniqueData=DeleteDuplicatesBy[data,First];
 dataoutput1=Transpose[{{U,J},{Dfield,filepos}}];
 
 Export[outputpath,dataoutput1]
+
+
+
