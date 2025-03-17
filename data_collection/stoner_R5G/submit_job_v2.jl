@@ -40,8 +40,6 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     # load Julia module
     ml mathematica
 
-    # multithreading
-    export NUM_KERNELS=$ntasks
      
     PARAMS_FILE=$(param_file)
     PARAMS=\$(sed -n "\${SLURM_ARRAY_TASK_ID}p" \$PARAMS_FILE)

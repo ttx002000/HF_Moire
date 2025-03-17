@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-numKernels=ToExpression[Environment["NUM_KERNELS"],InputForm,1];
+numKernels= $ProcessorCount;
 
 (*Launch that many kernels*)
 LaunchKernels[numKernels];
@@ -11,6 +11,7 @@ Print["Available Kernels: ",Length[Kernels[]]];
 result=ParallelTable[i^2,{i,1,1000}];
 params=Rest[$ScriptCommandLine];
 numericParams=ToExpression/@params;
+Print[numericParams]
 U=numericParams[[1]];
 J=numericParams[[2]];
 Dfield=numericParams[[3]]
@@ -28,5 +29,3 @@ uniqueData=DeleteDuplicatesBy[data,First];
 dataoutput1=Transpose[{{U,J},{Dfield,filepos}}];
 
 Export[outputpath,dataoutput1]
-
-
