@@ -6,7 +6,7 @@ using JLD2
 include("submit_job_v2.jl")
 
 filepath = joinpath(@__DIR__, "main_test.wl")
-job_prefix = "constrained"
+job_prefix = "stoner"
 
 
 
