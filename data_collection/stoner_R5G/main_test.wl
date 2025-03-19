@@ -47,7 +47,7 @@ Do[
 Print["Processing density: ",totaldensityrange[[index]]];
 result=NMinimize[
 {totalE[n1,n2,n3,n4,U,J],Min[x]<=n1<=Max[x],
-Min[x]<=n2<=Max[x],Min[x]<=n3<=Max[x],Min[x]<=n4<=Max[x],n1+n2+n3+n4==totaldensityrange[[index]],n1<=n2,n3<=n4,n1+n2<=n3+n4},{n1,n2,n3,n4},MaxIterations->2000,Method->"RandomSearch"];
+Min[x]<=n2<=Max[x],Min[x]<=n3<=Max[x],Min[x]<=n4<=Max[x],n1+n2+n3+n4==totaldensityrange[[index]]},{n1,n2,n3,n4},MaxIterations->2000,Method->"RandomSearch"];
 Print["result ",result];
 minValues[[index]]=result[[1]];    (*Store the minimum function value*)
 n1Values[[index]]=(n1/. result[[2]]);
