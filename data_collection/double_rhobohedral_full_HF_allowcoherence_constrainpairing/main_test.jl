@@ -32,7 +32,7 @@ savepath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence_constrainedpai
 st=load(savepath)
 
 initial_density_matrix=st["DS_seed"]+rd*10^(-2)
-=
+=#
 
 
 
