@@ -7,8 +7,8 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
 
     scratch_dir = ENV["SCRATCH"]
     filepos=Int(args_list[1][9]) #ensure that all the jobs are to the same file positions
-    outpath=joinpath(scratch_dir, "single_RMG_full_HF_dualgate_SG/data_output$(Int(args[9]))/out")
-    slurmpath=joinpath(scratch_dir, "single_RMG_full_HF_dualgate_SG/data_output$(Int(args[9]))/slurmfiles")
+    outpath=joinpath(scratch_dir, "single_RMG_full_HF_dualgate_SG/data_output$(filepos)/out")
+    slurmpath=joinpath(scratch_dir, "single_RMG_full_HF_dualgate_SG/data_output$(filepos)/slurmfiles")
     mkpath(outpath)
     mkpath(slurmpath)
  
