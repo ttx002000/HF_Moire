@@ -28,9 +28,9 @@ end
 
 st=load("missedjobs.jld2")
 index=st["index"]
-start=2501
-ee=5000
-ba_size=500
+start=5001
+ee=8000
+ba_size=300
 count=1
 while (count-1)*ba_size+1<=ee
   submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*ba_size+start:min(count*ba_size+start,ee)]; time="3:00:00",ntasks=8,mem=36)
