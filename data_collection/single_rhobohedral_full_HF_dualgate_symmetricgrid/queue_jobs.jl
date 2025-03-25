@@ -28,8 +28,8 @@ end
 
 st=load("missedjobs.jld2")
 index=st["index"]
-start=1
-ee=3000
+start=2501
+ee=5000
 ba_size=500
 count=1
 while (count-1)*ba_size+1<=ee
