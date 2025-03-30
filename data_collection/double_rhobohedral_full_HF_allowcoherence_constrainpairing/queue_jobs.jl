@@ -52,9 +52,7 @@ while (count-1)*ba_size+1<=ee
   sleep(5)
 
   global count+=1
-  if count==8
-    sleep(7200)
-  end
+
 
 end
 
