@@ -4,6 +4,7 @@
     "data_collection\\double_pentalayer_full_HF_intervalley": true,
     "data_collection\\pentalayer_full_HF": true,
     "data_collection\\double_pentalayer_full_HF": true,
-    "data_collection\\k5model": true
+    "data_collection\\k5model": true,
+    "data_collection\\single_rhobohedral_full_HF_dualgateCoulomb_nocoherence": true
   }
 }
