@@ -57,7 +57,7 @@ function get_f(k::Vector{Float64})
 end
 
 
-
+#=
 function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,NL::Int)
  
   Ham=zeros(ComplexF64,2*NL,2*NL)
@@ -67,6 +67,7 @@ function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,
   t2=-21
   t3=290
   t4=141
+  ff=(3)^(1/2)/2*0.246*(-valley*k[1]+im*k[2])
   for layer in 1:NL-1
      Ham[2*layer-1:2*layer,2*layer+1:2*layer+2]=[t4*get_f((k+Kac)*stacking) t3*conj(get_f((k+Kac)*stacking));t1 t4*get_f((k+Kac)*stacking)]
   end
@@ -82,6 +83,45 @@ function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,
   for layer in 1:NL
       Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[uD*(layer-(NL+1)/2) -t0*get_f((k+Kac)*stacking);-t0*conj(get_f((k+Kac)*stacking)) uD*(layer-(NL+1)/2)]
   end
+ return Ham
+end
+=#
+
+
+function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,NL::Int)
+ 
+  Ham=zeros(ComplexF64,2*NL,2*NL)
+  #Kac=4π/(3*0.246)*[1,0]*valley
+  t0=3100
+  t1=380
+  t2=-15 # There is something weird about this parameters here
+  t3=290
+  t4=141
+  ff=(3)^(1/2)/2*0.246*(-valley*k[1]+im*k[2])*stacking
+  Δ2=2.0 #I take this from the four layer paper
+  δ=10.5
+  for layer in 1:NL-1
+     Ham[2*layer-1:2*layer,2*layer+1:2*layer+2]+=[t4*ff t3*conj(ff);t1 t4*ff]
+  end
+
+  if NL>2
+   for layer in 1:NL-2
+      Ham[2*layer-1:2*layer,2*layer+3:2*layer+4]+=[0.0 t2/2;0.0 0.0]
+   end
+ end
+
+  Ham=Ham+Ham'
+
+  for layer in 1:NL
+      Ham[2*layer-1:2*layer,2*layer-1:2*layer]+=[uD*(layer-(NL+1)/2) -t0*ff;-t0*conj(ff) uD*(layer-(NL+1)/2)]
+  end
+  
+  for layer in 2:NL-1
+    Ham[2*layer-1:2*layer,2*layer-1:2*layer]+=[-2*Δ2 0;0 -2*Δ2]
+  end
+  Ham[1,1]+=-δ
+  Ham[2*NL,2*NL]+=-δ
+
  return Ham
 end
 
@@ -173,15 +213,15 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,JH::Flo
  HF_eigenvectors=zeros(ComplexF64,spin_num*valley_num,spin_num*valley_num,length(k_set))
 
 
-  for  vione in 1:2, vitwo in 1:2
-    ff=formfactors[vione,:,:].*conj.(formfactors[vitwo,:,:])
-    for sione in 1:2, sitwo in 1:2
-    Fock_matrix[sione,vione,sitwo,vitwo,:]+=(ff.*Coulombmatrix)*density_matrix[sione,vione,sitwo,vitwo,:]*1/(ϵr*Area)
+  for  vione in 1:valley_num, vitwo in 1:valley_num
+    ff=formfactors[vione,:,:].*conj.(formfactors[vitwo,:,:]) .*Coulombmatrix
+    for sione in 1: spin_num, sitwo in 1: spin_num
+    Fock_matrix[sione,vione,sitwo,vitwo,:]+=(ff)*density_matrix[sione,vione,sitwo,vitwo,:]*1/(ϵr*Area)
     end    
   end
 
   
- for sione in 1:2, vione in 1:2
+ for sione in 1:valley_num, vione in 1:valley_num
     aa=reshape(dropdims(sum(density_matrix[:,:,:,:,:],dims=5),dims=5),valley_num*spin_num,valley_num*spin_num)
     Hartree_matrix[sione,vione,sione,vione]+=tr(aa)*1/(ϵr*Area)*Coulomb([0.0,0.0])
  end
@@ -192,8 +232,8 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,JH::Flo
  paulimatrix=[[0 1;1 0],[0 -im;im 0],[1 0;0 -1]]
 
  density_matrix_transformed=zeros(ComplexF64,spin_num,valley_num,spin_num,valley_num,length(k_set))
-  for sione in 1:spin_num, sitwo in 1:spin_num, pi in 1:3, sithree in 1:spin_num, sifour in 1:spin_num
-     density_matrix_transformed[sione,:,sitwo,:,:]+=paulimatrix[pi][sione,sithree]*density_matrix[sithree,:,sifour,:,:]*paulimatrix[pi][sifour,sitwo]
+  for sione in 1:spin_num, sitwo in 1:spin_num, pp in 1:3, sithree in 1:spin_num, sifour in 1:spin_num
+     density_matrix_transformed[sione,:,sitwo,:,:]+=paulimatrix[pp][sione,sithree]*density_matrix[sithree,:,sifour,:,:]*paulimatrix[pp][sifour,sitwo]
   end
 
 
@@ -216,8 +256,8 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,JH::Flo
       vitwo=1
     end
 
-    for sione in 1:spin_num, sitwo in 1:spin_num, pi in 1:3, soneprime in 1:spin_num, stwoprime in 1:spin_num
-      Hartree_matrix[sione,vione,sitwo,vione]+=aa[stwoprime,vitwo,soneprime,vitwo]*paulimatrix[pi][soneprime,stwoprime]*paulimatrix[pi][sione,sitwo]*JH/Area
+    for sione in 1:spin_num, sitwo in 1:spin_num, pp in 1:3, soneprime in 1:spin_num, stwoprime in 1:spin_num
+      Hartree_matrix[sione,vione,sitwo,vione]+=aa[stwoprime,vitwo,soneprime,vitwo]*paulimatrix[pp][soneprime,stwoprime]*paulimatrix[pp][sione,sitwo]*JH/Area
     end
   end
 
@@ -320,7 +360,7 @@ function get_initial_proj(k_set::Vector{Vector{Float64}},whichside::Int)
  for ja in eachindex(k_set)
    A=randn(valley_num*spin_num,valley_num*spin_num)+im*randn(valley_num*spin_num,valley_num*spin_num)
 
-   initial_density_matrix[:,:,ja]+=(A+A')*0.05
+   initial_density_matrix[:,:,ja]+=(A+A')*1.0
  end
 
 
