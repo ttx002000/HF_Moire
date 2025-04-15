@@ -11,120 +11,34 @@ end
 
 
 
-function get_RNGham(k::Vector{Float64},NL::Int,uD::Float64)
+function get_ABCBA(k::Vector{Float64},NL::Int,uD::Float64)
+
   Ham=zeros(ComplexF64,2*NL,2*NL)
+  Kac=4π/(3*0.246)*[1,0]*valley
   t0=3100
   t1=380
-  t2=-21
-  t3=290
-  t4=141
-  for layer in 1:NL-1
-     Ham[2*layer-1:2*layer,2*layer+1:2*layer+2]=[t4*get_f(k) t3*conj(get_f(k));t1 t4*get_f(k)]
+
+  for layer in 1:Int((NL/2-0.5))
+     Ham[2*layer-1:2*layer,2*layer+1:2*layer+2]=[0 0;t1 0]
   end
 
-  for layer in 1:NL-2
-      Ham[2*layer-1:2*layer,2*layer+3:2*layer+4]=[0.0 t2/2;0.0 0.0]
+  for layer in Int((NL/2+0.5)):NL-1
+      Ham[2*layer-1:2*layer,2*layer+1:2*layer+2]=[0 t1;0 0]
   end
+
+ 
 
   Ham=Ham+Ham'
 
   for layer in 1:NL
-      #Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[uD*(layer+1-(NL-1)/2) -t0*get_f(k);-t0*conj(get_f(k)) uD*(layer+1-(NL-1)/2)]
-      Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[uD*(layer-(NL+1)/2) -t0*get_f(k);-t0*conj(get_f(k)) uD*(layer-(NL+1)/2)]
-
+      Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[uD*(layer-(NL+1)/2) -t0*get_f((k+Kac)*stacking);-t0*conj(get_f((k+Kac)*stacking)) uD*(layer-(NL+1)/2)]
   end
+
+
+ 
  return Ham
 end
 
-
-function find_E_cut(nstart::Float64,nend::Float64,uD::Float64,perturb_Ham::Matrix{Float64})
-ac=0.246
-KGr=4π/(3*ac)*[1,0]
-NL=5
-
-
-kx_grid=collect(-1.5:0.01:1.5)
-ky_grid=collect(-1.5:0.01:1.5)
-conduction_edge_set=[]
-valence_edge_set=[]
-for ja in [1,length(kx_grid)],jb in eachindex(ky_grid)
-    kvec=[kx_grid[ja],ky_grid[jb]]
-    Hamiltonian=get_RNGham(kvec+KGr,NL,uD)+perturb_Ham
-    FFF=eigen(Hamiltonian)
-    push!(conduction_edge_set,FFF.values[NL+1])
-    push!(valence_edge_set,FFF.values[NL])
-end
-
-for ja in eachindex(kx_grid),jb in [1,length(ky_grid)]
-  kvec=[kx_grid[ja],ky_grid[jb]]
-  Hamiltonian=get_RNGham(kvec+KGr,NL,uD)+perturb_Ham
-  FFF=eigen(Hamiltonian)
-  push!(conduction_edge_set,FFF.values[NL+1])
-  push!(valence_edge_set,FFF.values[NL])
-end
-
-conduction_edge=sort(conduction_edge_set)[1]
-valence_edge=sort(valence_edge_set)[end]
-
-println(conduction_edge)
-println(valence_edge)
-
-
-
-
-
-
-Area=4π^2/((kx_grid[2]-kx_grid[1])*(ky_grid[2]-ky_grid[1]))
-knorm=[]
-Eval=[]
-N_BG=0
-for ja in eachindex(kx_grid),jb in eachindex(ky_grid)
-    kvec=[kx_grid[ja],ky_grid[jb]]
-    Hamiltonian=get_RNGham(KGr+kvec,NL,uD)+perturb_Ham
-    FFF=eigen(Hamiltonian)
-    for jc in eachindex(FFF.values)
-        if valence_edge<FFF.values[jc]<conduction_edge
-          push!(knorm,norm(kvec))
-          push!(Eval,FFF.values[jc])
-          if jc<NL+1
-             N_BG+=1
-          end
-        end
-    end
-
-
-end
-ord=sortperm(Eval)
-Eval=Eval[ord]
-knorm=knorm[ord]
-
-nrange=collect(1:1:length(Eval))/Area.-N_BG/Area
-
-if nend>nrange[end] || nstart<nrange[1]
-  error("boundary wrong, try larger sampling area")
-end
-
-E_lower=Eval[searchsortedfirst(nrange,nstart)]
-E_upper=Eval[searchsortedfirst(nrange,nend)]
-
-k1=[]
-for ja in eachindex(Eval)
-   if E_upper-15<Eval[ja]<E_upper+15
-     push!(k1,knorm[ja])
-   end
-
-end
-
-for ja in eachindex(Eval)
-  if E_lower-15<Eval[ja]<E_lower+15
-    push!(k1,knorm[ja])
-  end
-end
-kradius=sort(k1)[end]
-
-
-return E_lower-10,E_upper+10, kradius*1.1
-end
 
 
 
