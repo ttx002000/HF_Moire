@@ -220,10 +220,9 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,JH::Flo
     end    
   end
 
-  
+  aaone=reshape(dropdims(sum(density_matrix[:,:,:,:,:],dims=5),dims=5),valley_num*spin_num,valley_num*spin_num)
  for sione in 1:valley_num, vione in 1:valley_num
-    aa=reshape(dropdims(sum(density_matrix[:,:,:,:,:],dims=5),dims=5),valley_num*spin_num,valley_num*spin_num)
-    Hartree_matrix[sione,vione,sione,vione]+=tr(aa)*1/(ϵr*Area)*Coulomb([0.0,0.0])
+     Hartree_matrix[sione,vione,sione,vione]+=tr(aaone)*1/(ϵr*Area)*Coulomb([0.0,0.0])
  end
 
 

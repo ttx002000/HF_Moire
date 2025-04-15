@@ -20,7 +20,7 @@ Print["uD ",Dfield];
 Print["filepos ",filepos];
 scratchDir=Environment["SCRATCH"];
 outputfilename=ToString[myPrint[numericParams[[1]]]]<>"U"<>ToString[myPrint[numericParams[[2]]]]<>"J"<>ToString[myPrint[numericParams[[3]]]]<>"uD"<>ToString[myPrint[numericParams[[4]]]]<>"perturb.csv";
-inputpath=FileNameJoin[{scratchDir, "stoner_RMG", "data_output"<>ToString[filepos],"stoner_perturb"<>ToString[perturbtype]<>"_input","uD"<>ToString[IntegerPart[numericParams[[3]]]]<>".csv"}];
+inputpath=FileNameJoin[{scratchDir, "stoner_RMG", "data_output"<>ToString[filepos],"stoner_perturb"<>ToString[perturbtype]<>"_input","uD"<>ToString[myPrint[numericParams[[3]]]]<>".csv"}];
 outputpath=FileNameJoin[{scratchDir, "stoner_RMG", "data_output"<>ToString[filepos],outputfilename}];
 
 
