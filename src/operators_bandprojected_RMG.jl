@@ -362,6 +362,14 @@ function get_initial_proj(k_set::Vector{Vector{Float64}},whichside::Int)
    initial_density_matrix[:,:,ja]+=(A+A')*1.0
  end
 
+ if rand()>0.5
+  for ja in eachindex(k_set)
+
+ 
+    initial_density_matrix[:,:,ja]=initial_density_matrix[:,:,ja].*Matrix{Float64}(I,valley_num*spin_num,valley_num*spin_num)
+  end
+ 
+ end
 
 
  return initial_density_matrix, BG_density_matrix
