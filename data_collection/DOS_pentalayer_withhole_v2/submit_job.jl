@@ -4,14 +4,14 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
 
     
     scratch_dir = ENV["SCRATCH"]
-    outpath=joinpath(scratch_dir, "pentalayer_DOS_v2/data_output$(Int(args[8]))/out")
-    slurmpath=joinpath(scratch_dir, "pentalayer_DOS_v2/data_output$(Int(args[8]))/slurmfiles")
+    outpath=joinpath(scratch_dir, "pentalayer_DOS_v2/data_output$(Int(args[9]))/out")
+    slurmpath=joinpath(scratch_dir, "pentalayer_DOS_v2/data_output$(Int(args[9]))/slurmfiles")
     mkpath(outpath)
     mkpath(slurmpath)
  
  
     
-    name = "$(args[1])uD$(args[2])sample$(args[3])nstart$(args[4])nend$(args[5])perturb$(args[6])DosEbin$(args[7])Eint$(args[8])filepos"
+    name = "$(args[1])uD$(args[2])sample$(args[3])nstart$(args[4])nend$(args[5])perturb$(args[6])DosEbin$(args[7])Eint$(args[8])NL$(args[9])filepos"
     filestr = """#!/bin/bash
     #SBATCH --job-name=$(job_prefix*"_"*name)
     #SBATCH --partition=$partition
@@ -34,7 +34,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     export JULIA_NUM_THREADS=$ntasks
 
     # run the script
-    julia $filepath $(args[1]) $(args[2]) $(args[3]) $(args[4]) $(args[5]) $(args[6]) $(args[7]) $(args[8]) """
+    julia $filepath $(args[1]) $(args[2]) $(args[3]) $(args[4]) $(args[5]) $(args[6]) $(args[7]) $(args[8]) $(args[9]) """
 
     open("$slurmpath/$(name).slurm", "w") do io
         write(io, filestr)

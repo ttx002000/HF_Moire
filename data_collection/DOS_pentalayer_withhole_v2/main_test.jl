@@ -18,16 +18,17 @@ nend=args[4]
 perturb=Int(args[5])
 DOS_n_binnum=Int(args[6])
 Einterval=args[7]
-file_pos=args[8]
+NL=Int(args[8])
+file_pos=args[9]
 
-perturb_Ham=get_perturb_Ham(perturb)
-E_lower,E_upper, kradius=find_E_cut(nstart,nend,uD,perturb_Ham)
-valuesset, N_valence, DOS_E_binnum=sample_value(uD, numsample,E_lower,E_upper,perturb_Ham,kradius,Einterval)
+perturb_Ham=get_perturb_Ham(perturb,NL)
+E_lower,E_upper, kradius=find_E_cut(nstart,nend,uD,perturb_Ham,NL)
+valuesset, N_valence, DOS_E_binnum=sample_value(uD, numsample,E_lower,E_upper,perturb_Ham,kradius,Einterval,NL)
 nE_bin_centers,nE_bin_means,bin_centers,nE,Nstates=process_data(valuesset,numsample,kradius,DOS_n_binnum,DOS_E_binnum,nstart,nend)
 
 scratch_dir = ENV["SCRATCH"]
 
-savepath=joinpath(scratch_dir, "pentalayer_DOS_v2/data_output$(Int(args[8]))/$(args[1])uD$(args[2])sample$(args[3])nstart$(args[4])nend$(args[5])perturb$(args[6])DosEbin$(args[7])Eint.jld2")
+savepath=joinpath(scratch_dir, "pentalayer_DOS_v2/data_output$(Int(args[9]))/$(args[1])uD$(args[2])sample$(args[3])nstart$(args[4])nend$(args[5])perturb$(args[6])DosEbin$(args[7])Eint$(args[8])NL.jld2")
 jldsave(savepath,nE_bin_centers=nE_bin_centers,
    nE_bin_means=nE_bin_means,
    bin_centers=bin_centers,nE=nE,

@@ -37,10 +37,10 @@ function get_RNGham(k::Vector{Float64},NL::Int,uD::Float64)
 end
 
 
-function find_E_cut(nstart::Float64,nend::Float64,uD::Float64,perturb_Ham::Matrix{Float64})
+function find_E_cut(nstart::Float64,nend::Float64,uD::Float64,perturb_Ham::Matrix{Float64},NL::Int)
 ac=0.246
 KGr=4π/(3*ac)*[1,0]
-NL=5
+
 
 
 kx_grid=collect(-1.5:0.01:1.5)
@@ -129,9 +129,9 @@ end
 
 
 
-function get_perturb_Ham(perturb::Int)
+function get_perturb_Ham(perturb::Int,NL::Int)
     
-  NL=5
+ 
  
   perturb_Ham=zeros(Float64,2*NL,2*NL)
   if perturb==1
@@ -197,7 +197,7 @@ function get_perturb_Ham(perturb::Int)
 
 end
 
-function sample_value(uD::Float64, numsample::Int,E_lower::Float64,E_upper::Float64,perturb_Ham::Matrix{Float64},kradius::Float64,Einterval::Float64)
+function sample_value(uD::Float64, numsample::Int,E_lower::Float64,E_upper::Float64,perturb_Ham::Matrix{Float64},kradius::Float64,Einterval::Float64,NL::Int)
  
 
 
@@ -211,7 +211,6 @@ function sample_value(uD::Float64, numsample::Int,E_lower::Float64,E_upper::Floa
 
 
 
-  NL=5
   KGr=4π/(3*ac)*[1,0]
  
  
