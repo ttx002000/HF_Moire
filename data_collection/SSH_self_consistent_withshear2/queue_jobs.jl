@@ -1,7 +1,7 @@
 using Pkg
 Pkg.activate(joinpath(@__DIR__, "../.."))
 using JLD2
-include(joinpath(@__DIR__,"submit_job.jl"))
+include(joinpath(@__DIR__,"submit_job_v2.jl"))
 filepath = joinpath(@__DIR__, "main_test.jl")
 
 job_prefix = "SSH_withshear"
@@ -55,12 +55,26 @@ end
 =#
 
 
-
+#=
 st=load(joinpath(@__DIR__, "missedjobs.jld2"))
 index=st["index"]
 for ja in eachindex(index)
   arguments=index[ja]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=1,mem=4)
+end
+=#
+
+st=load("missedjobs.jld2")
+index=st["index"]
+start=1
+ee=length(index)
+ba_size=200
+count=1
+while (count-1)*ba_size+1<=ee
+  submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*ba_size+start:min(count*ba_size+start,ee)]; time="1:00:00",ntasks=4,mem=24)
+  println((count-1)*ba_size+1,min(count*ba_size+start,ee))
+  sleep(5)
+  global count+=1
 end
 
 
