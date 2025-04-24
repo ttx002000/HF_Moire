@@ -2,7 +2,7 @@ using JLD2
 include("../../src/operators_bandprojected_RMG.jl")
 using LinearAlgebra,Plots
 args=parse.(Float64,ARGS)
-#args=[0.8,35.0,15.0,5.0,3.0,0.01,0.1,1.0,0.1,1.0,1000.0,1.0]
+#args=[1.4, 61.0, 10.0, 24.0, 5.0, 0.002, 0.01, -166.0, 0.0, 1.0, 2.0, 2.0]
 radius=args[1]
 num_points=Int(args[2])
 uD=args[3]
