@@ -18,7 +18,7 @@ trytime=args[11]
 file_pos=args[12]
 
 
-eig_set,k_set,k_index,eig_vec_set,Area,formfactors,Coulombmatrix,single_matrix=get_single_particle(radius,num_points,uD,NL,whichside,SOCcoef)
+eig_set,k_set,k_index,eig_vec_set,Area,formfactors,Coulombmatrix,single_matrix,perturbation=get_single_particle(radius,num_points,uD,NL,whichside,SOCcoef)
 
 println("finish1")
 
@@ -27,7 +27,7 @@ println("finish1")
 
 initial_density_matrix, BG_density_matrix=get_initial_proj(k_set,whichside)
 HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density=iteration(initial_density_matrix,BG_density_matrix,
-                                                                                                                                  ϵr,k_set,single_matrix,Area,
+                                                                                                                                  ϵr,k_set,single_matrix,perturbation,Area,
                                                                                                                                target_density,temp,Coulombmatrix,formfactors,JH,whichside)
 
 

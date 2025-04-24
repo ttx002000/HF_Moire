@@ -171,7 +171,7 @@ function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int
   formfactors=zeros(ComplexF64,valley_num,length(k_set),length(k_set))
   Coulombmatrix=zeros(Float64,length(k_set),length(k_set))
   single_matrix=zeros(ComplexF64,spin_num,valley_num,spin_num,valley_num,length(k_set))
-  
+  perturbation=zeros(ComplexF64,spin_num,valley_num,spin_num,valley_num,length(k_set))
   for ja in eachindex(k_set),jb in eachindex(k_set)
     for vi in 1:valley_num
       formfactors[vi,ja,jb]=eig_vec_set[vi][ja][:,bandindex]'*eig_vec_set[vi][jb][:,bandindex]
@@ -185,12 +185,14 @@ function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int
 
   for sione in 1:spin_num, vione in 1:valley_num, ja in eachindex(k_set)
      single_matrix[sione,vione,sione,vione,ja]=eig_set[vione][ja][bandindex]+pz[sione]*pz[vione]*(eig_vec_set[vione][ja][:,bandindex]'*sublattice_operators*eig_vec_set[vione][ja][:,bandindex])*SOCcoef/2
+     perturbation[sione,vione,sione,vione,ja]=pz[sione]*pz[vione]*0.1
+  
   end
   
  single_matrix=reshape(single_matrix,valley_num*spin_num,valley_num*spin_num,length(k_set))
+ perturbation=reshape(perturbation,valley_num*spin_num,valley_num*spin_num,length(k_set))
 
-
-  return eig_set,k_set,k_index,eig_vec_set,Area,formfactors,Coulombmatrix,single_matrix
+  return eig_set,k_set,k_index,eig_vec_set,Area,formfactors,Coulombmatrix,single_matrix, perturbation
 
 end
 
@@ -378,7 +380,7 @@ end
 
 
 function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},
-                           ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},Area::Float64,
+                           ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},perturbation::Array{ComplexF64},Area::Float64,
                            target_density::Float64,temp::Float64,Coulombmatrix::Matrix{Float64},formfactors::Array{ComplexF64},JH::Float64,whichside::Int)
 
   valley_num=2
@@ -406,9 +408,13 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
   itcount=0
 
 
-  while (eout>1*10^(-12)) || (bad_count<4) || (energy_change>1*10^(-6))
+  while (eout>1*10^(-12)) || (bad_count<4) || (energy_change>1*10^(-6)) || (sum(perturbation)>10^(-7))
       if eout<1*10^(-12)
        bad_count+=1
+      end
+      
+      if itcount>20
+       perturbation.=0.0
       end
       
    
@@ -428,7 +434,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
        
 
         eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix,renormalized_density=Construct_projector(k_set,ϵr,JH,
-                                                                                                                                                                                                         dmk,single_matrix,
+                                                                                                                                                                                                         dmk,single_matrix+perturbation,
                                                                                                                                                                                                          energy,BG_density_matrix,Area,
                                                                                                                                                                                                         target_density,temp,itcount,Coulombmatrix,formfactors,whichside)
         DIIS_input_density_matrix[mod(itcount,3)+1]=dmk
@@ -438,7 +444,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
       else
   
         eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix,renormalized_density=Construct_projector(k_set,ϵr,JH,
-                                                                                                                                                                                                                input_density_matrix,single_matrix,
+                                                                                                                                                                                                                input_density_matrix,single_matrix+perturbation,
                                                                                                                                                                                                                energy,BG_density_matrix,
                                                                                                                                                                                                                 Area,target_density,temp,itcount,Coulombmatrix,formfactors,whichside)
                                                                                                                                                                                            
