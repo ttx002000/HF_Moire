@@ -408,7 +408,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
   itcount=0
 
 
-  while (eout>1*10^(-12)) || (bad_count<4) || (energy_change>1*10^(-6)) || (sum(abs(perturbation))>10^(-7))
+  while (eout>1*10^(-12)) || (bad_count<4) || (energy_change>1*10^(-6)) || (sum(abs.(perturbation))>10^(-7))
       if eout<1*10^(-12)
        bad_count+=1
       end
