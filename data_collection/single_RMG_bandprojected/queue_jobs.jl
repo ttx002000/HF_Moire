@@ -3,14 +3,14 @@ Pkg.activate(joinpath(@__DIR__, "../.."))
 using LinearAlgebra
 using JLD2
 
-include("submit_job.jl")
+include("submit_job_v2.jl")
 
 filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "SG"
 
 
 
-
+#=
 st=load("missedjobs.jld2")
 index=st["index"]
 count=0
@@ -24,12 +24,13 @@ for ja in 1:length(index)
   end
   println(ja)
 end
+=#
 
 
-#=
+
 st=load("missedjobs.jld2")
 index=st["index"]
-start=1
+start=4100
 ee=length(index)
 ba_size=300
 count=1
@@ -40,4 +41,4 @@ while (count-1)*ba_size+1<=ee
 
   global count+=1
 end
-=#
+
