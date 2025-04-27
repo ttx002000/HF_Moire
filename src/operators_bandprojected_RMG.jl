@@ -181,10 +181,11 @@ function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int
   end
   pz=[1.0,-1.0]
   sublattice_operators=diagm(repeat([1, -1], NL))
+  layer_project_operator=diagm(reduce(vcat,[[1,1],repeat([0, 0], NL-1)]))
 
 
   for sione in 1:spin_num, vione in 1:valley_num, ja in eachindex(k_set)
-     single_matrix[sione,vione,sione,vione,ja]=eig_set[vione][ja][bandindex]+pz[sione]*pz[vione]*(eig_vec_set[vione][ja][:,bandindex]'*sublattice_operators*eig_vec_set[vione][ja][:,bandindex])*SOCcoef/2
+     single_matrix[sione,vione,sione,vione,ja]=eig_set[vione][ja][bandindex]+pz[sione]*pz[vione]*(eig_vec_set[vione][ja][:,bandindex]'*layer_project_operator*eig_vec_set[vione][ja][:,bandindex])*SOCcoef/2
      perturbation[sione,vione,sione,vione,ja]=pz[sione]*pz[vione]*0.1
   
   end
