@@ -31,7 +31,7 @@ end
 
 st=load("missedjobs.jld2")
 index=st["index"]
-start=3400
+start=3400+2700
 ee=length(index)
 ba_size=300
 count=1
