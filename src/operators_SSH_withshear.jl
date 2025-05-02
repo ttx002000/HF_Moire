@@ -295,10 +295,10 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
     badcount=0
     
     itcount=0
-     while (norm(grad_new)>5*10^(-4) && abs(energychange)/update_rate>10^(-8)) || badcount<5
+     while (norm(grad_new)>5*10^(-5) && abs(energychange)/update_rate>10^(-9)) || badcount<5
       itcount+=1
        
-      if abs(energychange)/update_rate<10^(-8)
+      if abs(energychange)/update_rate<10^(-9)
         badcount+=1
       end
 
