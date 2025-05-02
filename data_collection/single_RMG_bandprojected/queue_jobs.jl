@@ -20,7 +20,7 @@ for ja in 1:length(index)
   arguments=index[ja]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=1,mem=8,cpus_per_task=4)
   if mod(count,200)==0
-    sleep(700)
+    sleep(300)
   end
   println(ja)
 end
