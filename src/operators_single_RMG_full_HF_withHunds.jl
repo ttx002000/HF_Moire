@@ -361,7 +361,7 @@ end
 
 
 function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},
-                           ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},Area::Float64,NL::Int,target_density::Float64,temp::Float64)
+                           ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},Area::Float64,NL::Int,target_density::Float64,temp::Float64,JH::Float64)
   valley_num=2
   spin_num=2
   sublattice_num=2*NL
