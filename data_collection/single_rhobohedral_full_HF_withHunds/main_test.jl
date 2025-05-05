@@ -1,5 +1,5 @@
 using JLD2
-include("../../src/operators_single_RMG_full_HF_allowcoherence.jl")
+include("../../src/operators_single_RMG_full_HF_withHunds.jl")
 using LinearAlgebra,Plots
 args=parse.(Float64,ARGS)
 #args=[1.4,15.0,10.0,10.0,5.0,0.01,0.1,1.0,1.0]
