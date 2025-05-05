@@ -29,7 +29,10 @@ end
 st=load("missedjobs.jld2")
 index=st["index"]
 println("input the start")
-start=readline()
+input_str = readline()
+start = parse(Int, input_str)
+
+
 ee=length(index)
 ba_size=200
 count=1
