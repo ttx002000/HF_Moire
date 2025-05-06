@@ -200,7 +200,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
      end
 
       for sione in 1:spin_num, sitwo in 1:spin_num, pp in 1:3, soneprime in 1:spin_num, stwoprime in 1:spin_num
-        Hunds_Hartree_matrix[vione,sione,:,vione,sitwo,:]+=aa[vitwo,stwoprime,:,vitwo,soneprime,:]*paulimatrix[pp][soneprime,stwoprime]*paulimatrix[pp][sione,sitwo]*JH/Area
+        Hunds_Hartree_matrix[vione,sione,:,vione,sitwo,:]+=tr(aa[vitwo,stwoprime,:,vitwo,soneprime,:])*paulimatrix[pp][soneprime,stwoprime]*paulimatrix[pp][sione,sitwo]*JH/Area*Matrix{ComplexF64}(I,sublattice_num,sublattice_num)
        end
      end
 
