@@ -231,13 +231,45 @@ end
 
 
 
+function get_Hunds(Smatrix::Matrix{ComplexF64},v1::Vector{Int64},v2::Vector{Int64},v3::Vector{Int64},v4::Vector{Int64},HF_eigenvectors::Array{ComplexF64})
+   
+  valley_num=2
+  spin_num=2
+  layer_num=2
+  sublattice_num=2*NL
+
+  reshaped_size=(valley_num,spin_num,layer_num,sublattice_num)
+  
+   u1=reshape(HF_eigenvectors[:,v1[3],v1[2]],reshaped_size)
+   u2=reshape(HF_eigenvectors[:,v2[3],v2[2]],reshaped_size)
+   u3=reshape(HF_eigenvectors[:,v3[3],v3[2]],reshaped_size)
+   u4=reshape(HF_eigenvectors[:,v4[3],v4[2]],reshaped_size)
+
+  Velement=0.0 
+  for li in 1:layer_num, vone in 1:valley_num, vtwo in 1:valley_num
+     if vone≠vtwo
+       f1=vec(u1[vone,:,li,:])'*Smatrix*vec(u3[vone,:,li,:])
+       f2=vec(u2[vtwo,:,li,:])'*Smatrix*vec(u4[vtwo,:,li,:])
+       Velement+=f1*f2
+     end   
+  end
+
+  return Velement
+
+end
 
 
 
 
 
 
-function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset::Vector{Vector{Vector{Int64}}},B2indexset::Vector{Vector{Vector{Int64}}},HF_eigenvalues::Matrix{Float64},HF_eigenvectors::Array{ComplexF64},TDHF_Area::Float64,ϵr::Float64,ildis::Float64,NL::Int,k_set::Vector{Vector{Float64}})::Tuple{Matrix{ComplexF64},Matrix{ComplexF64},Matrix{ComplexF64}}
+
+
+
+
+
+
+function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset::Vector{Vector{Vector{Int64}}},B2indexset::Vector{Vector{Vector{Int64}}},HF_eigenvalues::Matrix{Float64},HF_eigenvectors::Array{ComplexF64},TDHF_Area::Float64,ϵr::Float64,ildis::Float64,JH::Float64,NL::Int,k_set::Vector{Vector{Float64}})::Tuple{Matrix{ComplexF64},Matrix{ComplexF64},Matrix{ComplexF64}}
 
     
 
@@ -253,8 +285,18 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
   z_pos[2,:]=0.335*[i for i in -NL+1:0 for _ in 1:2].-ildis
   z_pos=reshape(z_pos,layer_num*sublattice_num)
    
-    Amatrix=zeros(ComplexF64,length(Aindexset),length(Aindexset))
-    Amatrixvec=[zeros(ComplexF64,length(Aindexset)) for _ in eachindex(Aindexset)]
+  paulimatrix=[[0 1;1 0],[0 -im;im 0],[1 0;0 -1]]
+  Smatrix=zeros(ComplexF64,spin_num,sublattice_num,spin_num,sublattice_num)
+  for si in 1:3, ja in 1:sublattice_num
+    Smatrix[:,ja,:,ja]+=paulimatrix[si]
+  end
+  Smatrix=reshape(Smatrix,spin_num*sublattice_num,spin_num*sublattice_num)
+  
+  
+  
+  Amatrix=zeros(ComplexF64,length(Aindexset),length(Aindexset))
+  Amatrixvec=[zeros(ComplexF64,length(Aindexset)) for _ in eachindex(Aindexset)]
+
 
  Threads.@threads for ja in eachindex(Aindexset)
   for  jb in eachindex(Aindexset)
@@ -268,16 +310,16 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
    V1matrix=construct_Vmatrix(k_set[v1[2]]-k_set[v3[2]],z_pos,NL)
 
    V2matrix=construct_Vmatrix(k_set[v1[2]]-k_set[v4[2]],z_pos,NL)
-
-   
-   Amatrixvec[ja][jb]+=-get_Velement(V1matrix,v1,v2,v3,v4,HF_eigenvectors)+get_Velement(V2matrix,v1,v2,v4,v3,HF_eigenvectors)
+   Amatrixvec[ja][jb]+=(-get_Velement(V1matrix,v1,v2,v3,v4,HF_eigenvectors)+get_Velement(V2matrix,v1,v2,v4,v3,HF_eigenvectors))*1/(TDHF_Area*ϵr)
+   Amatrixvec[ja][jb]+=(-get_Hunds(Smatrix,v1,v2,v3,v4,HF_eigenvectors)+get_Hunds(Smatrix,v1,v2,v4,v3,HF_eigenvectors))*JH
+ 
+  
+  
   end
  end
    
  
- for ja in eachindex(Aindexset)
-    Amatrix[ja,:]=Amatrixvec[ja]*1/(TDHF_Area*ϵr)
- end
+
  Amatrixvec=nothing
  for ja in eachindex(Aindexset)
    v1=Aindexset[ja][1]
@@ -303,13 +345,13 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
 
    V2matrix=construct_Vmatrix(k_set[v1[2]]-k_set[v4[2]],z_pos,NL)
 
-   AmQmatrixvec[ja][jb]+=-get_Velement(V1matrix,v1,v2,v3,v4,HF_eigenvectors)+get_Velement(V2matrix,v1,v2,v4,v3,HF_eigenvectors)
- end
+   AmQmatrixvec[ja][jb]+=(-get_Velement(V1matrix,v1,v2,v3,v4,HF_eigenvectors)+get_Velement(V2matrix,v1,v2,v4,v3,HF_eigenvectors))*1/(TDHF_Area*ϵr)
+   AmQmatrixvec[ja][jb]+=(-get_Hunds(Smatrix,v1,v2,v3,v4,HF_eigenvectors)+get_Hunds(Smatrix,v1,v2,v4,v3,HF_eigenvectors))*JH
+ 
+  end
  end
 
- for ja in eachindex(AmQindexset)
-    AmQmatrix[ja,:]=AmQmatrixvec[ja]*1/(TDHF_Area*ϵr)
- end
+
  AmQmatrixvec=nothing
  println("finishA")
  flush(stdout)
@@ -338,13 +380,14 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
 
      V2matrix=construct_Vmatrix(k_set[v1[2]]-k_set[v4[2]],z_pos,NL)
 
-     Bmatrixvec[ja][jb]+=-get_Velement(V1matrix,v1,v2,v3,v4,HF_eigenvectors)+get_Velement(V2matrix,v1,v2,v4,v3,HF_eigenvectors)
-   end
+     Bmatrixvec[ja][jb]+=(-get_Velement(V1matrix,v1,v2,v3,v4,HF_eigenvectors)+get_Velement(V2matrix,v1,v2,v4,v3,HF_eigenvectors))*1/(TDHF_Area*ϵr)
+     Bmatrixvec[ja][jb]+=(-get_Hunds(Smatrix,v1,v2,v3,v4,HF_eigenvectors)+get_Hunds(Smatrix,v1,v2,v4,v3,HF_eigenvectors))*JH
+    
+   
+    end
    end
 
-   for ja in eachindex(Aindexset)
-    Bmatrix[ja,:]+=Bmatrixvec[ja]*1/(TDHF_Area*ϵr)
-   end
+
    Bmatrixvec=nothing
    println("finishB")
    flush(stdout)
