@@ -33,7 +33,7 @@ function get_indexset(num_bandbelow::Int64,num_bandup::Int64,bigQ::Vector{Int64}
   #Let's input three variables, TDHF_k_set, TDHF_k_index and TDHF_k_pos. TDHF_k_pos[ja] is the index of the corresponding vector in the original set
 
 
- dimension=spin_num*valley_num*sublattice_nu*layer_num   
+ dimension=spin_num*valley_num*sublattice_num*layer_num   
  FLindex=Int(round(dimension/2)) # the higest occupied band index
 
  Bandvector=Vector{Int64}[]
