@@ -225,7 +225,7 @@ function construct_Vmatrix(k_vec::Vector{Float64},z_pos::Vector{Float64},NL::Int
     Vmatrix[ja,:,jb,:]=s1
   end
 
-  return(reshape(Vmatrix,dimension,dimension))
+  return reshape(Vmatrix,dimension,dimension)
 
 end
 
@@ -274,11 +274,11 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
   end
  end
    
-
+ 
  for ja in eachindex(Aindexset)
     Amatrix[ja,:]=Amatrixvec[ja]*1/(TDHF_Area*ϵr)
  end
-
+ Amatrixvec=nothing
  for ja in eachindex(Aindexset)
    v1=Aindexset[ja][1]
    v2=Aindexset[ja][2]
@@ -310,6 +310,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
  for ja in eachindex(AmQindexset)
     AmQmatrix[ja,:]=AmQmatrixvec[ja]*1/(TDHF_Area*ϵr)
  end
+ AmQmatrixvec=nothing
  println("finishA")
  flush(stdout)
 
@@ -344,7 +345,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
    for ja in eachindex(Aindexset)
     Bmatrix[ja,:]+=Bmatrixvec[ja]*1/(TDHF_Area*ϵr)
    end
-
+   Bmatrixvec=nothing
    println("finishB")
    flush(stdout)
 
