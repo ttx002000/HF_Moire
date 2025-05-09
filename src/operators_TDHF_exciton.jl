@@ -311,8 +311,9 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
 
    V2matrix=construct_Vmatrix(k_set[v1[2]]-k_set[v4[2]],z_pos,NL)
    Amatrixvec[ja][jb]+=(-get_Velement(V1matrix,v1,v2,v3,v4,HF_eigenvectors)+get_Velement(V2matrix,v1,v2,v4,v3,HF_eigenvectors))*1/(TDHF_Area*ϵr)
+   if abs(JH)≠0.0
    Amatrixvec[ja][jb]+=(-get_Hunds(Smatrix,v1,v2,v3,v4,HF_eigenvectors)+get_Hunds(Smatrix,v1,v2,v4,v3,HF_eigenvectors))*JH/(TDHF_Area)
- 
+   end
   
   
   end
@@ -346,8 +347,9 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
    V2matrix=construct_Vmatrix(k_set[v1[2]]-k_set[v4[2]],z_pos,NL)
 
    AmQmatrixvec[ja][jb]+=(-get_Velement(V1matrix,v1,v2,v3,v4,HF_eigenvectors)+get_Velement(V2matrix,v1,v2,v4,v3,HF_eigenvectors))*1/(TDHF_Area*ϵr)
+   if abs(JH)≠0.0
    AmQmatrixvec[ja][jb]+=(-get_Hunds(Smatrix,v1,v2,v3,v4,HF_eigenvectors)+get_Hunds(Smatrix,v1,v2,v4,v3,HF_eigenvectors))*JH/(TDHF_Area)
- 
+   end
   end
  end
 
@@ -381,8 +383,9 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
      V2matrix=construct_Vmatrix(k_set[v1[2]]-k_set[v4[2]],z_pos,NL)
 
      Bmatrixvec[ja][jb]+=(-get_Velement(V1matrix,v1,v2,v3,v4,HF_eigenvectors)+get_Velement(V2matrix,v1,v2,v4,v3,HF_eigenvectors))*1/(TDHF_Area*ϵr)
+     if abs(JH)≠0.0
      Bmatrixvec[ja][jb]+=(-get_Hunds(Smatrix,v1,v2,v3,v4,HF_eigenvectors)+get_Hunds(Smatrix,v1,v2,v4,v3,HF_eigenvectors))*JH/(TDHF_Area)
-    
+     end
    
     end
    end
