@@ -231,7 +231,7 @@ end
 
 
 
-function get_Hunds(Smatrix::Matrix{ComplexF64},v1::Vector{Int64},v2::Vector{Int64},v3::Vector{Int64},v4::Vector{Int64},HF_eigenvectors::Array{ComplexF64})
+function get_Hunds(Smatrix::Array{ComplexF64},v1::Vector{Int64},v2::Vector{Int64},v3::Vector{Int64},v4::Vector{Int64},HF_eigenvectors::Array{ComplexF64})
    
   valley_num=2
   spin_num=2
