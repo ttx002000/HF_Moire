@@ -246,10 +246,10 @@ function get_Hunds(Smatrix::Matrix{ComplexF64},v1::Vector{Int64},v2::Vector{Int6
    u4=reshape(HF_eigenvectors[:,v4[3],v4[2]],reshaped_size)
 
   Velement=0.0 
-  for li in 1:layer_num, vone in 1:valley_num, vtwo in 1:valley_num
+  for li in 1:layer_num, vone in 1:valley_num, vtwo in 1:valley_num, si in 1:3
      if vone≠vtwo
-       f1=vec(u1[vone,:,li,:])'*Smatrix*vec(u3[vone,:,li,:])
-       f2=vec(u2[vtwo,:,li,:])'*Smatrix*vec(u4[vtwo,:,li,:])
+       f1=vec(u1[vone,:,li,:])'*Smatrix[:,:,si]*vec(u3[vone,:,li,:])
+       f2=vec(u2[vtwo,:,li,:])'*Smatrix[:,:,si]*vec(u4[vtwo,:,li,:])
        Velement+=f1*f2
      end   
   end
@@ -286,11 +286,11 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
   z_pos=reshape(z_pos,layer_num*sublattice_num)
    
   paulimatrix=[[0 1;1 0],[0 -im;im 0],[1 0;0 -1]]
-  Smatrix=zeros(ComplexF64,spin_num,sublattice_num,spin_num,sublattice_num)
+  Smatrix=zeros(ComplexF64,spin_num,sublattice_num,spin_num,sublattice_num,3)
   for si in 1:3, ja in 1:sublattice_num
-    Smatrix[:,ja,:,ja]+=paulimatrix[si]
+    Smatrix[:,ja,:,ja,si]+=paulimatrix[si]
   end
-  Smatrix=reshape(Smatrix,spin_num*sublattice_num,spin_num*sublattice_num)
+  Smatrix=reshape(Smatrix,spin_num*sublattice_num,spin_num*sublattice_num,3)
   
   
   
