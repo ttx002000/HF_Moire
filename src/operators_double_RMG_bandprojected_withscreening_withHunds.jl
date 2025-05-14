@@ -127,14 +127,15 @@ function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int
   
 
   bandindex=[NL,NL+1]
-  Fock_formfactors=[zeros(ComplexF64,length(k_set),length(k_set)) for _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num, _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num]
+  #Fock_formfactors=[zeros(ComplexF64,length(k_set),length(k_set)) for _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num, _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num]
+  Fock_formfactors=Matrix{Matrix{ComplexF4}}(undef,spin_num,valley_num,layer_num)
   Hartree_formfactors=[zeros(ComplexF64,length(k_set),length(k_set)) for _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num, _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num]
   
   z_pos=zeros(Float64,layer_num,sublattice_num)
   z_pos[1,:]=0.335*[i for i in 0:NL-1 for _ in 1:2]
   z_pos[2,:]=0.335*[i for i in -NL+1:0 for _ in 1:2].-ildis
 
-
+  index=reshape(collect(1:1:valley_num*spin_num*layer_num),spin_num,valley_num,layer_num)
 
 
 
@@ -150,13 +151,13 @@ function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int
         Vmatrix[subone,subtwo]=Coulomb(k_set[ja]-k_set[jb],abs(z_pos[lione,subone]-z_pos[litwo,subtwo]))
       end
      for sione in 1:spin_num, vione in 1:valley_num, sitwo in 1:spin_num, vitwo in 1:valley_num
-   
-  
-      f1=transpose(conj.(eig_vec_set[vione,lione][ja][:,bandindex[lione]]).*eig_vec_set[vione,lione][jb][:,bandindex[lione]])
-      f2=conj.(eig_vec_set[vitwo,litwo][jb][:,bandindex[litwo]]).*eig_vec_set[vitwo,litwo][ja][:,bandindex[litwo]]
-
-       Fock_formfactors[sione,vione,lione,sitwo,vitwo,litwo][ja,jb]+=f1*Vmatrix*f2
-      
+    
+       if index[sione,vione,lione]>=index[sitwo,vitwo,litwo]
+        Fock_formfactors[sione,vione,sitwo,vitwo,litwo]=zeros(ComplexF64,length(k_set),length(k_set))
+        f1=transpose(conj.(eig_vec_set[vione,lione][ja][:,bandindex[lione]]).*eig_vec_set[vione,lione][jb][:,bandindex[lione]])
+        f2=conj.(eig_vec_set[vitwo,litwo][jb][:,bandindex[litwo]]).*eig_vec_set[vitwo,litwo][ja][:,bandindex[litwo]]
+        Fock_formfactors[sione,vione,lione,sitwo,vitwo,litwo][ja,jb]+=f1*Vmatrix*f2
+       end
       
     end
     end
