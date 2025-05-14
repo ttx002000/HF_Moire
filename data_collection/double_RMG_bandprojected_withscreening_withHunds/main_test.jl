@@ -54,10 +54,10 @@ println("finish second iterations")
 
 
  
-#scratch_dir = ENV["SCRATCH"]
-#savepath=joinpath(scratch_dir, "double_RMG_bandprojected_screen_withHunds/data_output$(Int(args[13]))/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])er$(args[5])NL$(args[6])tgden$(args[7])temp$(args[8])JH$(args[9])CNP$(args[10])ildis$(args[11])shift$(args[12])trytime.jld2")
+scratch_dir = ENV["SCRATCH"]
+savepath=joinpath(scratch_dir, "double_RMG_bandprojected_screen_withHunds/data_output$(Int(args[13]))/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])er$(args[5])NL$(args[6])tgden$(args[7])temp$(args[8])JH$(args[9])CNP$(args[10])ildis$(args[11])shift$(args[12])trytime.jld2")
 
-savepath=joinpath(@__DIR__,"test.jld2")
+#savepath=joinpath(@__DIR__,"test.jld2")
 jldsave(savepath,
              final_density_matrix=final_density_matrix,HF_eigenvalues=HF_eigenvalues,
              k_set=k_set,eig_vec_set=eig_vec_set,HF_eigenvectors=HF_eigenvectors,fermi_level=fermi_level,energy=energy,eig_set=eig_set,
