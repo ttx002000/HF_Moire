@@ -127,8 +127,8 @@ function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int
   
 
   bandindex=[NL,NL+1]
-  #Fock_formfactors=[zeros(ComplexF64,length(k_set),length(k_set)) for _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num, _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num]
-  Fock_formfactors=Matrix{Matrix{ComplexF64}}(undef,spin_num,valley_num,layer_num)
+  Fock_formfactors=[zeros(ComplexF64,length(k_set),length(k_set)) for _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num, _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num]
+  #Fock_formfactors=Array{Matrix{ComplexF64}}(undef,spin_num,valley_num,layer_num,spin_num,valley_num,layer_num)
   Hartree_formfactors=[zeros(ComplexF64,length(k_set),length(k_set)) for _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num, _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num]
   
   z_pos=zeros(Float64,layer_num,sublattice_num)
@@ -152,12 +152,12 @@ function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int
       end
      for sione in 1:spin_num, vione in 1:valley_num, sitwo in 1:spin_num, vitwo in 1:valley_num
     
-       if index[sione,vione,lione]>=index[sitwo,vitwo,litwo]
-        Fock_formfactors[sione,vione,sitwo,vitwo,litwo]=zeros(ComplexF64,length(k_set),length(k_set))
+       #if index[sione,vione,lione]>=index[sitwo,vitwo,litwo]
+        #Fock_formfactors[sione,vione,lione,sitwo,vitwo,litwo]=zeros(ComplexF64,length(k_set),length(k_set))
         f1=transpose(conj.(eig_vec_set[vione,lione][ja][:,bandindex[lione]]).*eig_vec_set[vione,lione][jb][:,bandindex[lione]])
         f2=conj.(eig_vec_set[vitwo,litwo][jb][:,bandindex[litwo]]).*eig_vec_set[vitwo,litwo][ja][:,bandindex[litwo]]
         Fock_formfactors[sione,vione,lione,sitwo,vitwo,litwo][ja,jb]+=f1*Vmatrix*f2
-       end
+       #end
       
     end
     end
@@ -472,8 +472,8 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
 
   end
 
-  while (eout>1*10^(-14)) || (bad_count<4) || (energy_change>1*10^(-6))
-      if eout<1*10^(-14)
+  while (eout>1*10^(-18)) || (bad_count<4) || (energy_change>1*10^(-8))
+      if eout<1*10^(-18)
        bad_count+=1
       end
       
@@ -481,7 +481,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
    
       tic=time()
 
-      if (itcount>60 && abs(eout)>10^(-2)) || (itcount>70 && abs(eout)<10^(-7))
+      if (itcount>60 && abs(eout)>10^(-2)) || (itcount>70 && abs(eout)<10^(-8))
       
         dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
         if dmk==0

@@ -3,7 +3,7 @@ include("../../src/operators_double_RMG_bandprojected_withscreening_withHunds.jl
 using LinearAlgebra,Plots
 args=parse.(Float64,ARGS)
 #args=[1.4, 61.0, 10.0, 24.0, 5.0, 0.002, 0.01, -166.0, 0.0, 1.0, 2.0, 2.0]
-#args=[0.8,37.0,20.0,10.0,3.0,0.0,0.01,-100.0,10.0,1.5,2.0,1.0,2.0]
+#args=[0.8,25.0,20.0,10.0,3.0,0.0,0.01,-100.0,10.0,1.5,0.0,0.0,1.0,2.0]
 radius=args[1]
 num_points=Int(args[2])
 uD=args[3]
