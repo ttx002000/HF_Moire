@@ -7,13 +7,13 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     #mkpath(slurmpath)
 
     scratch_dir = ENV["SCRATCH"]
-    outpath=joinpath(scratch_dir, "double_RMG_bandprojected_screen_withHunds/data_output$(Int(args[13]))/out")
-    slurmpath=joinpath(scratch_dir, "double_RMG_bandprojected_screen_withHunds/data_output$(Int(args[13]))/slurmfiles")
+    outpath=joinpath(scratch_dir, "double_RMG_bandprojected_screen_withHunds/data_output$(Int(args[14]))/out")
+    slurmpath=joinpath(scratch_dir, "double_RMG_bandprojected_screen_withHunds/data_output$(Int(args[14]))/slurmfiles")
     mkpath(outpath)
     mkpath(slurmpath)
  
 
-    name = "$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])er$(args[5])NL$(args[6])tgden$(args[7])temp$(args[8])JH$(args[9])CNP$(args[10])ildis$(args[11])shift$(args[12])trytime"
+    name = "$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])er$(args[5])NL$(args[6])tgden$(args[7])temp$(args[8])JH$(args[9])CNP$(args[10])ildis$(args[11])shift_l1$(args[12])shift_l2$(args[13])trytime"
     filestr = """#!/bin/bash
     #SBATCH --job-name=$(job_prefix*"_"*name)
     #SBATCH --partition=$partition
@@ -38,7 +38,7 @@ function submit_job(filepath, dirpath, job_prefix,args; nodes=1, ntasks=1, time=
     export JULIA_DEPOT_PATH=\$SCRATCH/julia_depot
 
     # run the script
-    julia  $filepath $(args[1]) $(args[2]) $(args[3]) $(args[4]) $(args[5]) $(args[6]) $(args[7]) $(args[8]) $(args[9]) $(args[10]) $(args[11]) $(args[12]) $(args[13])"""
+    julia  $filepath $(args[1]) $(args[2]) $(args[3]) $(args[4]) $(args[5]) $(args[6]) $(args[7]) $(args[8]) $(args[9]) $(args[10]) $(args[11]) $(args[12]) $(args[13]) $(args[14])"""
 
     open("$slurmpath/$(name).slurm", "w") do io
         write(io, filestr)

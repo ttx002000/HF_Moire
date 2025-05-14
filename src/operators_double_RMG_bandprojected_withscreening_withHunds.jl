@@ -89,7 +89,7 @@ end
 
 
 
-function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int,ildis::Float64,shift::Int)
+function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int,ildis::Float64,shift_l1::Int,shift_l2::Int)
 
   vset=[1,-1]
   offset=[0.0,-(NL-1)*uD+CNP]
@@ -101,7 +101,7 @@ function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int
   valley_num=2
   spin_num=2
   layer_num=2
-  shiftvector=shift*[kx_grid[2]-kx_grid[1],0.0]
+  shiftvector=[shift_l1*[kx_grid[2]-kx_grid[1],0.0],shift_l2*[kx_grid[2]-kx_grid[1],0.0]]
 
   sublattice_num=Int(2*NL)
   
@@ -116,7 +116,7 @@ function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int
     push!(k_index,[ja,jb])
 
     for vi in 1:valley_num,  li in 1:layer_num
-      Ham=Hamiltonian([kx_grid[ja],ky_grid[jb]]+shiftvector*vset[vi],uD,vset[vi],1,NL)+Matrix{Float64}(I,sublattice_num,sublattice_num)*offset[li]
+      Ham=Hamiltonian([kx_grid[ja],ky_grid[jb]]+shiftvector[li]*vset[vi],uD,vset[vi],1,NL)+Matrix{Float64}(I,sublattice_num,sublattice_num)*offset[li]
       FFF=eigen(Ham)
       push!(eig_set[vi,li],real(FFF.values))
       push!(Ham_set[vi,li],Ham)
@@ -128,7 +128,7 @@ function get_single_particle(radius::Float64,num_points::Int,uD::Float64,NL::Int
 
   bandindex=[NL,NL+1]
   #Fock_formfactors=[zeros(ComplexF64,length(k_set),length(k_set)) for _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num, _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num]
-  Fock_formfactors=Matrix{Matrix{ComplexF4}}(undef,spin_num,valley_num,layer_num)
+  Fock_formfactors=Matrix{Matrix{ComplexF64}}(undef,spin_num,valley_num,layer_num)
   Hartree_formfactors=[zeros(ComplexF64,length(k_set),length(k_set)) for _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num, _ in 1:spin_num, _ in 1:valley_num, _ in 1:layer_num]
   
   z_pos=zeros(Float64,layer_num,sublattice_num)
