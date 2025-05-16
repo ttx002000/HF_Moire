@@ -77,7 +77,7 @@ println("finish index set")
 flush(stdout)
 
 
-Amatrix,AmQmatrix,Bmatrix=Construct_Amatrix(Aindexset,AmQindexset,B2indexset,HF_eigenvalues,HF_eigenvectors_sublatticebasis_TDHF,TDHF_Area,ϵr,NL,k_set,JH,z_pos)
+Amatrix,AmQmatrix,Bmatrix=Construct_Amatrix(Aindexset,AmQindexset,B2indexset,HF_eigenvalues_TDHF,HF_eigenvectors_sublatticebasis_TDHF,TDHF_Area,ϵr,NL,k_set,JH,z_pos)
 
  
  
