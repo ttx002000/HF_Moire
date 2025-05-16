@@ -56,6 +56,17 @@ band_num=valley_num*layer_num*spin_num
 
 tot_bd=num_bandup+num_bandbelow
 
+z_pos=zeros(Float64,layer_num,sublattice_num)
+z_pos[1,:]=0.335*[i for i in 0:NL-1 for _ in 1:2]
+z_pos[2,:]=0.335*[i for i in -NL+1:0 for _ in 1:2].-ildis
+
+
+bigQ=bigQ_index_set[bigQ_index]
+
+println(bigQ)
+
+
+
 
 
 Bandvector,Aindexset,AmQindexset,B2indexset=get_indexset(num_bandbelow,num_bandup,bigQ,TDHF_k_set,TDHF_k_index,TDHF_k_pos,k_index,k_set)
