@@ -20,7 +20,7 @@ function find_FL(quasi_particle_energy::Vector{Float64},target_density::Float64,
 
   
   if target_density==0.0
-    stan=10^(-9)
+    stan=10^(-12)
   else
     stan=abs(10^(-8)*target_density)
   end
@@ -216,7 +216,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,JH::Flo
   density_matrix::Array{ComplexF64},single_matrix::Array{ComplexF64},
   energy_input::Float64,BG_density_matrix::Array{ComplexF64},Area::Float64
   ,target_density::Float64,temp::Float64,itcount::Int,Fock_formfactors::Matrix{Matrix{ComplexF64}}
-  ,Hartree_formfactors::Matrix{Matrix{ComplexF64}},Hunds_formfactors::Array{ComplexF64})
+  ,Hartree_formfactors::Matrix{Matrix{ComplexF64}},Hunds_formfactors::Array{ComplexF64},sz_conserve::Int)
  
   spin_num=2
   valley_num=2
@@ -272,7 +272,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,JH::Flo
 
 
 
-  density_matrix=reshape(density_matrix,(spin_num,valley_num,layer_num,spin_num,valley_num,layer_num,length(k_set)))
+ density_matrix=reshape(density_matrix,(spin_num,valley_num,layer_num,spin_num,valley_num,layer_num,length(k_set)))
  paulimatrix=[[0 1;1 0],[0 -im;im 0],[1 0;0 -1]]
 
  density_matrix_transformed=zeros(ComplexF64,spin_num,valley_num,layer_num,spin_num,valley_num,layer_num,length(k_set))
@@ -339,22 +339,36 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,JH::Flo
 
 
  fermi_level,renormalized_density=find_FL(vec(HF_eigenvalues),target_density,val_s,val_e,temp,Area,bg_particle_density)
-
-
+ #fermi_level=(sort(vec(HF_eigenvalues))[length(k_set)*valley_num*spin_num]+sort(vec(HF_eigenvalues))[length(k_set)*valley_num*spin_num+1])/2
+ #renormalized_density=0.0
 
  density_matrix_new=zeros(ComplexF64,dimension,dimension,length(k_set))
- 
+
  for jb in 1:valley_num*spin_num*layer_num
    Threads.@threads for ja in eachindex(k_set) 
       density_matrix_new[:,:,ja]+=HF_eigenvectors[:,jb,ja]*(HF_eigenvectors[:,jb,ja])'*1/(exp((HF_eigenvalues[jb,ja]-fermi_level)/temp)+1)
     end
  end
 
+#=
+   Threads.@threads for ja in eachindex(k_set) 
+    for jb in 1:valley_num*spin_num*layer_num
 
-  density_matrix_new=reshape(density_matrix_new,spin_num,valley_num,layer_num,spin_num,valley_num,layer_num,length(k_set))
-  density_matrix_new[1,:,:,2,:,:,:].=0.0
-  density_matrix_new[2,:,:,1,:,:,:].=0.0
-   density_matrix_new=reshape(density_matrix_new,dimension,dimension,length(k_set))
+    if HF_eigenvalues[jb,ja]<fermi_level
+      density_matrix_new[:,:,ja]+=HF_eigenvectors[:,jb,ja]*(HF_eigenvectors[:,jb,ja])'
+    end
+  end
+ end=#
+  if sz_conserve==1
+     density_matrix_new=reshape(density_matrix_new,spin_num,valley_num,layer_num,spin_num,valley_num,layer_num,length(k_set))
+     density_matrix_new[1,:,:,2,:,:,:].=0.0 #This is assuming that sz is a good quantum number.
+     density_matrix_new[2,:,:,1,:,:,:].=0.0
+     #density_matrix_new[:,1,:,:,2,:,:].=0.0
+     #density_matrix_new[:,2,:,:,1,:,:].=0.0
+    density_matrix_new=reshape(density_matrix_new,dimension,dimension,length(k_set))
+  end
+
+
 
  density_matrix_new-=BG_density_matrix 
  if itcount<15
@@ -371,6 +385,7 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,JH::Flo
  for ja in eachindex(k_set)
    eout+=real(tr(DeltaMatrix[:,:,ja]*DeltaMatrix[:,:,ja]'))/length(k_set)
  end
+
 
  energy=0.0
  for ja in eachindex(k_set)
@@ -412,7 +427,7 @@ function get_initial_proj(k_set::Vector{Vector{Float64}})
  for ja in eachindex(k_set)
    A=randn(valley_num*spin_num*layer_num,valley_num*spin_num*layer_num)+im*randn(valley_num*spin_num*layer_num,valley_num*spin_num*layer_num)
 
-   initial_density_matrix[:,:,ja]+=(A+A')*1.0
+   initial_density_matrix[:,:,ja]+=(A+A')*0.5
  end
 
  return initial_density_matrix, BG_density_matrix
@@ -423,7 +438,7 @@ end
 function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},
                            ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},Area::Float64,
                            target_density::Float64,temp::Float64,Fock_formfactors::Matrix{Matrix{ComplexF64}},Hartree_formfactors::Matrix{Matrix{ComplexF64}}
-                           ,Hunds_formfactors::Array{ComplexF64},JH::Float64,pairing::Int64)
+                           ,Hunds_formfactors::Array{ComplexF64},JH::Float64,pairing::Int64,sz_conserve::Int)
 
   valley_num=2
   spin_num=2
@@ -459,21 +474,21 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
 
 
 
-  function process_pairing(density_matrix_new::Array{ComplexF64},pairing::Int)
-    density_matrix_new=reshape(density_matrix_new,spin_num,valley_num,layer_num,spin_num,valley_num,layer_num,length(k_set))
+  function process_pairing(density_matrix_topro::Array{ComplexF64},pairing::Int)
+    density_matrix_topro=reshape(density_matrix_topro,spin_num,valley_num,layer_num,spin_num,valley_num,layer_num,length(k_set))
     
    if pairing==-1 #no interlayer coherence
-      density_matrix_new[:,:,1,:,:,2,:].=0.0
-      density_matrix_new[:,:,2,:,:,1,:].=0.0
+      density_matrix_topro[:,:,1,:,:,2,:].=0.0
+      density_matrix_topro[:,:,2,:,:,1,:].=0.0
    end
-   density_matrix_new=reshape(density_matrix_new,dimension,dimension,length(k_set))
+   density_matrix_topro=reshape(density_matrix_topro,dimension,dimension,length(k_set))
    
-   return density_matrix_new
+   return density_matrix_topro
 
   end
 
-  while (eout>1*10^(-18)) || (bad_count<4) || (energy_change>1*10^(-8))
-      if eout<1*10^(-18)
+  while (eout>1*10^(-20)) || (bad_count<4) || (energy_change>1*10^(-13))
+      if eout<1*10^(-20)
        bad_count+=1
       end
       
@@ -481,14 +496,14 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
    
       tic=time()
 
-      if (itcount>60 && abs(eout)>10^(-2)) || (itcount>70 && abs(eout)<10^(-8))
+      if (itcount>60 && abs(eout)>10^(-2)) || (itcount>70 && abs(eout)<10^(-10))
       
         dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
         if dmk==0
             itcount=0
-            dmk=zeros(ComplexF64,valley_num*spin_num,valley_num*spin_num,length(k_set))
+            dmk=zeros(ComplexF64,valley_num*spin_num*layer_num,valley_num*spin_num*layer_num,length(k_set))
             for ja in eachindex(k_set)
-              A=randn(valley_num*spin_num,valley_num*spin_num)+im*randn(valley_num*spin_num,valley_num*spin_num)
+              A=randn(valley_num*spin_num*layer_numvalley_num*spin_num*layer_num)+im*randn(valley_num*spin_num*layer_num,valley_num*spin_num*layer_num)
               dmk[:,:,ja]+=(A+A')*0.01
             end
         end
@@ -497,7 +512,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
         eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix,renormalized_density=Construct_projector(k_set,ϵr,JH,
                                                                                                                                                                                                          dmk,single_matrix,
                                                                                                                                                                                                          energy,BG_density_matrix,Area,
-                                                                                                                                                                                                        target_density,temp,itcount,Fock_formfactors,Hartree_formfactors,Hunds_formfactors)
+                                                                                                                                                                                                        target_density,temp,itcount,Fock_formfactors,Hartree_formfactors,Hunds_formfactors,sz_conserve)
         DIIS_input_density_matrix[mod(itcount,3)+1]=dmk
         input_density_matrix=output_density_matrix
         println("using DIIS")
@@ -508,7 +523,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
         eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix,renormalized_density=Construct_projector(k_set,ϵr,JH,
                                                                                                                                                                                                                 input_density_matrix,single_matrix,
                                                                                                                                                                                                                energy,BG_density_matrix,
-                                                                                                                                                                                                                Area,target_density,temp,itcount,Fock_formfactors,Hartree_formfactors,Hunds_formfactors)
+                                                                                                                                                                                                                Area,target_density,temp,itcount,Fock_formfactors,Hartree_formfactors,Hunds_formfactors,sz_conserve)
                                                                                                                                                                                            
 
         DIIS_input_density_matrix[mod(itcount,3)+1]=input_density_matrix

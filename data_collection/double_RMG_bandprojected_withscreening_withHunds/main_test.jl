@@ -2,8 +2,9 @@ using JLD2
 include("../../src/operators_double_RMG_bandprojected_withscreening_withHunds.jl")
 using LinearAlgebra,Plots
 args=parse.(Float64,ARGS)
-#args=[1.4, 61.0, 10.0, 24.0, 5.0, 0.002, 0.01, -166.0, 0.0, 1.0, 2.0, 2.0]
-#args=[0.8,25.0,20.0,10.0,3.0,0.0,0.01,-100.0,10.0,1.5,0.0,0.0,1.0,2.0]
+#args=[0.8,13.0,20.0,10.0,3.0,0.0,0.01,-100.0,10.0,1.5,0.0,0.0,1.0,2.0]
+#args=[1.4,15.0,20.0,5.0,5.0,0.0,0.001,0.0,30.0,1.5,0.0,0.0,1.0,2.0]
+#args=[0.7,15.0,20.0,5.0,3.0,0.0,0.01,0.0,12.0,1.5,0.0,0.0,1.0,2.0]
 radius=args[1]
 num_points=Int(args[2])
 uD=args[3]
@@ -16,8 +17,9 @@ CNP=args[9]
 ildis=args[10]
 shift_l1=Int(args[11])
 shift_l2=Int(args[12])
-trytime=args[13]
-file_pos=args[14]
+sz_conserve=Int(args[13])
+trytime=args[14]
+file_pos=args[15]
 
 
 eig_set,k_set,k_index,eig_vec_set,Area,Fock_formfactors,Hartree_formfactors,Hunds_formfactors,single_matrix=get_single_particle(radius,num_points,uD,NL,ildis,shift_l1,shift_l2)
@@ -39,7 +41,7 @@ initial_density_matrix=st["seed_DS"]+rd*10^(-2)
 HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density=iteration(initial_density_matrix,BG_density_matrix,
                                                                                                                               ϵr,k_set,single_matrix,Area,
                                                                                                                                target_density,temp,Fock_formfactors,Hartree_formfactors
-                                                                                                                               ,Hunds_formfactors,JH,0)
+                                                                                                                               ,Hunds_formfactors,JH,0,sz_conserve)
 
 
 
@@ -55,7 +57,7 @@ println("start second iterations")
 parent_HF_eigenvalues,parent_HF_eigenvectors,parent_energy, parent_DIIS_input_density_matrix,parent_fermi_level,parent_Hartree_matrix,parent_Fock_matrix,_,_=iteration(second_input,BG_density_matrix,
                                                                                                                               ϵr,k_set,single_matrix,Area,
                                                                                                                                target_density,temp,Fock_formfactors,Hartree_formfactors
-                                                                                                                               ,Hunds_formfactors,JH,-1)
+                                                                                                                               ,Hunds_formfactors,JH,-1,sz_conserve)
 println("finish second iterations")
 
 
@@ -63,7 +65,7 @@ println("finish second iterations")
 
  
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "double_RMG_bandprojected_screen_withHunds/data_output$(Int(args[14]))/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])er$(args[5])NL$(args[6])tgden$(args[7])temp$(args[8])JH$(args[9])CNP$(args[10])ildis$(args[11])shift_l1$(args[12])shift_l2$(args[13])trytime.jld2")
+savepath=joinpath(scratch_dir, "double_RMG_bandprojected_screen_withHunds/data_output$(Int(args[15]))/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])er$(args[5])NL$(args[6])tgden$(args[7])temp$(args[8])JH$(args[9])CNP$(args[10])ildis$(args[11])shift_l1$(args[12])shift_l2$(args[13])sz_conserve$(args[14])trytime.jld2")
 
 #savepath=joinpath(@__DIR__,"$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])er$(args[5])NL$(args[6])tgden$(args[7])temp$(args[8])JH$(args[9])CNP$(args[10])ildis$(args[11])shift_l1$(args[12])shift_l2$(args[13])trytime.jld2")
 jldsave(savepath,
