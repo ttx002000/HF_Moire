@@ -6,18 +6,6 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 
 job_prefix = "SSH_withshear"
 
-Nx=20
-Ny=20
-tper=-0.37
-tpa=2
-tNNN=-0.08
-#α=-0.05
-#β=-0.05
-K=1.0;
-KNNN=0.0;
-filling=1.25;
-#gshear=0.0
-temp=0.01
 
 
 
@@ -44,15 +32,6 @@ Nelec=Int(round(Nx*Ny*filling))
 
 
 
-#=
-for trytime in 1:10, gshear in [0.1,0.5,1.0,2.0], α in collect(-1.0:-0.1:-1.5)
- 
-  β=-α
-
-  arguments=Float64.([Nx,Ny,tper,tpa,tNNN,α,β,K,gshear,filling,KNNN,temp,trytime])
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="40:00",ntasks=1,mem=8)
-end
-=#
 
 
 #=
