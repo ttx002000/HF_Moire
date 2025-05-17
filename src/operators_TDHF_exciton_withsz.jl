@@ -157,7 +157,7 @@ function get_Velement(v1::Vector{Int64},v2::Vector{Int64},v3::Vector{Int64},v4::
     return Velement
   else
     return 0.0
-    println("something is wrong")
+
   end
    
 
@@ -194,7 +194,7 @@ function get_Hunds(v1::Vector{Int64},v2::Vector{Int64},v3::Vector{Int64},v4::Vec
        Velement+=f1*f2
      end   
   end
-   println("I use this")
+  
   return Velement*ppmatrix[v1[4],v2[4],v3[4],v4[4]]
 
 end
