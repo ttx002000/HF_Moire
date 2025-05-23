@@ -25,7 +25,7 @@ println("finish1")
 
 
 
-initial_density_matrix, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL,pairing)
+initial_density_matrix, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL,2)
 #=
 rd, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL,2)
 
