@@ -408,8 +408,8 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
  println("time for constructing fcmatrix is $(toc-tic)")
 
 
-  while (eout>1*10^(-12)) || (bad_count<4) || (energy_change>1*10^(-6))
-      if eout<1*10^(-12)
+  while (eout>1*10^(-15)) || (bad_count<4) || (energy_change>1*10^(-11))
+      if eout<1*10^(-15)
        bad_count+=1
       end
       
