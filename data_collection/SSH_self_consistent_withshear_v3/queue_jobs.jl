@@ -34,18 +34,24 @@ Nelec=Int(round(Nx*Ny*filling))
 
 
 
-#=
-st=load(joinpath(@__DIR__, "missedjobs.jld2"))
-index=st["index"]
-for ja in eachindex(index)
-  arguments=index[ja]
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=1,mem=4)
-end
-=#
 
 st=load("missedjobs.jld2")
 index=st["index"]
-start=5000
+count=0
+for ja in 1:length(index)
+  global count+=1
+  arguments=index[ja]
+  submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=1,mem=4)
+  if mod(count,200)==0
+    sleep(500)
+  end
+  println(count)
+end
+
+#=
+st=load("missedjobs.jld2")
+index=st["index"]
+start=1
 ee=length(index)
 ba_size=200
 count=1
@@ -55,7 +61,7 @@ while (count-1)*ba_size+1<=ee
   sleep(5)
   global count+=1
 end
-
+=#
 
 
 
