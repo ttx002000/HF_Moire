@@ -26,8 +26,8 @@ println("finish1")
 
 
 
-#initial_density_matrix, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL,2)
-
+initial_density_matrix, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL,2)
+#=
 rd, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL,2)
 
 scratch_dir = ENV["SCRATCH"]
@@ -35,7 +35,7 @@ savepath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence_constrainedpai
 st=load(savepath)
 
 initial_density_matrix=st["parent_DS"]+rd*10^(-3)
-
+=#
 
 
 
