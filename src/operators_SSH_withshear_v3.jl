@@ -27,7 +27,7 @@ function calculate_gradient(K::Float64,KNNN::Float64,NNN_sp_d1::Vector{Vector{In
                             px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},
                             py_ybond::Vector{Vector{Int}},Htotal::Matrix{ComplexF64},
                             Nx::Int,Ny::Int,orbital_id::Array{Int},phonon_id::Array{Int},
-                            phonon_coor::Vector{Float64},Nelec::Int,α::Float64,
+                            phonon_coor::Vector{Float64},Nelec::Float64,α::Float64,
                             β::Float64,gshear::Float64,temp::Float64)::Tuple{Vector{Float64},Float64,Float64,Float64,Float64}
 
     
@@ -39,7 +39,7 @@ function calculate_gradient(K::Float64,KNNN::Float64,NNN_sp_d1::Vector{Vector{In
 
 
 
-  Egap=real(FFF.values[Nelec+1]-FFF.values[Nelec])
+  Egap=real(FFF.values[Int(round(Nelec))+1]-FFF.values[Int(round(Nelec))])
 
   #FL=findFL(Nelec,spectrum,temp,min(spectrum[Nelec-10],spectrum[Nelec]-0.5),max(spectrum[Nelec+10],spectrum[Nelec]+0.1))
   FL=findFL(Nelec,spectrum,temp,spectrum[1],spectrum[length(spectrum)])
@@ -271,7 +271,7 @@ end
 
 
 
-function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},py_ybond::Vector{Vector{Int}},NNN_sp_d1::Vector{Vector{Int}},NNN_sp_d2::Vector{Vector{Int}},orbital_id::Array{Int},phonon_id::Array{Int},α::Float64,β::Float64,K::Float64,KNNN::Float64,H0::Matrix{ComplexF64},gshear::Float64,temp::Float64,stop_standard::Float64)
+function iteration(Nx::Int,Ny::Int,Nelec::Float64,px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},py_ybond::Vector{Vector{Int}},NNN_sp_d1::Vector{Vector{Int}},NNN_sp_d2::Vector{Vector{Int}},orbital_id::Array{Int},phonon_id::Array{Int},α::Float64,β::Float64,K::Float64,KNNN::Float64,H0::Matrix{ComplexF64},gshear::Float64,temp::Float64,stop_standard::Float64)
     phonon_coor=randn(2*Nx*Ny)*10^(-1)
     
     E_old=10^8
@@ -385,7 +385,7 @@ function iteration(Nx::Int,Ny::Int,Nelec::Int,px_xbond::Vector{Vector{Int}},px_y
 end
 
 
-function findFL(Nelec::Int,spectrum::Vector{Float64},temp::Float64,val_s::Float64,val_e::Float64)
+function findFL(Nelec::Float64,spectrum::Vector{Float64},temp::Float64,val_s::Float64,val_e::Float64)
   fl=0
   stan=10^(-7)
 

@@ -29,7 +29,7 @@ stop_standard=args[13]
 trytime=Int(args[14])
 filepos=Int(args[15])
 
-Nelec=Int(round(Nx*Ny*filling))
+Nelec=Nx*Ny*filling
 
 H0, orbital_id, phonon_id, px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NNN_sp_d2=initialize(Nx,Ny,tper,tpa,tNNN)
 
