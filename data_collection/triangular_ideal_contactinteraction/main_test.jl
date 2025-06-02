@@ -9,7 +9,7 @@ include("../../src/operators_ideal_contactinteraction.jl")
 
 args=parse.(Float64,ARGS)
 
-#args=[0.5,0.0,0.0,3,1.0,1.0,1.0,1.0,1.0,1.0]
+args=[4.0,0.0,0.0,3,1.0,8.0,1.0,3.5,1.0,1.0]
 
 flux=args[1]
 V0=args[2]
@@ -32,7 +32,7 @@ overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_e
  
 for ja in 1:Nq^2
     A=randn(ComplexF64,length(wave),length(wave))
-    initial_DensityMatrix[ja]=initial_DensityMatrix[ja]+(A+A')*0.1
+    initial_DensityMatrix[ja]=(A+A')*0.2
 end
 
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
