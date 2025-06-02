@@ -37,13 +37,13 @@ Nelec=Int(round(Nx*Ny*filling))
 
 st=load("missedjobs.jld2")
 index=st["index"]
-count=0
-for ja in 4115:length(index)
+count=1
+for ja in 1:length(index)
   global count+=1
   arguments=index[ja]
   submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=1,mem=4)
   if mod(count,200)==0
-    sleep(600)
+    sleep(10)
   end
   println(count)
 end
