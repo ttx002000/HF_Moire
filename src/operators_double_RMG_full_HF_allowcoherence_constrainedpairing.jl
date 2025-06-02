@@ -490,14 +490,14 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
   end
 
 
-  while (eout>1*10^(-14)) || (bad_count<4) || (energy_change>1*10^(-8))
-      if eout<1*10^(-14)
+  while (eout>5*10^(-14)) || (bad_count<4) || (energy_change>1*10^(-9))
+      if eout<5*10^(-14)
        bad_count+=1
       end
       
       tic=time()
 
-      if (itcount>200 && abs(eout)>10^(-2)) || (itcount>50 && abs(eout)<10^(-6))
+      if (itcount>200 && abs(eout)>10^(-2)) || (itcount>50 && abs(eout)<10^(-8))
       
         dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
         if dmk==0
