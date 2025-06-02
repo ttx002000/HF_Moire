@@ -9,7 +9,7 @@ include("../../src/operators_ideal_contactinteraction.jl")
 
 args=parse.(Float64,ARGS)
 
-args=[4.0,0.0,0.0,3,1.0,8.0,1.0,3.5,1.0,1.0]
+#args=[4.0,0.0,0.0,3,1.0,8.0,1.0,3.5,1.0,1.0]
 
 flux=args[1]
 V0=args[2]
