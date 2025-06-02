@@ -33,7 +33,7 @@ overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_e
  
 for ja in 1:Nq^2
     A=randn(ComplexF64,length(wave),length(wave))
-    initial_DensityMatrix[ja]=initial_DensityMatrix[ja]+(A+A')*0.1
+    initial_DensityMatrix[ja]=(A+A')*0.2
 end
 
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
