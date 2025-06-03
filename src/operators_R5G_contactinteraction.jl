@@ -107,7 +107,7 @@ function triangle_initial_Densitymatrix(NL::Int,V0::Float64,ϕ::Float64,scale::F
       k=allowedq[ja][1]*T1+allowedq[ja][2]*T2
     
       for jb in eachindex(wave)
-       single_Ham[ja][jb,jb]=(norm(k+wave[jb][1]*T1+wave[jb][2]*T2)*vf/t1)^NL*t1
+       single_Ham[ja][jb,jb]=(norm(k+wave[jb][1]*T1+wave[jb][2]*T2)/1.0)^2*200
       end
 
 
