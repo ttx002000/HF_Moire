@@ -37,7 +37,7 @@ DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,ene
                                                     allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,constq,overlapmatrix,filling,Area)
 
 
-chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=triangle_chern(Nq,wave,scale,NL,allowedq,HF_eigenvector,single_eigenvector)
+chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=triangle_chern(Nq,wave,scale,Int(NL),allowedq,HF_eigenvector,single_eigenvector)
 
 
 
