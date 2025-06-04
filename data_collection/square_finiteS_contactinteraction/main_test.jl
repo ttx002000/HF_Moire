@@ -24,10 +24,9 @@ filepos=Int(args[10])
 
 
 
+ 
 
-
-
-overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(spin,vf,V0,ϕ,scale,Nq,filling,gcutoff)
+overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(spin,vf,V0,scale,Nq,filling,gcutoff)
 
  
 for ja in 1:Nq^2
