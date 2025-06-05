@@ -45,5 +45,5 @@ sym_phonon_coor,sym_free_energy=construct_sym(unsym_phonon_coor,Nx,Ny,tper,tpa,t
 
 savepath=joinpath(scratch_dir, "SSH_v3/test$(Int(args[14]))/mirror_result/$(Int(args[1]))Nx$(Int(args[2]))Ny$(args[3])tper$(args[4])tpa$(args[5])tNNN$(args[6])alpha$(args[7])beta$(args[8])K$(args[9])gshear$(args[10])filling$(args[11])KNNN$(args[12])temp$(args[13])stop.jld2")
 
-jldsave(savepath,sym_phonon_coor=sym_phonon_coor,sym_free_energy=sym_free_energy)
+jldsave(savepath,sym_phonon_coor=sym_phonon_coor,sym_free_energy=sym_free_energy,unsym_phonon_coor=unsym_phonon_coor,unsym_free_energy=unsym_free_energy)
          
