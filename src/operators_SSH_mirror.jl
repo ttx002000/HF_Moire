@@ -86,7 +86,7 @@ function calculate_freeenergy(K::Float64,KNNN::Float64,NNN_sp_d1::Vector{Vector{
  FFF=eigen(Htotal)
  spectrum=real.(FFF.values)
 
- Egap=real(FFF.values[Nelec+1]-FFF.values[Nelec])
+ Egap=real(FFF.values[Int(round(Nelec))+1]-FFF.values[Int(round(Nelec))])
  FL=findFL(Nelec,spectrum,temp,spectrum[1],spectrum[length(spectrum)])
 
 
