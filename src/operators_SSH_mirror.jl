@@ -279,7 +279,7 @@ function construct_sym(unsym_phonon_coor,Nx,Ny,tper,tpa,tNNN,α,β,K,KNNN,gshear
       
       diff_try[jb,jc]=sum(abs.(phonon_coord_try2-unsym_phonon_coor).^2)
   
-      Hph=construct_Ham(px_xbond,px_ybond,py_xbond,py_ybond, phonon_coord_try2,Nx,Ny,α,α*βratio) #I modified the order between py_xbond and py_ybond
+      Hph=construct_Ham(px_xbond,px_ybond,py_xbond,py_ybond, phonon_coord_try2,Nx,Ny,α,β) #I modified the order between py_xbond and py_ybond
       Htotal=Hph+H0
   
 
@@ -290,7 +290,7 @@ function construct_sym(unsym_phonon_coor,Nx,Ny,tper,tpa,tNNN,α,β,K,KNNN,gshear
       py_ybond,Htotal,
       Nx,Ny,orbital_id,phonon_id,
        phonon_coord_try2,Nelec,α,
-      α*βratio,gshear,temp)
+      β,gshear,temp)
     end
 
     return free_energy_symmetric,diff_try
