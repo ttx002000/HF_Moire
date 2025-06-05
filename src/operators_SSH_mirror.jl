@@ -78,7 +78,7 @@ function calculate_freeenergy(K::Float64,KNNN::Float64,NNN_sp_d1::Vector{Vector{
   px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},
   py_ybond::Vector{Vector{Int}},Htotal::Matrix{ComplexF64},
   Nx::Int,Ny::Int,orbital_id::Array{Int},phonon_id::Array{Int},
-  phonon_coor::Vector{Float64},Nelec::Int,α::Float64,
+  phonon_coor::Vector{Float64},Nelec::Float64,α::Float64,
   β::Float64,gshear::Float64,temp::Float64)
 
 
@@ -285,6 +285,9 @@ function construct_sym(unsym_phonon_coor,Nx,Ny,tper,tpa,tNNN,α,β,K,KNNN,gshear
       Htotal=Hph+H0
   
 
+
+
+    
 
       free_energy_symmetric[jb,jc]=calculate_freeenergy(K,KNNN,NNN_sp_d1,
       NNN_sp_d2,px_xbond,
