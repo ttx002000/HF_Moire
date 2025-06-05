@@ -122,10 +122,11 @@ function triangle_initial_Densitymatrix(spin::Float64,vf::Float64,V0::Float64,ϕ
 
 
     input_DensityMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-    for ja in 1:Nq^2,jb in 1:filling
-     
-       input_DensityMatrix[ja]+=single_eigenvector[ja][:,jb]*(single_eigenvector[ja][:,jb])'
-    end    
+    for ja in 1:Nq^2
+      A=randn(ComplexF64,length(wave),length(wave))
+      input_DensityMatrix[ja]=(A+A')*0.2
+    end
+
     
      
 

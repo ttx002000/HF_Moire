@@ -24,7 +24,7 @@ end
 
 
 
-function triangle_initial_Densitymatrix(spin::Float64,vf::Float64,V0::Float64,scale::Float64,Nq::Int64,filling::Int,gcutoff::Float64)
+function triangle_initial_Densitymatrix(spin::Float64,vf::Float64,V0::Float64,scale::Float64,Nx::Int64,Ny::Int64,filling::Int,gcutoff::Float64)
     am=2*π/(scale);
     
     mass=0.5;
@@ -37,8 +37,8 @@ function triangle_initial_Densitymatrix(spin::Float64,vf::Float64,V0::Float64,sc
     a2m=am*[1,0]
     
     
-    T1=b1/(Nq)
-    T2=b2/(Nq)
+    T1=b1/(Ny)
+    T2=b2/(Nx)
     
     
     
@@ -48,7 +48,7 @@ function triangle_initial_Densitymatrix(spin::Float64,vf::Float64,V0::Float64,sc
     
     
     allowedq=Vector{Int64}[]
-    for ja in 0:Nq-1,jb in 0:Nq-1
+    for ja in 0:Ny-1,jb in 0:Nx-1
         push!(allowedq,[ja,jb])
     end
 
@@ -68,21 +68,21 @@ function triangle_initial_Densitymatrix(spin::Float64,vf::Float64,V0::Float64,sc
    
     
     
-    overlapmatrix=zeros(ComplexF64,Nq^2,length(wave),Nq^2,length(wave))
-    for ja in 1:Nq^2, jb in eachindex(wave), jc in 1:Nq^2, jd in eachindex(wave)
+    overlapmatrix=zeros(ComplexF64,Nx*Ny,length(wave),Nx*Ny,length(wave))
+    for ja in 1:Nx*Ny, jb in eachindex(wave), jc in 1:Nx*Ny, jd in eachindex(wave)
        overlapmatrix[ja,jb,jc,jd]=overlap([T1 T2]*(allowedq[ja]+wave[jb]),[T1 T2]*(allowedq[jc]+wave[jd]-wave[jb]-allowedq[ja]),spin,mass*vf/2)
     end
 
 
     
      
-    single_Ham=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-    single_MoirePo=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-    single_eigenvalue=[zeros(Float64,dimension) for _ in 1:Nq^2]
-    single_eigenvector=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
+    single_Ham=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nx*Ny]
+    single_MoirePo=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nx*Ny]
+    single_eigenvalue=[zeros(Float64,dimension) for _ in 1:Nx*Ny]
+    single_eigenvector=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nx*Ny]
     
     
-    Threads.@threads for ja in 1:Nq^2
+    Threads.@threads for ja in 1:Nx*Ny
       
       
       k=allowedq[ja][1]*T1+allowedq[ja][2]*T2
@@ -116,12 +116,13 @@ function triangle_initial_Densitymatrix(spin::Float64,vf::Float64,V0::Float64,sc
     end
 
 
-    input_DensityMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-    for ja in 1:Nq^2
+    input_DensityMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nx*Ny]
+  for ja in 1:Nx*Ny
       A=randn(ComplexF64,length(wave),length(wave))
       input_DensityMatrix[ja]=(A+A')*0.2
-    end
+  end
 
+    
      
 
     
@@ -184,25 +185,25 @@ end
 
 
 function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vector{Vector{Int}},
-                               T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},
+                               T1::Vector{Float64},T2::Vector{Float64},Nx::Int64,Ny::Int,wave::Vector{Vector{Int64}},
                                input_DensityMatrix::Vector{Matrix{ComplexF64}},single_Ham::Vector{Matrix{ComplexF64}},
                                single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,overlapmatrix::Array{ComplexF64,4},
                                energy_input::Float64,filling::Int)
   
  
    dimension=length(wave)
-  HartreeMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-  FockMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-  output_DensityMatrix=Vector{Matrix{ComplexF64}}(undef,Nq^2)
-  DeltaMatrix=Vector{Matrix{ComplexF64}}(undef,Nq^2)
-  NewDensityMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-  HF_eigenvalue=Vector{Vector{Float64}}(undef,Nq^2)
-  HF_eigenvector=Vector{Matrix{ComplexF64}}(undef,Nq^2)
+  HartreeMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nx*Ny]
+  FockMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nx*Ny]
+  output_DensityMatrix=Vector{Matrix{ComplexF64}}(undef,Nx*Ny)
+  DeltaMatrix=Vector{Matrix{ComplexF64}}(undef,Nx*Ny)
+  NewDensityMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nx*Ny]
+  HF_eigenvalue=Vector{Vector{Float64}}(undef,Nx*Ny)
+  HF_eigenvector=Vector{Matrix{ComplexF64}}(undef,Nx*Ny)
 
  
-  Threads.@threads for jk in 1:Nq^2
+  Threads.@threads for jk in 1:Nx*Ny
     Fk = FockMatrix[jk]
-    for jk1 in 1:Nq^2
+    for jk1 in 1:Nx*Ny
         dmk = input_DensityMatrix[jk1]
       
        for (dg,loop_dic_dg) in loop_dic
@@ -219,14 +220,14 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
   end
  
   Hartree_Density=zeros(ComplexF64,dimension,dimension)
-  for ja in 1:Nq^2
+  for ja in 1:Nx*Ny
    Hartree_Density+=input_DensityMatrix[ja] .* transpose(overlapmatrix[ja,:,ja,:])
   end
 
   
 
 
-  Threads.@threads for jk in 1:Nq^2
+  Threads.@threads for jk in 1:Nx*Ny
       for dg in keys(loop_dic)
          
           for gg2 in keys(loop_dic[dg])          
@@ -242,16 +243,16 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
 
  
 
- for ja in 1:Nq^2
+ for ja in 1:Nx*Ny
    FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+constq*HartreeMatrix[ja]-constq*FockMatrix[ja])
    HF_eigenvalue[ja]=real(FFF.values)
    HF_eigenvector[ja]=FFF.vectors
    
  end
 
- bound=(sort(reduce(vcat,HF_eigenvalue))[filling*Nq^2+1]+sort(reduce(vcat,HF_eigenvalue))[filling*Nq^2])/2
+ bound=(sort(reduce(vcat,HF_eigenvalue))[filling*Nx*Ny+1]+sort(reduce(vcat,HF_eigenvalue))[filling*Nx*Ny])/2
 
-  for ja in 1:Nq^2
+  for ja in 1:Nx*Ny
     
        for jd in eachindex(HF_eigenvalue[ja])
           if HF_eigenvalue[ja][jd]<bound
@@ -265,14 +266,14 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
 
   
   e1=0.0
-  for ja in 1:Nq^2
+  for ja in 1:Nx*Ny
     e1+=tr(DeltaMatrix[ja]'*DeltaMatrix[ja])
   end
-  eout=real(e1)/Nq^2
+  eout=real(e1)/Nx*Ny
   
   
   energy=0
-   for ja in 1:Nq^2
+   for ja in 1:Nx*Ny
        ss=single_MoirePo[ja]+single_Ham[ja]+0.5*constq*HartreeMatrix[ja]-0.5*constq*FockMatrix[ja]
        energy+=real(tr(ss*output_DensityMatrix[ja]))
    end
@@ -289,16 +290,16 @@ end
 
 function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
                        allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},
-                       Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},
+                       Nx::Int,Ny::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},
                        single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,overlapmatrix::Array{ComplexF64,4},filling::Int)
     eout=1.0
     itcount=0
     dimension=length(wave)
     loop_dic=construct_loop_dic(wave)
-    HF_eigenvalue=Vector{Vector{Float64}}(undef,Nq^2)
-    HF_eigenvector=Vector{Matrix{ComplexF64}}(undef,Nq^2)
-    HartreeMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-    FockMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
+    HF_eigenvalue=Vector{Vector{Float64}}(undef,Nx*Ny)
+    HF_eigenvector=Vector{Matrix{ComplexF64}}(undef,Nx*Ny)
+    HartreeMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nx*Ny]
+    FockMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nx*Ny]
   
 
     DIIS_input_DensityMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
@@ -318,18 +319,18 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
 
       if (itcount>200 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-8))
       
-        dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,Nq)
+        dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,Nx,Ny)
         if dmk==0
             itcount=0
-            dmk=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-            for ja in 1:Nq^2
+            dmk=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nx*Ny]
+            for ja in 1:Nx*Ny
               A=randn(dimension,dimension)+im*randn(dimension,dimension)
               dmk[ja]+=(A+A')*0.01
             end
         end
       
 
-       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,dmk,single_Ham,single_MoirePo,constq,overlapmatrix,energy,filling)
+       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nx,Ny,wave,dmk,single_Ham,single_MoirePo,constq,overlapmatrix,energy,filling)
        
         DIIS_input_DensityMatrix[mod(itcount,3)+1]=dmk
         input_DensityMatrix=output_DensityMatrix
@@ -339,7 +340,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
   
       
 
-        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,overlapmatrix,energy,filling)
+        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nx,Ny,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,overlapmatrix,energy,filling)
         DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
         input_DensityMatrix=output_DensityMatrix
         
@@ -393,172 +394,12 @@ end
 
 
 
-function shift_vector(vector_toshift::Vector{ComplexF64},shiftamount::Vector{Int},wave::Vector{Vector{Int}})
-    shifted_vector=zeros(ComplexF64,length(wave))
-    for ja in eachindex(wave)
-        pos=findfirst(item->item==wave[ja]+shiftamount,wave)
-        if pos≠nothing
-        shifted_vector[ja]=vector_toshift[pos]
-        end
-    
-    end
-    return shifted_vector/norm(shifted_vector)
-
-end
 
 
 
-function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},scale::Float64,spin::Float64,vf::Float64,allowedq::Vector{Vector{Int}},HF_eigenvector::Vector{Matrix{ComplexF64}},single_eigenvector::Vector{Matrix{ComplexF64}})
-
-  
-    
-    mass=0.5;
-    dimension=length(wave)
-    
-    b1=scale*[0,1]
-    b2=scale*[1,0]
 
 
-   
-    
-    
-    T1=b1/(Nq)
-    T2=b2/(Nq)
-    b1T=Int.(round.(inv([T1 T2])*b1))
-    b2T=Int.(round.(inv([T1 T2])*b2))
-    
-    
-    chern_allowedq=Vector{Int64}[]
-    for ja in 0:Nq,jb in 0:Nq
-        push!(chern_allowedq,[ja,jb])
-    end
-
-  
-
-    eigenvector_intermediate_bc=Vector{Vector{ComplexF64}}(undef,(Nq+1)^2)
-    eigenvector_intermediate_single=Vector{Vector{ComplexF64}}(undef,(Nq+1)^2)
-
-    Threads.@threads for ja in eachindex(chern_allowedq)
-      
-      kbraket=mod.(chern_allowedq[ja],Nq)
-      kbraket_pos=findfirst(item->item==kbraket,allowedq)
-      if kbraket==chern_allowedq[ja]
-        eigenvector_intermediate_bc[ja]=HF_eigenvector[kbraket_pos][:,1] 
-        eigenvector_intermediate_single[ja]=single_eigenvector[kbraket_pos][:,1] 
-      else
-        eigenvector_intermediate_bc[ja]=shift_vector(HF_eigenvector[kbraket_pos][:,1],chern_allowedq[ja]-kbraket,wave)
-        eigenvector_intermediate_single[ja]=shift_vector(single_eigenvector[kbraket_pos][:,1],chern_allowedq[ja]-kbraket,wave)
-
-      end  
-    end
-
-    eigenvector_bc=zeros(ComplexF64,dimension,Nq+1,Nq+1)
-    eigenvector_bc_single=zeros(ComplexF64,dimension,Nq+1,Nq+1)
-    for ja in eachindex(chern_allowedq)
-       eigenvector_bc[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=eigenvector_intermediate_bc[ja]
-       eigenvector_bc_single[:,chern_allowedq[ja][1]+1,chern_allowedq[ja][2]+1]=eigenvector_intermediate_single[ja]
-    end
-    
-    
-    Uonelink=zeros(ComplexF64,Nq,Nq+1)
-    Utwolink=zeros(ComplexF64,Nq+1,Nq)
-    tra=zeros(ComplexF64,Nq,Nq)
-    tra_single=zeros(ComplexF64,Nq,Nq)
-    
-    for ja in 1:Nq, jb in 1:Nq+1
-        Amatrix=metric(wave,spin,vf,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
-       Uonelink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb]))
-    end
-
-    
-    
-    for ja in 1:Nq+1, jb in 1:Nq
-        Amatrix=metric(wave,spin,vf,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
-     Utwolink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1]))
-    end
-    
-    dG=norm(T2)
-    for ja in 1:Nq, jb in 1:Nq
-        Amatrix=metric(wave,spin,vf,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
-        Bmatrix=metric(wave,spin,vf,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
-        Cmatrix=metric(wave,spin,vf,(ja-1)*T1+(jb-1)*T2,T2+T1,T1,T2)
-        A1=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])
-        B1=dot(eigenvector_bc[:,ja,jb],Bmatrix*eigenvector_bc[:,ja,jb+1])
-    
-       gyy=(1-abs(A1)^2)/dG^2
-       gxx=(1-abs(B1)^2)/dG^2
-       tra[ja,jb]+=(gxx+gyy)*dG^2
-
-        A1=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])
-        B1=dot(eigenvector_bc_single[:,ja,jb],Bmatrix*eigenvector_bc_single[:,ja,jb+1])
-       
-       gyy=(1-abs(A1)^2)/dG^2
-       gxx=(1-abs(B1)^2)/dG^2
-       tra_single[ja,jb]+=(gxx+gyy)*dG^2
-      
-      
-    end
-
-   
-
-
-    Flink=zeros(ComplexF64,Nq,Nq)
-    for ja in 1:Nq, jb in 1:Nq
-     Flink[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
-    end
-    chern=sum(Flink)/(2*π*im)
-    aveF=sum(Flink)/Nq^2
-    uniform=0
-    for ja in 1:Nq, jb in 1:Nq
-        uniform+=(imag(Flink[ja,jb])-imag(aveF))^2*Nq^2/(2π)^2
-    end
-
-
-    Uonelink=zeros(ComplexF64,Nq,Nq+1)
-    Utwolink=zeros(ComplexF64,Nq+1,Nq)
-  
-    
-    for ja in 1:Nq, jb in 1:Nq+1
-        Amatrix=metric(wave,spin,vf,(ja-1)*T1+(jb-1)*T2,T1,T1,T2)
-       Uonelink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])/abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb]))
-    end
-    
-    for ja in 1:Nq+1, jb in 1:Nq
-        Amatrix=metric(wave,spin,vf,(ja-1)*T1+(jb-1)*T2,T2,T1,T2)
-     Utwolink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1])/abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1]))
-    end
-    
-
-   
-
-    Flink_single=zeros(ComplexF64,Nq,Nq)
-    for ja in 1:Nq, jb in 1:Nq
-     Flink_single[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
-    end
-    chern_single=sum(Flink_single)/(2*π*im)
-    aveF=sum(Flink_single)/Nq^2
-    uniform_single=0
-    for ja in 1:Nq, jb in 1:Nq
-        uniform_single+=(imag(Flink_single[ja,jb])-imag(aveF))^2*Nq^2/(2π)^2
-    end
-    
-    
-
-    
-  trace_condition=sum(tra)-sum(abs.(Flink))
-  trace_condition_single=sum(tra_single)-sum(abs.(Flink_single))
-      
-
-
-    
-      
-   return chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single
-
-end
-
-
-
-function implement_DIIS(DIIS_input_projector::Vector{Vector{Matrix{ComplexF64}}},DIIS_input_DeltaMatrix::Vector{Vector{Matrix{ComplexF64}}},Nq::Int)
+function implement_DIIS(DIIS_input_projector::Vector{Vector{Matrix{ComplexF64}}},DIIS_input_DeltaMatrix::Vector{Vector{Matrix{ComplexF64}}},Nx::Int,Ny::Int)
 
 
 
@@ -569,7 +410,7 @@ function implement_DIIS(DIIS_input_projector::Vector{Vector{Matrix{ComplexF64}}}
       end
   
       for ja in 1:3,jb in 1:3
-          for jc in Nq^2
+          for jc in Nx*Ny
              Bmatrix[ja,jb]+=real(tr((DIIS_input_DeltaMatrix[ja][jc])'*(DIIS_input_DeltaMatrix[jb][jc])))
           end
       end
