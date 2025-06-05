@@ -267,6 +267,8 @@ function construct_sym(unsym_phonon_coor,Nx,Ny,tper,tpa,tNNN,α,β,K,KNNN,gshear
 
     
     for jb in 1:Nx, jc in 1:Ny
+      println("jb=",jb," jc=",jc)
+      flush(stdout)
         center_x=jb
         center_y=jc
       
