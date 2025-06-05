@@ -258,8 +258,8 @@ end
 function construct_sym(unsym_phonon_coor,Nx,Ny,tper,tpa,tNNN,α,β,K,KNNN,gshear,temp,Nelec)
 
   diff_try=zeros(Float64,Nx,Ny)
-  free_energy_symmetric=zeros(ComplexF64,Nx,Ny)
-  
+  free_energy_symmetric=zeros(Float64,Nx,Ny)
+  symmetrized_phonon_coor=Array{Vector{Float64}}(undef,Nx,Ny)
 
 
 
@@ -280,7 +280,7 @@ function construct_sym(unsym_phonon_coor,Nx,Ny,tper,tpa,tNNN,α,β,K,KNNN,gshear
   
       
       diff_try[jb,jc]=sum(abs.(phonon_coord_try2-unsym_phonon_coor).^2)
-  
+     symmetrized_phonon_coor[jb,jc]=phonon_coord_try2
       Hph=construct_Ham(px_xbond,px_ybond,py_xbond,py_ybond, phonon_coord_try2,Nx,Ny,α,β) #I modified the order between py_xbond and py_ybond
       Htotal=Hph+H0
   
@@ -298,7 +298,7 @@ function construct_sym(unsym_phonon_coor,Nx,Ny,tper,tpa,tNNN,α,β,K,KNNN,gshear
       β,gshear,temp)
     end
 
-    return free_energy_symmetric,diff_try
+    return free_energy_symmetric,diff_try, symmetrized_phonon_coor
 
 
 end
