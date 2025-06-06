@@ -306,6 +306,88 @@ end
 
 
 
+function construct_sym_v2(unsym_phonon_coor,Nx,Ny,tper,tpa,tNNN,α,β,K,KNNN,gshear,temp,Nelec)
+
+  diff_try=zeros(Float64,Nx,2)
+  free_energy_symmetric=zeros(Float64,Nx,2)
+  symmetrized_phonon_coor=Array{Vector{Float64}}(undef,Nx,2)
+
+
+
+  H0, orbital_id, phonon_id, px_xbond, px_ybond, py_xbond, py_ybond, NNN_sp_d1, NNN_sp_d2=initialize(Nx,Ny,tper,tpa,tNNN)
+
+    
+    for jb in 1:Nx
+      println("jb=",jb,"jc=",jc)
+      flush(stdout)
+        center_x=1
+        center_y=jb
+      
+     tryconfig1,_=get_mirror_oneone(phonon_id,unsym_phonon_coor,Nx,Ny,center_x,center_y)
+     phonon_coord_try1=(unsym_phonon_coor+tryconfig1)/2
+
+  
+      
+      diff_try[jb,1]=sum(abs.( phonon_coord_try1-unsym_phonon_coor).^2)
+     symmetrized_phonon_coor[jb,1]= phonon_coord_try1
+      Hph=construct_Ham(px_xbond,px_ybond,py_xbond,py_ybond,  phonon_coord_try1,Nx,Ny,α,β) #I modified the order between py_xbond and py_ybond
+      Htotal=Hph+H0
+  
+
+
+
+    
+
+      free_energy_symmetric[jb,1]=calculate_freeenergy(K,KNNN,NNN_sp_d1,
+      NNN_sp_d2,px_xbond,
+      px_ybond,py_xbond,
+      py_ybond,Htotal,
+      Nx,Ny,orbital_id,phonon_id,
+        phonon_coord_try1,Nelec,α,
+      β,gshear,temp)
+    end
+
+
+
+    for jb in 1:Nx
+      println("jb=",jb," jc=",jc)
+      flush(stdout)
+        center_x=1
+        center_y=jb
+      
+     tryconfig1,_=get_mirror_oneminusone(phonon_id,unsym_phonon_coor,Nx,Ny,center_x,center_y)
+     phonon_coord_try1=(unsym_phonon_coor+tryconfig1)/2
+
+  
+      
+      diff_try[jb,2]=sum(abs.( phonon_coord_try1-unsym_phonon_coor).^2)
+     symmetrized_phonon_coor[jb,2]= phonon_coord_try1
+      Hph=construct_Ham(px_xbond,px_ybond,py_xbond,py_ybond,  phonon_coord_try1,Nx,Ny,α,β) #I modified the order between py_xbond and py_ybond
+      Htotal=Hph+H0
+  
+
+
+
+    
+
+      free_energy_symmetric[jb,2]=calculate_freeenergy(K,KNNN,NNN_sp_d1,
+      NNN_sp_d2,px_xbond,
+      px_ybond,py_xbond,
+      py_ybond,Htotal,
+      Nx,Ny,orbital_id,phonon_id,
+        phonon_coord_try1,Nelec,α,
+      β,gshear,temp)
+    end
+
+    return free_energy_symmetric,diff_try, symmetrized_phonon_coor
+
+
+end
+
+
+
+
+
 
 function findFL(Nelec::Float64,spectrum::Vector{Float64},temp::Float64,val_s::Float64,val_e::Float64)
   fl=0
