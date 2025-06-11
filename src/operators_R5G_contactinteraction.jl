@@ -405,7 +405,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
     energy_change=0.0
   
 
-    while (eout>1*10^(-16)) || (bad_count<4) || (energy_change>1*10^(-8))
+    while (eout>1*10^(-16)) || (bad_count<4) || (energy_change>1*10^(-10))
       if eout<1*10^(-16)
        bad_count+=1
       end
