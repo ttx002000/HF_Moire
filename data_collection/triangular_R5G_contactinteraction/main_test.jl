@@ -49,12 +49,12 @@ savepath=joinpath(scratch_dir, "triangle_R5G_contact/data_output$(Int(args[12]))
 
 
 jldsave(savepath,single_Ham=single_Ham,single_MoirePo=single_MoirePo,
-               single_eigenvector=single_eigenvector,single_eigenvalue=single_eigenvalue,
+               single_eigenvalue=single_eigenvalue,
                 chern=chern,Flink=Flink,chern_single=chern_single,
                 Flink_single=Flink_single,arguments=args,
                 densitymatrix=DIIS_input_DensityMatrix[1],energy=energy,eout=eout,
                 TC=trace_condition,TCS=trace_condition_single,
-                HFeigenvalue=HF_eigenvalue,single_eigenvalue=single_eigenvalue,
+                HFeigenvalue=HF_eigenvalue,
                 uniform=uniform,uniform_single=uniform_single,
                 HartreeMatrix=HartreeMatrix,FockMatrix=FockMatrix,HF_eigenvector=HF_eigenvector,
                 single_eigenvector=single_eigenvector,allowedq=allowedq,T1=T1,T2=T2,wave=wave)
