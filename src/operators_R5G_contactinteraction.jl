@@ -30,7 +30,13 @@ function get_spinor(NL::Int,q::Vector{Float64})
 end
  
 
+function get_f(k::Vector{Float64})
+  delta1=1/√3*0.246*[0,1]
+  delta2=1/√3*0.246*[√3/2,-1/2]
+  delta3=1/√3*0.246*[-√3/2,-1/2]
 
+  return exp(im*dot(k,delta1))+exp(im*dot(k,delta2))+exp(im*dot(k,delta3))
+end
 
 
 function get_dispersion(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,NL::Int)
