@@ -33,14 +33,40 @@ end
 
 
 
+function get_dispersion(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,NL::Int)
+ 
+  Ham=zeros(ComplexF64,2*NL,2*NL)
+  Kac=4π/(3*0.246)*[1,0]*valley
+  t0=3100
+  t1=380
+  t2=-21
+  t3=290
+  t4=141
+  for layer in 1:NL-1
+     Ham[2*layer-1:2*layer,2*layer+1:2*layer+2]=[t4*get_f((k+Kac)*stacking) t3*conj(get_f((k+Kac)*stacking));t1 t4*get_f((k+Kac)*stacking)]
+  end
+
+  if NL>2
+   for layer in 1:NL-2
+      Ham[2*layer-1:2*layer,2*layer+3:2*layer+4]=[0.0 t2/2;0.0 0.0]
+   end
+ end
+
+  Ham=Ham+Ham'
+
+  for layer in 1:NL
+      Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[uD*(layer-(NL+1)/2) -t0*get_f((k+Kac)*stacking);-t0*conj(get_f((k+Kac)*stacking)) uD*(layer-(NL+1)/2)]
+  end
+
+  FFF=eigen(Ham)
+ return real(FFF.values[NL+1])
+end
 
 
 
 
 
-
-
-function triangle_initial_Densitymatrix(NL::Int,V0::Float64,ϕ::Float64,scale::Float64,Nq::Int64,gcutoff::Float64)
+function triangle_initial_Densitymatrix(NL::Int,V0::Float64,ϕ::Float64,scale::Float64,Nq::Int64,gcutoff::Float64,uD::Float64)
     am=4*π/(√3*scale);
     
     aGr=0.246
@@ -107,7 +133,8 @@ function triangle_initial_Densitymatrix(NL::Int,V0::Float64,ϕ::Float64,scale::F
       k=allowedq[ja][1]*T1+allowedq[ja][2]*T2
     
       for jb in eachindex(wave)
-       single_Ham[ja][jb,jb]=(norm(k+wave[jb][1]*T1+wave[jb][2]*T2)/1.0)^2*200
+      # single_Ham[ja][jb,jb]=(norm(k+wave[jb][1]*T1+wave[jb][2]*T2)/1.0)^2*200
+      single_Ham[ja][jb,jb]=get_dispersion(k+wave[jb][1]*T1+wave[jb][2]*T2,uD,1,1,NL)
       end
 
 
@@ -164,13 +191,6 @@ end
 
 
 
-
-
-
-
-
-
-
 function construct_loop_dic(wave::Vector{Vector{Int}})::Dict{Vector{Int},Any}
     g_dic=Dict{Vector{Int},Int}()
     for ja in eachindex(wave)
@@ -206,11 +226,16 @@ end
 
 
 
+function Coulomb(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64})::Float64
+   D=25
+   return k==[0,0] ? D*9047.5636 : tanh(norm([T1 T2]*k*D))/norm(k[1]*T1+k[2]*T2)*9047.5636
+end
+
 
 function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vector{Vector{Int}},
                                T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},
                                input_DensityMatrix::Vector{Matrix{ComplexF64}},single_Ham::Vector{Matrix{ComplexF64}},
-                               single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,overlapmatrix::Array{ComplexF64,4},
+                               single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,ϵr::Float64,overlapmatrix::Array{ComplexF64,4},
                                energy_input::Float64,filling::Int,Area::Float64)
   
   
@@ -223,7 +248,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
   HF_eigenvalue=Vector{Vector{Float64}}(undef,Nq^2)
   HF_eigenvector=Vector{Matrix{ComplexF64}}(undef,Nq^2)
 
- 
+  #=
   Threads.@threads for jk in 1:Nq^2
     Fk = FockMatrix[jk]
     for jk1 in 1:Nq^2
@@ -262,12 +287,54 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
   
       end    
  end
+ =#
+
+
+
+ Threads.@threads for jk in 1:Nq^2
+    Fk = FockMatrix[jk]
+    for jk1 in 1:Nq^2
+        dmk = input_DensityMatrix[jk1]
+        q=allowedq[jk1]-allowedq[jk]
+       for (dg,loop_dic_dg) in loop_dic
+           CoulF1=Coulomb(q+dg,T1,T2)/ϵr+constq  
+           for (gg2,loop_dic_dg_gg2) in loop_dic_dg          
+               CoulF=CoulF1*overlapmatrix[jk1,gg2[2],jk,gg2[1]]
+           for g1g3 in loop_dic_dg_gg2
+               Fk[g1g3[2],gg2[1]]+=dmk[g1g3[1],gg2[2]]*CoulF*overlapmatrix[jk,g1g3[2],jk1,g1g3[1]]
+           end 
+           end
+   
+       end    
+    end
+  end
+ 
+  Hartree_Density=zeros(ComplexF64,dimension,dimension)
+  for ja in 1:Nq^2
+   Hartree_Density+=input_DensityMatrix[ja] .* transpose((overlapmatrix[ja,:,ja,:]))
+  end
+
+  
+
+
+  Threads.@threads for jk in 1:Nq^2
+      for dg in keys(loop_dic)
+          CoulH1=Coulomb(dg,T1,T2)/ϵr+constq
+          for gg2 in keys(loop_dic[dg])          
+              CoulH=CoulH1*(overlapmatrix[jk,gg2[2],jk,gg2[1]])          
+          for g1g3 in loop_dic[dg][gg2]           
+              HartreeMatrix[jk][gg2[2],gg2[1]]+=Hartree_Density[g1g3[1],g1g3[2]]*CoulH               
+          end 
+          end
+  
+      end    
+ end
 
 
  
 
  for ja in 1:Nq^2
-   FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+constq/Area*HartreeMatrix[ja]-constq/Area*FockMatrix[ja])
+   FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+1/Area*HartreeMatrix[ja]-1/Area*FockMatrix[ja])
    HF_eigenvalue[ja]=real(FFF.values)
    HF_eigenvector[ja]=FFF.vectors
  end
@@ -313,7 +380,7 @@ end
 function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
                        allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},
                        Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},
-                       single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,overlapmatrix::Array{ComplexF64,4},filling::Int,Area::Float64)
+                       single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,ϵr::Float64,overlapmatrix::Array{ComplexF64,4},filling::Int,Area::Float64)
     eout=1.0
     itcount=0
     dimension=length(wave)
@@ -352,7 +419,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
         end
       
 
-       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,dmk,single_Ham,single_MoirePo,constq,overlapmatrix,energy,filling,Area)
+       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,dmk,single_Ham,single_MoirePo,constq,ϵr,overlapmatrix,energy,filling,Area)
        
         DIIS_input_DensityMatrix[mod(itcount,3)+1]=dmk
         input_DensityMatrix=output_DensityMatrix
@@ -362,7 +429,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
   
       
 
-        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,overlapmatrix,energy,filling,Area)
+        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,ϵr,overlapmatrix,energy,filling,Area)
         DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
         input_DensityMatrix=output_DensityMatrix
         
