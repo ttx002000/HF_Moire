@@ -336,11 +336,14 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
       end    
  end
 
-
+  for ja in 1:Nq^2
+    HartreeMatrix[ja]=HartreeMatrix[ja]/Area
+    FockMatrix[ja]=FockMatrix[ja]/Area
+  end
  
 
  for ja in 1:Nq^2
-   FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+1/Area*HartreeMatrix[ja]-1/Area*FockMatrix[ja])
+   FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+HartreeMatrix[ja]-FockMatrix[ja])
    HF_eigenvalue[ja]=real(FFF.values)
    HF_eigenvector[ja]=FFF.vectors
  end
@@ -369,7 +372,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
   
   energy=0
    for ja in 1:Nq^2
-       ss=single_MoirePo[ja]+single_Ham[ja]+0.5/Area*HartreeMatrix[ja]-0.5/Area*FockMatrix[ja]
+       ss=single_MoirePo[ja]+single_Ham[ja]+0.5*HartreeMatrix[ja]-0.5*FockMatrix[ja]
        energy+=real(tr(ss*output_DensityMatrix[ja]))
    end
 
