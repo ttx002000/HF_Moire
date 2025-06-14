@@ -9,10 +9,10 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "chern_square_finiteS"
 
 
-sleep(10000)
+
 st=load("missedjobs.jld2")
 index=st["index"]
-start=1501
+start=4201
 ee=length(index)
 ba_size=300
 count=1
