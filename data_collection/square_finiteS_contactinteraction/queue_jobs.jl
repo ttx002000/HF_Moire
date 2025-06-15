@@ -12,7 +12,7 @@ job_prefix = "chern_square_finiteS"
 
 st=load("missedjobs.jld2")
 index=st["index"]
-start=3001
+start=5401
 ee=length(index)
 ba_size=300
 count=1
