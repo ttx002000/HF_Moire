@@ -296,7 +296,7 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
  =#
 
 
-
+  #=
  Threads.@threads for jk in 1:Nq^2
     Fk = FockMatrix[jk]
     for jk1 in 1:Nq^2
@@ -328,6 +328,50 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
           CoulH1=Coulomb(dg,T1,T2)/ϵr+constq
           for gg2 in keys(loop_dic[dg])          
               CoulH=CoulH1*(overlapmatrix[jk,gg2[2],jk,gg2[1]])          
+          for g1g3 in loop_dic[dg][gg2]           
+              HartreeMatrix[jk][gg2[2],gg2[1]]+=Hartree_Density[g1g3[1],g1g3[2]]*CoulH               
+          end 
+          end
+  
+      end    
+ end
+ =#
+
+
+  Threads.@threads for jk in 1:Nq^2
+    Fk = FockMatrix[jk]
+    for jk1 in 1:Nq^2
+        dmk = input_DensityMatrix[jk1]
+        q=allowedq[jk1]-allowedq[jk]
+        opf=overlapmatrix[jk1,:,jk,:]
+        opm=overlapmatrix[jk,:,jk1,:]
+       for (dg,loop_dic_dg) in loop_dic
+           CoulF1=Coulomb(q+dg,T1,T2)/ϵr+constq  
+           for (gg2,loop_dic_dg_gg2) in loop_dic_dg          
+               CoulF=CoulF1*opf[gg2[2],gg2[1]]
+           for g1g3 in loop_dic_dg_gg2
+               Fk[g1g3[2],gg2[1]]+=dmk[g1g3[1],gg2[2]]*CoulF*opm[g1g3[2],g1g3[1]]
+           end 
+           end
+   
+       end    
+    end
+  end
+ 
+  Hartree_Density=zeros(ComplexF64,dimension,dimension)
+  for ja in 1:Nq^2
+   Hartree_Density+=input_DensityMatrix[ja] .* transpose((overlapmatrix[ja,:,ja,:]))
+  end
+
+  
+
+
+  Threads.@threads for jk in 1:Nq^2
+    oph=(overlapmatrix[jk,:,jk,:])   
+      for dg in keys(loop_dic)
+          CoulH1=Coulomb(dg,T1,T2)/ϵr+constq
+          for gg2 in keys(loop_dic[dg])          
+              CoulH=CoulH1*(oph[gg2[2],gg2[1]])          
           for g1g3 in loop_dic[dg][gg2]           
               HartreeMatrix[jk][gg2[2],gg2[1]]+=Hartree_Density[g1g3[1],g1g3[2]]*CoulH               
           end 
