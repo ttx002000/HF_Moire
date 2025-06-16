@@ -135,9 +135,11 @@ function triangle_initial_Densitymatrix(NL::Int,V0::Float64,ϕ::Float64,scale::F
     
     
     overlapmatrix=zeros(ComplexF64,Nq^2,length(wave),Nq^2,length(wave))
-    for ja in 1:Nq^2, jb in eachindex(wave), jc in 1:Nq^2, jd in eachindex(wave)
+    Threads.@threads for ja in 1:Nq^2
+      for jb in eachindex(wave), jc in 1:Nq^2, jd in eachindex(wave)
        overlapmatrix[ja,jb,jc,jd]=overlap([T1 T2]*(allowedq[ja]+wave[jb]),
                              [T1 T2]*(allowedq[jc]+wave[jd]-wave[jb]-allowedq[ja]),uD,1,1,NL)
+      end
     end
 
 
