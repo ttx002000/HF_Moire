@@ -194,7 +194,7 @@ function triangle_initial_Densitymatrix(NL::Int,V0::Float64,ϕ::Float64,scale::F
     
      for ja in 1:Nq^2
       A=randn(ComplexF64,length(wave),length(wave))
-      input_DensityMatrix[ja]=(A+A')*0.2
+      input_DensityMatrix[ja]=(A+A')*1.0
      end
 
     
@@ -436,7 +436,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
       
       tic=time()
 
-      if (itcount>200 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-9))
+      if (itcount>100 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-9))
       
         dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,Nq)
         if dmk==0
