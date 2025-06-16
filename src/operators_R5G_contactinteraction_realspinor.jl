@@ -41,7 +41,7 @@ function get_spinor(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,N
   end
 
   FFF=eigen(Ham)
- return real(FFF.vectors[:,NL+1])
+ return FFF.vectors[:,NL+1]
 end
  
 
