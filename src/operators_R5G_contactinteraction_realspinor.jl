@@ -141,6 +141,19 @@ function triangle_initial_Densitymatrix(NL::Int,V0::Float64,ϕ::Float64,scale::F
     end
 
 
+
+    overlapmatrix=reshape(overlapmatrix,Nq^2*length(wave),Nq^2*length(wave))
+    for ja in 1:Nq^2*length(wave), jb in 1:ja-1
+      overlapmatrix[ja,jb]=conj(overlapmatrix[jb,ja])
+    end
+
+     for ja in 1:Nq^2*length(wave)
+      overlapmatrix[ja,ja]=1.0
+    end
+   overlapmatrix=reshape(overlapmatrix,Nq^2,length(wave),Nq^2,length(wave))
+  
+
+
     
      
     single_Ham=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
@@ -379,9 +392,11 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
           end
        end
        DeltaMatrix[ja]=NewDensityMatrix[ja]-input_DensityMatrix[ja]
-       output_DensityMatrix[ja]=0.0*input_DensityMatrix[ja]+1.0*NewDensityMatrix[ja]
+       
   end
-
+  
+ mix_ratio=rand()
+  output_DensityMatrix=mix_ratio*input_DensityMatrix+(1.0-mix_ratio)*NewDensityMatrix
 
   
   e1=0.0
