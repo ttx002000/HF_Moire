@@ -49,7 +49,7 @@ savepath=joinpath(scratch_dir, "triangle_R5G_contact_realspinor/data_output$(Int
 
 
 jldsave(savepath,single_Ham=single_Ham,single_MoirePo=single_MoirePo,
-               single_eigenvalue=single_eigenvalue,
+               single_eigenvalue=single_eigenvalue,spinor_set=spinor_set,
                 chern=chern,Flink=Flink,chern_single=chern_single,
                 Flink_single=Flink_single,arguments=args,
                 densitymatrix=DIIS_input_DensityMatrix[1],energy=energy,eout=eout,
