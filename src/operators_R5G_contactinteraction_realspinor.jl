@@ -6,13 +6,14 @@ using Random
 
 
  
-
+#=
 function overlap(k::Vector{Float64},q::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,NL::Int)::ComplexF64
     s1=get_spinor(k,uD,valley,stacking,NL)
     s2=get_spinor(k+q,uD,valley,stacking,NL)
     v=s1'*s2
     return v
 end
+=#
 
 
 function get_spinor(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,NL::Int)
@@ -41,7 +42,7 @@ function get_spinor(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,N
   end
 
   FFF=eigen(Ham)
- return FFF.vectors[:,NL+1]
+ return FFF.vectors[:,NL+1]/norm(FFF.vectors[:,NL+1])
 end
  
 
@@ -133,7 +134,7 @@ function triangle_initial_Densitymatrix(NL::Int,V0::Float64,ϕ::Float64,scale::F
     dimension=length(wave)
    
     
-    
+    #=
     overlapmatrix=zeros(ComplexF64,Nq^2,length(wave),Nq^2,length(wave))
     Threads.@threads for ja in 1:Nq^2
       for jb in eachindex(wave), jc in 1:Nq^2, jd in eachindex(wave)
@@ -153,7 +154,19 @@ function triangle_initial_Densitymatrix(NL::Int,V0::Float64,ϕ::Float64,scale::F
       overlapmatrix[ja,ja]=1.0
     end
    overlapmatrix=reshape(overlapmatrix,Nq^2,length(wave),Nq^2,length(wave))
-  
+    =#
+    spinor_set=Matrix{Vector{ComplexF64}}(Nq^2,length(wave))
+    for ja in 1:Nq^2, jb in eachindex(wave)
+      spinor_set[ja,jb]=get_spinor([T1 T2]*(allowedq[ja]+wave[jb]),uD,valley,stacking,NL)
+    end
+
+     overlapmatrix=zeros(ComplexF64,Nq^2,length(wave),Nq^2,length(wave))
+    for ja in 1:Nq^2
+      for jb in eachindex(wave), jc in 1:Nq^2, jd in eachindex(wave)
+       overlapmatrix[ja,jb,jc,jd]=spinor_set[ja,jb]'*spinor_set[jc,jd]
+      end
+    end
+
 
 
     
@@ -180,18 +193,21 @@ function triangle_initial_Densitymatrix(NL::Int,V0::Float64,ϕ::Float64,scale::F
         k1=k+wave[jc][1]*T1+wave[jc][2]*T2
         pos=findfirst(item->item==wave[jc]-b1T,wave)
         if pos≠nothing
-          single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b1,uD,1,1,NL)
+          #single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b1,uD,1,1,NL)
+          single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*(spinor_set[ja,jc]'*spinor_set[ja,pos])
         end
         
       
         pos=findfirst(item->item==wave[jc]+b2T+b1T,wave)
         if pos≠nothing
-            single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*overlap(k1,+b2+b1,uD,1,1,NL)
+            #single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*overlap(k1,+b2+b1,uD,1,1,NL)
+            single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*(spinor_set[ja,jc]'*spinor_set[ja,pos])
         end
     
         pos=findfirst(item->item==wave[jc]-b2T,wave)
         if pos≠nothing
-            single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2,uD,1,1,NL)
+            #single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*overlap(k1,-b2,uD,1,1,NL)
+            single_MoirePo[ja][jc,pos]=V0*exp(im*ϕ)*(spinor_set[ja,jc]'*spinor_set[ja,pos])
         end
      end
     
@@ -215,7 +231,7 @@ function triangle_initial_Densitymatrix(NL::Int,V0::Float64,ϕ::Float64,scale::F
     
 
     
-    return overlapmatrix, wave, input_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m
+    return overlapmatrix, wave, input_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m, spinor_set
       
 
        
@@ -510,17 +526,38 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
 end
 
 
-
-
-
-
-
-
+#=
 function metric(wavelist::Vector{Vector{Int64}},NL::Int,k::Vector{Float64},q::Vector{Float64},T1::Vector{Float64},T2::Vector{Float64},uD::Float64)::Matrix{ComplexF64}
     Amatrix=zeros(ComplexF64,length(wavelist),length(wavelist))
-   
+ 
+
+
     for ja in 1:length(wavelist)
     Amatrix[ja,ja]=overlap(k+wavelist[ja][1]*T1+wavelist[ja][2]*T2,q,uD,1,1,NL)
+
+    end
+    return Amatrix
+end
+=#
+
+
+
+
+function metric(wavelist::Vector{Vector{Int64}},k::Vector{Int},
+          q::Vector{Int},spinor_set::Matrix{Vector{ComplexF64}})::Matrix{ComplexF64}
+    Amatrix=zeros(ComplexF64,length(wavelist),length(wavelist))
+ 
+
+
+    for ja in 1:length(wavelist)
+ 
+    k1=findfirst(item->item==mod.(k,Nq),allowedq)
+    g1=findfirst(item->item==wavelist[ja]+k-k1,wavelist)
+    k2=findfirst(item->item==mod.(k+q,Nq),allowedq)
+    g2=findfirst(item->item==wavelist[ja]+k+q-k2,wavelist)
+      if g1≠nothing && g2≠nothing
+         Amatrix[ja,ja]=spinor_set[k1,g1]'*spinor_set[k2,g2]
+      end
     end
     return Amatrix
 end
@@ -548,7 +585,7 @@ end
 function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},
        scale::Float64,NL::Int,allowedq::Vector{Vector{Int}},
        HF_eigenvector::Vector{Matrix{ComplexF64}},
-       single_eigenvector::Vector{Matrix{ComplexF64}},uD::Float64)
+       single_eigenvector::Vector{Matrix{ComplexF64}},uD::Float64,spinor_set::Matrix{Vector{ComplexF64}})
 
   
     
@@ -604,22 +641,26 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},
     tra_single=zeros(ComplexF64,Nq,Nq)
     
     for ja in 1:Nq, jb in 1:Nq+1
-        Amatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T1,T1,T2,uD)
+        #Amatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T1,T1,T2,uD)
+        Amatrix=metric(wave,[ja-1,jb-1],[1,0],spinor_set)
        Uonelink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb]))
     end
 
     
     
     for ja in 1:Nq+1, jb in 1:Nq
-        Amatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T2,T1,T2,uD)
+        Amatrix=metric(wave,[ja-1,jb-1],[0,1],spinor_set)
      Utwolink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1]))
     end
     
     dG=norm(T2)
     for ja in 1:Nq, jb in 1:Nq
-        Amatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T1,T1,T2,uD)
-        Bmatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T2,T1,T2,uD)
-        Cmatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T2+T1,T1,T2,uD)
+        #Amatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T1,T1,T2,uD)
+        #Bmatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T2,T1,T2,uD)
+        #Cmatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T2+T1,T1,T2,uD)
+        Amatrix=metric(wave,[ja-1,jb-1],[1,0],spinor_set)
+        Bmatrix=metric(wave,[ja-1,jb-1],[0,1],spinor_set)
+        Cmatrix=metric(wave,[ja-1,jb-1],[1,1],spinor_set)
         A1=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])
         B1=dot(eigenvector_bc[:,ja,jb],Bmatrix*eigenvector_bc[:,ja,jb+1])
         C1=dot(eigenvector_bc[:,ja,jb],Cmatrix*eigenvector_bc[:,ja+1,jb+1])
@@ -657,12 +698,14 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},
   
     
     for ja in 1:Nq, jb in 1:Nq+1
-        Amatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T1,T1,T2,uD)
+        #Amatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T1,T1,T2,uD)
+        Amatrix=metric(wave,[ja-1,jb-1],[1,0],spinor_set)
        Uonelink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])/abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb]))
     end
     
     for ja in 1:Nq+1, jb in 1:Nq
-        Amatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T2,T1,T2,uD)
+        #Amatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T2,T1,T2,uD)
+        Amatrix=metric(wave,[ja-1,jb-1],[0,1],spinor_set)
      Utwolink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1])/abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1]))
     end
     
