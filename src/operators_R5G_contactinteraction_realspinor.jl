@@ -552,9 +552,9 @@ function metric(wavelist::Vector{Vector{Int64}},k::Vector{Int},
     for ja in 1:length(wavelist)
  
     k1=findfirst(item->item==mod.(k,Nq),allowedq)
-    g1=findfirst(item->item==wavelist[ja]+k-k1,wavelist)
+    g1=findfirst(item->item==wavelist[ja]+k-mod.(k,Nq),wavelist)
     k2=findfirst(item->item==mod.(k+q,Nq),allowedq)
-    g2=findfirst(item->item==wavelist[ja]+k+q-k2,wavelist)
+    g2=findfirst(item->item==wavelist[ja]+k+q-mod.(k+q,Nq),wavelist)
       if g1≠nothing && g2≠nothing
          Amatrix[ja,ja]=spinor_set[k1,g1]'*spinor_set[k2,g2]
       end
