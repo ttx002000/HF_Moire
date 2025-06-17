@@ -544,7 +544,7 @@ end
 
 
 function metric(wavelist::Vector{Vector{Int64}},k::Vector{Int},
-          q::Vector{Int},spinor_set::Matrix{Vector{ComplexF64}})::Matrix{ComplexF64}
+          q::Vector{Int},spinor_set::Matrix{Vector{ComplexF64}},Nq::Int)::Matrix{ComplexF64}
     Amatrix=zeros(ComplexF64,length(wavelist),length(wavelist))
  
 
@@ -642,14 +642,14 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},
     
     for ja in 1:Nq, jb in 1:Nq+1
         #Amatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T1,T1,T2,uD)
-        Amatrix=metric(wave,[ja-1,jb-1],[1,0],spinor_set)
+        Amatrix=metric(wave,[ja-1,jb-1],[1,0],spinor_set,Nq)
        Uonelink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb]))
     end
 
     
     
     for ja in 1:Nq+1, jb in 1:Nq
-        Amatrix=metric(wave,[ja-1,jb-1],[0,1],spinor_set)
+        Amatrix=metric(wave,[ja-1,jb-1],[0,1],spinor_set,Nq)
      Utwolink[ja,jb]=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1])/abs(dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja,jb+1]))
     end
     
@@ -658,9 +658,9 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},
         #Amatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T1,T1,T2,uD)
         #Bmatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T2,T1,T2,uD)
         #Cmatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T2+T1,T1,T2,uD)
-        Amatrix=metric(wave,[ja-1,jb-1],[1,0],spinor_set)
-        Bmatrix=metric(wave,[ja-1,jb-1],[0,1],spinor_set)
-        Cmatrix=metric(wave,[ja-1,jb-1],[1,1],spinor_set)
+        Amatrix=metric(wave,[ja-1,jb-1],[1,0],spinor_set,Nq)
+        Bmatrix=metric(wave,[ja-1,jb-1],[0,1],spinor_set,Nq)
+        Cmatrix=metric(wave,[ja-1,jb-1],[1,1],spinor_set,Nq)
         A1=dot(eigenvector_bc[:,ja,jb],Amatrix*eigenvector_bc[:,ja+1,jb])
         B1=dot(eigenvector_bc[:,ja,jb],Bmatrix*eigenvector_bc[:,ja,jb+1])
         C1=dot(eigenvector_bc[:,ja,jb],Cmatrix*eigenvector_bc[:,ja+1,jb+1])
@@ -699,13 +699,13 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},
     
     for ja in 1:Nq, jb in 1:Nq+1
         #Amatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T1,T1,T2,uD)
-        Amatrix=metric(wave,[ja-1,jb-1],[1,0],spinor_set)
+        Amatrix=metric(wave,[ja-1,jb-1],[1,0],spinor_set,Nq)
        Uonelink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb])/abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja+1,jb]))
     end
     
     for ja in 1:Nq+1, jb in 1:Nq
         #Amatrix=metric(wave,NL,(ja-1)*T1+(jb-1)*T2,T2,T1,T2,uD)
-        Amatrix=metric(wave,[ja-1,jb-1],[0,1],spinor_set)
+        Amatrix=metric(wave,[ja-1,jb-1],[0,1],spinor_set,Nq)
      Utwolink[ja,jb]=dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1])/abs(dot(eigenvector_bc_single[:,ja,jb],Amatrix*eigenvector_bc_single[:,ja,jb+1]))
     end
     
