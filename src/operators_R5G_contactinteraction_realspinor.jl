@@ -157,7 +157,7 @@ function triangle_initial_Densitymatrix(NL::Int,V0::Float64,ϕ::Float64,scale::F
     =#
     spinor_set=Matrix{Vector{ComplexF64}}(undef,Nq^2,length(wave))
     for ja in 1:Nq^2, jb in eachindex(wave)
-      spinor_set[ja,jb]=get_spinor([T1 T2]*(allowedq[ja]+wave[jb]),uD,valley,stacking,NL)
+      spinor_set[ja,jb]=get_spinor([T1 T2]*(allowedq[ja]+wave[jb]),uD,1,1,NL)
     end
 
      overlapmatrix=zeros(ComplexF64,Nq^2,length(wave),Nq^2,length(wave))
