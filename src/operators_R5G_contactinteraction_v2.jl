@@ -387,8 +387,8 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Har
   end
 
   for ja in 1:Nq^2
-    HartreeMatrix[ja]=(HartreeMatrix[ja]+HartreeMatrix[ja]'-Diagonal(HartreeMatrix[ja]))/Area*constq
-    FockMatrix[ja]=(FockMatrix[ja]+FockMatrix[ja]'-Diagonal(FockMatrix[ja]))/Area*constq
+    HartreeMatrix[ja]=(HartreeMatrix[ja]+HartreeMatrix[ja]'-real(Diagonal(HartreeMatrix[ja])))/Area*constq
+    FockMatrix[ja]=(FockMatrix[ja]+FockMatrix[ja]'-real(Diagonal(FockMatrix[ja])))/Area*constq
   end
 
  Threads.@threads for ja in 1:Nq^2
