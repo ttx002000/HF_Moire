@@ -925,7 +925,8 @@ function safe_inverse(A)
   catch e
       if isa(e, SingularException)
           println("Matrix is singular, doing randomstart again.")
-          return 0  # Use pseudoinverse as an alternative
+          println(det(A))
+          return pinv(A, 0.1)   # Use pseudoinverse as an alternative
       else
           rethrow(e)  # If another error occurs, propagate it
       end
