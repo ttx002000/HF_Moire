@@ -12,7 +12,7 @@ job_prefix = "chern_R5G"
 
 st=load("missedjobs.jld2")
 index=st["index"]
-start=6900
+start=10000
 ee=length(index)
 ba_size=300
 count=1
