@@ -134,27 +134,7 @@ function triangle_initial_Densitymatrix(NL::Int,V0::Float64,ϕ::Float64,scale::F
     dimension=length(wave)
    
     
-    #=
-    overlapmatrix=zeros(ComplexF64,Nq^2,length(wave),Nq^2,length(wave))
-    Threads.@threads for ja in 1:Nq^2
-      for jb in eachindex(wave), jc in 1:Nq^2, jd in eachindex(wave)
-       overlapmatrix[ja,jb,jc,jd]=overlap([T1 T2]*(allowedq[ja]+wave[jb]),
-                             [T1 T2]*(allowedq[jc]+wave[jd]-wave[jb]-allowedq[ja]),uD,1,1,NL)
-      end
-    end
-
-
-
-    overlapmatrix=reshape(overlapmatrix,Nq^2*length(wave),Nq^2*length(wave))
-    for ja in 1:Nq^2*length(wave), jb in 1:ja-1
-      overlapmatrix[ja,jb]=conj(overlapmatrix[jb,ja])
-    end
-
-     for ja in 1:Nq^2*length(wave)
-      overlapmatrix[ja,ja]=1.0
-    end
-   overlapmatrix=reshape(overlapmatrix,Nq^2,length(wave),Nq^2,length(wave))
-    =#
+    
     spinor_set=Matrix{Vector{ComplexF64}}(undef,Nq^2,length(wave))
     for ja in 1:Nq^2, jb in eachindex(wave)
       v1=get_spinor([T1 T2]*(allowedq[ja]+wave[jb]),uD,1,1,NL)
@@ -251,7 +231,7 @@ end
 
 
 
-
+#=
 function construct_loop_dic(wave::Vector{Vector{Int}})::Dict{Vector{Int},Any}
     g_dic=Dict{Vector{Int},Int}()
     for ja in eachindex(wave)
@@ -282,6 +262,57 @@ function construct_loop_dic(wave::Vector{Vector{Int}})::Dict{Vector{Int},Any}
    return loop_dic
 
 end
+=#
+
+
+function construct_loop_dic(wave::Vector{Vector{Int}},Nq,T1,T2,ϵr,constq)
+
+
+    loop_dic_Fock=Vector{Int}[]
+
+    for ja in eachindex(wave), jb in eachindex(wave), jc in eachindex(wave), jd in 1:ja
+      if wave[ja]+wave[jb]==wave[jc]+wave[jd]
+      
+        push!(loop_dic_Fock,[ja,jb,jc,jd])
+        
+      end
+    end
+
+    loop_dic_Fock_val=zeros(Float64,Nq^2,Nq^2,length(loop_dic_Fock))
+
+    Threads.@threads for k1 in 1:Nq^2
+        for k2 in 1:Nq^2
+      for waveset in eachindex(loop_dic_Fock)
+      cc=Coulomb(allowedq[k2]+wave[loop_dic_Fock[waveset][3]]-allowedq[k1]-wave[loop_dic_Fock[waveset][1]],T1,T2)/ϵr+constq
+      loop_dic_Fock_val[k1,k2,waveset]=cc
+    end
+    end
+   end
+   
+
+
+  loop_dic_Hartree=Vector{Int}[]
+    for ja in eachindex(wave), jb in eachindex(wave), jc in 1:ja, jd in eachindex(wave)
+      if wave[ja]+wave[jb]==wave[jc]+wave[jd]
+      
+        push!(loop_dic_Hartree,[ja,jb,jc,jd])
+      
+      end
+    end
+
+      loop_dic_Hartree_val=zeros(Float64,length(loop_dic_Hartree))
+      
+      for waveset in eachindex(loop_dic_Hartree)
+      cc=Coulomb(wave[loop_dic_Hartree[waveset][3]]-wave[loop_dic_Hartree[waveset][1]],T1,T2)/ϵr+constq
+      loop_dic_Hartree_val[waveset]=cc
+      end
+ 
+
+
+    
+   return loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val
+
+end
 
 
 
@@ -293,7 +324,9 @@ function Coulomb(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64})::Float6
 end
 
 
-function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vector{Vector{Int}},
+function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Fock_val::Array{Float64},
+                               loop_dic_Hartree::Vector{Vector{Int}},loop_dic_Hartree_val::Vector{Float64},
+                              allowedq::Vector{Vector{Int}},
                                T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},
                                input_DensityMatrix::Vector{Matrix{ComplexF64}},single_Ham::Vector{Matrix{ComplexF64}},
                                single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,ϵr::Float64,overlapmatrix::Array{ComplexF64,4},
@@ -309,96 +342,43 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
   HF_eigenvalue=Vector{Vector{Float64}}(undef,Nq^2)
   HF_eigenvector=Vector{Matrix{ComplexF64}}(undef,Nq^2)
 
-  #=
-  Threads.@threads for jk in 1:Nq^2
-    Fk = FockMatrix[jk]
-    for jk1 in 1:Nq^2
-        dmk = input_DensityMatrix[jk1]
-      
-       for (dg,loop_dic_dg) in loop_dic
-          
-           for (gg2,loop_dic_dg_gg2) in loop_dic_dg          
-               CoulF=overlapmatrix[jk1,gg2[2],jk,gg2[1]]
-           for g1g3 in loop_dic_dg_gg2
-               Fk[g1g3[2],gg2[1]]+=dmk[g1g3[1],gg2[2]]*CoulF*overlapmatrix[jk,g1g3[2],jk1,g1g3[1]]
-           end 
-           end
-   
-       end    
-    end
-  end
  
-  Hartree_Density=zeros(ComplexF64,dimension,dimension)
-  for ja in 1:Nq^2
-   Hartree_Density+=input_DensityMatrix[ja] .* transpose(overlapmatrix[ja,:,ja,:])
-  end
-
-  
-
 
   Threads.@threads for jk in 1:Nq^2
-      for dg in keys(loop_dic)
-         
-          for gg2 in keys(loop_dic[dg])          
-              CoulH=overlapmatrix[jk,gg2[2],jk,gg2[1]]            
-          for g1g3 in loop_dic[dg][gg2]           
-              HartreeMatrix[jk][gg2[2],gg2[1]]+=Hartree_Density[g1g3[1],g1g3[2]]*CoulH               
-          end 
-          end
-  
-      end    
- end
- =#
-
-
-
- Threads.@threads for jk in 1:Nq^2
     Fk = FockMatrix[jk]
     for jk1 in 1:Nq^2
         dmk = input_DensityMatrix[jk1]
-        q=allowedq[jk1]-allowedq[jk]
+        lfv=loop_dic_Fock_val[jk,jk1,:]
         opf=overlapmatrix[jk1,:,jk,:]
         opm=overlapmatrix[jk,:,jk1,:]
-       for (dg,loop_dic_dg) in loop_dic
-           CoulF1=Coulomb(q+dg,T1,T2)/ϵr+constq  
-           for (gg2,loop_dic_dg_gg2) in loop_dic_dg          
-               CoulF=CoulF1*opf[gg2[2],gg2[1]]
-           for g1g3 in loop_dic_dg_gg2
-               Fk[g1g3[2],gg2[1]]+=dmk[g1g3[1],gg2[2]]*CoulF*opm[g1g3[2],g1g3[1]]
-           end 
-           end
-   
-       end    
-    end
-  end
- 
-  Hartree_Density=zeros(ComplexF64,dimension,dimension)
-  for ja in 1:Nq^2
-   Hartree_Density+=input_DensityMatrix[ja] .* transpose((overlapmatrix[ja,:,ja,:]))
+
+        for (ja,vvs) in pairs(loop_dic_Fock)
+          Fk[vvs[1],vvs[4]]+=dmk[vvs[3],vvs[2]]*opm[vvs[1],vvs[3]]*opf[vvs[2],vvs[4]]*lfv[ja]
+        end
+     end
   end
 
-  
+
+
+
+
+
+   Hartree_Density=sum([input_DensityMatrix[ja] .* transpose(overlapmatrix[ja,:,ja,:]) for ja in 1:Nq^2])
+
 
 
   Threads.@threads for jk in 1:Nq^2
+    Hk=HartreeMatrix[jk]
     oph=(overlapmatrix[jk,:,jk,:])   
-      for dg in keys(loop_dic)
-          CoulH1=Coulomb(dg,T1,T2)/ϵr+constq
-          for gg2 in keys(loop_dic[dg])          
-              CoulH=CoulH1*(oph[gg2[2],gg2[1]])          
-          for g1g3 in loop_dic[dg][gg2]           
-              HartreeMatrix[jk][gg2[2],gg2[1]]+=Hartree_Density[g1g3[1],g1g3[2]]*CoulH               
-          end 
-          end
-  
-      end    
- end
+      for (ja,vvs) in pairs(loop_dic_Hartree)
+        Hk[vvs[1],vvs[3]]+=Hartree_Density[vvs[4],vvs[2]]*oph[vvs[1],vvs[3]]*loop_dic_Hartree_val[ja]
+      end
+  end
 
 
-
-  for ja in 1:Nq^2
-    HartreeMatrix[ja]=HartreeMatrix[ja]/Area
-    FockMatrix[ja]=FockMatrix[ja]/Area
+ for ja in 1:Nq^2
+    HartreeMatrix[ja]=(HartreeMatrix[ja]+HartreeMatrix[ja]'-real(Diagonal(HartreeMatrix[ja])))/Area
+    FockMatrix[ja]=(FockMatrix[ja]+FockMatrix[ja]'-real(Diagonal(FockMatrix[ja])))/Area
   end
  
 
@@ -417,12 +397,11 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
              NewDensityMatrix[ja]+=HF_eigenvector[ja][:,jd]*(HF_eigenvector[ja][:,jd])'
           end
        end
+        NewDensityMatrix[ja]=0.5*(NewDensityMatrix[ja]'+ NewDensityMatrix[ja])
        DeltaMatrix[ja]=NewDensityMatrix[ja]-input_DensityMatrix[ja]
-       
+       output_DensityMatrix[ja]=0.0*input_DensityMatrix[ja]+1.0*NewDensityMatrix[ja]
   end
-  
- mix_ratio=rand()
-  output_DensityMatrix=mix_ratio*input_DensityMatrix+(1.0-mix_ratio)*NewDensityMatrix
+
 
   
   e1=0.0
@@ -448,6 +427,7 @@ end
 
 
 
+
 function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
                        allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},
                        Nq::Int,wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},
@@ -455,7 +435,10 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
     eout=1.0
     itcount=0
     dimension=length(wave)
-    loop_dic=construct_loop_dic(wave)
+    #loop_dic=construct_loop_dic(wave)
+     loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val=construct_loop_dic(wave,Nq,T1,T2,ϵr,constq)
+   
+    
     HF_eigenvalue=Vector{Vector{Float64}}(undef,Nq^2)
     HF_eigenvector=Vector{Matrix{ComplexF64}}(undef,Nq^2)
     HartreeMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
@@ -490,7 +473,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
         end
       
 
-       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,dmk,single_Ham,single_MoirePo,constq,ϵr,overlapmatrix,energy,filling,Area)
+       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val,allowedq,T1,T2,Nq,wave,dmk,single_Ham,single_MoirePo,constq,ϵr,overlapmatrix,energy,filling,Area)
        
         DIIS_input_DensityMatrix[mod(itcount,3)+1]=dmk
         input_DensityMatrix=output_DensityMatrix
@@ -500,7 +483,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
   
       
 
-        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,ϵr,overlapmatrix,energy,filling,Area)
+        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,ϵr,overlapmatrix,energy,filling,Area)
         DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
         input_DensityMatrix=output_DensityMatrix
         
