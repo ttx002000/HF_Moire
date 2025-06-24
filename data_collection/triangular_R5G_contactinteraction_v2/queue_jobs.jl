@@ -9,7 +9,7 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "chern_R5G"
 
 
-sleep(3600)
+
 st=load("missedjobs.jld2")
 index=st["index"]
 start=11701
