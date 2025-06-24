@@ -29,7 +29,7 @@ filepos=Int(args[12])
 
 
 
-overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m=triangle_initial_Densitymatrix(Int(NL),V0,ϕ,scale,Nq,gcutoff,uD)
+overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m,spinor_set=triangle_initial_Densitymatrix(Int(NL),V0,ϕ,scale,Nq,gcutoff,uD)
 
 Area=Nq^2*√3/2*norm(a1m)^2
 
@@ -38,7 +38,7 @@ DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,ene
                                                     allowedq,T1,T2,Nq,wave,single_Ham,single_MoirePo,constq,ϵr,overlapmatrix,filling,Area)
 
 
-chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=triangle_chern(Nq,wave,scale,Int(NL),allowedq,HF_eigenvector,single_eigenvector)
+chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single=triangle_chern(Nq,wave,scale,Int(NL),allowedq,HF_eigenvector,single_eigenvector,spinor_set)
 
 
 
@@ -57,6 +57,6 @@ jldsave(savepath,single_Ham=single_Ham,single_MoirePo=single_MoirePo,
                 HFeigenvalue=HF_eigenvalue,
                 uniform=uniform,uniform_single=uniform_single,
                 HartreeMatrix=HartreeMatrix,FockMatrix=FockMatrix,HF_eigenvector=HF_eigenvector,
-                single_eigenvector=single_eigenvector,allowedq=allowedq,T1=T1,T2=T2,wave=wave)
+                single_eigenvector=single_eigenvector,allowedq=allowedq,T1=T1,T2=T2,wave=wave,spinor_set=spinor_set)
 
 
