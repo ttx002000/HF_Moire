@@ -383,8 +383,8 @@ function Construct_DensityMatrix(loop_dic::Dict{Vector{Int},Any},allowedq::Vecto
  end
 
   for ja in 1:Nq^2
-    HartreeMatrix[ja]=HartreeMatrix[ja]/Area
-    FockMatrix[ja]=FockMatrix[ja]/Area
+    HartreeMatrix[ja]=0.5*(HartreeMatrix[ja]+HartreeMatrix[ja]')/Area
+    FockMatrix[ja]=0.5*(FockMatrix[ja]+FockMatrix[ja]')/Area
   end
  
 
