@@ -978,10 +978,12 @@ function construct_loop_dic(wave::Vector{Vector{Int}},Nq,T1,T2,ϵr,constq)
 
     loop_dic_Fock_val=zeros(Float64,Nq^2,Nq^2,length(loop_dic_Fock))
 
-    for k1 in 1:Nq^2, k2 in 1:Nq^2
+    Threads.@threads for k1 in 1:Nq^2
+        for k2 in 1:Nq^2
       for waveset in eachindex(loop_dic_Fock)
       cc=Coulomb(allowedq[k2]+wave[loop_dic_Fock[waveset][3]]-allowedq[k1]-wave[loop_dic_Fock[waveset][1]],T1,T2)/ϵr+constq
       loop_dic_Fock_val[k1,k2,waveset]=cc
+    end
     end
    end
    
