@@ -22,8 +22,8 @@ while (count-1)*ba_size+1<=ee
   sleep(5)
 
   global count+=1
-  if mod(count,3)==0
-    sleep(0)
+  if mod(count,5)==0
+    sleep(1800)
   end
 
 
