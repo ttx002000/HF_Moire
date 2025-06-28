@@ -5,7 +5,7 @@ using JLD2
 using CSV,DataFrames
 
 
-include("../../src/operators_R5G_contactinteraction_interpolation.jl")
+include("../../src/operators_R5G_contactinteraction_interpolation_withhBN.jl")
 
 args=parse.(Float64,ARGS)
 
@@ -29,7 +29,7 @@ filepos=Int(args[11])
 
 
 
-overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m, b1,b2,spinor_set=triangle_initial_Densitymatrix(Int(NL),V0,ϕ,scale,Nq,gcutoff,uD,λ)
+overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m, b1,b2,spinor_set=triangle_initial_Densitymatrix(Int(NL),θ,Nq,gcutoff,uD,λ)
 
 Area=Nq^2*√3/2*norm(a1m)^2
 
