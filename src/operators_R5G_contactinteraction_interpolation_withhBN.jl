@@ -403,7 +403,8 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
        end
         NewDensityMatrix[ja]=0.5*(NewDensityMatrix[ja]'+ NewDensityMatrix[ja])
        DeltaMatrix[ja]=NewDensityMatrix[ja]-input_DensityMatrix[ja]
-       output_DensityMatrix[ja]=0.0*input_DensityMatrix[ja]+1.0*NewDensityMatrix[ja]
+       mix_ratio=rand()
+       output_DensityMatrix[ja]=mix_ratio*input_DensityMatrix[ja]+(1-mix_ratio)*NewDensityMatrix[ja]
   end
 
 
