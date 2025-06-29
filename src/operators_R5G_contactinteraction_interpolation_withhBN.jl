@@ -115,12 +115,12 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,Nq::Int64,gcutoff::F
 
 
 
-    V0=28.9
-    V1=0.0
-    ψ=-0.29
 
-      
-    
+
+ 
+    V0=28.9
+    V1=21.0
+    ψ=-0.29
  
     
     
