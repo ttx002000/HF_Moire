@@ -123,7 +123,7 @@ end
 kradius=sort(k1)[end]
 
 
-return E_lower-10,E_upper+10, kradius*1.1
+return E_lower-15,E_upper+15, kradius*1.2
 end
 
 

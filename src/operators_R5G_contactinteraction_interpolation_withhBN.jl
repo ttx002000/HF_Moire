@@ -202,8 +202,8 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,Nq::Int64,gcutoff::F
       k=allowedq[ja][1]*T1+allowedq[ja][2]*T2
     
       for jb in eachindex(wave)
-          #hh=(1-λ)*get_Ham_Holomorphic([T1 T2]*(allowedq[ja]+wave[jb]),uD,1,1,NL)+(λ)*get_Ham([T1 T2]*(allowedq[ja]+wave[jb]),uD,1,1,NL)
-          hh=get_Ham([T1 T2]*(allowedq[ja]+wave[jb]),uD,1,1,NL)
+          hh=(1-λ)*get_Ham_Holomorphic([T1 T2]*(allowedq[ja]+wave[jb]),uD,1,1,NL)+(λ)*get_Ham([T1 T2]*(allowedq[ja]+wave[jb]),uD,1,1,NL)
+          #hh=get_Ham([T1 T2]*(allowedq[ja]+wave[jb]),uD,1,1,NL)
       
           single_Ham[ja][jb,jb]=real(eigen(hh).values[NL+1])
       end
