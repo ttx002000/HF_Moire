@@ -14,7 +14,7 @@ job_prefix = "stoner"
 
 st=load("missedjobs.jld2")
 index=st["index"]
-start=3000
+start=1
 ee=length(index)
 ba_size=500
 count=1
