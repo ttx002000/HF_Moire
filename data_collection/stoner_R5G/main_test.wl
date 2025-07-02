@@ -5,7 +5,8 @@ numKernels= $ProcessorCount;
 
 LaunchKernels[numKernels];
 (*myPrint[x_]:=NumberForm[x,{20,1}];*)
-myPrint[x_]:=Module[{num=N[x]},If[IntegerQ[x],ToString[num]<>"0",(*Add "0" to make 200. become 200.0*)ToString[num]          (*Keep decimals as they are*)]]
+myPrint[x_]:=Module[{num=N[x],str},str=ToString[num];
+If[StringEndsQ[str,"."],str<>"0",str]]
 Print["Available Kernels: ",Length[Kernels[]]];
 Print["scriptcommandline",$ScriptCommandLine];
 params=Rest[$ScriptCommandLine];
