@@ -460,14 +460,14 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
     energy_change=0.0
   
 
-    while (eout>1*10^(-20)) || (bad_count<4) || (energy_change>1*10^(-10))
-      if eout<1*10^(-20)
+    while (eout>1*10^(-22)) || (bad_count<4) || (energy_change>1*10^(-11))
+      if eout<1*10^(-22)
        bad_count+=1
       end
       
       tic=time()
 
-      if (itcount>100 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-9))
+      if (itcount>100 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-10))
       
         dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,Nq)
         if dmk==0
