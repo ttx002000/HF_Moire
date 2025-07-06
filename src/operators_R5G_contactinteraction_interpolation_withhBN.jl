@@ -421,7 +421,7 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
   energy=0
    for ja in 1:Nq^2
        ss=single_MoirePo[ja]+single_Ham[ja]+0.5*HartreeMatrix[ja]-0.5*FockMatrix[ja]
-       energy+=real(tr(ss*output_DensityMatrix[ja]))
+       energy+=real(tr(ss*input_DensityMatrix[ja]))
    end
 
    energy_change=real(energy-energy_input)
