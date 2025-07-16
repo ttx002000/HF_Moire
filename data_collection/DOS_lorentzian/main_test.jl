@@ -7,8 +7,8 @@ using CSV,DataFrames
 
 include("../../src/operators_DOS_Lorentzian.jl")
 
-#args=parse.(Float64,ARGS)
-args=[50.0,50.0,1.0,1]
+args=parse.(Float64,ARGS)
+#args=[50.0,50.0,1.0,1]
 
 uD=args[1]
 Nq=Int(args[2])
