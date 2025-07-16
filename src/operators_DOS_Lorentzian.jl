@@ -92,7 +92,7 @@ function big_func(type)
             g = (x, y) -> get_RNG_Ham(x, y, 3)
             return g
         elseif type==2
-            return get_ABC_Ham
+            return get_ABA_Ham
         end
 
 
