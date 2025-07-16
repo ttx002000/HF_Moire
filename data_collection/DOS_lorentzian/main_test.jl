@@ -36,6 +36,6 @@ savepath=joinpath(scratch_dir, "DOS_Lorenztian/data_output$(Int(args[5]))/$(args
 
 
 
-jldsave(savepath,Elist,DOS)
+jldsave(savepath,Elist=Elist,DOS=DOS)
 
 
