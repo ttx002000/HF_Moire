@@ -108,7 +108,7 @@ function record_values(Nq::Int,type::Int,Γ::Float64,uD::Float64,Area::Float64)
 
 
   Threads.@threads for ja in eachindex(index_set)
-    k=index_set[ja][1]/Nq*G1+index_set[ja][1]/Nq*G2
+    k=index_set[ja][1]/Nq*G1+index_set[ja][2]/Nq*G2
     h1=Ham_func(k,uD)
     s1=real(eigen(h1).values)
     push!(values_record[Threads.threadid()],s1)
@@ -116,12 +116,13 @@ function record_values(Nq::Int,type::Int,Γ::Float64,uD::Float64,Area::Float64)
 
   values_record=sort(reduce(vcat,reduce(vcat,values_record)))
   Elist=collect(range(values_record[1]-20*Γ, stop=values_record[end]+20*Γ, length=Int(round((values_record[end]-values_record[1]+40*Γ)*0.5))))
+  #Elist=collect(-500.0:4.0:500.0)
   DOS=zeros(Float64,length(Elist))
 
   
   Threads.@threads for ja in eachindex(Elist)
     println(ja)
-    DOS[ja]=1/(π*Area)*sum([Γ/(Γ^2+(values_record[jb]-Elist[ja])^2) for jb in eachindex(values_record)])
+    DOS[ja]=2/(π*Area)*sum([Γ/(Γ^2+(values_record[jb]-Elist[ja])^2) for jb in eachindex(values_record)])
   end
 
 

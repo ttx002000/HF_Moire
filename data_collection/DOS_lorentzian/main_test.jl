@@ -9,7 +9,7 @@ include("../../src/operators_DOS_Lorentzian.jl")
 
 args=parse.(Float64,ARGS)
 #args=[50.0,50.0,1.0,1]
-
+#args=[1000/4.1*0.335,1000,5.0,1,0]
 uD=args[1]
 Nq=Int(args[2])
 Γ=args[3]
@@ -27,7 +27,7 @@ Area=Nq^2*ac^2*√3/2
 
 Elist,DOS=record_values(Nq,type,Γ,uD,Area)
 
-
+#plot(Elist,DOS,xlim=(-500,500))
 
 scratch_dir = ENV["SCRATCH"]
 
