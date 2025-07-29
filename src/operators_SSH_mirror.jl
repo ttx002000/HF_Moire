@@ -318,7 +318,7 @@ function construct_sym_v2(unsym_phonon_coor,Nx,Ny,tper,tpa,tNNN,α,β,K,KNNN,gsh
 
     
     for jb in 1:Nx
-      println("jb=",jb,"jc=",jc)
+      println("jb=",jb)
       flush(stdout)
         center_x=1
         center_y=jb
@@ -350,7 +350,7 @@ function construct_sym_v2(unsym_phonon_coor,Nx,Ny,tper,tpa,tNNN,α,β,K,KNNN,gsh
 
 
     for jb in 1:Nx
-      println("jb=",jb," jc=",jc)
+      println("jb=",jb)
       flush(stdout)
         center_x=1
         center_y=jb
@@ -371,12 +371,12 @@ function construct_sym_v2(unsym_phonon_coor,Nx,Ny,tper,tpa,tNNN,α,β,K,KNNN,gsh
     
 
       free_energy_symmetric[jb,2]=calculate_freeenergy(K,KNNN,NNN_sp_d1,
-      NNN_sp_d2,px_xbond,
-      px_ybond,py_xbond,
-      py_ybond,Htotal,
-      Nx,Ny,orbital_id,phonon_id,
-        phonon_coord_try1,Nelec,α,
-      β,gshear,temp)
+                                        NNN_sp_d2,px_xbond,
+                                        px_ybond,py_xbond,
+                                        py_ybond,Htotal,
+                                        Nx,Ny,orbital_id,phonon_id,
+                                          phonon_coord_try1,Nelec,α,
+                                        β,gshear,temp)
     end
 
     return free_energy_symmetric,diff_try, symmetrized_phonon_coor
