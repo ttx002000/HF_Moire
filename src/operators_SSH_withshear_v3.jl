@@ -272,7 +272,7 @@ end
 
 
 function iteration(Nx::Int,Ny::Int,Nelec::Float64,px_xbond::Vector{Vector{Int}},px_ybond::Vector{Vector{Int}},py_xbond::Vector{Vector{Int}},py_ybond::Vector{Vector{Int}},NNN_sp_d1::Vector{Vector{Int}},NNN_sp_d2::Vector{Vector{Int}},orbital_id::Array{Int},phonon_id::Array{Int},α::Float64,β::Float64,K::Float64,KNNN::Float64,H0::Matrix{ComplexF64},gshear::Float64,temp::Float64,stop_standard::Float64)
-    phonon_coor=randn(2*Nx*Ny)*10^(-1)
+    phonon_coor=randn(2*Nx*Ny)*4*10^(-1)
     
     E_old=10^8
     E_new=0.0

@@ -34,7 +34,7 @@ Nelec=Int(round(Nx*Ny*filling))
 
 
 
-
+#=
 st=load("missedjobs.jld2")
 index=st["index"]
 count=1
@@ -47,9 +47,10 @@ for ja in 1:length(index)
   end
   println(count)
 end
+=#
 
 
-#=
+
 st=load("missedjobs.jld2")
 index=st["index"]
 start=1
@@ -61,8 +62,11 @@ while (count-1)*ba_size+1<=ee
   println((count-1)*ba_size+1,min(count*ba_size+start,ee))
   sleep(5)
   global count+=1
+  if mod(count,5)==0
+   sleep(1800)
+  end
 end
-=#
+
 
 
 
