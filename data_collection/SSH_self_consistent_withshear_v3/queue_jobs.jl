@@ -58,7 +58,7 @@ ee=length(index)
 ba_size=200
 count=1
 while (count-1)*ba_size+1<=ee
-  submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*ba_size+start:min(count*ba_size+start,ee)]; time="5:00:00",ntasks=4,mem=16)
+  submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*ba_size+start:min(count*ba_size+start,ee)]; time="8:00:00",ntasks=4,mem=16)
   println((count-1)*ba_size+1,min(count*ba_size+start,ee))
   sleep(5)
   global count+=1
