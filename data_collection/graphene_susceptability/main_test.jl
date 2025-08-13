@@ -14,7 +14,7 @@ whichstack=Int(args[2])
 radius=args[3]
 Γ=args[4]
 ϵ=args[5]
-num_poinst=args[6]
+num_points=args[6]
 file_pos=args[7]
 
 
