@@ -124,8 +124,8 @@ function main(radius::Float64,Γ::Float64,uD::Float64,whichstack::Int,ϵspace::V
       get_Ham = k -> get_ABCA_Ham(k, uD)
     end
 
-    Hx=(get_Ham([0.5,0.0])-get_Ham([0.0,0.0]))/0.5
-    Hy=(get_Ham([0.0,0.5])-get_Ham([0.0,0.0]))/0.5
+    dHx=(get_Ham([0.5,0.0])-get_Ham([0.0,0.0]))/0.5
+    dHy=(get_Ham([0.0,0.5])-get_Ham([0.0,0.0]))/0.5
 
 
     Threads.@threads for ja in eachindex(kx_grid)
@@ -138,8 +138,8 @@ function main(radius::Float64,Γ::Float64,uD::Float64,whichstack::Int,ϵspace::V
    
         FFF=eigen(H)
 
-        Hxmatrix[ja,jb]=(FFF.vectors')*Hx*FFF.vectors
-        Hymatrix[ja,jb]=(FFF.vectors')*Hy*FFF.vectors
+        Hxmatrix[ja,jb]=(FFF.vectors')*dHx*FFF.vectors
+        Hymatrix[ja,jb]=(FFF.vectors')*dHy*FFF.vectors
         eigenvalue_record[ja,jb]=real(FFF.values)
         end
    end
@@ -176,13 +176,13 @@ gamma_complex = im * Γ
       trace_sum = zero(ComplexF64)
       @inbounds for ja in eachindex(kx_grid), jb in eachindex(ky_grid)
           # Get local references to avoid repeated indexing
-          G = Gmatrix[ja, jb]
-          Hx = Hxmatrix[ja, jb]
-          Hy = Hymatrix[ja, jb]
+          #G = Gmatrix[ja, jb]
+          #Hx = Hxmatrix[ja, jb]
+          #Hy = Hymatrix[ja, jb]
           
           # Compute (Hx.*G) and (Hy.*G) once
-          HxG = Hx .* G
-          HyG = Hy .* G
+          HxG = Hxmatrix[ja, jb] .* Gmatrix[ja, jb]
+          HyG = Hymatrix[ja, jb] .* Gmatrix[ja, jb]
           
           # Compute the product matrix and its trace
           # This is (Hx.*G)*(Hy.*G)*(Hx.*G)*(Hy.*G)
