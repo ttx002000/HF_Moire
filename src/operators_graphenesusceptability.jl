@@ -162,7 +162,8 @@ gamma_complex = im * Γ
 
 # Optimized version
   Threads.@threads for jc in eachindex(ϵspace)
-      println("Processing energy point: $jc/$(length(ϵspace))")
+    tic=time()
+    
       
       ε = ϵspace[jc]
       Gmatrix = Array{Vector{ComplexF64}}(undef, length(kx_grid), length(ky_grid))
@@ -191,6 +192,8 @@ gamma_complex = im * Γ
       end
       
       Fz[jc] = inv_area * imag(trace_sum)
+        toc=time()
+          println("Processing energy point: $jc/$(length(ϵspace)),takestime$(toc-tic)")
   end
 
     
