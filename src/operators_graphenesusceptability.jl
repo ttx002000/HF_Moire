@@ -127,7 +127,8 @@ function main(radius::Float64,Γ::Float64,uD::Float64,whichstack::Int,ϵ::Float6
     Hy=(get_Ham([0.0,0.5])-get_Ham([0.0,0.0]))/0.5
 
 
-    for ja in eachindex(kx_grid),jb in eachindex(ky_grid)
+    Threads.@threads for ja in eachindex(kx_grid)
+        for jb in eachindex(ky_grid)
     
    
   
@@ -139,12 +140,14 @@ function main(radius::Float64,Γ::Float64,uD::Float64,whichstack::Int,ϵ::Float6
         Hxmatrix[ja,jb]=(FFF.vectors')*Hx*FFF.vectors
         Hymatrix[ja,jb]=(FFF.vectors')*Hy*FFF.vectors
         eigenvalue_record[ja,jb]=real(FFF.values)
+        end
    end
    toc=time()
    println("getting Hamiltonian takes time",toc-tic)
    flush(stdout)
 
    Gmatrix=[diagm([1/(ϵ-real(eigenvalue_record[ja,jb][ii])+im*Γ) for ii in eachindex(eigenvalue_record[ja,jb]) ]) for ja in eachindex(kx_grid),jb in eachindex(ky_grid)]
+   
    Fz=1/Area*imag(sum([tr(Gmatrix[ja,jb]*Hxmatrix[ja,jb]*Gmatrix[ja,jb]*Hymatrix[ja,jb]*Gmatrix[ja,jb]*Hxmatrix[ja,jb]*Gmatrix[ja,jb]*Hymatrix[ja,jb]) for ja in eachindex(kx_grid),jb in eachindex(ky_grid)]))
 
 
