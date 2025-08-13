@@ -108,7 +108,7 @@ end
 
 
 
-function main(radius::Float64,Γ::Float64,uD::Float64,whichstack::Int,ϵ::Float64,num_points::Int64)
+function main(radius::Float64,Γ::Float64,uD::Float64,whichstack::Int,ϵspace::Vector{Float64},num_points::Int64)
    tic=time()
    kx_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
    ky_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
@@ -147,10 +147,51 @@ function main(radius::Float64,Γ::Float64,uD::Float64,whichstack::Int,ϵ::Float6
    println("getting Hamiltonian takes time",toc-tic)
    flush(stdout)
 
-   Gmatrix=[diagm([1/(ϵ-real(eigenvalue_record[ja,jb][ii])+im*Γ) for ii in eachindex(eigenvalue_record[ja,jb]) ]) for ja in eachindex(kx_grid),jb in eachindex(ky_grid)]
+   #Gmatrix=[diagm([1/(ϵ-real(eigenvalue_record[ja,jb][ii])+im*Γ) for ii in eachindex(eigenvalue_record[ja,jb]) ]) for ja in eachindex(kx_grid),jb in eachindex(ky_grid)]
    
-   Fz=1/Area*imag(sum([tr(Gmatrix[ja,jb]*Hxmatrix[ja,jb]*Gmatrix[ja,jb]*Hymatrix[ja,jb]*Gmatrix[ja,jb]*Hxmatrix[ja,jb]*Gmatrix[ja,jb]*Hymatrix[ja,jb]) for ja in eachindex(kx_grid),jb in eachindex(ky_grid)]))
+   #Fz=1/Area*imag(sum([tr(Gmatrix[ja,jb]*Hxmatrix[ja,jb]*Gmatrix[ja,jb]*Hymatrix[ja,jb]*Gmatrix[ja,jb]*Hxmatrix[ja,jb]*Gmatrix[ja,jb]*Hymatrix[ja,jb]) for ja in eachindex(kx_grid),jb in eachindex(ky_grid)]))
+  
 
+
+Fz = zeros(Float64, length(ϵspace))
+
+
+# Pre-compute constant terms
+inv_area = 1.0 / Area
+gamma_complex = im * Γ
+
+# Optimized version
+  Threads.@threads for jc in eachindex(ϵspace)
+      println("Processing energy point: $jc/$(length(ϵspace))")
+      
+      ε = ϵspace[jc]
+      Gmatrix = Array{Vector{ComplexF64}}(undef, length(kx_grid), length(ky_grid))
+      # Compute Green's function matrix more efficiently
+      @inbounds for ja in eachindex(kx_grid), jb in eachindex(ky_grid)
+          # Vectorized computation of Green's function
+          Gmatrix[ja, jb] = @. 1 / (ε - real(eigenvalue_record[ja, jb]) + gamma_complex)
+      end
+      
+      # Compute the trace sum more efficiently
+      trace_sum = zero(ComplexF64)
+      @inbounds for ja in eachindex(kx_grid), jb in eachindex(ky_grid)
+          # Get local references to avoid repeated indexing
+          G = Gmatrix[ja, jb]
+          Hx = Hxmatrix[ja, jb]
+          Hy = Hymatrix[ja, jb]
+          
+          # Compute (Hx.*G) and (Hy.*G) once
+          HxG = Hx .* G
+          HyG = Hy .* G
+          
+          # Compute the product matrix and its trace
+          # This is (Hx.*G)*(Hy.*G)*(Hx.*G)*(Hy.*G)
+          product_matrix = (HxG * HyG) * (HxG * HyG)
+          trace_sum += tr(product_matrix)
+      end
+      
+      Fz[jc] = inv_area * imag(trace_sum)
+  end
 
     
   return Fz
