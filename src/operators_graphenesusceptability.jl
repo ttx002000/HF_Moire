@@ -107,6 +107,27 @@ function get_ABAB_Ham(k::Vector{Float64},uD::Float64)
 end
 
 
+function get_MLG_Ham(k::Vector{Float64})
+    kp=k[1]+im*k[2]
+    km=k[1]-im*k[2]
+    Ham=zeros(ComplexF64,2,2)
+
+ 
+
+    γ=√3/2*0.246*3160
+ 
+
+    Ham[1,2]+=γ*km
+
+
+    Ham=Ham+Ham'
+
+    return Ham
+
+end
+
+
+
 
 function main(radius::Float64,Γ::Float64,uD::Float64,whichstack::Int,ϵspace::Vector{Float64},num_points::Int64)
    tic=time()
@@ -120,8 +141,12 @@ function main(radius::Float64,Γ::Float64,uD::Float64,whichstack::Int,ϵspace::V
    
     if whichstack==1
       get_Ham = k -> get_ABAB_Ham(k, uD)
-    else
+    elseif whichstack==2
       get_Ham = k -> get_ABCA_Ham(k, uD)
+    elseif whichstack==3
+      get_Ham = k -> get_MLG_Ham(k)
+    else
+      error("Invalid stack type specified")
     end
 
     dHx=(get_Ham([0.5,0.0])-get_Ham([0.0,0.0]))/0.5
