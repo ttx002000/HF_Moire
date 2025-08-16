@@ -8,7 +8,7 @@ using CSV,DataFrames
 include("../../src/operators_workfunction.jl")
 
 args=parse.(Float64,ARGS)
-#args=[50.0,600,1.5/11.6045,4,-22.0,-0.1,0.1,81]
+#args=[50.0,600,1.5/11.6045,4,-22.0,-0.1,0.1,81,1]
 uD=args[1]
 Nq=Int(args[2])
 temp=args[3]
@@ -41,6 +41,7 @@ aba_record, abc_record=get_reference_CNP(
 energy_diff=big_func(uD,aba_record,abc_record,
         wf,temp,kx_grid,
          ky_grid,Nq,NL,density_list)
+
 
 
 scratch_dir = ENV["SCRATCH"]

@@ -21,9 +21,13 @@ function find_FL(quasi_particle_energy::Vector{Float64},target_density::Float64,
   else
     stan=abs(10^(-10)*target_density)
   end
-  fermifactor=[1/(exp((quasi_particle_energy[ja]-try_FL)/temp)+1) for ja in eachindex(quasi_particle_energy)]
- 
-  fl=sum(fermifactor)/Area-bg_particle_density
+
+  fl=0.0
+  for ja in eachindex(quasi_particle_energy)
+   fl+=1/(exp((quasi_particle_energy[ja]-try_FL)/temp)+1)
+  end
+  fl=fl/Area-bg_particle_density
+  #fl=sum(fermifactor)/Area-bg_particle_density
 
 
 
@@ -240,30 +244,33 @@ function big_func(uD::Float64,aba_record::Float64,abc_record::Float64,
               end
             end
 
-
-            v_ABA=sort(vec(values_plot_ABA[:,:,:]))
-            v_ABC=sort(vec(values_plot_ABC[:,:,:]))
-
-
-
-            CNP_ABA=aba_record
-            CNP_ABC=abc_record
+         
+            v_ABA=sort(vec(values_plot_ABA[:,:,:]).-aba_record)
+            values_plot_ABA=nothing
+            v_ABC=sort(vec(values_plot_ABC[:,:,:]).-abc_record)
+            values_plot_ABC=nothing
+          
 
 
-
-
+            #CNP_ABA=aba_record
+            #CNP_ABC=abc_record
 
 
 
-            values_plot_ABC=values_plot_ABC.-CNP_ABC
-            values_plot_ABA=values_plot_ABA.-CNP_ABA
-
-            v_ABA=sort(vec(values_plot_ABA[:,:,:]))
-            v_ABC=sort(vec(values_plot_ABC[:,:,:]))
 
 
-            CNP_ABA=0.0
-            CNP_ABC=0.0
+
+
+            #values_plot_ABC=values_plot_ABC.-CNP_ABC
+            #values_plot_ABA=values_plot_ABA.-CNP_ABA
+
+            #v_ABA=sort(vec(values_plot_ABA[:,:,:]))
+          
+            #v_ABC=sort(vec(values_plot_ABC[:,:,:]))
+            
+
+            #CNP_ABA=0.0
+            #CNP_ABC=0.0
 
             
 
@@ -276,20 +283,20 @@ function big_func(uD::Float64,aba_record::Float64,abc_record::Float64,
 
             Threads.@threads for ja in eachindex(density_list)
                 println(ja)
-            mu1,_=find_FL(v_ABA,density_list[ja],v_ABA[1],v_ABA[end],temp,Area,bg_ABA)
-            mu2,_=find_FL(v_ABC,density_list[ja],v_ABC[1],v_ABC[end],temp,Area,bg_ABC)
-              
-              jj1=0.0
-              jj2=0.0
-               for jb in eachindex(v_ABA)
-                jj1+=1/(1+exp((v_ABA[jb]-mu1)/temp))*v_ABA[jb]
-                jj2+=1/(1+exp((v_ABC[jb]-mu2)/temp))*v_ABC[jb]
-                #jj1=sum(([1/(1+exp((v_ABA[ja]-mu1)/temp)) for ja in eachindex(v_ABA)]/Area).*v_ABA)
-                #jj2=sum(([1/(1+exp((v_ABC[ja]-mu2)/temp)) for ja in eachindex(v_ABC)]/Area).*v_ABC)
-               end
-               jj1=jj1/Area
-               jj2=jj2/Area
-            energy_diff[ja]=(jj2-jj1-density_list[ja]*(workfunction))*2
+            
+                    mu1,_=find_FL(v_ABA,density_list[ja],v_ABA[1],v_ABA[end],temp,Area,bg_ABA)
+                    mu2,_=find_FL(v_ABC,density_list[ja],v_ABC[1],v_ABC[end],temp,Area,bg_ABC)
+                  jj1=0.0
+                  jj2=0.0
+                  for jb in eachindex(v_ABA)
+                    jj1+=1/(1+exp((v_ABA[jb]-mu1)/temp))*v_ABA[jb]
+                    jj2+=1/(1+exp((v_ABC[jb]-mu2)/temp))*v_ABC[jb]
+                    #jj1=sum(([1/(1+exp((v_ABA[ja]-mu1)/temp)) for ja in eachindex(v_ABA)]/Area).*v_ABA)
+                    #jj2=sum(([1/(1+exp((v_ABC[ja]-mu2)/temp)) for ja in eachindex(v_ABC)]/Area).*v_ABC)
+                  end
+                  jj1=jj1/Area
+                  jj2=jj2/Area
+                energy_diff[ja]=(jj2-jj1-density_list[ja]*(workfunction))*2
             end
             println(uD)
             flush(stdout)
