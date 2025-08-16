@@ -46,10 +46,9 @@ energy_diff=big_func(uD,aba_record,abc_record,
 scratch_dir = ENV["SCRATCH"]
 savepath=joinpath(scratch_dir, "graphene_wf/data_output$(Int(args[9]))/$(args[1])uD$(args[2])Nq$(args[3])temp$(args[4])NL$(args[5])wf$(args[6])denstart$(args[7])denend$(args[8])dennum.jld2")
 
-plot(energy_diff)
 
 
-jldsave(savepath,Fz=Fz)
+jldsave(savepath,energy_diff=energy_diff)
 
 
 
