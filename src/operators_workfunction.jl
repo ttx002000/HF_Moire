@@ -283,6 +283,7 @@ function big_func(uD::Float64,aba_record::Float64,abc_record::Float64,
 
             Threads.@threads for ja in eachindex(density_list)
                 println(ja)
+                flush(stdout)
             
                     mu1,_=find_FL(v_ABA,density_list[ja],v_ABA[1],v_ABA[end],temp,Area,bg_ABA)
                     mu2,_=find_FL(v_ABC,density_list[ja],v_ABC[1],v_ABC[end],temp,Area,bg_ABC)
