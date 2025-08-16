@@ -9,7 +9,7 @@ include("../../src/operators_workfunction.jl")
 
 args=parse.(Float64,ARGS)
 #args=[50.0,600,1.5/11.6045,4,-22.0,-0.1,0.1,81,1]
-uD=args[1]
+uD=args[1]*0.335/4.1
 Nq=Int(args[2])
 temp=args[3]
 NL=Int(args[4])
@@ -34,7 +34,7 @@ ky_grid=collect(1:1:Nq)
 
 density_list=collect(range(den_st, stop=den_end, length=den_num))
 
-aba_record, abc_record=get_reference_CNP(
+aba_record, abc_record,energy_diff_reference=get_reference_CNP(
                             temp,kx_grid,
                              ky_grid,Nq,NL)
 
@@ -45,11 +45,11 @@ energy_diff=big_func(uD,aba_record,abc_record,
 
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "graphene_wf/data_output$(Int(args[9]))/$(args[1])uD$(args[2])Nq$(args[3])temp$(args[4])NL$(args[5])wf$(args[6])denstart$(args[7])denend$(args[8])dennum.jld2")
+savepath=joinpath(scratch_dir, "graphene_wf/data_output$(Int(args[9]))/$(args[1])D$(args[2])Nq$(args[3])temp$(args[4])NL$(args[5])wf$(args[6])denstart$(args[7])denend$(args[8])dennum.jld2")
 
 
 
-jldsave(savepath,energy_diff=energy_diff)
+jldsave(savepath,energy_diff=energy_diff,energy_diff_reference=energy_diff_reference)
 
 
 

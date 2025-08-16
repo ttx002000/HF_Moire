@@ -200,9 +200,37 @@ function get_reference_CNP(
             aba_record=copy(CNP_ABA_reference)
             abc_record=copy(CNP_ABC_reference)
 
+          #values_plot_ABC_reference=values_plot_ABC_reference.-CNP_ABC_reference
+          #values_plot_ABA_reference=values_plot_ABA_reference.-CNP_ABA_reference
+
+          v_ABA_reference=sort(vec(values_plot_ABA_reference).-CNP_ABA_reference)
+          values_plot_ABA_reference=nothing
+          v_ABC_reference=sort(vec(values_plot_ABC_reference).-CNP_ABC_reference)
+          values_plot_ABC_reference=nothing
+
+          CNP_ABA_reference=0.0
+          CNP_ABC_reference=0.0
+
+
+          bg_ABA_reference=Nq^2/Area*NL
+          bg_ABC_reference=Nq^2/Area*NL
+
+
+
+
+
+          mu1_reference,_=find_FL(v_ABA_reference,0.0,v_ABA_reference[1],v_ABA_reference[end],temp,Area,bg_ABA_reference)
+          mu2_reference,_=find_FL(v_ABC_reference,0.0,v_ABC_reference[1],v_ABC_reference[end],temp,Area,bg_ABC_reference)
+
+          jj1=sum(([1/(1+exp((v_ABA_reference[ss]-mu1_reference)/temp)) for ss in eachindex(v_ABA_reference)]/Area).*v_ABA_reference)
+
+          jj2=sum(([1/(1+exp((v_ABC_reference[ss]-mu2_reference)/temp)) for ss in eachindex(v_ABC_reference)]/Area).*v_ABC_reference)
+
+          energy_diff_reference=(jj2-jj1)*2
+
            
 
-    return aba_record, abc_record
+    return aba_record, abc_record,energy_diff_reference
 end 
 
 
