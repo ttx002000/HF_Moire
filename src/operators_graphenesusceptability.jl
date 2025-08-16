@@ -255,7 +255,9 @@ function main_bigmemory(radius::Float64,Γ::Float64,uD::Float64,whichstack::Int,
     dHy=(get_Ham([0.0,0.5])-get_Ham([0.0,0.0]))/0.5
 
     for ja in eachindex(kx_grid)
-          println("Processing kx: $(ja)/$(num_points)")
+      tic=time()
+     
+     
       for jb in eachindex(ky_grid)
         
         k = [kx_grid[ja], ky_grid[jb]]
@@ -282,6 +284,9 @@ function main_bigmemory(radius::Float64,Γ::Float64,uD::Float64,whichstack::Int,
         Fz+= inv_area * imag(trace_sum)
 
       end
+      toc=time()
+       println("Processing kx: $(ja)/$(num_points),takes time $(tco-tic)")
+            flush(stdout)
     end
 
 
