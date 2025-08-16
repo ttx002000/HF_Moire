@@ -224,3 +224,69 @@ gamma_complex = im * Γ
     
   return Fz
 end
+
+
+
+function main_bigmemory(radius::Float64,Γ::Float64,uD::Float64,whichstack::Int,ϵspace::Vector{Float64},num_points::Int64)
+ 
+   kx_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
+   ky_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
+   Area=4*π^2/((ky_grid[2]-ky_grid[1])*(kx_grid[2]-kx_grid[1]))
+       # Pre-compute constant terms
+    inv_area = 1.0 / Area
+    gamma_complex = im * Γ
+    Fz = zeros(Float64, length(ϵspace))
+
+    Hxmatrix=Matrix{Matrix{ComplexF64}}(undef,length(kx_grid),length(ky_grid))
+    Hymatrix=Matrix{Matrix{ComplexF64}}(undef,length(kx_grid),length(ky_grid))
+    eigenvalue_record=Matrix{Vector{Float64}}(undef,length(kx_grid),length(ky_grid))
+   
+    if whichstack==1
+      get_Ham = k -> get_ABAB_Ham(k, uD)
+    elseif whichstack==2
+      get_Ham = k -> get_ABCA_Ham(k, uD)
+    elseif whichstack==3
+      get_Ham = k -> get_MLG_Ham(k)
+    else
+      error("Invalid stack type specified")
+    end
+    
+    dHx=(get_Ham([0.5,0.0])-get_Ham([0.0,0.0]))/0.5
+    dHy=(get_Ham([0.0,0.5])-get_Ham([0.0,0.0]))/0.5
+
+    for ja in eachindex(kx_grid)
+          println("Processing kx: $(ja)/$(num_points)")
+      for jb in eachindex(ky_grid)
+        
+        k = [kx_grid[ja], ky_grid[jb]]
+        H = get_Ham(k)
+        FFF=eigen(H)
+
+        Hxmatrix=(FFF.vectors')*dHx*FFF.vectors
+        Hymatrix=(FFF.vectors')*dHy*FFF.vectors
+     
+        eigenvalue_record=real(FFF.values)
+        trace_sum=zeros(ComplexF64,length(ϵspace))
+     
+        Threads.@threads for jc in eachindex(ϵspace)
+             ε=ϵspace[jc]
+             Gmatrix = @. 1 / (ε - real(eigenvalue_record) + gamma_complex)
+             HxG = Hxmatrix .* Gmatrix
+             HyG = Hymatrix .* Gmatrix
+             product_matrix = (HxG * HyG) * (HxG * HyG)
+             trace_sum[jc] += tr(product_matrix)
+
+             
+
+        end
+        Fz+= inv_area * imag(trace_sum)
+
+      end
+    end
+
+
+
+
+    
+  return Fz
+end
