@@ -161,25 +161,28 @@ function get_reference_CNP(
 
             values_plot_ABA_reference=zeros(Float64,2*NL,length(kx_grid),length(kx_grid))
 
-            for ja in eachindex(kx_grid), jb in eachindex(ky_grid)
+            Threads.@threads for ja in eachindex(kx_grid)
+              for jb in eachindex(ky_grid)
             
                 k=kx_grid[ja]/(Nq)*G1+ky_grid[jb]/Nq*G2
             
                 single_Ham=get_ABCA_Ham(k,0.0)
                 
                 values_plot_ABC_reference[:,ja,jb]=real(eigen(single_Ham).values)
-
+              end
             end
 
 
 
-            for ja in eachindex(kx_grid), jb in eachindex(ky_grid)
+            Threads.@threads for ja in eachindex(kx_grid)
+              for jb in eachindex(ky_grid)
             
                 k=kx_grid[ja]/(Nq)*G1+ky_grid[jb]/Nq*G2
 
                 single_Ham=get_ABAB_Ham(k,0.0)
                 values_plot_ABA_reference[:,ja,jb]=real(eigen(single_Ham).values)
 
+            end
             end
 
 
@@ -208,7 +211,8 @@ function big_func(uD::Float64,aba_record::Float64,abc_record::Float64,
 
             values_plot_ABA=zeros(Float64,2*NL,length(kx_grid),length(ky_grid))
 
-            for ja in eachindex(kx_grid), jb in eachindex(ky_grid)
+            Threads.@threads for ja in eachindex(kx_grid)
+              for jb in eachindex(ky_grid)
             
             
                 
@@ -217,12 +221,14 @@ function big_func(uD::Float64,aba_record::Float64,abc_record::Float64,
                 
                 values_plot_ABC[:,ja,jb]=real(eigen(single_Ham).values)
             
-
+              end
             end
 
 
 
-            for ja in eachindex(kx_grid), jb in eachindex(ky_grid)
+            Threads.@threads for ja in eachindex(kx_grid)
+              for jb in eachindex(ky_grid)
+            
             
                 
                 
@@ -231,7 +237,7 @@ function big_func(uD::Float64,aba_record::Float64,abc_record::Float64,
                 values_plot_ABA[:,ja,jb]=real(eigen(single_Ham).values)
             
 
-
+              end
             end
 
 
