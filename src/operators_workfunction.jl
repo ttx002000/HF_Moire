@@ -278,11 +278,17 @@ function big_func(uD::Float64,aba_record::Float64,abc_record::Float64,
                 println(ja)
             mu1,_=find_FL(v_ABA,density_list[ja],v_ABA[1],v_ABA[end],temp,Area,bg_ABA)
             mu2,_=find_FL(v_ABC,density_list[ja],v_ABC[1],v_ABC[end],temp,Area,bg_ABC)
-
-            jj1=sum(([1/(1+exp((v_ABA[ja]-mu1)/temp)) for ja in eachindex(v_ABA)]/Area).*v_ABA)
-
-            jj2=sum(([1/(1+exp((v_ABC[ja]-mu2)/temp)) for ja in eachindex(v_ABC)]/Area).*v_ABC)
-
+              
+              jj1=0.0
+              jj2=0.0
+               for jb in eachindex(v_ABA)
+                jj1+=1/(1+exp((v_ABA[jb]-mu1)/temp))*v_ABA[jb]
+                jj2+=1/(1+exp((v_ABC[jb]-mu2)/temp))*v_ABC[jb]
+                #jj1=sum(([1/(1+exp((v_ABA[ja]-mu1)/temp)) for ja in eachindex(v_ABA)]/Area).*v_ABA)
+                #jj2=sum(([1/(1+exp((v_ABC[ja]-mu2)/temp)) for ja in eachindex(v_ABC)]/Area).*v_ABC)
+               end
+               jj1=jj1/Area
+               jj2=jj2/Area
             energy_diff[ja]=(jj2-jj1-density_list[ja]*(workfunction))*2
             end
             println(uD)
