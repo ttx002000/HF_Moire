@@ -30,6 +30,6 @@ savepath=joinpath(scratch_dir, "suseptability_graphene/data_output$(Int(args[7])
 
 
 
-jldsave(savepath,Fz=Fz)
+jldsave(savepath,Fz=Fz,ϵspace=ϵspace)
 
 
