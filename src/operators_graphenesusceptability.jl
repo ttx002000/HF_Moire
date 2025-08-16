@@ -285,7 +285,7 @@ function main_bigmemory(radius::Float64,Γ::Float64,uD::Float64,whichstack::Int,
 
       end
       toc=time()
-       println("Processing kx: $(ja)/$(num_points),takes time $(tco-tic)")
+       println("Processing kx: $(ja)/$(num_points),takes time $(toc-tic)")
             flush(stdout)
     end
 
