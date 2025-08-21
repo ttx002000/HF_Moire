@@ -326,8 +326,8 @@ function big_func(uD::Float64,aba_record::Float64,abc_record::Float64,
                     #jj1=sum(([1/(1+exp((v_ABA[ja]-mu1)/temp)) for ja in eachindex(v_ABA)]/Area).*v_ABA)
                     #jj2=sum(([1/(1+exp((v_ABC[ja]-mu2)/temp)) for ja in eachindex(v_ABC)]/Area).*v_ABC)
                   
-                    kk3=abs(v_ABA[jb]-mu1[ja])/temp
-                    kk4=abs(v_ABC[jb]-mu2[ja])/temp
+                    kk3=abs(v_ABA[jb]-mu1)/temp
+                    kk4=abs(v_ABC[jb]-mu2)/temp
                     jj3+=-log(1+exp(-kk3))+(-kk3)*exp(-kk3)/(1+exp(-kk3))
                     jj4+=-log(1+exp(-kk4))+(-kk4)*exp(-kk4)/(1+exp(-kk4))
 
