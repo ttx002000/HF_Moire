@@ -308,6 +308,7 @@ function big_func(uD::Float64,aba_record::Float64,abc_record::Float64,
 
 
             energy_diff=zeros(Float64,length(density_list))
+            entropy_diff=zeros(Float64,length(density_list))
 
             Threads.@threads for ja in eachindex(density_list)
                 println(ja)
@@ -317,19 +318,35 @@ function big_func(uD::Float64,aba_record::Float64,abc_record::Float64,
                     mu2,_=find_FL(v_ABC,density_list[ja],v_ABC[1],v_ABC[end],temp,Area,bg_ABC)
                   jj1=0.0
                   jj2=0.0
+                  jj3=0.0
+                  jj4=0.0
                   for jb in eachindex(v_ABA)
                     jj1+=1/(1+exp((v_ABA[jb]-mu1)/temp))*v_ABA[jb]
                     jj2+=1/(1+exp((v_ABC[jb]-mu2)/temp))*v_ABC[jb]
                     #jj1=sum(([1/(1+exp((v_ABA[ja]-mu1)/temp)) for ja in eachindex(v_ABA)]/Area).*v_ABA)
                     #jj2=sum(([1/(1+exp((v_ABC[ja]-mu2)/temp)) for ja in eachindex(v_ABC)]/Area).*v_ABC)
+                  
+                    kk3=abs(v_ABA[jb]-mu1[ja])/temp
+                    kk4=abs(v_ABC[jb]-mu2[ja])/temp
+                    jj3+=-log(1+exp(-kk3))+(-kk3)*exp(-kk3)/(1+exp(-kk3))
+                    jj4+=-log(1+exp(-kk4))+(-kk4)*exp(-kk4)/(1+exp(-kk4))
+
+                  
                   end
                   jj1=jj1/Area
                   jj2=jj2/Area
+                  jj3=jj3/Area
+                  jj4=jj4/Area
                 energy_diff[ja]=(jj2-jj1-density_list[ja]*(workfunction))*2
+                entropy_diff[ja]=-(jj4-jj3)*2*temp
+
+
+
+
             end
             println(uD)
             flush(stdout)
-            return energy_diff
+            return energy_diff,entropy_diff
 end
 
 

@@ -38,7 +38,7 @@ aba_record, abc_record,energy_diff_reference=get_reference_CNP(
                             temp,kx_grid,
                              ky_grid,Nq,NL)
 
-energy_diff=big_func(uD,aba_record,abc_record,
+energy_diff,entropy_diff=big_func(uD,aba_record,abc_record,
         wf,temp,kx_grid,
          ky_grid,Nq,NL,density_list)
 
@@ -49,7 +49,7 @@ savepath=joinpath(scratch_dir, "graphene_wf/data_output$(Int(args[9]))/$(args[1]
 
 
 
-jldsave(savepath,energy_diff=energy_diff,energy_diff_reference=energy_diff_reference)
+jldsave(savepath,energy_diff=energy_diff,energy_diff_reference=energy_diff_reference,entropy_diff=entropy_diff)
 
 
 
