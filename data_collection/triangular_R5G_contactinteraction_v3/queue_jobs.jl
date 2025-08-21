@@ -12,7 +12,7 @@ job_prefix = "chern_R5G"
 
 st=load("missedjobs.jld2")
 index=st["index"]
-start=3001
+start=1
 ee=length(index)
 ba_size=300
 count=1
@@ -22,7 +22,7 @@ while (count-1)*ba_size+1<=ee
   sleep(5)
 
   global count+=1
-  if mod(count,4)==0
+  if mod(count,6)==0
     sleep(3600)
   end
 
