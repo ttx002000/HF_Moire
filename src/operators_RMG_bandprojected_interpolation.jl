@@ -2,7 +2,7 @@
 
 
 
-function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::Int64)
+function single_particle(λ::Float64,θ::Float64,NL::Int64,Nq::Int64,uD::Float64,Nband::Int64,gcutoff::Float64,couplingratio::Float64)
 
     ac=0.246
     R1=ac*[1,0]
@@ -11,15 +11,10 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
     G2=2π/ac*[0,2/√3]
     ϵ=0.2504/ac-1 #This is the normal one
     
-    #ϵ=0.650313445592362/(norm(G1)-0.650313445592362) #This is the one that gives me the same period as the normal one at 0.77 degree
-    #ϵ=0.66/(norm(G1)-0.66)#This is the one that gives me 11nm period
-  
-    NL=5
-    V0=28.9
-    V1=21.0
-    #V0=0.0
-    #V1=0.0
-
+   
+   
+    V0=28.9*couplingratio
+    V1=21.0*couplingratio
     ψ=-0.29
     Rθ=[cos(θ) -sin(θ);sin(θ) cos(θ)]
     g1=(G1-(1+ϵ)^(-1)*Rθ*G1)
@@ -39,7 +34,7 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
     KGr=4π/(3*ac)*[1,0]
     am=norm(a1)
     
-    constq=1/(√3/2*am^2*ϵr*Nq^2)*9047.5636
+    Area=(√3/2*am^2*Nq^2)
     
     allowedq=Vector{Int}[]
     for ja in 0:Nq-1, jb in 0:Nq-1
@@ -48,14 +43,14 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
 
     allowedq_dic=Dict{Vector{Int},Int}()
 
-  for ja in eachindex(allowedq)
+   for ja in eachindex(allowedq)
      allowedq_dic[allowedq[ja]]=ja
    end
     
     
     wave=Vector{Int64}[]
     cutoff=18
-    cutoffstandard=3.1*norm(g1)
+    cutoffstandard=gcutoff*norm(g1)
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*g1+jb*g2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -67,7 +62,7 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
     
     wave_diff=Vector{Int64}[]
     cutoff=18
-    cutoffstandard_diff=5.1*norm(g1)
+    cutoffstandard_diff=(gcutoff+2)*norm(g1)
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*g1+jb*g2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard_diff^2
@@ -82,7 +77,7 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
 
 
    for ja in eachindex(allowedq)
-       Ham=get_MoireHam([T1 T2]*allowedq[ja]+KGr,wave,NL,uD,T1,T2,V1,V0,ψ,g1T,g2T)
+       Ham=get_MoireHam(λ,[T1 T2]*allowedq[ja]+KGr,wave,NL,uD,T1,T2,V1,V0,ψ,g1T,g2T)
        FFF=eigen(Ham)
        eigenvalue[ja]=FFF.values[length(wave)*NL+1:length(wave)*NL+Nband]
        eigenvector[ja]=FFF.vectors[:,length(wave)*NL+1:length(wave)*NL+Nband]
@@ -159,8 +154,10 @@ function single_particle(ϵr::Float64,θ::Float64,Nq::Int64,uD::Float64,Nband::I
    for ja in 1:Nq^2,jb in 1:Nq^2, jc in eachindex(wave_diff)
       form_factors[ja,jb,jc]=form_factors_threads[ja][jb,jc]
    end
+   form_factors_threads=nothing
+   GC.gc()
 
-   return eigenvector,eigenvalue,wave,wave_diff,allowedq,allowedq_dic,T1,T2,form_factors,constq,ϵ
+   return eigenvector,eigenvalue,wave,wave_diff,allowedq,allowedq_dic,T1,T2,form_factors,Area,ϵ
 
 end
 
@@ -193,7 +190,7 @@ end
 
 
 
-function iteration(Nq::Int64,Nband::Int64,initial_projector::Vector{Matrix{ComplexF64}},form_factors::Array{Matrix{ComplexF64}},constq::Float64,wave_diff::Vector{Vector{Int}},allowedq::Vector{Vector{Int}},allowedq_dic::Dict{Vector{Int},Int},T1::Vector{Float64},T2::Vector{Float64},band_Ham::Vector{Matrix{ComplexF64}})
+function iteration(Nq::Int64,Nband::Int64,initial_projector::Vector{Matrix{ComplexF64}},form_factors::Array{Matrix{ComplexF64}},Area::Float64,ϵr::Float64,contact_strength::Float64,wave_diff::Vector{Vector{Int}},allowedq::Vector{Vector{Int}},allowedq_dic::Dict{Vector{Int},Int},T1::Vector{Float64},T2::Vector{Float64},band_Ham::Vector{Matrix{ComplexF64}})
     eout=1.0
     itcount=0
     bad_count=0
@@ -206,65 +203,93 @@ function iteration(Nq::Int64,Nband::Int64,initial_projector::Vector{Matrix{Compl
     DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     input_projector=initial_projector
     
-    while (eout>1*10^-13) || (bad_count<4) || (abs(energy_change)>1*10^-8)
-      if eout<1*10^-13
+  while (eout>1*10^-18) || (bad_count<4) || (abs(energy_change)>1*10^-10)
+      if eout<1*10^-18
        bad_count+=1
       end
       tic=time()
-      eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy=Construct_projector(form_factors,input_projector,constq,Nq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,band_Ham,energy)
-      DIIS_input_projector[mod(itcount,3)+1]=input_projector
-      input_projector=output_projector
-      itcount+=1
-     
-      toc=time()
-      println(toc-tic,"eout=$eout","energy_change=$energy_change")
-      flush(stdout)
-     
-    
-    end
-    
 
-   #=
-    println("startDIIS",itcount)
-    
-    bad_count=0
-    while (eout>1*10^-15) || (bad_count<4) || (abs(energy_change)>1*10^-10)
-        if  eout<1*10^-15 
-            bad_count+=1
-        end
-        tic=time()
-        Bmatrix=zeros(ComplexF64,4,4)
-        for ja in 1:3
-         Bmatrix[ja,4]=1
-         Bmatrix[4,ja]=1
-        end
-    
-        for ja in 1:3,jb in 1:3
-            for jc in 1:Nq^2
-               Bmatrix[ja,jb]+=tr((DIIS_input_DeltaMatrix[ja][jc])'*(DIIS_input_DeltaMatrix[jb][jc]))
+
+        if (itcount>100 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-10))
+             println("startDIIS",itcount)
+              dmk=implement_DIIS(DIIS_input_projector,DIIS_input_DeltaMatrix,Nq)
+            if dmk==0
+                itcount=0
+                dmk=[zeros(ComplexF64,Nband,Nband) for _ in 1:Nq^2]
+                for ja in 1:Nq^2
+                  A=randn(Nband,Nband)+im*randn(Nband,Nband)
+                  dmk[ja]+=(A+A')*0.01
+                end
             end
+             eout,energy_change,_,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy=Construct_projector(form_factors,dmk,Area,ϵr,contact_strength,Nq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,band_Ham,energy)
+             DIIS_input_projector[mod(itcount,3)+1]=dmk
+            itcount+=1
+
+
+        else
+
+          eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy=Construct_projector(form_factors,input_projector,Area,ϵr,contact_strength,Nq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,band_Ham,energy)
+          DIIS_input_projector[mod(itcount,3)+1]=input_projector
+          input_projector=output_projector
+          itcount+=1
+        
+         
         end
-        coeff=inv(Bmatrix)*[0;0;0;1]
-       
-        dmk=coeff[1]*(DIIS_input_projector[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_projector[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_projector[3]+DIIS_input_DeltaMatrix[3])
-        eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy=Construct_projector(form_factors,dmk,constq,Nq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,band_Ham,energy)
-        DIIS_input_projector[mod(itcount,3)+1]=dmk
-        itcount+=1
-
-        toc=time()
-        println(toc-tic,"eout=$eout","energy_change=$energy_change")
-        flush(stdout)
+         toc=time()
+          println(toc-tic,"eout=$eout","energy_change=$energy_change")
+          flush(stdout)
+    
     end
-  =#
+    
+
    
-
-
-
 
 
     return DIIS_input_projector,energy,HF_eigenvalue,HF_eigenvector,bound
 end
 
+
+
+
+function implement_DIIS(DIIS_input_projector::Vector{Vector{Matrix{ComplexF64}}},DIIS_input_DeltaMatrix::Vector{Vector{Matrix{ComplexF64}}},Nq::Int)
+
+
+
+      Bmatrix=zeros(ComplexF64,4,4)
+      for ja in 1:3
+       Bmatrix[ja,4]=1
+       Bmatrix[4,ja]=1
+      end
+  
+      for ja in 1:3,jb in 1:3
+          for jc in Nq^2
+             Bmatrix[ja,jb]+=real(tr((DIIS_input_DeltaMatrix[ja][jc])'*(DIIS_input_DeltaMatrix[jb][jc])))
+          end
+      end
+
+      inB=safe_inverse(Bmatrix)
+      if inB≠0
+         coeff=inB*[0;0;0;1]
+         dmk=coeff[1]*(DIIS_input_projector[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_projector[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_projector[3]+DIIS_input_DeltaMatrix[3])
+         return dmk
+      else
+        return 0
+      end
+end
+
+
+function safe_inverse(A)
+  try
+      return inv(A)  # Attempt to compute inverse
+  catch e
+      if isa(e, SingularException)
+          println("Matrix is singular, doing randomstart again.")
+          return pinv(A, 0.1)  # Use pseudoinverse as an alternative
+      else
+          rethrow(e)  # If another error occurs, propagate it
+      end
+  end
+end
 
 
 
@@ -283,7 +308,7 @@ end
 
 function Coulomb(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64})::Float64
    D=25
-   return k==[0,0] ? D : tanh(norm([T1 T2]*k*D))/norm(k[1]*T1+k[2]*T2)
+   return k==[0,0] ? D*9047.5636 : tanh(norm([T1 T2]*k*D))/norm(k[1]*T1+k[2]*T2)*9047.5636
 end
 
 
@@ -305,19 +330,54 @@ function get_RNGham(k::Vector{Float64},NL::Int,uD::Float64)
     Ham=Ham+Ham'
 
     for layer in 1:NL
-        Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[uD*(layer+1-(NL-1)/2) -t0*get_f(k);-t0*conj(get_f(k)) uD*(layer+1-(NL-1)/2)]
+        Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[uD*(layer-(NL+1)/2) -t0*get_f(k);-t0*conj(get_f(k)) uD*(layer-(NL+1)/2)]
     end
    return Ham
 end
 
+function get_RNGham_Holomorphic(k::Vector{Float64},NL::Int,uD::Float64)
+ 
+  Ham=zeros(ComplexF64,2*NL,2*NL)
 
-function get_MoireHam(k::Vector{Float64},wave::Vector{Vector{Int}},NL::Int,uD::Float64,T1::Vector{Float64},T2::Vector{Float64},V1::Float64,V0::Float64,ψ::Float64,g1T::Vector{Int},g2T::Vector{Int})
+  t0=3100
+  t1=380
+  fk=-√3/2*0.246*(k[1]-4π/(3*0.246))+im*√3/2*0.246*k[2]
+
+  for layer in 1:NL-1
+     Ham[2*layer-1:2*layer,2*layer+1:2*layer+2]+=[0.0 0.0;t1 0.0]
+  end
+
+
+
+  Ham=Ham+Ham'
+
+  for layer in 1:NL
+      Ham[2*layer-1:2*layer,2*layer-1:2*layer]+=[0.0 -t0*fk;-t0*conj(fk) 0.0]
+  end
+  
+   Ham[1:2,1:2]=[0.0 0.0; 0.0 0.0]
+
+ for layer in 1:NL
+   Ham[2*layer,2*layer]+=eigen(get_RNGham(k,NL,uD)).values[NL+1] 
+ end
+
+  for layer in 1:NL
+   Ham[2*layer-1,2*layer-1]-=eigen(get_RNGham(k,NL,uD)).values[NL+1]  
+ end
+  
+ return Ham
+end
+
+
+function get_MoireHam(λ::Float64,k::Vector{Float64},wave::Vector{Vector{Int}},NL::Int,
+                      uD::Float64,T1::Vector{Float64},T2::Vector{Float64},
+                      V1::Float64,V0::Float64,ψ::Float64,g1T::Vector{Int},g2T::Vector{Int})
     
       ω=exp(im*2π/3)
         Hamiltonian=zeros(ComplexF64,length(wave)*2*NL,length(wave)*2*NL)
         for jb in eachindex(wave)
             kvec=k+[T1 T2]*wave[jb]
-            Hamiltonian[2*NL*(jb-1)+1:2*NL*jb,2*NL*(jb-1)+1:2*NL*jb]=get_RNGham(kvec,NL,uD)
+            Hamiltonian[2*NL*(jb-1)+1:2*NL*jb,2*NL*(jb-1)+1:2*NL*jb]=λ*get_RNGham(kvec,NL,uD)+(1-λ)*get_RNGham_Holomorphic(kvec,NL,uD)
         end
        
         Moire=zeros(ComplexF64,length(wave)*2*NL,length(wave)*2*NL)
@@ -353,49 +413,14 @@ end
 
 
 
-function get_MoireHam_periodicpo(k::Vector{Float64},wave::Vector{Vector{Int}},NL::Int,uD::Float64,T1::Vector{Float64},T2::Vector{Float64},Vperiod::Float64,angle::Float64)
-    
-
-   iden=Matrix{Float64}(I, 2*NL, 2*NL) 
-     Hamiltonian=zeros(ComplexF64,length(wave)*2*NL,length(wave)*2*NL)
-     for jb in eachindex(wave)
-         kvec=k+[T1 T2]*wave[jb]
-         Hamiltonian[2*NL*(jb-1)+1:2*NL*jb,2*NL*(jb-1)+1:2*NL*jb]=get_RNGham(kvec,NL,uD)
-     end
-    
-     Moire=zeros(ComplexF64,length(wave)*2*NL,length(wave)*2*NL)
- 
-     for jc in eachindex(wave)
-        pos=findfirst(item->item==wave[jc]+g1T,wave)
-        if pos≠nothing
-           Moire[2*NL*(pos-1)+1:2*NL*(pos),2*NL*(jc-1)+1:2*NL*(jc)]+=Vperiod*exp(-im*angle)*iden
-        end
- 
-        pos=findfirst(item->item==wave[jc]+g2T,wave)
-        if pos≠nothing
-           Moire[2*NL*(pos-1)+1:2*NL*(pos),2*NL*(jc-1)+1:2*NL*(jc)]+=Vperiod*exp(-im*angle)*iden
- 
-        end
- 
-        pos=findfirst(item->item==wave[jc]-g1T-g2T,wave)
-        if pos≠nothing
-         Moire[2*NL*(pos-1)+1:2*NL*(pos),2*NL*(jc-1)+1:2*NL*(jc)]+=Vperiod*exp(-im*angle)*iden
-        end
-    
-     end
- 
- 
-
-     return Moire+Moire'+Hamiltonian
- 
- 
- 
-
-end
 
 
 
-function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::Vector{Matrix{ComplexF64}},constq::Float64,Nq::Int64,Nband::Int64,wave_diff::Vector{Vector{Int64}},allowedq::Vector{Vector{Int}},allowedq_dic::Dict{Vector{Int},Int},T1::Vector{Float64},T2::Vector{Float64},band_Ham::Vector{Matrix{ComplexF64}},energy_input::Float64)
+
+function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::Vector{Matrix{ComplexF64}},Area::Float64,ϵr::Float64,contact_strength::Float64,
+                                             Nq::Int64,Nband::Int64,wave_diff::Vector{Vector{Int64}},allowedq::Vector{Vector{Int}},
+                                             allowedq_dic::Dict{Vector{Int},Int},T1::Vector{Float64},T2::Vector{Float64},
+                                             band_Ham::Vector{Matrix{ComplexF64}},energy_input::Float64)
    Hartree=[zeros(ComplexF64,Nband,Nband) for _ in 1:Nq^2]
    Fock=[zeros(ComplexF64,Nband,Nband) for _ in 1:Nq^2]
    New_projector=[zeros(ComplexF64,Nband,Nband) for _ in 1:Nq^2]
@@ -404,7 +429,7 @@ function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::V
     for jqmesh in eachindex(allowedq)
        k1pos=allowedq_dic[mod.(allowedq[k2]+allowedq[jqmesh],Nq)]
       for jqg in eachindex(wave_diff)
-         Fock[k2]+=Coulomb(allowedq[jqmesh]+wave_diff[jqg],T1,T2)*form_factor[k2,jqmesh,jqg]*projector[k1pos]*(form_factor[k2,jqmesh,jqg])'
+         Fock[k2]+=(Coulomb(allowedq[jqmesh]+wave_diff[jqg],T1,T2)/ϵr+contact_strength)*form_factor[k2,jqmesh,jqg]*projector[k1pos]*(form_factor[k2,jqmesh,jqg])'
        end
    end 
    end
@@ -417,14 +442,14 @@ function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::V
 
   Threads.@threads for ja in eachindex(allowedq)
     for jqg in eachindex(wave_diff)
-       Hartree[ja]+=Coulomb(wave_diff[jqg],T1,T2)*form_factor[ja,zeropos,jqg]*HartreeDensity[jqg]
+       Hartree[ja]+=(Coulomb(wave_diff[jqg],T1,T2)/ϵr+contact_strength)*form_factor[ja,zeropos,jqg]*HartreeDensity[jqg]
     end
   end
 
   HF_eigenvalue=[zeros(Float64,Nband) for _ in 1:Nq^2]
   HF_eigenvector=[zeros(ComplexF64,Nband,Nband) for _ in 1:Nq^2]
   for ja in eachindex(allowedq)
-     FFF=eigen(constq*Hartree[ja]+band_Ham[ja]-constq*Fock[ja])
+     FFF=eigen(1/Area*Hartree[ja]+band_Ham[ja]-1/Area*Fock[ja])
      HF_eigenvalue[ja]=real.(FFF.values)
      HF_eigenvector[ja]=FFF.vectors
   end
@@ -442,6 +467,11 @@ function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::V
         end
    end
 
+   for ja in 1:Nq^2
+     New_projector[ja]=0.5*( New_projector[ja]+ New_projector[ja]')
+   end
+
+
    DeltaMatrix=New_projector-projector
    output_projector=0.0*projector+1.0*New_projector
 
@@ -453,11 +483,11 @@ function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::V
     
   energy=0.0
   for ja in 1:Nq^2
-     energy+=tr((constq/2*Hartree[ja]+band_Ham[ja]-constq/2*Fock[ja])*output_projector[ja])
+     energy+=tr((1/(2*Area)*Hartree[ja]+band_Ham[ja]-1/(2*Area)*Fock[ja])*output_projector[ja])
   end
 
 
-  energy_change=real(energy-energy_input)
+  energy_change=real(energy-energy_input)/Nq^2
 
    return  eout,energy_change,output_projector,DeltaMatrix,HF_eigenvalue,bound, HF_eigenvector,real(energy)
   
@@ -478,8 +508,8 @@ function reshuffle(state::Vector{ComplexF64},NL,wave,shuffle_vec)
 end
 
 
-function get_chern(Nq::Int64,wave::Vector{Vector{Int64}},allowedq::Vector{Vector{Int}},allowedq_dic::Dict{Vector{Int},Int},T1::Vector{Float64},T2::Vector{Float64},eigenvector::Vector{Matrix{ComplexF64}},HF_eigenvector::Vector{Matrix{ComplexF64}})
-    NL=5
+function get_chern(NL::Int64,Nq::Int64,wave::Vector{Vector{Int64}},allowedq::Vector{Vector{Int}},allowedq_dic::Dict{Vector{Int},Int},T1::Vector{Float64},T2::Vector{Float64},eigenvector::Vector{Matrix{ComplexF64}},HF_eigenvector::Vector{Matrix{ComplexF64}})
+   
     chern_eigenvector=zeros(ComplexF64,2*NL*length(wave),Nq+1,Nq+1)
     for ja in 1:Nq+1, jb in 1:Nq+1
         
