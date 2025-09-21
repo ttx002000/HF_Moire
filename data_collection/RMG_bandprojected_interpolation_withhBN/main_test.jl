@@ -19,7 +19,7 @@ filepos=Int(args[12])
 
 
 
-eigenvector,eigenvalue,wave,wave_diff,allowedq,allowedq_dic,T1,T2,form_factors,Area,ϵ=single_particle(λ,θ,NL,Nq,uD,Nband,gcutoff,couplingratio)
+eigenvector,eigenvalue,wave,wave_diff,allowedq,allowedq_dic,T1,T2,form_factors,Area,ϵ=single_particle(λ,θ,NL,Nq,uD,Nband,gcutoff,coupling_ratio)
 push!(args,ϵ)
 println("Finished single particle")
 initial_projector,band_Ham=get_initial_projector(Nq,Nband,eigenvalue)
