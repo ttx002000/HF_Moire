@@ -2,7 +2,7 @@ using JLD2
 include("../../src/operators_RMG_bandprojected_interpolation.jl")
 using LinearAlgebra
 
-#args=parse.(Float64,ARGS)
+args=parse.(Float64,ARGS)
 #args=[5.0,0.77,6,50.0,7.0,1.0,0.0,3.01,5,1,1]
 ϵr=args[1]
 θ=args[2]/180*π
