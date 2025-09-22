@@ -10,8 +10,7 @@ include("../../src/operators_TDHF_RMG_contactinteraction_v2.jl")
 
 
 args=parse.(Float64,ARGS)
-args=[5.0,0.77,6,50.0,7.0,1.0,0.0,3.01,5,1,1,1]
-#args=[5.0,0.0,0.0,6.0,2.0,944060.8762859226,1.0,3.51,1.0,1.0]
+
 NL=Int(args[1])
 V0=args[2]
 ϕ=args[3]/180*π
