@@ -83,6 +83,7 @@ output_path=joinpath(scratch_dir, "triangle_R5G_contact_v2/data_output$(Int(args
  jldsave(output_path,
          omegaspectrum=ω,
          Sspectrum=Sspectrum,
-         Aspectrum=Aspectrum,Amatrix=Amatrix,Bmatrix=Bmatrix,AmQmatrix=AmQmatrix)
+         Aspectrum=Aspectrum,Amatrix=Amatrix,Bmatrix=Bmatrix,AmQmatrix=AmQmatrix,
+         Bandvector=Bandvector,Aindexset=Aindexset,AmQindexset=AmQindexset,B2indexset=B2indexset)
 
 
