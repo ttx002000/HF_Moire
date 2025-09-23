@@ -34,6 +34,8 @@ println("found it")
 st=load(input_path)
 T1=st["T1"]
 T2=st["T2"]
+b1=st["b1"]
+b2=st["b2"]
 allowedq=st["allowedq"]
 wave=st["wave"]
 bigQ=allowedq[bigQindex]
@@ -44,13 +46,11 @@ HF_eigenvalue=st["HFeigenvalue"]
 HF_eigenvector=st["HF_eigenvector"]
 
 spinor_set=st["spinor_set"]
+am=norm(st["a1m"])
+wave_diff=get_wavediff(gcutoff,T1,T2,b1,b2)
 
 
 
-wave_diff=get_wavediff(gcutoff,T1,T2,scale)
-
-
- am=4π/(√3*scale)
   Area=(√3/2*am^2*Nq^2)
 
 

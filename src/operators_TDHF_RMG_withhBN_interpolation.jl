@@ -252,10 +252,9 @@ end
 
 
 
-function get_wavediff(gcutoff::Float64,T1::Vector{Float64},T2::Vector{Float64},scale::Float64)
+function get_wavediff(gcutoff::Float64,T1::Vector{Float64},T2::Vector{Float64},b1::Vector{Float64},b2::Vector{Float64})
 
-   b1=scale*[0,1]
-    b2=scale*[√3/2,-1/2]
+   
 
     
     
@@ -267,7 +266,7 @@ function get_wavediff(gcutoff::Float64,T1::Vector{Float64},T2::Vector{Float64},s
     
     wavediff=Vector{Int64}[]
     cutoff=25
-    cutoffstandard=2*gcutoff*scale
+    cutoffstandard=2*gcutoff*norm(b1)
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
