@@ -10,7 +10,7 @@ include("../../src/operators_TDHF_RMG_withhBN_interpolation.jl")
 
 
 args=parse.(Float64,ARGS)
-NL=args[1]
+NL=Int(args[1])
 
 Nq=Int(args[2]);
 θ=args[3]/180*pi;
