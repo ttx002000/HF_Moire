@@ -136,26 +136,30 @@ end
 function get_Velement(qindex::Int64,v1::Vector{Int64},v2::Vector{Int64},v3::Vector{Int64},v4::Vector{Int64}
                     ,Fmatrix::Array{ComplexF64},gkpqmap::Array{Int64},gkmqmap::Array{Int64}
                      ,T1::Vector{Float64},T2::Vector{Float64},wave_diff::Vector{Vector{Int64}}
-                      ,allowedq::Vector{Vector{Int64}},Area::Float64,contact_strength::Float64)::ComplexF64
+                      ,allowedq::Vector{Vector{Int64}},Area::Float64,contact_strength::Float64,ϵr::Float64)::ComplexF64
     Velement=0 #v1v2v3v4 contains two informatin, which band and which momentum
    for ja in eachindex(wave_diff)
-     
+       qvec=allowedq[qindex]+wave_diff[ja]
        if  (gkpqmap[v3[2],qindex,ja]≠0) && (gkmqmap[v4[2],qindex,ja]≠0)
-          Velement+=Fmatrix[v1[1],v3[1],gkpqmap[v3[2],qindex,ja]]*Fmatrix[v2[1],v4[1],gkmqmap[v4[2],qindex,ja]]
+          Velement+=(Coulomb(qvec,T1,T2)/ϵr+contact_strength)*Fmatrix[v1[1],v3[1],gkpqmap[v3[2],qindex,ja]]*Fmatrix[v2[1],v4[1],gkmqmap[v4[2],qindex,ja]]
        end
    end
 
-   return Velement/Area*contact_strength
+   return Velement/Area
 end
 
 
+function Coulomb(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64})::Float64
+   D=25
+   return k==[0,0] ? D*9047.5636 : tanh(norm([T1 T2]*k*D))/norm(k[1]*T1+k[2]*T2)*9047.5636
+end
 
 
 
 function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset::Vector{Vector{Vector{Int64}}},B2indexset::Vector{Vector{Vector{Int64}}},
                   allowedq::Vector{Vector{Int64}},Fmatrix::Array{ComplexF64},gkpqmap::Array{Int64},gkmqmap::Array{Int64},
                   T1::Vector{Float64},T2::Vector{Float64},wave_diff::Vector{Vector{Int64}},
-                  HF_eigenvalue::Vector{Vector{Float64}},Nq::Int64,Area::Float64,contact_strength::Float64)::Tuple{Matrix{ComplexF64},Matrix{ComplexF64},Matrix{ComplexF64}}
+                  HF_eigenvalue::Vector{Vector{Float64}},Nq::Int64,Area::Float64,contact_strength::Float64,ϵr::Float64)::Tuple{Matrix{ComplexF64},Matrix{ComplexF64},Matrix{ComplexF64}}
    
 
 
@@ -174,7 +178,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
 
    deltaq2=allowedq[v1[2]]-allowedq[v4[2]]
    q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
-   Amatrixvec[ja][jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,Area,contact_strength)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,Area,contact_strength)
+   Amatrixvec[ja][jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,Area,contact_strength,ϵr)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,Area,contact_strength,ϵr)
   end
  end
 
@@ -204,7 +208,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
 
    deltaq2=allowedq[v1[2]]-allowedq[v4[2]]
    q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
-   AmQmatrixvec[ja][jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,Area,contact_strength)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,Area,contact_strength)
+   AmQmatrixvec[ja][jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,Area,contact_strength,ϵr)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,Area,contact_strength,ϵr)
  end
  end
 
@@ -237,7 +241,7 @@ function Construct_Amatrix(Aindexset::Vector{Vector{Vector{Int64}}},AmQindexset:
   
      deltaq2=allowedq[v1[2]]-allowedq[v4[2]]
      q2index=findfirst(item->item==[mod(deltaq2[1],Nq),mod(deltaq2[2],Nq)],allowedq)
-     Bmatrixvec[ja][jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,Area,contact_strength)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,Area,contact_strength)
+     Bmatrixvec[ja][jb]=-get_Velement(q1index,v1[1:2],v2[1:2],v3[1:2],v4[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,Area,contact_strength,ϵr)+get_Velement(q2index,v1[1:2],v2[1:2],v4[1:2],v3[1:2],Fmatrix,gkpqmap,gkmqmap,T1,T2,wave_diff,allowedq,Area,contact_strength,ϵr)
    end
    end
 

@@ -66,7 +66,7 @@ flush(stdout)
 Amatrix,AmQmatrix,Bmatrix=Construct_Amatrix(Aindexset,AmQindexset,B2indexset,
                   allowedq,Fmatrix,gkpqmap,gkmqmap,
                   T1,T2,wave_diff,
-                  HF_eigenvalue,Nq,Area,contact_strength)
+                  HF_eigenvalue,Nq,Area,contact_strength,ϵr)
    println("I am here")
    flush(stdout)
 
