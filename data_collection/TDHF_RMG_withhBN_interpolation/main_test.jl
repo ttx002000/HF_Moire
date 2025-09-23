@@ -27,7 +27,7 @@ filepos=Int(args[11])
 
 
 scratch_dir = ENV["SCRATCH"]
-input_path=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN/data_output$(Int(args[11]))/$(args[1])NL$(args[2])Nq$(args[3])theta$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda_seed.jld2")
+input_path=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN/data_output$(Int(args[11]))/TDHF_seed/$(args[1])NL$(args[2])Nq$(args[3])theta$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda_seed.jld2")
 #input_path=joinpath(@__DIR__,"data.jld2")
 println("found it")
 
@@ -80,7 +80,7 @@ Amatrix,AmQmatrix,Bmatrix=Construct_Amatrix(Aindexset,AmQindexset,B2indexset,
  Sspectrum=eigvals(Smatrix)
  Aspectrum=eigvals(Amatrix)
 
-output_path=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN/data_output$(Int(args[11]))/$(args[1])NL$(args[2])Nq$(args[3])theta$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda$(args[10])bigQ.jld2")
+output_path=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN/data_output$(Int(args[11]))/TDHF_result/$(args[1])NL$(args[2])Nq$(args[3])theta$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda$(args[10])bigQ.jld2")
 
 
  jldsave(output_path,
