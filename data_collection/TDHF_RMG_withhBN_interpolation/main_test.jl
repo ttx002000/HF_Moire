@@ -71,7 +71,8 @@ Amatrix,AmQmatrix,Bmatrix=Construct_Amatrix(Aindexset,AmQindexset,B2indexset,
    flush(stdout)
 
 
- 
+ Fmatrix=nothing
+ GC.gc()
  Totalmatrix=vcat(hcat(Amatrix,Bmatrix),hcat(-Bmatrix',-conj(AmQmatrix)))
  Smatrix=vcat(hcat(Amatrix,Bmatrix),hcat(Bmatrix',conj(AmQmatrix)))
  FFF=eigen(Totalmatrix)
