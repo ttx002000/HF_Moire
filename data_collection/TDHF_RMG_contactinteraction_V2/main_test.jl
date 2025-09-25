@@ -73,7 +73,9 @@ Amatrix,AmQmatrix,Bmatrix=Construct_Amatrix(Aindexset,AmQindexset,B2indexset,
  
  Totalmatrix=vcat(hcat(Amatrix,Bmatrix),hcat(-Bmatrix',-conj(AmQmatrix)))
  Smatrix=vcat(hcat(Amatrix,Bmatrix),hcat(Bmatrix',conj(AmQmatrix)))
- ω=eigvals(Totalmatrix)
+ FFF=eigen(Totalmatrix)
+ ω=FFF.values
+ XYvecotrs=FFF.vectors
  Sspectrum=eigvals(Smatrix)
  Aspectrum=eigvals(Amatrix)
 
@@ -82,7 +84,7 @@ output_path=joinpath(scratch_dir, "triangle_R5G_contact_v2/data_output$(Int(args
 
  jldsave(output_path,
          omegaspectrum=ω,
-         Sspectrum=Sspectrum,
+         Sspectrum=Sspectrum,XYvecotrs=XYvecotrs,
          Aspectrum=Aspectrum,Amatrix=Amatrix,Bmatrix=Bmatrix,AmQmatrix=AmQmatrix,
          Bandvector=Bandvector,Aindexset=Aindexset,AmQindexset=AmQindexset,B2indexset=B2indexset)
 
