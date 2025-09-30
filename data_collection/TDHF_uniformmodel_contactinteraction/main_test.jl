@@ -54,9 +54,12 @@ wave_diff=get_wavediff(gcutoff,T1,T2,scale)
 Bandvector,Aindexset,AmQindexset,B2indexset,gkpqmap,gkmqmap=get_indexset(wave_diff,num_bandbelow,num_bandup,allowedq,Nq,bigQ)
 
 println("I am here")
+flush(stdout)
+form_overlapmatrix=get_foverlap(wave_diff,wave,allowedq,Nq,T1,T2,flux,scale)
+println("I am here")
+flush(stdout)
 
-
-Fmatrix=get_Fmatrix(Bandvector,HF_eigenvector,wave,wave_diff,T1,T2,flux,scale)
+Fmatrix=get_Fmatrix(Bandvector,HF_eigenvector,wave,wave_diff,T1,T2,flux,scale,form_overlapmatrix)
  
 
 println("I am here")

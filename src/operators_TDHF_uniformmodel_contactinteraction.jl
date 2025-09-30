@@ -141,7 +141,7 @@ end
 
 
 
-function get_Fmatrix(Bandvector::Vector{Vector{Int64}},HF_eigenvector::Vector{Matrix{ComplexF64}},wave::Vector{Vector{Int}},wave_diff::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},flux::Float64,scale::Float64)::Array{ComplexF64}
+function get_Fmatrix(Bandvector::Vector{Vector{Int64}},HF_eigenvector::Vector{Matrix{ComplexF64}},wave::Vector{Vector{Int}},wave_diff::Vector{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},flux::Float64,scale::Float64,form_overlapmatrix::Array{ComplexF64})::Array{ComplexF64}
     β=flux/(√3/2*scale^2)
     dimension=length(wave)
     Fmatrix=zeros(ComplexF64,length(Bandvector),length(Bandvector),length(wave_diff))
@@ -161,12 +161,16 @@ function get_Fmatrix(Bandvector::Vector{Vector{Int64}},HF_eigenvector::Vector{Ma
     end
 
     Threads.@threads for ja in eachindex(Bandvector)
-      for jb in eachindex(Bandvector), jc in eachindex(wave_diff)
-         ff=[overlap([T1 T2]*(allowedq[Bandvector[ja][1]]+wave[jw]+wave_diff[jc]),[T1 T2]*(allowedq[Bandvector[jb][1]]+wave[jw]),β) for jw in eachindex(wave)]
-
-        #Fmatrix[ja,jb,jc]=sum(conj(diff_eigenvector[:,ja,jc]).*eigenvector_single[:,jb].*form_overlapmatrix[Bandvector[ja][1],Bandvector[jb][1],:,jc])
-         Fmatrix[ja,jb,jc]=diff_eigenvector[:,ja,jc]'*(eigenvector_single[:,jb].*ff) 
-      end
+      for jb in eachindex(Bandvector)
+        ff=form_overlapmatrix[Bandvector[ja][1],Bandvector[jb][1],:,:]
+        for  jc in eachindex(wave_diff)
+         #ff=[overlap([T1 T2]*(allowedq[Bandvector[ja][1]]+wave[jw]+wave_diff[jc]),[T1 T2]*(allowedq[Bandvector[jb][1]]+wave[jw]),β) for jw in eachindex(wave)]
+           Fmatrix[ja,jb,jc]=diff_eigenvector[:,ja,jc]'*(eigenvector_single[:,jb].*ff[:,jc])
+       
+           #Fmatrix[ja,jb,jc]=diff_eigenvector[:,ja,jc]'*(eigenvector_single[:,jb].*form_overlapmatrix[Bandvector[ja][1],Bandvector[jb][1],:,jc])
+         #Fmatrix[ja,jb,jc]=diff_eigenvector[:,ja,jc]'*(eigenvector_single[:,jb].*ff) 
+        end
+        end
     end
   
     pos=findfirst(item->item==[0,0],wave_diff)
@@ -178,7 +182,7 @@ function get_Fmatrix(Bandvector::Vector{Vector{Int64}},HF_eigenvector::Vector{Ma
 end
 
 
-#=
+
 function  get_foverlap(wave_diff::Vector{Vector{Int64}},wave::Vector{Vector{Int64}},allowedq::Vector{Vector{Int64}},Nq::Int64,T1::Vector{Float64},T2::Vector{Float64},flux::Float64,scale::Float64)::Array{ComplexF64}
     form_overlapmatrix=zeros(ComplexF64,Nq^2,Nq^2,length(wave),length(wave_diff))
    
@@ -196,7 +200,7 @@ function  get_foverlap(wave_diff::Vector{Vector{Int64}},wave::Vector{Vector{Int6
 
    return form_overlapmatrix
 end
-=#
+
 
 
 
