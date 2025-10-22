@@ -145,6 +145,7 @@ function big_func(powerindex::Int,bigQindex::Int,file_pos::Int)
 
       
                println(bigQindex)
+               flush(stdout)
                 bigQ=allowedq[bigQindex]
                 bigQvec=[T1 T2]*bigQ
                 shiftvec=[-bigQvec[2],bigQvec[1]]*(norm(a1m)^2*√3/2)/(2*π)
@@ -276,7 +277,8 @@ function big_func(powerindex::Int,bigQindex::Int,file_pos::Int)
 
 
                 MMmatrix=zeros(ComplexF64,length(powerrange),length(powerrange)) #This is Gmatrix
-                for mindex in eachindex(powerrange), nindex in eachindex(powerrange)
+               Threads.@threads for mindex in eachindex(powerrange)
+                   for nindex in eachindex(powerrange)
                   
                       for emsite in eachindex(allowedq)
                               emk_plusq=mod.(allowedq[emsite]+bigQ,Nq)
@@ -291,12 +293,15 @@ function big_func(powerindex::Int,bigQindex::Int,file_pos::Int)
                               dd1=dd1/(norm(eigenvector_try[emk_plusq_pos]))^2
                               MMmatrix[mindex,nindex]+=dd1
                       end
-          
+                    end
                 end
+                   println("finishMM")
+                   flush(stdout)
 
 
             MHmatrix=zeros(ComplexF64,length(powerrange),length(powerrange))# This is Amatrix
-            for mindex in eachindex(powerrange),nindex in eachindex(powerrange) 
+            Threads.@threads for mindex in eachindex(powerrange)
+              for nindex in eachindex(powerrange) 
 
                       for emsite in eachindex(allowedq)
                             emk_plusq=mod.(allowedq[emsite]+bigQ,Nq)
@@ -335,19 +340,18 @@ function big_func(powerindex::Int,bigQindex::Int,file_pos::Int)
                             
 
                       end
-
-
-
-
-
-            end
+                    end
+                 end
+                   println("finishMH")
+                   flush(stdout)
 
 
 
 
             Bmatrix=zeros(ComplexF64,length(powerrange),length(powerrange))# This is Bmatrix
 
-            for mindex in eachindex(powerrange),nindex in eachindex(powerrange) 
+            Threads.@threads for mindex in eachindex(powerrange)
+              for nindex in eachindex(powerrange) 
 
                   for emsite in eachindex(allowedq)
                         emk_plusq=mod.(allowedq[emsite]+bigQ,Nq)
@@ -363,10 +367,12 @@ function big_func(powerindex::Int,bigQindex::Int,file_pos::Int)
 
                       Bmatrix[mindex,nindex]+=v3-v4-v5
                   end
+                end
             end
     
 
-
+             println("finishB")
+                   flush(stdout)
             
   
 
