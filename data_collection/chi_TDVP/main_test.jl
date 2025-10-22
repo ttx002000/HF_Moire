@@ -15,7 +15,8 @@ Nq=Int(args[1])
 powerindex=Int(args[2])
 bigQindex=Int(args[3])
 file_pos=Int(args[4])
-
+println("we start")
+flush(stdout)
  MHmatrix, Bmatrix,MMmatrix=big_func(powerindex,bigQindex,file_pos)
 
 
