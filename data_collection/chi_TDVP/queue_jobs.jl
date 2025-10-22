@@ -2,6 +2,7 @@ using Pkg
 Pkg.activate(joinpath(@__DIR__, "../.."))
 using LinearAlgebra
 using JLD2
+using Plots
 
 
 include("submit_job_v2.jl")
