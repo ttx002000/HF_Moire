@@ -1,6 +1,7 @@
 using Pkg
 Pkg.activate(joinpath(@__DIR__, "../.."))
-using Plots
+Pkg.instantiate()
+
 using JLD2
 using CSV,DataFrames
 using LinearAlgebra

@@ -1,6 +1,6 @@
 using Pkg
 Pkg.activate(joinpath(@__DIR__, "../.."))
-Pkg.instantiate()
+
 using LinearAlgebra
 using JLD2
 using Plots
