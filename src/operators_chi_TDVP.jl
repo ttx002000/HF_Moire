@@ -27,6 +27,8 @@ function big_func(powerindex::Int,bigQindex::Int,file_pos::Int)
          powerrange=[7]
     elseif powerindex==9
          powerrange=[8]
+    elseif powerindex==10
+    powerrange=[2]
 
 
     end
