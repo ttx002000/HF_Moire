@@ -29,6 +29,8 @@ function big_func(powerindex::Int,bigQindex::Int,file_pos::Int)
          powerrange=[8]
     elseif powerindex==10
     powerrange=[2]
+    elseif powerindex==11
+      powerrange=collect(0:1:5)
 
 
     end
