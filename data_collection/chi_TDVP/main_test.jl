@@ -21,7 +21,7 @@ flush(stdout)
 
 
 scratch_dir = ENV["SCRATCH"]
-output_path=joinpath(scratch_dir, "chi_TDVP/data_output$(Int(args[4]))/$(args[1])Nq$(args[2])powerindex$(args[3])bigQ")
+output_path=joinpath(scratch_dir, "chi_TDVP/data_output$(Int(args[4]))/$(args[1])Nq$(args[2])powerindex$(args[3])bigQ.jld2")
 
 
  jldsave(output_path,
