@@ -45,12 +45,12 @@ eigenvector,eigenvalue,wave,wave_diff,wave_dic,allowedq,allowedq_dic,T1,T2,const
 Npa=length(allowedq)*filling
 formfactors=get_formfactors(allowedq,wave,wave_diff,wave_dic,Minv,Nband,eigenvector)
 scratch_dir = ENV["SCRATCH"]
-ffpath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[16]))/FF/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(args[13])gcut$(args[14])qcut.jld2")
+ffpath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[16]))/FF/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(args[14])gcut$(args[15])qcut.jld2")
 jldsave(ffpath,formfactors=formfactors)
 
 
 #scratch_dir = ENV["SCRATCH"]
-#ffpath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[16]))/FF/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(args[13])gcut$(args[14])qcut.jld2")
+#ffpath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[16]))/FF/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(args[14])gcut$(args[15])qcut.jld2")
 #st=load(ffpath)
 #formfactors=st["formfactors"]
 
@@ -62,7 +62,7 @@ HF_eigenvalue,HF_eigenvector,energy, DIIS_input_projector,bound,Hartree_matrix,F
 
 chern_number,chern_num__nonabelian=get_chernnumber(HF_eigenvector,eigenvector,allowedq,allowedq_dic,wave,wave_dic,Nband,geonum,Minv)
 
-savepath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[16]))/shift$(Int(args[12]))/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])Dfield$(args[12])shift$(args[13])try.jld2")
+savepath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[16]))/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])Dfield$(args[12])shift$(args[13])try$(args[14])gcut$(args[15])qcut.jld2")
 
 jldsave(savepath,
         HF_eigenvalue=HF_eigenvalue,eigenvalue=eigenvalue,energy=energy,final_density_matrix=DIIS_input_projector[1],
