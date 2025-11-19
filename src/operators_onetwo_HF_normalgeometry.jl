@@ -352,7 +352,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   
   
   Threads.@threads for ja in eachindex(allowedq)
-    for spin_i in 1:num_spin, valley in  1:num_spin
+    for spin_i in 1:num_spin, valley in  1:num_valley
       vset=[1,-1]
       kvec=allowedq[ja][1]*T1+allowedq[ja][2]*T2+gridshift
       Moire, Ham=get_Moire_Ham(wave,wAA,wAB,vF,qset,Kset,dt,db,T1,T2,vset[valley],kvec,g1m_ps_int, g2m_ps_int,lambda_MDT,Dfield)

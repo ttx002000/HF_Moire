@@ -747,7 +747,7 @@ function implement_DIIS(DIIS_input_projector::Vector{Vector{Matrix{ComplexF64}}}
       end
   
       for ja in 1:3,jb in 1:3
-          for jc in Nq^2
+          for jc in 1:Nq^2
              Bmatrix[ja,jb]+=real(tr((DIIS_input_DeltaMatrix[ja][jc])'*(DIIS_input_DeltaMatrix[jb][jc])))
           end
       end

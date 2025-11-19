@@ -1,5 +1,5 @@
 using LinearAlgebra
-
+#This is copied from operators_onetwo_HF_normalgeometry_correct.
 
 
 function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::Float64,qset::Vector{Vector{Float64}},Kset::Vector{Vector{Float64}},dt::Vector{Float64},db::Vector{Float64},T1::Vector{Float64},T2::Vector{Float64},vi::Int,kvec::Vector{Float64},g1m_ps_int::Vector{Int},g2m_ps_int::Vector{Int},lambda_MDT::Float64,Dfield::Float64)
@@ -18,18 +18,19 @@ function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::F
    
     for jb in eachindex(wave)
      absolute_k=kvec+wave[jb][1]*T1+wave[jb][2]*T2
-     Moire[2,:,jb,1,:,jb]+=[wAA wAB;wAB wAA]*exp(-im*dot(qset[1],dt))*(1+lambda_MDT*dot(qper_set[1],absolute_k-Kset[1]))
- 
-
+     Moire[1,:,jb,2,:,jb]+=[wAA wAB;wAB wAA]*exp(-im*dot(qset[1],dt))*(1+lambda_MDT*dot(qper_set[1],absolute_k-Kset[2]))
+    
      pos=findfirst(item->item==wave[jb]+g1m_ps_int,wave)
      if pos≠nothing
-       Moire[2,:,pos,1,:,jb]+=[wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*dot(qset[2],dt))*(1+lambda_MDT*dot(qper_set[2],absolute_k-Kset[1]))
-     end
+       Moire[1,:,pos,2,:,jb]+=[wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*dot(qset[2],dt))*(1+lambda_MDT*dot(qper_set[2],absolute_k-Kset[2]))
+    
+    end
 
      pos=findfirst(item->item==wave[jb]+g2m_ps_int,wave)
      if pos≠nothing
-       Moire[2,:,pos,1,:,jb]+=[wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*dot(qset[3],dt))*(1+lambda_MDT*dot(qper_set[3],absolute_k-Kset[1]))
-     end
+       Moire[1,:,pos,2,:,jb]+=[wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*dot(qset[3],dt))*(1+lambda_MDT*dot(qper_set[3],absolute_k-Kset[2]))
+     
+      end
    end
 
 
@@ -37,17 +38,18 @@ function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::F
 
      absolute_k=kvec+wave[jb][1]*T1+wave[jb][2]*T2
       Moire[2,:,jb,3,:,jb]+=[wAA wAB;wAB wAA]*exp(-im*2*dot(qset[1],db))*(1+lambda_MDT*dot(qper_set[1],absolute_k-Kset[3]))
-
-
+      
       pos=findfirst(item->item==wave[jb]+2*g1m_ps_int,wave)
      if pos≠nothing
          Moire[2,:,pos,3,:,jb]+=[wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*2*dot(qset[2],db))*(1+lambda_MDT*dot(qper_set[2],absolute_k-Kset[3]))
+     
      end
 
       pos=findfirst(item->item==wave[jb]+2*g2m_ps_int,wave)
       if pos≠nothing
          Moire[2,:,pos,3,:,jb]+=[wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*2*dot(qset[3],db))*(1+lambda_MDT*dot(qper_set[3],absolute_k-Kset[3]))
-     end
+      
+      end
    end
  end
     
@@ -55,17 +57,17 @@ function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::F
  if vi==-1
   for jb in eachindex(wave)
     absolute_k=kvec+wave[jb][1]*T1+wave[jb][2]*T2
-    Moire[2,:,jb,1,:,jb]+=conj.([wAA wAB;wAB wAA]*exp(-im*dot(qset[1],dt))*(1-lambda_MDT*dot(qper_set[1],absolute_k+Kset[1])))
+    Moire[1,:,jb,2,:,jb]+=conj.([wAA wAB;wAB wAA]*exp(-im*dot(qset[1],dt))*(1-lambda_MDT*dot(qper_set[1],absolute_k+Kset[2])))
 
 
     pos=findfirst(item->item==wave[jb]-g1m_ps_int,wave)
     if pos≠nothing
-      Moire[2,:,pos,1,:,jb]+=conj.([wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*dot(qset[2],dt))*(1-lambda_MDT*dot(qper_set[2],absolute_k+Kset[1])))
+      Moire[1,:,pos,2,:,jb]+=conj.([wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*dot(qset[2],dt))*(1-lambda_MDT*dot(qper_set[2],absolute_k+Kset[2])))
     end
 
     pos=findfirst(item->item==wave[jb]-g2m_ps_int,wave)
     if pos≠nothing
-      Moire[2,:,pos,1,:,jb]+=conj.([wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*dot(qset[3],dt))*(1-lambda_MDT*dot(qper_set[3],absolute_k+Kset[1])))
+      Moire[1,:,pos,2,:,jb]+=conj.([wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*dot(qset[3],dt))*(1-lambda_MDT*dot(qper_set[3],absolute_k+Kset[2])))
     end
   end
 
@@ -184,7 +186,10 @@ function Geometry(geonum::Int)
 end
 
 
-function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF::Float64,ϵr::Float64,Nband::Int64,lambda_MDT::Float64,Nb_down::Int,Nb_up::Int,Dfield::Float64,shift::Int64)
+function single_particle(geonum::Int64,θ::Float64,wAA::Float64,
+               wAB::Float64,vF::Float64,ϵr::Float64,Nband::Int64,
+               lambda_MDT::Float64,Nb_down::Int,Nb_up::Int,Dfield::Float64,
+               shift::Int64,g_cutoff::Float64,q_cutoff::Float64)
 
 
   a0=0.246
@@ -195,7 +200,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   kθ=2*KGr*sin(θ/2)
   
   
-  Kset=[kθ*[0.0,0.0],kθ*[0.0,1.0],kθ*[0.0,-1.0]]
+  Kset=[kθ*[0.0,1.0],kθ*[0.0,0.0],kθ*[0.0,-2.0]]
   qset=[kθ*[0.0,-1.0],kθ*[√3/2,1/2],kθ*[-√3/2,1/2]]
   
   
@@ -211,54 +216,9 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
 
   if shift==1
     db=[0.0,0.0]
-    dt=1/3*(a2m_ps-a1m_ps)
+    dt=1/6*(a2m_ps-a1m_ps)
     gridshift=[0.0,0.0]
-  elseif  shift==2
-    db=[0.0,0.0]
-    dt=[0.0,0.0]
-    gridshift=[0.0,0.0]
-  elseif  shift==3
-    db=[0.0,0.0]
-    dt=1/4*(a2m_ps)
-    gridshift=[0.0,0.0]
-  elseif  shift==4
-    db=[0.0,0.0]
-    dt=1/4*(a1m_ps)*(0.25)+1/6*(a1m_ps-a2m_ps)*(1-0.25)
-    gridshift=[0.0,0.0]
-
-  elseif  shift==5
-    db=[0.0,0.0]
-    dt=1/4*(a1m_ps)*(0.5)+1/6*(a1m_ps-a2m_ps)*(1-0.5)
-    gridshift=[0.0,0.0]
-
-  elseif  shift==6
-    db=[0.0,0.0]
-    dt=1/4*(a1m_ps)*(0.75)+1/6*(a1m_ps-a2m_ps)*(1-0.75)
-    gridshift=[0.0,0.0]
-  elseif  shift==7
-    db=[0.0,0.0]
-    dt=1/4*(a1m_ps)*(1.0)+1/6*(a1m_ps-a2m_ps)*(1-1.0)
-    gridshift=[0.0,0.0]
-  elseif  shift==8
-    db=[0.0,0.0]
-    dt=1/4*(a1m_ps)*(0.0)+1/6*(a1m_ps-a2m_ps)*(1-0.0)
-    gridshift=[0.0,0.0]
-  elseif  shift==9
-    db=[0.0,0.0]
-    dt=1/6*(a1m_ps-a2m_ps)*0.25
-    gridshift=[0.0,0.0]
-  elseif  shift==10
-    db=[0.0,0.0]
-    dt=1/6*(a1m_ps-a2m_ps)*0.5
-    gridshift=[0.0,0.0]
-  elseif  shift==11
-    db=[0.0,0.0]
-    dt=1/6*(a1m_ps-a2m_ps)*0.75
-    gridshift=[0.0,0.0]
-  elseif  shift==12
-    db=[0.0,0.0]
-    dt=1/6*(a1m_ps-a2m_ps)*0.1
-    gridshift=[0.0,0.0]
+  
   end
 
   
@@ -309,10 +269,10 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   end
 
   constq=1/(√3/2*norm(a1m)^2*ϵr*length(allowedq))*9047.5636
- #constq=0.0
+ 
   wave=Vector{Int64}[]
   cutoff=20*5
-  g_cutoff=6.01
+
   cutoffstandard=g_cutoff*norm(g1m_ps)
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*g1m+jb*g2m;
@@ -334,7 +294,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   dimension=num_layer*length(wave)*num_sub
   wave_diff=Vector{Int64}[]
   cutoff=20*5
-  q_cutoff=9.01
+ 
   cutoffstandard=q_cutoff*norm(g1m_ps)
   for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       gtest=ja*g1m+jb*g2m;
@@ -364,7 +324,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,wAB::Float64,vF:
   
   
 
- return  eigenvector,eigenvalue,wave,wave_diff,wave_dic,allowedq,allowedq_dic,T1,T2,constq,Minv,g1mT,g2mT,a1m,a2m,g_cutoff,q_cutoff
+ return  eigenvector,eigenvalue,wave,wave_diff,wave_dic,allowedq,allowedq_dic,T1,T2,constq,Minv,g1mT,g2mT,a1m,a2m
   
   
 
@@ -390,7 +350,7 @@ function  get_bias(g1mT,g2mT,T1,T2,eigenvector,allowedq,a1m,a2m,Nband,shift)
 
    
 
-    if only(rand(1))>0.5
+    if only(rand(1))>-0.1
       return  [zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
     else
       return  perturb_Ham
@@ -408,24 +368,24 @@ function get_initial_proj(allowedq::Vector{Vector{Int}},eigenvalue::Array{Vector
   bg_projector=[1/2*Matrix{ComplexF64}(I,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
 
 
- single_Ham=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
- single_eigenvector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+ #single_Ham=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+ #single_eigenvector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
 
- single_eigenvalue=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley, _ in eachindex(allowedq)]
+ #single_eigenvalue=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley, _ in eachindex(allowedq)]
 
  for spin_i in 1:num_spin, valley in 1:num_valley,ja in eachindex(allowedq)
   single_Ham[spin_i,valley,ja]=diagm(eigenvalue[spin_i,valley,ja])
-  FFF=eigen(single_Ham[spin_i,valley,ja]+perturb_Ham[spin_i,valley,ja])
-  single_eigenvector[spin_i,valley,ja]=FFF.vectors
-  single_eigenvalue[spin_i,valley,ja]=FFF.values
+  #FFF=eigen(single_Ham[spin_i,valley,ja]+perturb_Ham[spin_i,valley,ja])
+  #single_eigenvector[spin_i,valley,ja]=FFF.vectors
+  #single_eigenvalue[spin_i,valley,ja]=FFF.values
  end
 
 
 
     
- sorted=sort(reduce(vcat,reduce(vcat,real.(single_eigenvalue)))) 
- bound=(sorted[Npa+1]+sorted[Npa])/2
-
+ #sorted=sort(reduce(vcat,reduce(vcat,real.(single_eigenvalue)))) 
+ #bound=(sorted[Npa+1]+sorted[Npa])/2
+#=
  Threads.@threads for ja in eachindex(allowedq)
   for spin_i in 1:num_spin, valley in 1:num_valley
        for jd in eachindex(single_eigenvalue[spin_i,valley,ja])
@@ -435,6 +395,7 @@ function get_initial_proj(allowedq::Vector{Vector{Int}},eigenvalue::Array{Vector
        end
   end
  end
+ =#
 
 
 
@@ -496,15 +457,26 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
 
 
   
-  while (eout>1*10^(-12)) || (bad_count<4) || (energy_change>1*10^(-6))
-      if eout<1*10^(-12)
+  while (eout>1*10^(-20)) || (bad_count<4) || (energy_change>1*10^(-8))
+      if eout<1*10^(-20)
        bad_count+=1
       end
       
       tic=time()
-      if (itcount>30 && abs(energy_change)>0.1) || (itcount>30 && abs(eout)<10^(-8))
+      if (itcount>50 && abs(energy_change)>0.1) || (itcount>50 && abs(eout)<10^(-8))
+        
 
         dmk=implement_DIIS(DIIS_input_projector,DIIS_input_DeltaMatrix,allowedq)
+
+        if dmk==0
+            itcount=0
+            dmk=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+            for ja in 1:num_spin, jv in 1:num_valley, jall in eachindex(allowedq)
+              A=randn(Nband,Nband)+im*randn(Nband,Nband)
+              dmk[ja,jv,jall]+=(A+A')*0.01
+            end
+        end
+      
         eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy,Hartree_matrix,Fock_matrix=Construct_projector(formfactors,dmk,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,energy,Npa,Minv)
         DIIS_input_projector[mod(itcount,3)+1]=dmk
         input_projector=output_projector
@@ -541,9 +513,9 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
 
 end
 
-function implement_DIIS(DIIS_input_projector,DIIS_input_DeltaMatrix,allowedq)
+function implement_DIIS(DIIS_input_projector::Vector{Vector{Matrix{ComplexF64}}},DIIS_input_DeltaMatrix::Vector{Vector{Matrix{ComplexF64}}},allowedq::Vector{Vector{Int}})
 
-  num_spin=2
+   num_spin=2
   num_valley=2
 
       Bmatrix=zeros(ComplexF64,4,4)
@@ -557,107 +529,20 @@ function implement_DIIS(DIIS_input_projector,DIIS_input_DeltaMatrix,allowedq)
              Bmatrix[ja,jb]+=tr((DIIS_input_DeltaMatrix[ja][spin_i,valley,jc])'*(DIIS_input_DeltaMatrix[jb][spin_i,valley,jc]))
           end
       end
-      coeff=inv(Bmatrix)*[0;0;0;1]
-     
-      dmk=coeff[1]*(DIIS_input_projector[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_projector[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_projector[3]+DIIS_input_DeltaMatrix[3])
 
-    return dmk
+      inB=safe_inverse(Bmatrix)
+      if inB≠0
+         coeff=inB*[0;0;0;1]
+         dmk=coeff[1]*(DIIS_input_projector[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_projector[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_projector[3]+DIIS_input_DeltaMatrix[3])
+         return dmk
+      else
+        return 0
+      end
 end
 
 
 
 
-function get_polarization(HF_eigenvector,eigenvector,allowedq,wave,Nband)
-  num_spin=2
-  num_valley=2
-  num_layer=3
-  num_sub=2
-  PW_basis_eig=[zeros(ComplexF64,num_layer,num_sub,length(wave),Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
- 
-  for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
-   PW_basis_eig[spin_i,valley,ja]=reshape(eigenvector[spin_i,valley,ja]*HF_eigenvector[spin_i,valley,ja],num_layer,num_sub,length(wave),Nband)
-  end
-
-  layer_pol=[zeros(ComplexF64,num_layer,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
-  sub_pol=[zeros(ComplexF64,num_sub,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
- 
-  for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
-    for layer_index in 1:num_layer, bandi in 1:Nband
-    layer_pol[spin_i,valley,ja][layer_index,bandi]=sum(abs.(vec(PW_basis_eig[spin_i,valley,ja][layer_index,:,:,bandi])).^2)
-    end
-  end
-
-  for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
-    for sub_index in 1:num_sub, bandi in 1:Nband
-      sub_pol[spin_i,valley,ja][sub_index,bandi]=sum(abs.(vec(PW_basis_eig[spin_i,valley,ja][:,sub_index ,:,bandi])).^2)
-    end
-  end
-
-  return layer_pol,sub_pol
-
-
-end
-
-
-
-function get_chernsub(HF_eigenvector,eigenvector,allowedq,wave,Nband,Nb_up,Nb_down)
-  num_spin=2
-  num_valley=2
-  num_layer=3
-  num_sub=2
-  PW_basis_eig=[zeros(ComplexF64,num_layer*num_sub*length(wave),Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
- 
-  for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
-   PW_basis_eig[spin_i,valley,ja]=reshape(eigenvector[spin_i,valley,ja]*HF_eigenvector[spin_i,valley,ja],num_layer*num_sub*length(wave),Nband)
-  end
-
-  sub_op=zeros(ComplexF64,num_layer,num_sub,length(wave),num_layer,num_sub,length(wave))
-  for ja in eachindex(wave), jb in 1:num_layer
-     sub_op[jb,:,ja,jb,:,ja]=[1.0 0.0;0.0 -1.0]
-  end
-  
-  reshape_subop=reshape(sub_op,num_layer*num_sub*length(wave),num_layer*num_sub*length(wave))
-
-  sub_exp_HF=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
-  sub_eig_HF=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
-  sub_eig_single=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
-
-  for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
-   sd=PW_basis_eig[spin_i,valley,ja]'*reshape_subop*PW_basis_eig[spin_i,valley,ja]
-   sub_exp_HF[spin_i,valley,ja]=diag(sd,0) #This can be checked with the sub_pol
-   FFF=eigen(sd)
-   sub_eig_HF[spin_i,valley,ja]=FFF.values #It would be a good check that this agrees in the single-particle case.
-  end
-  
- chern_sub_operator=[zeros(ComplexF64,num_layer*num_sub*length(wave),num_layer*num_sub*length(wave)) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
- 
- eigenvector_ex_remo=[eigenvector[spin_i,valley,ja][:,Nb_down-1+1:Nb_down+1] for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)]
-
-
-
-
- for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
-  projected_subop=eigenvector_ex_remo[spin_i,valley,ja]'*reshape_subop*eigenvector_ex_remo[spin_i,valley,ja] #I need to take into account to the case where I include the remote bands
-  FFF=eigen(projected_subop)
-  sub_eig_single[spin_i,valley,ja]=FFF.values
-  chern_sub_eigenvectors=eigenvector_ex_remo[spin_i,valley,ja]*(FFF.vectors)
-  for bandi in eachindex(FFF.values)
-    chern_sub_operator[spin_i,valley,ja]+=sign(real(FFF.values[bandi]))*chern_sub_eigenvectors[:,bandi]*chern_sub_eigenvectors[:,bandi]'
-  end
- end
-
- 
- chern_exp_HF=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
- 
- for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
-  FFF=PW_basis_eig[spin_i,valley,ja]'*chern_sub_operator[spin_i,valley,ja]*PW_basis_eig[spin_i,valley,ja]
-  chern_exp_HF[spin_i,valley,ja]=diag(FFF,0)
- end
- 
-
- return sub_exp_HF,chern_exp_HF,sub_eig_HF,sub_eig_single
-
-end
 
 
 
@@ -853,8 +738,8 @@ function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::A
  end
 end
 
- Hartree_matrix=[constq*Hartree_threaded[ja][spin_i,valley] for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)]
- Fock_matrix=[constq*Fock_threaded[ja][spin_i,valley] for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)]
+ Hartree_matrix=[0.5*constq*(Hartree_threaded[ja][spin_i,valley]+Hartree_threaded[ja][spin_i,valley]') for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)]
+ Fock_matrix=[0.5*constq*(Fock_threaded[ja][spin_i,valley]+Fock_threaded[ja][spin_i,valley]') for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)]
 
 
  sorted=sort(reduce(vcat,reduce(vcat,real.(HF_eigenvalue)))) 
@@ -884,6 +769,9 @@ end
 
   DeltaMatrix=New_projector-projector
   output_projector=0.0*projector+1.0*New_projector
+  for spin_i in 1:num_spin, valley in 1:num_valley,ja in eachindex(allowedq)
+    output_projector[spin_i,valley,ja]=0.5*(output_projector[spin_i,valley,ja]+output_projector[spin_i,valley,ja]')
+  end
 
   e1=0.0
   for spin_i in 1:num_spin, valley in 1:num_valley,ja in eachindex(allowedq)
@@ -907,53 +795,16 @@ end
 
 
 
-function plot_Chargedensity(eigenvector,total_projector,a1m,a2m,wave,T1,T2,allowedq)
-  N3=50
-  num_spin=2
-  num_valley=2
-  num_sub=2
-  num_layer=3
-  dimension=length(wave)*num_sub*num_layer
 
-  zgrid=zeros(Float64,N3,N3,num_spin,num_valley,num_layer,num_sub)
-
-  xgrid=zeros(Float64,N3,N3)
-  ygrid=zeros(Float64,N3,N3)
-  
-  H_Density=[zeros(ComplexF64,dimension,dimension) for _ in 1:num_spin,_ in 1:num_valley]
-  for k_index in eachindex(allowedq), spin_i in 1:num_spin, valley in 1:num_valley
-     H_Density[spin_i,valley]+=eigenvector[spin_i,valley,k_index]*total_projector[spin_i,valley,k_index]*eigenvector[spin_i,valley,k_index]'
+function safe_inverse(A)
+  try
+      return inv(A)  # Attempt to compute inverse
+  catch e
+      if isa(e, SingularException)
+          println("Matrix is singular, doing randomstart again.")
+          return pinv(A, 0.1)  # Use pseudoinverse as an alternative
+      else
+          rethrow(e)  # If another error occurs, propagate it
+      end
   end
-
-  reshaped_Hartree_Density=[zeros(ComplexF64,num_layer,num_sub,length(wave),num_layer,num_sub,length(wave)) for _ in 1:num_spin,_ in 1:num_valley]
-  
-  for spin_i in 1:num_spin, valley in 1:num_valley
-    reshaped_Hartree_Density[spin_i,valley]=reshape(H_Density[spin_i,valley],num_layer,num_sub,length(wave),num_layer,num_sub,length(wave))
-  end
-
-
- Threads.@threads for ja in 1:50
-  for jb in 1:50
-    rvec=ja/50*a1m+jb/50*a2m
-    v1=[exp(-im*dot([T1 T2]*wave[jv],rvec)) for jv in eachindex(wave)]
-    for  spin_i in 1:num_spin, valley in 1:num_valley, sub_index in 1:num_sub, layer_index in 1:num_layer
-    
-     zgrid[ja,jb,spin_i,valley,layer_index,sub_index]+=real(v1'*reshaped_Hartree_Density[spin_i,valley][layer_index,sub_index,:,layer_index,sub_index,:]*v1)
-
-    end
-  
-  end
- end
-
-
-  for ja in 1:50, jb in 1:50
-    rvec=ja/50*a1m+jb/50*a2m
-    xgrid[ja,jb]=rvec[1]
-    ygrid[ja,jb]=rvec[2]
-  end
-
-
-
-
-  return xgrid,ygrid,zgrid
 end
