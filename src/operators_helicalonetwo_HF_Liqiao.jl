@@ -513,7 +513,7 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
 
 end
 
-function implement_DIIS(DIIS_input_projector::Vector{Vector{Matrix{ComplexF64}}},DIIS_input_DeltaMatrix::Vector{Vector{Matrix{ComplexF64}}},allowedq::Vector{Vector{Int}})
+function implement_DIIS(DIIS_input_projector::Vector{Array{Matrix{ComplexF64}}},DIIS_input_DeltaMatrix::Vector{Array{Matrix{ComplexF64}}},allowedq::Vector{Vector{Int}})
 
    num_spin=2
   num_valley=2
