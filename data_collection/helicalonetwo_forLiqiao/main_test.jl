@@ -48,7 +48,7 @@ scratch_dir = ENV["SCRATCH"]
 ffpath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[16]))/FF/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(args[14])gcut$(args[15])qcut.jld2")
 jldsave(ffpath,formfactors=formfactors)
 
-
+#=
 #scratch_dir = ENV["SCRATCH"]
 #ffpath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[16]))/FF/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(args[14])gcut$(args[15])qcut.jld2")
 #st=load(ffpath)
@@ -71,3 +71,4 @@ jldsave(savepath,
        Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,single_Ham=single_Ham,
        T1=T1,T2=T2,g1mT=g1mT,g2mT=g2mT,allowedq=allowedq,Minv=Minv,a1m=a1m,a2m=a2m)
 
+=#
