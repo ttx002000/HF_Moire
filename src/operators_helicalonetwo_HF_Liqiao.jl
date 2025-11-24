@@ -436,13 +436,15 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
   input_projector=initial_projector
   Hartree_matrix=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in 1:length(allowedq)]
   Fock_matrix=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in 1:length(allowedq)]
+  Coulomb_matrix=[Coulomb(allowedq[jqmesh]+wave_diff[jqg],T1,T2) for jqmesh in eachindex(allowedq), jqg in eachindex(wave_diff)]
+  kpkpos=[sendtomesh(Minv,allowedq[ja]+allowedq[jb]) for ja in eachindex(allowedq), jb in eachindex(allowedq)]
   
   while itcount<20
   
     
     tic=time()
 
-      eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy,Hartree_matrix,Fock_matrix=Construct_projector(formfactors,input_projector,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham+perturb_Ham,energy,Npa,Minv)
+      eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy,Hartree_matrix,Fock_matrix=Construct_projector(formfactors,input_projector,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham+perturb_Ham,energy,Npa,Minv,Coulomb_matrix,kpkpos)
       DIIS_input_projector[mod(itcount,3)+1]=input_projector
       input_projector=output_projector 
 
@@ -485,13 +487,13 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
             end
         end
       
-        eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy,Hartree_matrix,Fock_matrix=Construct_projector(formfactors,dmk,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,energy,Npa,Minv)
+        eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy,Hartree_matrix,Fock_matrix=Construct_projector(formfactors,dmk,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,energy,Npa,Minv,Coulomb_matrix,kpkpos)
         DIIS_input_projector[mod(itcount,3)+1]=dmk
         input_projector=output_projector
         println("using DIIS")
        
       else
-        eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy,Hartree_matrix,Fock_matrix=Construct_projector(formfactors,input_projector,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,energy,Npa,Minv)
+        eout,energy_change,output_projector,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,bound,HF_eigenvector,energy,Hartree_matrix,Fock_matrix=Construct_projector(formfactors,input_projector,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,energy,Npa,Minv,Coulomb_matrix,kpkpos)
         DIIS_input_projector[mod(itcount,3)+1]=input_projector
         input_projector=output_projector 
          
@@ -699,7 +701,11 @@ function get_formfactors(allowedq::Vector{Vector{Int}},wave::Vector{Vector{Int}}
 end
 
 
-function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::Array{Matrix{ComplexF64}},bg_projector::Array{Matrix{ComplexF64}},constq::Float64,Nband::Int64,wave_diff::Vector{Vector{Int64}},allowedq::Vector{Vector{Int}},allowedq_dic::Dict{Vector{Int},Int},T1::Vector{Float64},T2::Vector{Float64},single_Ham::Array{Matrix{ComplexF64}},energy_input::Float64,Npa::Int64,Minv::Matrix{Int})
+function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::Array{Matrix{ComplexF64}},
+            bg_projector::Array{Matrix{ComplexF64}},constq::Float64,Nband::Int64,
+            wave_diff::Vector{Vector{Int64}},allowedq::Vector{Vector{Int}},allowedq_dic::Dict{Vector{Int},Int},
+            T1::Vector{Float64},T2::Vector{Float64},single_Ham::Array{Matrix{ComplexF64}},energy_input::Float64,
+            Npa::Int64,Minv::Matrix{Int},Coulomb_matrix::Matrix{Float64},kpkpos::Matrix{Vector{Int}})
   num_spin=2
   num_valley=2
   
@@ -708,6 +714,7 @@ function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::A
   Fock_threaded=[[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley] for _ in eachindex(allowedq)]
   New_projector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
   
+  #=
  Threads.@threads for k2 in eachindex(allowedq)
   for jqmesh in eachindex(allowedq)
    k1pos=allowedq_dic[sendtomesh(Minv,allowedq[k2]+allowedq[jqmesh])]
@@ -719,6 +726,33 @@ function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::A
    end
   end
  end 
+ =#
+
+  
+ Threads.@threads for k2 in eachindex(allowedq)
+    @views ff1=form_factor[:,:,k2,:,:]
+    @views Fk2=Fock_threaded[k2]
+    tmp = similar(Fk2[1,1])
+  for jqmesh in eachindex(allowedq)
+
+     k1pos=allowedq_dic[kpkpos[k2,jqmesh]]
+     #@views proj_slice=projector[:,:,k1pos]
+   for jqg in eachindex(wave_diff)
+  
+     Cq=Coulomb_matrix[jqmesh,jqg]
+   for spin_i in 1:num_spin, valley in 1:num_valley
+       #Fk2[spin_i,valley]+=Cq*ff1[spin_i,valley,jqmesh,jqg]*proj_slice[spin_i,valley]*(ff1[spin_i,valley,jqmesh,jqg])'
+       @views M=ff1[spin_i,valley,jqmesh,jqg]
+       @views P=projector[spin_i,valley,k1pos]
+       @views F=Fk2[spin_i,valley]
+       mul!(tmp, M, P)
+       mul!(F, tmp, M', Cq, 1.0)
+
+    end
+   end
+  end
+ end 
+ 
  
  HartreeDensity=zeros(ComplexF64,length(wave_diff))
  zeropos=allowedq_dic[[0,0]]
