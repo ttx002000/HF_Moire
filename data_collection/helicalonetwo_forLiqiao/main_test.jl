@@ -43,12 +43,12 @@ Dfield=20.0
 
 eigenvector,eigenvalue,wave,wave_diff,wave_dic,allowedq,allowedq_dic,T1,T2,constq,Minv,g1mT,g2mT,a1m,a2m=single_particle(geonum,θ,wAA,wAB,vF,ϵr,Nband,lambda_MDT,Nb_down,Nb_up,Dfield,shift,g_cutoff,q_cutoff)
 Npa=length(allowedq)*filling
-#formfactors=get_formfactors(allowedq,wave,wave_diff,wave_dic,Minv,Nband,eigenvector)
-#scratch_dir = ENV["SCRATCH"]
-#ffpath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[16]))/FF/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(args[14])gcut$(args[15])qcut.jld2")
-#jldsave(ffpath,formfactors=formfactors)
+formfactors=get_formfactors(allowedq,wave,wave_diff,wave_dic,Minv,Nband,eigenvector)
+scratch_dir = ENV["SCRATCH"]
+ffpath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[16]))/FF/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(args[14])gcut$(args[15])qcut.jld2")
+jldsave(ffpath,formfactors=formfactors)
 
-
+#=
 scratch_dir = ENV["SCRATCH"]
 ffpath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[16]))/FF/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(args[14])gcut$(args[15])qcut.jld2")
 st=load(ffpath)
@@ -70,4 +70,4 @@ jldsave(savepath,
        chern_num__nonabelian=chern_num__nonabelian,
        Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,single_Ham=single_Ham,
        T1=T1,T2=T2,g1mT=g1mT,g2mT=g2mT,allowedq=allowedq,Minv=Minv,a1m=a1m,a2m=a2m)
-
+=#
