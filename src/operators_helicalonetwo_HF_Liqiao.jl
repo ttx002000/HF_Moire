@@ -179,6 +179,14 @@ function Geometry(geonum::Int)
     
   end
 
+  if geonum==4
+    l1=[15,0]
+    l2=[0,15]
+    Nx=15;
+    Ny=15;
+    
+  end
+
 
 
   return l1,l2,Nx,Ny
