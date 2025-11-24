@@ -410,7 +410,7 @@ function get_initial_proj(allowedq::Vector{Vector{Int}},eigenvalue::Array{Vector
 
  for spin_i in 1:num_spin, valley in 1:num_valley, jc in eachindex(allowedq)
    A=randn(Nband,Nband)+im*randn(Nband,Nband)
-   initial_projector[spin_i,valley,jc]+=(A+A')*0.3
+   initial_projector[spin_i,valley,jc]+=(A+A')*1.0
  end 
 
  return initial_projector, bg_projector, single_Ham
