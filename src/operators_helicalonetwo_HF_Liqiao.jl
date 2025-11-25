@@ -683,8 +683,8 @@ function get_formfactors(allowedq::Vector{Vector{Int}},wave::Vector{Vector{Int}}
       kplusq_pos=allowedq_dic[sendtomesh(Minv,allowedq[qvec]+allowedq[ja])]
       gkplusq=allowedq[ja]+allowedq[qvec]+wave_diff[gqindex]-allowedq[kplusq_pos]
       s1=shuffle_vector(eigenvector[spin_i,valley,ja],gkplusq,wave,wave_dic,Nband)
-      prod=s1'*eigenvector[spin_i,valley,kplusq_pos]
-      formfactors_threaded[ja][spin_i, valley, qvec, gqindex]=prod
+      #prod=s1'*eigenvector[spin_i,valley,kplusq_pos]
+      formfactors_threaded[ja][spin_i, valley, qvec, gqindex]=s1'*eigenvector[spin_i,valley,kplusq_pos]
 
     end
    end
