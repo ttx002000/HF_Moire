@@ -467,13 +467,13 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
 
 
   
-  while (eout>1*10^(-20)) || (bad_count<4) || (energy_change>1*10^(-8))
-      if eout<1*10^(-20)
+  while (abs(eout)>1*10^(-22)) || (bad_count<4) || (abs(energy_change)>1*10^(-10))
+      if abs(eout)<1*10^(-22)
        bad_count+=1
       end
       
       tic=time()
-      if (itcount>50 && abs(energy_change)>0.1) || (itcount>50 && abs(eout)<10^(-8))
+      if (itcount>50 && abs(energy_change)>0.1) || (itcount>50 && abs(eout)<10^(-15))
         
 
         dmk=implement_DIIS(DIIS_input_projector,DIIS_input_DeltaMatrix,allowedq)
