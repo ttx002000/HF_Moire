@@ -23,7 +23,8 @@ shift=Int(args[12])
 trytime=Int(args[13])
 g_cutoff=args[14]
 q_cutoff=args[15]
-filepos=Int(args[16])
+subtraction_choice=Int(args[16])
+filepos=Int(args[17])
 
 #=
 wAA=75.0
@@ -45,24 +46,24 @@ eigenvector,eigenvalue,wave,wave_diff,wave_dic,allowedq,allowedq_dic,T1,T2,const
 Npa=length(allowedq)*filling
 #formfactors=get_formfactors(allowedq,wave,wave_diff,wave_dic,Minv,Nband,eigenvector)
 #scratch_dir = ENV["SCRATCH"]
-#ffpath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[16]))/FF/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(args[14])gcut$(args[15])qcut.jld2")
+#ffpath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[17]))/FF/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(args[14])gcut$(args[15])qcut.jld2")
 #jldsave(ffpath,formfactors=formfactors)
 
 
 scratch_dir = ENV["SCRATCH"]
-ffpath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[16]))/FF/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(args[14])gcut$(args[15])qcut.jld2")
+ffpath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[17]))/FF/FF_$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[9])geo$(args[11])Dfield$(args[12])shift$(args[14])gcut$(args[15])qcut.jld2")
 st=load(ffpath)
 formfactors=st["formfactors"]
 
 perturb_Ham=get_bias(g1mT,g2mT,T1,T2,eigenvector,allowedq,a1m,a2m,Nband,shift)
-initial_projector, bg_projector, single_Ham=get_initial_proj(allowedq,eigenvalue,Nband,perturb_Ham,Npa)
+initial_projector, bg_projector, single_Ham=get_initial_proj(allowedq,eigenvalue,Nband,perturb_Ham,Npa,subtraction_choice,Nb_up,Nb_down)
 
 
 HF_eigenvalue,HF_eigenvector,energy, DIIS_input_projector,bound,Hartree_matrix,Fock_matrix=iteration(formfactors,initial_projector,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,perturb_Ham,Npa,Minv)
 
 chern_number,chern_num__nonabelian=get_chernnumber(HF_eigenvector,eigenvector,allowedq,allowedq_dic,wave,wave_dic,Nband,geonum,Minv)
 
-savepath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[16]))/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])Dfield$(args[12])shift$(args[13])try$(args[14])gcut$(args[15])qcut.jld2")
+savepath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[17]))/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])Dfield$(args[12])shift$(args[13])try$(args[14])gcut$(args[15])qcut$(args[16])subtraction.jld2")
 
 jldsave(savepath,
         HF_eigenvalue=HF_eigenvalue,eigenvalue=eigenvalue,energy=energy,final_density_matrix=DIIS_input_projector[1],

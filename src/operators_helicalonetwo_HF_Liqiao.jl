@@ -368,12 +368,22 @@ function  get_bias(g1mT,g2mT,T1,T2,eigenvector,allowedq,a1m,a2m,Nband,shift)
 end
 
 
-function get_initial_proj(allowedq::Vector{Vector{Int}},eigenvalue::Array{Vector{Float64}},Nband::Int,perturb_Ham::Array{Matrix{ComplexF64}},Npa::Int)
+function get_initial_proj(allowedq::Vector{Vector{Int}},eigenvalue::Array{Vector{Float64}},Nband::Int,perturb_Ham::Array{Matrix{ComplexF64}},Npa::Int,subtraction_choice::Int,Nb_up::Int,Nb_down::Int)
   num_spin=2
   num_valley=2
 
   initial_projector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
-  bg_projector=[1/2*Matrix{ComplexF64}(I,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+  
+  if subtraction_choice==1
+     bg_projector=[1/2*Matrix{ComplexF64}(I,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+  elseif subtraction_choice==2
+    AAmatrix=zeros(ComplexF64,Nband,Nband)
+    for jd in 1:Nb_down
+      AAmatrix[jd,jd]=1.0
+    end
+     bg_projector=[AAmatrix for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+
+  end
 
 
  single_Ham=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
