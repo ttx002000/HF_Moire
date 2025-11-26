@@ -9,8 +9,13 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "honetwo"
 
 
+aa= parse.(Int, ARGS)
 
-st=load("missedjobs.jld2")
+scratch_dir = ENV["SCRATCH"]
+misspath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(aa[1]))/missedjobs.jld2")
+
+
+st=load(misspath)
 index=st["index"]
 start=1
 ee=length(index)
