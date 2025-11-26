@@ -591,6 +591,9 @@ function get_chernnumber(HF_eigenvector::Array{Matrix{ComplexF64}},eigenvector::
   chern_num=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley]
   chern_num_nonabelian=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley]
 
+  Flink=[zeros(ComplexF64,Nx,Ny) for _ in 1:num_spin,_ in 1:num_valley, _ in 1:Nband]
+  Flink_nonabelian=[zeros(ComplexF64,Nx,Ny) for _ in 1:num_spin,_ in 1:num_valley,_ in 1:Nband]
+
   for spin_i in 1:num_spin, valley in 1:num_valley, bandin in 1:Nband
   
   
@@ -621,11 +624,11 @@ function get_chernnumber(HF_eigenvector::Array{Matrix{ComplexF64}},eigenvector::
         Utwolink[ja,jb]=dot(chern_eigenvector[:,ja,jb],chern_eigenvector[:,ja,jb+1])/abs(dot(chern_eigenvector[:,ja,jb],chern_eigenvector[:,ja,jb+1]))
     end
         
-    Flink=zeros(ComplexF64,Nx,Ny)
+ 
     for ja in 1:Nx, jb in 1:Ny
-     Flink[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
+     Flink[spin_i,valley,bandin][ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
     end
-    chern_num[spin_i,valley][bandin]=sum(Flink)/(2*π*im)
+    chern_num[spin_i,valley][bandin]=sum(Flink[spin_i,valley,bandin])/(2*π*im)
   
   
   
@@ -665,11 +668,11 @@ function get_chernnumber(HF_eigenvector::Array{Matrix{ComplexF64}},eigenvector::
         Utwolink[ja,jb]=det(chern_eigenvector[:,:,ja,jb]'*chern_eigenvector[:,:,ja,jb+1])/abs(det(chern_eigenvector[:,:,ja,jb]'*chern_eigenvector[:,:,ja,jb+1]))
     end
         
-    Flink=zeros(ComplexF64,Nx,Ny)
+  
     for ja in 1:Nx, jb in 1:Ny
-     Flink[ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
+     Flink_nonabelian[spin_i,valley,bandin][ja,jb]=log(Uonelink[ja,jb]*Utwolink[ja+1,jb]/(Uonelink[ja,jb+1]*Utwolink[ja,jb]))
     end
-    chern_num_nonabelian[spin_i,valley][bandin]=sum(Flink)/(2*π*im)
+    chern_num_nonabelian[spin_i,valley][bandin]=sum(Flink_nonabelian[spin_i,valley,bandin])/(2*π*im)
   
   
   
@@ -678,7 +681,7 @@ function get_chernnumber(HF_eigenvector::Array{Matrix{ComplexF64}},eigenvector::
 
 
 
-  return chern_num,chern_num_nonabelian
+  return chern_num,chern_num_nonabelian,Flink, Flink_nonabelian
 
 
 end
