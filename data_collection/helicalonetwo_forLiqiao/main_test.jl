@@ -64,14 +64,16 @@ initial_projector, bg_projector, single_Ham=get_initial_proj(allowedq,eigenvalue
 
 HF_eigenvalue,HF_eigenvector,energy, DIIS_input_projector,bound,Hartree_matrix,Fock_matrix=iteration(formfactors,initial_projector,bg_projector,constq,Nband,wave_diff,allowedq,allowedq_dic,T1,T2,single_Ham,perturb_Ham,Npa,Minv)
 
-chern_number,chern_num__nonabelian=get_chernnumber(HF_eigenvector,eigenvector,allowedq,allowedq_dic,wave,wave_dic,Nband,geonum,Minv)
+chern_number,chern_num_nonabelian=get_chernnumber(HF_eigenvector,eigenvector,allowedq,allowedq_dic,wave,wave_dic,Nband,geonum,Minv)
 
 savepath=joinpath(scratch_dir, "helicalonetwo_Liqiao/data_output$(Int(args[17]))/$(args[1])wAA$(args[2])wAB$(args[3])vf$(args[4])MDT$(args[5])Nup$(args[6])Ndown$(args[7])theta$(args[8])er$(args[9])geo$(args[10])fill$(args[11])Dfield$(args[12])shift$(args[13])try$(args[14])gcut$(args[15])qcut$(args[16])subtraction.jld2")
 
 jldsave(savepath,
-        HF_eigenvalue=HF_eigenvalue,eigenvalue=eigenvalue,energy=energy,final_density_matrix=DIIS_input_projector[1],
+        HF_eigenvalue=HF_eigenvalue,HF_eigenvector=HF_eigenvector,eigenvalue=eigenvalue,energy=energy,final_density_matrix=DIIS_input_projector[1],
         bound=bound,chern_number=chern_number,
-       chern_num__nonabelian=chern_num__nonabelian,
+       chern_num_nonabelian=chern_num_nonabelian,
        Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,single_Ham=single_Ham,
-       T1=T1,T2=T2,g1mT=g1mT,g2mT=g2mT,allowedq=allowedq,Minv=Minv,a1m=a1m,a2m=a2m)
+       T1=T1,T2=T2,g1mT=g1mT,g2mT=g2mT,allowedq=allowedq,Minv=Minv,a1m=a1m,a2m=a2m,
+       eigenvector=eigenvector,wave=wave,wave_diff=wave_diff,perturb_Ham=perturb_Ham,
+       wave_dic=wave_dic,constq=constq,allowedq_dic=allowedq_dic)
 

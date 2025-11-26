@@ -401,7 +401,7 @@ function get_initial_proj(allowedq::Vector{Vector{Int}},eigenvalue::Array{Vector
  #single_eigenvalue=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley, _ in eachindex(allowedq)]
 
  for spin_i in 1:num_spin, valley in 1:num_valley,ja in eachindex(allowedq)
-  single_Ham[spin_i,valley,ja]=diagm(eigenvalue[spin_i,valley,ja])
+  single_Ham[spin_i,valley,ja]=diagm(sort(real.(eigenvalue[spin_i,valley,ja])))
   #FFF=eigen(single_Ham[spin_i,valley,ja]+perturb_Ham[spin_i,valley,ja])
   #single_eigenvector[spin_i,valley,ja]=FFF.vectors
   #single_eigenvalue[spin_i,valley,ja]=FFF.values
