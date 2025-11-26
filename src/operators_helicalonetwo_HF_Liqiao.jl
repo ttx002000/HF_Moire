@@ -382,7 +382,16 @@ function get_initial_proj(allowedq::Vector{Vector{Int}},eigenvalue::Array{Vector
       AAmatrix[jd,jd]=1.0
     end
      bg_projector=[AAmatrix for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
+  elseif subtraction_choice==3
+     AAmatrix=zeros(ComplexF64,Nband,Nband)
+    for jd in 1:Nb_down-1
+      AAmatrix[jd,jd]=1.0
+    end
+    for jd in Nb_down:Nb_down+1
+       AAmatrix[jd,jd]=0.5
+    end
 
+     bg_projector=[AAmatrix for _ in 1:num_spin,_ in 1:num_valley,_ in eachindex(allowedq)]
   end
 
 
@@ -483,7 +492,7 @@ function iteration(formfactors::Array{Matrix{ComplexF64}},initial_projector::Arr
       end
       
       tic=time()
-      if (itcount>50 && abs(energy_change)>0.1) || (itcount>50 && abs(eout)<10^(-15))
+      if (itcount>50 && abs(energy_change)>0.1) || (itcount>50 && abs(eout)<10^(-13))
         
 
         dmk=implement_DIIS(DIIS_input_projector,DIIS_input_DeltaMatrix,allowedq)
