@@ -794,6 +794,11 @@ function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::A
  HF_eigenvalue=[zeros(ComplexF64,Nband) for _ in 1:num_spin,_ in 1:num_valley, _ in eachindex(allowedq)]
  HF_eigenvector=[zeros(ComplexF64,Nband,Nband) for _ in 1:num_spin,_ in 1:num_valley, _ in eachindex(allowedq)]
 
+ for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)
+   Hartree_threaded[ja][spin_i,valley]=0.5*(Hartree_threaded[ja][spin_i,valley]+Hartree_threaded[ja][spin_i,valley]')
+   Fock_threaded[ja][spin_i,valley]=0.5*(Fock_threaded[ja][spin_i,valley]+Fock_threaded[ja][spin_i,valley]')
+ end
+
  Threads.@threads for ja in eachindex(allowedq)
  for spin_i in 1:num_spin, valley in 1:num_valley
     FFF=eigen(constq*Hartree_threaded[ja][spin_i,valley]+single_Ham[spin_i,valley,ja]-constq*Fock_threaded[ja][spin_i,valley])
@@ -802,8 +807,8 @@ function Construct_projector(form_factor::Array{Matrix{ComplexF64}},projector::A
  end
 end
 
- Hartree_matrix=[0.5*constq*(Hartree_threaded[ja][spin_i,valley]+Hartree_threaded[ja][spin_i,valley]') for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)]
- Fock_matrix=[0.5*constq*(Fock_threaded[ja][spin_i,valley]+Fock_threaded[ja][spin_i,valley]') for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)]
+ Hartree_matrix=[constq*(Hartree_threaded[ja][spin_i,valley]) for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)]
+ Fock_matrix=[constq*(Fock_threaded[ja][spin_i,valley]) for spin_i in 1:num_spin, valley in 1:num_valley, ja in eachindex(allowedq)]
 
 
  sorted=sort(reduce(vcat,reduce(vcat,real.(HF_eigenvalue)))) 
