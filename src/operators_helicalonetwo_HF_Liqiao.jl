@@ -133,7 +133,12 @@ function shuffle_vector(eg_vec::Matrix{ComplexF64},shuff_vec::Vector{Int},wave::
           shuff_eigvec[:,:,ja,:]=res_eigvec[:,:,pos,:]
         end
     end
-   return reshape(shuff_eigvec,num_layer*num_sub*length(wave),Nband)
+    s1=reshape(shuff_eigvec,num_layer*num_sub*length(wave),Nband)
+    for ja in 1:Nband
+     s1=s1[:,ja]/norm(s1[:,ja])
+    end
+  # return reshape(shuff_eigvec,num_layer*num_sub*length(wave),Nband)
+    return s1
 end
 
 
@@ -149,7 +154,9 @@ function shuffle_vector_singlevector(eg_vec::Vector{ComplexF64},shuff_vec::Vecto
         shuff_eigvec[:,:,ja]=res_eigvec[:,:,pos]
       end
   end
- return reshape(shuff_eigvec,num_layer*num_sub*length(wave))
+  s1=reshape(shuff_eigvec,num_layer*num_sub*length(wave))
+ #return reshape(shuff_eigvec,num_layer*num_sub*length(wave))
+  return s1/norm(s1)
 end
 
 
