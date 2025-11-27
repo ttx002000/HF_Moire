@@ -135,7 +135,7 @@ function shuffle_vector(eg_vec::Matrix{ComplexF64},shuff_vec::Vector{Int},wave::
     end
     s1=reshape(shuff_eigvec,num_layer*num_sub*length(wave),Nband)
     for ja in 1:Nband
-     s1=s1[:,ja]/norm(s1[:,ja])
+     s1[:,ja]=s1[:,ja]/norm(s1[:,ja])
     end
   # return reshape(shuff_eigvec,num_layer*num_sub*length(wave),Nband)
     return s1
