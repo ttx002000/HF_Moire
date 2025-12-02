@@ -277,7 +277,12 @@ function construct_loop_dic(wave::Vector{Vector{Int}},Nq,T1,T2,ϵr,constq)
 
 
     loop_dic_Fock=Vector{Int}[]
-
+    wave_dic=Dict{Vector{Int},Int}()
+    for ja in eachindex(wave)
+      wave_dic[wave[ja]]=ja
+    end
+ 
+    #=
     for ja in eachindex(wave), jb in eachindex(wave), jc in eachindex(wave), jd in 1:ja
       if wave[ja]+wave[jb]==wave[jc]+wave[jd]
       
@@ -285,25 +290,41 @@ function construct_loop_dic(wave::Vector{Vector{Int}},Nq,T1,T2,ϵr,constq)
         
       end
     end
+    =#
+
+    for ja in eachindex(wave), jb in eachindex(wave),  jd in 1:ja
+      if haskey(wave_dic,wave[ja]+wave[jb]-wave[jd])
+        push!(loop_dic_Fock,[ja,jb,wave_dic[wave[ja]+wave[jb]-wave[jd]],jd])
+      end
+    end
 
     loop_dic_Fock_val=zeros(Float64,Nq^2,Nq^2,length(loop_dic_Fock))
 
     Threads.@threads for k1 in 1:Nq^2
         for k2 in 1:Nq^2
-      for waveset in eachindex(loop_dic_Fock)
-      cc=Coulomb(allowedq[k2]+wave[loop_dic_Fock[waveset][3]]-allowedq[k1]-wave[loop_dic_Fock[waveset][1]],T1,T2)/ϵr+constq
-      loop_dic_Fock_val[k1,k2,waveset]=cc
-    end
-    end
+            for waveset in eachindex(loop_dic_Fock)
+            cc=Coulomb(allowedq[k2]+wave[loop_dic_Fock[waveset][3]]-allowedq[k1]-wave[loop_dic_Fock[waveset][1]],T1,T2)/ϵr+constq
+            loop_dic_Fock_val[k1,k2,waveset]=cc
+            end
+       end
    end
    
 
 
   loop_dic_Hartree=Vector{Int}[]
+  #=
     for ja in eachindex(wave), jb in eachindex(wave), jc in 1:ja, jd in eachindex(wave)
       if wave[ja]+wave[jb]==wave[jc]+wave[jd]
       
         push!(loop_dic_Hartree,[ja,jb,jc,jd])
+      
+      end
+    end
+    =#
+
+    for ja in eachindex(wave), jb in eachindex(wave), jc in 1:ja
+      if haskey(wave_dic,wave[ja]+wave[jb]-wave[jc])
+        push!(loop_dic_Hartree,[ja,jb,jc,wave_dic[wave[ja]+wave[jb]-wave[jc]]])
       
       end
     end
@@ -321,6 +342,8 @@ function construct_loop_dic(wave::Vector{Vector{Int}},Nq,T1,T2,ϵr,constq)
    return loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val
 
 end
+
+
 
 
 
