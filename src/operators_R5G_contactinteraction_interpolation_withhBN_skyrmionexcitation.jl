@@ -354,7 +354,136 @@ function Coulomb(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64})::Float6
    return k==[0,0] ? D*9047.5636 : tanh(norm([T1 T2]*k*D))/norm(k[1]*T1+k[2]*T2)*9047.5636
 end
 
+function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Fock_val::Array{Float64},
+                               loop_dic_Hartree::Vector{Vector{Int}},loop_dic_Hartree_val::Vector{Float64},
+                              allowedq::Vector{Vector{Int}},
+                               T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},
+                               input_DensityMatrix::Vector{Matrix{ComplexF64}},single_Ham::Vector{Matrix{ComplexF64}},
+                               single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,ϵr::Float64,overlapmatrix::Array{ComplexF64,4},
+                               energy_input::Float64,filling::Int,Area::Float64)
+  
+  
+   dimension=length(wave)
+  HartreeMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
+  FockMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
+  output_DensityMatrix=Vector{Matrix{ComplexF64}}(undef,Nq^2)
+  DeltaMatrix=Vector{Matrix{ComplexF64}}(undef,Nq^2)
+  NewDensityMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
+  HF_eigenvalue=Vector{Vector{Float64}}(undef,Nq^2)
+  HF_eigenvector=Vector{Matrix{ComplexF64}}(undef,Nq^2)
 
+ 
+  Fock_local=[[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2] for _ in 1:Threads.nthreads()]
+  Hartree_local=[[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2] for _ in 1:Threads.nthreads()]
+
+ Threads.@threads for ja in  eachindex(loop_dic_Fock)
+     Fk_local = Fock_local[Threads.threadid()]
+     vvs=loop_dic_Fock[ja]
+   for jk in 1:Nq^2, jk1 in 1:Nq^2
+        dmk = input_DensityMatrix[jk1]
+        lfv=@view loop_dic_Fock_val[jk,jk1,:]
+        opf= @view overlapmatrix[jk1,:,jk,:]
+        opm= @view overlapmatrix[jk,:,jk1,:]
+         Fk_local[jk][vvs[1],vvs[4]]+=dmk[vvs[3],vvs[2]]*opm[vvs[1],vvs[3]]*opf[vvs[2],vvs[4]]*lfv[ja]
+    end
+ end
+
+  for jk in 1:Nq^2
+      for t_id in 1:Threads.nthreads()
+          FockMatrix[jk]+=Fock_local[t_id][jk]
+      end
+  end
+
+
+
+
+
+
+
+
+   Hartree_Density=sum([input_DensityMatrix[ja] .* transpose(overlapmatrix[ja,:,ja,:]) for ja in 1:Nq^2])
+
+
+#=
+ for jk in 1:Nq^2
+    Hk=HartreeMatrix[jk]
+    oph=(overlapmatrix[jk,:,jk,:])   
+      for (ja,vvs) in pairs(loop_dic_Hartree)
+        Hk[vvs[1],vvs[3]]+=Hartree_Density[vvs[4],vvs[2]]*oph[vvs[1],vvs[3]]*loop_dic_Hartree_val[ja]
+      end
+  end
+  =#
+Threads.@threads for ja in eachindex(loop_dic_Hartree)
+  Ht_local=Hartree_local[Threads.threadid()]
+  vvs=loop_dic_Hartree[ja]
+  for jk in 1:Nq^2
+   
+     oph=@view overlapmatrix[jk,:,jk,:]
+      
+        Ht_local[jk][vvs[1],vvs[3]]+=Hartree_Density[vvs[4],vvs[2]]*oph[vvs[1],vvs[3]]*loop_dic_Hartree_val[ja]
+      
+  end
+end
+
+  for jk in 1:Nq^2
+      for t_id in 1:Threads.nthreads()
+          HartreeMatrix[jk]+=Hartree_local[t_id][jk]
+      end
+  end
+
+
+ for ja in 1:Nq^2
+    HartreeMatrix[ja]=(HartreeMatrix[ja]+HartreeMatrix[ja]'-real(Diagonal(HartreeMatrix[ja])))/Area
+    FockMatrix[ja]=(FockMatrix[ja]+FockMatrix[ja]'-real(Diagonal(FockMatrix[ja])))/Area
+  end
+ 
+
+ for ja in 1:Nq^2
+   FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+HartreeMatrix[ja]-FockMatrix[ja])
+   HF_eigenvalue[ja]=real(FFF.values)
+   HF_eigenvector[ja]=FFF.vectors
+ end
+
+ bound=(sort(reduce(vcat,HF_eigenvalue))[filling*Nq^2+1]+sort(reduce(vcat,HF_eigenvalue))[filling*Nq^2])/2
+
+  for ja in 1:Nq^2
+    
+       for jd in eachindex(HF_eigenvalue[ja])
+          if HF_eigenvalue[ja][jd]<bound
+             NewDensityMatrix[ja]+=HF_eigenvector[ja][:,jd]*(HF_eigenvector[ja][:,jd])'
+          end
+       end
+        NewDensityMatrix[ja]=0.5*(NewDensityMatrix[ja]'+ NewDensityMatrix[ja])
+       DeltaMatrix[ja]=NewDensityMatrix[ja]-input_DensityMatrix[ja]
+       mix_ratio=0.0
+       output_DensityMatrix[ja]=mix_ratio*input_DensityMatrix[ja]+(1-mix_ratio)*NewDensityMatrix[ja]
+  end
+
+
+  
+  e1=0.0
+  for ja in 1:Nq^2
+    e1+=tr(DeltaMatrix[ja]'*DeltaMatrix[ja])
+  end
+  eout=real(e1)/Nq^2
+  
+  
+  energy=0
+   for ja in 1:Nq^2
+       ss=single_MoirePo[ja]+single_Ham[ja]+0.5*HartreeMatrix[ja]-0.5*FockMatrix[ja]
+       energy+=real(tr(ss*input_DensityMatrix[ja]))
+   end
+
+   energy_change=real(energy-energy_input)
+
+
+
+ return  eout,energy_change,output_DensityMatrix,DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix
+end
+
+
+
+#=
 function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Fock_val::Array{Float64},
                                loop_dic_Hartree::Vector{Vector{Int}},loop_dic_Hartree_val::Vector{Float64},
                               allowedq::Vector{Vector{Int}},
@@ -455,6 +584,7 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
 
  return  eout,energy_change,output_DensityMatrix,DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix
 end
+=#
 
 
 
