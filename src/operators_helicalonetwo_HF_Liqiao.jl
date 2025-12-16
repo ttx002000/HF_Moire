@@ -2,12 +2,19 @@ using LinearAlgebra
 #This is copied from operators_onetwo_HF_normalgeometry_correct.
 
 
-function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::Float64,qset::Vector{Vector{Float64}},Kset::Vector{Vector{Float64}},dt::Vector{Float64},db::Vector{Float64},T1::Vector{Float64},T2::Vector{Float64},vi::Int,kvec::Vector{Float64},g1m_ps_int::Vector{Int},g2m_ps_int::Vector{Int},lambda_MDT::Float64,Dfield::Float64)
+function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::Float64,
+     qset::Vector{Vector{Float64}},Kset::Vector{Vector{Float64}},dt::Vector{Float64},
+     db::Vector{Float64},T1::Vector{Float64},T2::Vector{Float64},vi::Int,kvec::Vector{Float64},
+     g1m_ps_int::Vector{Int},g2m_ps_int::Vector{Int},lambda_MDT::Float64,Dfield::Float64,Katomic::Vector{Vector{Float64}})
  
   num_layer=3
   num_sub=2
   
-  qper_set=[[1.0,0.0],[-1/2,√3/2],[-1/2,-√3/2]]
+  #qper_set=[[1.0,0.0],[-1/2,√3/2],[-1/2,-√3/2]]
+  KGr=4π/(3*0.246)
+  
+  C120=[-1/2 -√3/2;√3/2 -1/2]
+
 
   σx=[0.0 1.0;1.0 0.0]
   σy=[0.0 -im;im 0.0]
@@ -17,18 +24,18 @@ function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::F
   Moire=zeros(ComplexF64,num_layer,num_sub,length(wave),num_layer,num_sub,length(wave))
    
     for jb in eachindex(wave)
-     absolute_k=kvec+wave[jb][1]*T1+wave[jb][2]*T2
-     Moire[1,:,jb,2,:,jb]+=[wAA wAB;wAB wAA]*exp(-im*dot(qset[1],dt))*(1+lambda_MDT*dot(qper_set[1],absolute_k-Kset[2]))
+     absolute_k=kvec+wave[jb][1]*T1+wave[jb][2]*T2+Katomic[2]
+     Moire[1,:,jb,2,:,jb]+=[wAA wAB;wAB wAA]*exp(-im*dot(qset[1],dt))*(1+lambda_MDT*(norm(absolute_k)-KGr))
     
      pos=findfirst(item->item==wave[jb]+g1m_ps_int,wave)
      if pos≠nothing
-       Moire[1,:,pos,2,:,jb]+=[wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*dot(qset[2],dt))*(1+lambda_MDT*dot(qper_set[2],absolute_k-Kset[2]))
+       Moire[1,:,pos,2,:,jb]+=[wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*dot(qset[2],dt))*(1+lambda_MDT*(norm(absolute_k+C120*Katomic[2]-Katomic[2])-KGr))
     
     end
 
      pos=findfirst(item->item==wave[jb]+g2m_ps_int,wave)
      if pos≠nothing
-       Moire[1,:,pos,2,:,jb]+=[wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*dot(qset[3],dt))*(1+lambda_MDT*dot(qper_set[3],absolute_k-Kset[2]))
+       Moire[1,:,pos,2,:,jb]+=[wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*dot(qset[3],dt))*(1+lambda_MDT*(norm(absolute_k+C120*C120*Katomic[2]-Katomic[2])-KGr))
      
       end
    end
@@ -36,18 +43,18 @@ function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::F
 
    for jb in eachindex(wave)
 
-     absolute_k=kvec+wave[jb][1]*T1+wave[jb][2]*T2
-      Moire[2,:,jb,3,:,jb]+=[wAA wAB;wAB wAA]*exp(-im*2*dot(qset[1],db))*(1+lambda_MDT*dot(qper_set[1],absolute_k-Kset[3]))
+     absolute_k=kvec+wave[jb][1]*T1+wave[jb][2]*T2+Katomic[2]
+      Moire[2,:,jb,3,:,jb]+=[wAA wAB;wAB wAA]*exp(-im*2*dot(qset[1],db))*(1+lambda_MDT*(norm(absolute_k)-KGr))
       
       pos=findfirst(item->item==wave[jb]+2*g1m_ps_int,wave)
      if pos≠nothing
-         Moire[2,:,pos,3,:,jb]+=[wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*2*dot(qset[2],db))*(1+lambda_MDT*dot(qper_set[2],absolute_k-Kset[3]))
+         Moire[2,:,pos,3,:,jb]+=[wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*2*dot(qset[2],db))*(1+lambda_MDT*(norm(absolute_k+C120*Katomic[3]-Katomic[3])-KGr))
      
      end
 
       pos=findfirst(item->item==wave[jb]+2*g2m_ps_int,wave)
       if pos≠nothing
-         Moire[2,:,pos,3,:,jb]+=[wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*2*dot(qset[3],db))*(1+lambda_MDT*dot(qper_set[3],absolute_k-Kset[3]))
+         Moire[2,:,pos,3,:,jb]+=[wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*2*dot(qset[3],db))*(1+lambda_MDT*(norm(absolute_k+C120*C120*Katomic[3]-Katomic[3])-KGr))
       
       end
    end
@@ -56,37 +63,46 @@ function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::F
 
  if vi==-1
   for jb in eachindex(wave)
-    absolute_k=kvec+wave[jb][1]*T1+wave[jb][2]*T2
-    Moire[1,:,jb,2,:,jb]+=conj.([wAA wAB;wAB wAA]*exp(-im*dot(qset[1],dt))*(1-lambda_MDT*dot(qper_set[1],absolute_k+Kset[2])))
-
+    absolute_k=kvec+wave[jb][1]*T1+wave[jb][2]*T2-Katomic[2]
+    #Moire[1,:,jb,2,:,jb]+=conj.([wAA wAB;wAB wAA]*exp(-im*dot(qset[1],dt))*(1-lambda_MDT*dot(qper_set[1],absolute_k+Kset[2])))
+     Moire[1,:,jb,2,:,jb]+=conj.([wAA wAB;wAB wAA]*exp(-im*dot(qset[1],dt))*(1+lambda_MDT*(norm(absolute_k)-KGr)))
 
     pos=findfirst(item->item==wave[jb]-g1m_ps_int,wave)
     if pos≠nothing
-      Moire[1,:,pos,2,:,jb]+=conj.([wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*dot(qset[2],dt))*(1-lambda_MDT*dot(qper_set[2],absolute_k+Kset[2])))
+      #Moire[1,:,pos,2,:,jb]+=conj.([wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*dot(qset[2],dt))*(1-lambda_MDT*dot(qper_set[2],absolute_k+Kset[2])))
+     Moire[1,:,pos,2,:,jb]+=conj.([wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*dot(qset[2],dt))*(1+lambda_MDT*(norm(absolute_k-C120*Katomic[2]+Katomic[2])-KGr)))
+  
     end
 
     pos=findfirst(item->item==wave[jb]-g2m_ps_int,wave)
     if pos≠nothing
-      Moire[1,:,pos,2,:,jb]+=conj.([wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*dot(qset[3],dt))*(1-lambda_MDT*dot(qper_set[3],absolute_k+Kset[2])))
+      #Moire[1,:,pos,2,:,jb]+=conj.([wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*dot(qset[3],dt))*(1-lambda_MDT*dot(qper_set[3],absolute_k+Kset[2])))
+    Moire[1,:,pos,2,:,jb]+=conj.([wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*dot(qset[3],dt))*(1+lambda_MDT*(norm(absolute_k-C120*C120*Katomic[2]+Katomic[2])-KGr)))
+   
     end
   end
 
 
   for jb in eachindex(wave)
 
-    absolute_k=kvec+wave[jb][1]*T1+wave[jb][2]*T2
-     Moire[2,:,jb,3,:,jb]+=conj.([wAA wAB;wAB wAA]*exp(-im*2*dot(qset[1],db))*(1-lambda_MDT*dot(qper_set[1],absolute_k+Kset[3])))
+    absolute_k=kvec+wave[jb][1]*T1+wave[jb][2]*T2-Katomic[2]
+     #Moire[2,:,jb,3,:,jb]+=conj.([wAA wAB;wAB wAA]*exp(-im*2*dot(qset[1],db))*(1-lambda_MDT*dot(qper_set[1],absolute_k+Kset[3])))
+     Moire[2,:,jb,3,:,jb]+=conj.([wAA wAB;wAB wAA]*exp(-im*2*dot(qset[1],db))*(1+lambda_MDT*(norm(absolute_k)-KGr)))
 
 
      pos=findfirst(item->item==wave[jb]-2*g1m_ps_int,wave)
     if pos≠nothing
-        Moire[2,:,pos,3,:,jb]+=conj.([wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*2*dot(qset[2],db))*(1-lambda_MDT*dot(qper_set[2],absolute_k+Kset[3])))
-    end
+       # Moire[2,:,pos,3,:,jb]+=conj.([wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*2*dot(qset[2],db))*(1-lambda_MDT*dot(qper_set[2],absolute_k+Kset[3])))
+       Moire[2,:,pos,3,:,jb]+=conj.([wAA wAB*exp(-im*2*π/3);wAB*exp(im*2*π/3) wAA]*exp(-im*2*dot(qset[2],db))*(1+lambda_MDT*(norm(absolute_k-C120*Katomic[3]+Katomic[3])-KGr)))
+
+      end
 
      pos=findfirst(item->item==wave[jb]-2*g2m_ps_int,wave)
      if pos≠nothing
-        Moire[2,:,pos,3,:,jb]+=conj.([wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*2*dot(qset[3],db))*(1-lambda_MDT*dot(qper_set[3],absolute_k+Kset[3])))
-    end
+        #Moire[2,:,pos,3,:,jb]+=conj.([wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*2*dot(qset[3],db))*(1-lambda_MDT*dot(qper_set[3],absolute_k+Kset[3])))
+        Moire[2,:,pos,3,:,jb]+=conj.([wAA wAB*exp(im*2*π/3);wAB*exp(-im*2*π/3) wAA]*exp(-im*2*dot(qset[3],db))*(1+lambda_MDT*(norm(absolute_k-C120*C120*Katomic[3]+Katomic[3])-KGr)))
+
+      end
   end
  end
 
@@ -218,7 +234,9 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,
   Kset=[kθ*[0.0,1.0],kθ*[0.0,0.0],kθ*[0.0,-2.0]]
   qset=[kθ*[0.0,-1.0],kθ*[√3/2,1/2],kθ*[-√3/2,1/2]]
   
-  
+  Katomic=[Kset[ii]+KGr*[1.0,0.0] for ii in eachindex(Kset)]
+
+
   g1m_ps=kθ*√3*[1/2,√3/2] #stands for pristine
   g2m_ps=kθ*√3*[-1/2,√3/2]
   
@@ -328,7 +346,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,
     for spin_i in 1:num_spin, valley in  1:num_valley
       vset=[1,-1]
       kvec=allowedq[ja][1]*T1+allowedq[ja][2]*T2+gridshift
-      Moire, Ham=get_Moire_Ham(wave,wAA,wAB,vF,qset,Kset,dt,db,T1,T2,vset[valley],kvec,g1m_ps_int, g2m_ps_int,lambda_MDT,Dfield)
+      Moire, Ham=get_Moire_Ham(wave,wAA,wAB,vF,qset,Kset,dt,db,T1,T2,vset[valley],kvec,g1m_ps_int, g2m_ps_int,lambda_MDT,Dfield,Katomic)
       totalHam=reshape(Moire,dimension,dimension)+reshape(Moire,dimension,dimension)'+reshape(Ham,dimension,dimension)
       FFF=eigen(totalHam)
   
