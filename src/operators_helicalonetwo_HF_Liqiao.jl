@@ -5,7 +5,8 @@ using LinearAlgebra
 function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::Float64,
      qset::Vector{Vector{Float64}},Kset::Vector{Vector{Float64}},dt::Vector{Float64},
      db::Vector{Float64},T1::Vector{Float64},T2::Vector{Float64},vi::Int,kvec::Vector{Float64},
-     g1m_ps_int::Vector{Int},g2m_ps_int::Vector{Int},lambda_MDT::Float64,Dfield::Float64,Katomic::Vector{Vector{Float64}})
+     g1m_ps_int::Vector{Int},g2m_ps_int::Vector{Int},lambda_MDT::Float64,
+     Dfield::Float64,Katomic::Vector{Vector{Float64}},angle_set::Vector{Float64})
  
   num_layer=3
   num_sub=2
@@ -111,11 +112,25 @@ function get_Moire_Ham(wave::Vector{Vector{Int}},wAA::Float64,wAB::Float64,vF::F
  Hamiltonian=zeros(ComplexF64,num_layer,num_sub,length(wave),num_layer,num_sub,length(wave))
  
  for jb in eachindex(wave)
-   kvec1=kvec+wave[jb][1]*T1+wave[jb][2]*T2-vi*Kset[1]
+
+   kvec1=(kvec+wave[jb][1]*T1+wave[jb][2]*T2-vi*Kset[1])
+   kvec1_complex=kvec1[1]+im*kvec1[2]
+   kvec1_complex_rotated=kvec1_complex*exp(-im*(angle_set[1]))
+   kvec1=[real(kvec1_complex_rotated),imag(kvec1_complex_rotated)]
+
    Hamiltonian[1,:,jb,1,:,jb]+=vF*(vi*σx*kvec1[1]+σy*kvec1[2])-Dfield*Matrix{Float64}(I,2,2)
-   kvec2=kvec+wave[jb][1]*T1+wave[jb][2]*T2-vi*Kset[2]
+
+
+   kvec2=(kvec+wave[jb][1]*T1+wave[jb][2]*T2-vi*Kset[2])
+   kvec2_complex=kvec2[1]+im*kvec2[2]
+   kvec2_complex_rotated=kvec2_complex*exp(-im*(angle_set[2]))
+   kvec2=[real(kvec2_complex_rotated),imag(kvec2_complex_rotated)]
    Hamiltonian[2,:,jb,2,:,jb]+=vF*(vi*σx*kvec2[1]+σy*kvec2[2])
-   kvec3=kvec+wave[jb][1]*T1+wave[jb][2]*T2-vi*Kset[3]
+   
+   kvec3=(kvec+wave[jb][1]*T1+wave[jb][2]*T2-vi*Kset[3])
+   kvec3_complex=kvec3[1]+im*kvec3[2]
+   kvec3_complex_rotated=kvec3_complex*exp(-im*(angle_set[3]))
+   kvec3=[real(kvec3_complex_rotated),imag(kvec3_complex_rotated)]
    Hamiltonian[3,:,jb,3,:,jb]+=vF*(vi*σx*kvec3[1]+σy*kvec3[2])+Dfield*Matrix{Float64}(I,2,2)
  end
 
@@ -228,21 +243,33 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,
 
   
   KGr=4π/(3*a0)
-  kθ=2*KGr*sin(θ/2)
+  #kθ=2*KGr*sin(θ/2)
   
+  unrelaxed_K=[KGr*[cos(θ),sin(θ)],KGr*[1.0,0.0],KGr*[cos(-2θ),sin(-2θ)]]
+  K2_relaxed=2/3*unrelaxed_K[1]+1/3*unrelaxed_K[3]
+  relaxed_K=[KGr*[cos(θ),sin(θ)],K2_relaxed,KGr*[cos(-2θ),sin(-2θ)]]
+  Kset=[relaxed_K[ii]-K2_relaxed for ii in eachindex(relaxed_K)]
+
+  C120=[-1/2 -√3/2;√3/2 -1/2]
+  qset=[Kset[2]-Kset[1],C120*(Kset[2]-Kset[1]),C120*C120*(Kset[2]-Kset[1])]
+
+  angle_set=[angle(relaxed_K[ii][1]+im*relaxed_K[ii][2]) for ii in eachindex(relaxed_K)]
+
+  #Kset=[kθ*[0.0,1.0],kθ*[0.0,0.0],kθ*[0.0,-2.0]]
+  #qset=[kθ*[0.0,-1.0],kθ*[√3/2,1/2],kθ*[-√3/2,1/2]]
   
-  Kset=[kθ*[0.0,1.0],kθ*[0.0,0.0],kθ*[0.0,-2.0]]
-  qset=[kθ*[0.0,-1.0],kθ*[√3/2,1/2],kθ*[-√3/2,1/2]]
-  
-  Katomic=[Kset[ii]+KGr*[1.0,0.0] for ii in eachindex(Kset)]
+  #Katomic=[Kset[ii]+KGr*[1.0,0.0] for ii in eachindex(Kset)]
 
 
-  g1m_ps=kθ*√3*[1/2,√3/2] #stands for pristine
-  g2m_ps=kθ*√3*[-1/2,√3/2]
-  
-  
-  a1m_ps=4π/(3*kθ)*[√3/2,1/2]
-  a2m_ps=4π/(3*kθ)*[-√3/2,1/2]
+  #g1m_ps=kθ*√3*[1/2,√3/2] #stands for pristine
+  #g2m_ps=kθ*√3*[-1/2,√3/2]
+  g1m_ps=qset[2]-qset[1]
+  g2m_ps=qset[3]-qset[1]
+  DD=2π*inv([g1m_ps g2m_ps])
+  a1m_ps=DD[1,:]
+  a2m_ps=DD[2,:]
+  #a1m_ps=4π/(3*kθ)*[√3/2,1/2]
+  #a2m_ps=4π/(3*kθ)*[-√3/2,1/2]
   
 
 
@@ -346,7 +373,7 @@ function single_particle(geonum::Int64,θ::Float64,wAA::Float64,
     for spin_i in 1:num_spin, valley in  1:num_valley
       vset=[1,-1]
       kvec=allowedq[ja][1]*T1+allowedq[ja][2]*T2+gridshift
-      Moire, Ham=get_Moire_Ham(wave,wAA,wAB,vF,qset,Kset,dt,db,T1,T2,vset[valley],kvec,g1m_ps_int, g2m_ps_int,lambda_MDT,Dfield,Katomic)
+      Moire, Ham=get_Moire_Ham(wave,wAA,wAB,vF,qset,Kset,dt,db,T1,T2,vset[valley],kvec,g1m_ps_int, g2m_ps_int,lambda_MDT,Dfield,relaxed_K,angle_set)
       totalHam=reshape(Moire,dimension,dimension)+reshape(Moire,dimension,dimension)'+reshape(Ham,dimension,dimension)
       FFF=eigen(totalHam)
   
