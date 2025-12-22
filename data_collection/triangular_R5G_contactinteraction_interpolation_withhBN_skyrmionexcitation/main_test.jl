@@ -23,14 +23,19 @@ gcutoff=args[8]
 λ=args[9]
 trytimes=Int(args[10])
 enlarge_factor=Int(args[11])
-filepos=Int(args[12])
+V0_hBN=args[12]
+V1_hBN=args[13]
+ψ_hBN=Int(args[14])
+V2_scalar=args[15]
+ϕ=args[16]/180*π
+filepos=Int(args[17])
 
 
 
 
 
 
-overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m, b1,b2,spinor_set=triangle_initial_Densitymatrix(Int(NL),θ,Nq,gcutoff,uD,λ,enlarge_factor)
+overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m, b1,b2,spinor_set=triangle_initial_Densitymatrix(Int(NL),θ,Nq,gcutoff,uD,λ,enlarge_factor,V0_hBN,V1_hBN,ψ_hBN,V2_scalar,ϕ)
 
 Area=Nq^2*√3/2*norm(a1m)^2
 
@@ -45,7 +50,7 @@ chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uni
 
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation/data_output$(Int(args[12]))/$(args[1])NL$(args[2])Nq$(args[3])theta$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda$(args[10])trytime$(args[11])enlarge.jld2")
+savepath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation/data_output$(Int(args[17]))/$(args[1])NL$(args[2])Nq$(args[3])theta$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda$(args[10])trytime$(args[11])enlarge$(args[12])V0_hBN$(args[13])V1_hBN$(args[14])ψ_hBN$(args[15])V2_scalar$(args[16])ϕ.jld2")
 #savepath="test.jld2"
 
 

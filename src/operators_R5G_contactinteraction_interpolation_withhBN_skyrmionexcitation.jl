@@ -91,7 +91,8 @@ end
 
 
 
-function triangle_initial_Densitymatrix(NL::Int,θ::Float64,Nq::Int64,gcutoff::Float64,uD::Float64,λ::Float64,enlarge_factor::Int)
+function triangle_initial_Densitymatrix(NL::Int,θ::Float64,Nq::Int64,gcutoff::Float64,
+              uD::Float64,λ::Float64,enlarge_factor::Int,V0_hBN::Float64,V1_hBN::Float64,ψ_hBN::Float64,V2_scalar::Float64,ϕ::Float64)
    
     aGr=0.246
     ϵ=0.2504/aGr-1 #This is the normal one
@@ -118,9 +119,7 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,Nq::Int64,gcutoff::F
 
 
  
-    V0=28.9
-    V1=21.0
-    ψ=-0.29
+  
  
     
     
@@ -195,6 +194,8 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,Nq::Int64,gcutoff::F
        
        op_4=zeros(ComplexF64,2*NL,2*NL)
        op_4[1:2,1:2]=[1 0; 0 1]
+
+       op_5=Matrix{Float64}(I,2*NL,2*NL)
     
     Threads.@threads for ja in 1:Nq^2
       
@@ -203,7 +204,7 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,Nq::Int64,gcutoff::F
     
       for jb in eachindex(wave)
           hh=(1-λ)*get_Ham_Holomorphic([T1 T2]*(allowedq[ja]+wave[jb]),uD,1,1,NL)+(λ)*get_Ham([T1 T2]*(allowedq[ja]+wave[jb]),uD,1,1,NL)
-          #hh=get_Ham([T1 T2]*(allowedq[ja]+wave[jb]),uD,1,1,NL)
+         
          
           single_Ham[ja][jb,jb]=real(eigen(hh).values[NL+1])
 
@@ -217,23 +218,27 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,Nq::Int64,gcutoff::F
         pos=findfirst(item->item==wave[jc]-enlarge_factor*b1T,wave)
         if pos≠nothing
        
-          single_MoirePo[ja][jc,pos]=V1*exp(-im*ψ)*(spinor_set[ja,jc]'*op_1*spinor_set[ja,pos])
+          single_MoirePo[ja][jc,pos]+=V1_hBN*exp(-im*ψ_hBN)*(spinor_set[ja,jc]'*op_1*spinor_set[ja,pos])
+          single_MoirePo[ja][jc,pos]+=V2_scalar*exp(-im*ϕ)*(spinor_set[ja,jc]'*op_5*spinor_set[ja,pos])
+          
         end
         
         pos=findfirst(item->item==wave[jc]-enlarge_factor*b2T,wave)
         if pos≠nothing
    
-            single_MoirePo[ja][jc,pos]=V1*exp(-im*ψ)*(spinor_set[ja,jc]'*op_2*spinor_set[ja,pos])
+            single_MoirePo[ja][jc,pos]+=V1_hBN*exp(-im*ψ_hBN)*(spinor_set[ja,jc]'*op_2*spinor_set[ja,pos])
+            single_MoirePo[ja][jc,pos]+=V2_scalar*exp(-im*ϕ)*(spinor_set[ja,jc]'*op_5*spinor_set[ja,pos])
         end
 
 
         pos=findfirst(item->item==wave[jc]+(b2T+b1T)*enlarge_factor,wave)
         if pos≠nothing
    
-            single_MoirePo[ja][jc,pos]=V1*exp(-im*ψ)*(spinor_set[ja,jc]'*op_3*spinor_set[ja,pos])
+            single_MoirePo[ja][jc,pos]+=V1_hBN*exp(-im*ψ_hBN)*(spinor_set[ja,jc]'*op_3*spinor_set[ja,pos])
+            single_MoirePo[ja][jc,pos]+=V2_scalar*exp(-im*ϕ)*(spinor_set[ja,jc]'*op_5*spinor_set[ja,pos])
         end
     
-        single_MoirePo[ja][jc,jc]+=V0/2*(spinor_set[ja,jc]'*op_4*spinor_set[ja,jc])
+        single_MoirePo[ja][jc,jc]+=V0_hBN/2*(spinor_set[ja,jc]'*op_4*spinor_set[ja,jc])
      end
 
 
@@ -375,6 +380,23 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
  
   Fock_local=[[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2] for _ in 1:Threads.nthreads()]
   Hartree_local=[[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2] for _ in 1:Threads.nthreads()]
+#=
+  Threads.@threads for jk in 1:Nq^2
+    Fk = FockMatrix[jk]
+    for jk1 in 1:Nq^2
+        dmk = input_DensityMatrix[jk1]
+        lfv=loop_dic_Fock_val[jk,jk1,:]
+        opf=overlapmatrix[jk1,:,jk,:]
+        opm=overlapmatrix[jk,:,jk1,:]
+
+        for (ja,vvs) in pairs(loop_dic_Fock)
+          Fk[vvs[1],vvs[4]]+=dmk[vvs[3],vvs[2]]*opm[vvs[1],vvs[3]]*opf[vvs[2],vvs[4]]*lfv[ja]
+        end
+     end
+  end
+=#
+
+
 
  Threads.@threads for ja in  eachindex(loop_dic_Fock)
      Fk_local = Fock_local[Threads.threadid()]
