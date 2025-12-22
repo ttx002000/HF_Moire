@@ -147,7 +147,8 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,Nq::Int64,gcutoff::F
             push!(wave,ja*b1T+jb*b2T)
         end
     end
-    dimension=length(wave)
+    num_spin=2
+    dimension=num_spin*length(wave)
    
     
     
@@ -174,12 +175,13 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,Nq::Int64,gcutoff::F
 
 
 
-    
-     
     single_Ham=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
     single_MoirePo=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-    single_eigenvalue=[zeros(Float64,dimension) for _ in 1:Nq^2]
-    single_eigenvector=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
+     
+    single_Ham_spinless=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:Nq^2]
+    single_MoirePo_spinless=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:Nq^2]
+    single_eigenvalue=[zeros(Float64,length(wave)) for _ in 1:Nq^2]
+    single_eigenvector=[zeros(ComplexF64,length(wave),length(wave)) for _ in 1:Nq^2]
 
          ω=exp(im*2π/3)
        op_1=zeros(ComplexF64,2*NL,2*NL)
@@ -200,13 +202,13 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,Nq::Int64,gcutoff::F
     Threads.@threads for ja in 1:Nq^2
       
       
-      k=allowedq[ja][1]*T1+allowedq[ja][2]*T2
+      k=[T1 T2]*allowedq[ja]
     
       for jb in eachindex(wave)
           hh=(1-λ)*get_Ham_Holomorphic([T1 T2]*(allowedq[ja]+wave[jb]),uD,1,1,NL)+(λ)*get_Ham([T1 T2]*(allowedq[ja]+wave[jb]),uD,1,1,NL)
          
          
-          single_Ham[ja][jb,jb]=real(eigen(hh).values[NL+1])
+          single_Ham_spinless[ja][jb,jb]=real(eigen(hh).values[NL+1])
 
          
       end
@@ -218,33 +220,33 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,Nq::Int64,gcutoff::F
         pos=findfirst(item->item==wave[jc]-enlarge_factor*b1T,wave)
         if pos≠nothing
        
-          single_MoirePo[ja][jc,pos]+=V1_hBN*exp(-im*ψ_hBN)*(spinor_set[ja,jc]'*op_1*spinor_set[ja,pos])
-          single_MoirePo[ja][jc,pos]+=V2_scalar*exp(-im*ϕ)*(spinor_set[ja,jc]'*op_5*spinor_set[ja,pos])
+          single_MoirePo_spinless[ja][jc,pos]+=V1_hBN*exp(-im*ψ_hBN)*(spinor_set[ja,jc]'*op_1*spinor_set[ja,pos])
+          single_MoirePo_spinless[ja][jc,pos]+=V2_scalar*exp(-im*ϕ)*(spinor_set[ja,jc]'*op_5*spinor_set[ja,pos])
           
         end
         
         pos=findfirst(item->item==wave[jc]-enlarge_factor*b2T,wave)
         if pos≠nothing
-   
-            single_MoirePo[ja][jc,pos]+=V1_hBN*exp(-im*ψ_hBN)*(spinor_set[ja,jc]'*op_2*spinor_set[ja,pos])
-            single_MoirePo[ja][jc,pos]+=V2_scalar*exp(-im*ϕ)*(spinor_set[ja,jc]'*op_5*spinor_set[ja,pos])
+
+            single_MoirePo_spinless[ja][jc,pos]+=V1_hBN*exp(-im*ψ_hBN)*(spinor_set[ja,jc]'*op_2*spinor_set[ja,pos])
+            single_MoirePo_spinless[ja][jc,pos]+=V2_scalar*exp(-im*ϕ)*(spinor_set[ja,jc]'*op_5*spinor_set[ja,pos])
         end
 
 
         pos=findfirst(item->item==wave[jc]+(b2T+b1T)*enlarge_factor,wave)
         if pos≠nothing
    
-            single_MoirePo[ja][jc,pos]+=V1_hBN*exp(-im*ψ_hBN)*(spinor_set[ja,jc]'*op_3*spinor_set[ja,pos])
-            single_MoirePo[ja][jc,pos]+=V2_scalar*exp(-im*ϕ)*(spinor_set[ja,jc]'*op_5*spinor_set[ja,pos])
+            single_MoirePo_spinless[ja][jc,pos]+=V1_hBN*exp(-im*ψ_hBN)*(spinor_set[ja,jc]'*op_3*spinor_set[ja,pos])
+            single_MoirePo_spinless[ja][jc,pos]+=V2_scalar*exp(-im*ϕ)*(spinor_set[ja,jc]'*op_5*spinor_set[ja,pos])
         end
     
-        single_MoirePo[ja][jc,jc]+=V0_hBN/2*(spinor_set[ja,jc]'*op_4*spinor_set[ja,jc])
+        single_MoirePo_spinless[ja][jc,jc]+=V0_hBN/2*(spinor_set[ja,jc]'*op_4*spinor_set[ja,jc])
      end
 
 
     
-     single_MoirePo[ja]=single_MoirePo[ja]+single_MoirePo[ja]'
-     FFF=eigen(single_MoirePo[ja]+single_Ham[ja])
+     single_MoirePo_spinless[ja]=single_MoirePo_spinless[ja]+single_MoirePo_spinless[ja]'
+     FFF=eigen(single_MoirePo_spinless[ja]+single_Ham_spinless[ja])
     
       single_eigenvalue[ja]=real(FFF.values)
       single_eigenvector[ja]=FFF.vectors
@@ -252,11 +254,24 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,Nq::Int64,gcutoff::F
     end
 
 
+     for ja in 1:Nq^2
+      dd=zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave))
+      dd[1,:,1,:]=single_Ham_spinless[ja]
+      dd[2,:,2,:]=single_Ham_spinless[ja]
+      single_Ham[ja]=reshape(dd,dimension,dimension)
+
+      ee=zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave))
+      ee[1,:,1,:]=single_MoirePo_spinless[ja]
+      ee[2,:,2,:]=single_MoirePo_spinless[ja]
+      single_MoirePo[ja]=reshape(ee,dimension,dimension)
+     end
+
+
     input_DensityMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
  
     
      for ja in 1:Nq^2
-      A=randn(ComplexF64,length(wave),length(wave))
+      A=randn(ComplexF64,dimension,dimension)
       input_DensityMatrix[ja]=(A+A')*1.0
      end
 
@@ -367,8 +382,8 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
                                single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,ϵr::Float64,overlapmatrix::Array{ComplexF64,4},
                                energy_input::Float64,filling::Int,Area::Float64)
   
-  
-   dimension=length(wave)
+    num_spin=2
+   dimension=num_spin*length(wave)
   HartreeMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
   FockMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
   output_DensityMatrix=Vector{Matrix{ComplexF64}}(undef,Nq^2)
@@ -377,9 +392,9 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
   HF_eigenvalue=Vector{Vector{Float64}}(undef,Nq^2)
   HF_eigenvector=Vector{Matrix{ComplexF64}}(undef,Nq^2)
 
- 
-  Fock_local=[[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2] for _ in 1:Threads.nthreads()]
-  Hartree_local=[[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2] for _ in 1:Threads.nthreads()]
+  input_DensityMatrix_reshaped=[reshape(input_DensityMatrix[ja],num_spin,length(wave),num_spin,length(wave)) for ja in 1:Nq^2]
+  Fock_local=[[zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave)) for _ in 1:Nq^2] for _ in 1:Threads.nthreads()]
+  Hartree_local=[[zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave)) for _ in 1:Nq^2] for _ in 1:Threads.nthreads()]
 #=
   Threads.@threads for jk in 1:Nq^2
     Fk = FockMatrix[jk]
@@ -402,17 +417,17 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
      Fk_local = Fock_local[Threads.threadid()]
      vvs=loop_dic_Fock[ja]
    for jk in 1:Nq^2, jk1 in 1:Nq^2
-        dmk = input_DensityMatrix[jk1]
+        dmk =input_DensityMatrix_reshaped[jk1]
         lfv=@view loop_dic_Fock_val[jk,jk1,:]
         opf= @view overlapmatrix[jk1,:,jk,:]
         opm= @view overlapmatrix[jk,:,jk1,:]
-         Fk_local[jk][vvs[1],vvs[4]]+=dmk[vvs[3],vvs[2]]*opm[vvs[1],vvs[3]]*opf[vvs[2],vvs[4]]*lfv[ja]
+         Fk_local[jk][:,vvs[1],:,vvs[4]]+=dmk[:,vvs[3],:,vvs[2]]*opm[vvs[1],vvs[3]]*opf[vvs[2],vvs[4]]*lfv[ja]
     end
  end
 
   for jk in 1:Nq^2
       for t_id in 1:Threads.nthreads()
-          FockMatrix[jk]+=Fock_local[t_id][jk]
+          FockMatrix[jk].+=reshape(Fock_local[t_id][jk],dimension,dimension)
       end
   end
 
@@ -422,9 +437,10 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
 
 
 
-
-   Hartree_Density=sum([input_DensityMatrix[ja] .* transpose(overlapmatrix[ja,:,ja,:]) for ja in 1:Nq^2])
-
+  
+   
+   Hartree_Density=sum([input_DensityMatrix_reshaped[ja][1,:,1,:] .* transpose(overlapmatrix[ja,:,ja,:]) for ja in 1:Nq^2])
+   Hartree_Density+=sum([input_DensityMatrix_reshaped[ja][2,:,2,:] .* transpose(overlapmatrix[ja,:,ja,:]) for ja in 1:Nq^2])
 
 #=
  for jk in 1:Nq^2
@@ -442,14 +458,14 @@ Threads.@threads for ja in eachindex(loop_dic_Hartree)
    
      oph=@view overlapmatrix[jk,:,jk,:]
       
-        Ht_local[jk][vvs[1],vvs[3]]+=Hartree_Density[vvs[4],vvs[2]]*oph[vvs[1],vvs[3]]*loop_dic_Hartree_val[ja]
+        Ht_local[jk][:,vvs[1],:,vvs[3]]+=Matrix{Float64}(I,num_spin,num_spin)*Hartree_Density[vvs[4],vvs[2]]*oph[vvs[1],vvs[3]]*loop_dic_Hartree_val[ja]
       
   end
 end
 
   for jk in 1:Nq^2
       for t_id in 1:Threads.nthreads()
-          HartreeMatrix[jk]+=Hartree_local[t_id][jk]
+          HartreeMatrix[jk]+=reshape(Hartree_local[t_id][jk],dimension,dimension)
       end
   end
 
@@ -505,109 +521,6 @@ end
 
 
 
-#=
-function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Fock_val::Array{Float64},
-                               loop_dic_Hartree::Vector{Vector{Int}},loop_dic_Hartree_val::Vector{Float64},
-                              allowedq::Vector{Vector{Int}},
-                               T1::Vector{Float64},T2::Vector{Float64},Nq::Int64,wave::Vector{Vector{Int64}},
-                               input_DensityMatrix::Vector{Matrix{ComplexF64}},single_Ham::Vector{Matrix{ComplexF64}},
-                               single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,ϵr::Float64,overlapmatrix::Array{ComplexF64,4},
-                               energy_input::Float64,filling::Int,Area::Float64)
-  
-  
-   dimension=length(wave)
-  HartreeMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-  FockMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-  output_DensityMatrix=Vector{Matrix{ComplexF64}}(undef,Nq^2)
-  DeltaMatrix=Vector{Matrix{ComplexF64}}(undef,Nq^2)
-  NewDensityMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
-  HF_eigenvalue=Vector{Vector{Float64}}(undef,Nq^2)
-  HF_eigenvector=Vector{Matrix{ComplexF64}}(undef,Nq^2)
-
- 
-
-  Threads.@threads for jk in 1:Nq^2
-    Fk = FockMatrix[jk]
-    for jk1 in 1:Nq^2
-        dmk = input_DensityMatrix[jk1]
-        lfv=loop_dic_Fock_val[jk,jk1,:]
-        opf=overlapmatrix[jk1,:,jk,:]
-        opm=overlapmatrix[jk,:,jk1,:]
-
-        for (ja,vvs) in pairs(loop_dic_Fock)
-          Fk[vvs[1],vvs[4]]+=dmk[vvs[3],vvs[2]]*opm[vvs[1],vvs[3]]*opf[vvs[2],vvs[4]]*lfv[ja]
-        end
-     end
-  end
-
-
-
-
-
-
-   Hartree_Density=sum([input_DensityMatrix[ja] .* transpose(overlapmatrix[ja,:,ja,:]) for ja in 1:Nq^2])
-
-
-
-  Threads.@threads for jk in 1:Nq^2
-    Hk=HartreeMatrix[jk]
-    oph=(overlapmatrix[jk,:,jk,:])   
-      for (ja,vvs) in pairs(loop_dic_Hartree)
-        Hk[vvs[1],vvs[3]]+=Hartree_Density[vvs[4],vvs[2]]*oph[vvs[1],vvs[3]]*loop_dic_Hartree_val[ja]
-      end
-  end
-
-
- for ja in 1:Nq^2
-    HartreeMatrix[ja]=(HartreeMatrix[ja]+HartreeMatrix[ja]'-real(Diagonal(HartreeMatrix[ja])))/Area
-    FockMatrix[ja]=(FockMatrix[ja]+FockMatrix[ja]'-real(Diagonal(FockMatrix[ja])))/Area
-  end
- 
-
- for ja in 1:Nq^2
-   FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+HartreeMatrix[ja]-FockMatrix[ja])
-   HF_eigenvalue[ja]=real(FFF.values)
-   HF_eigenvector[ja]=FFF.vectors
- end
-
- bound=(sort(reduce(vcat,HF_eigenvalue))[filling*Nq^2+1]+sort(reduce(vcat,HF_eigenvalue))[filling*Nq^2])/2
-
-  for ja in 1:Nq^2
-    
-       for jd in eachindex(HF_eigenvalue[ja])
-          if HF_eigenvalue[ja][jd]<bound
-             NewDensityMatrix[ja]+=HF_eigenvector[ja][:,jd]*(HF_eigenvector[ja][:,jd])'
-          end
-       end
-        NewDensityMatrix[ja]=0.5*(NewDensityMatrix[ja]'+ NewDensityMatrix[ja])
-       DeltaMatrix[ja]=NewDensityMatrix[ja]-input_DensityMatrix[ja]
-       mix_ratio=rand()
-       output_DensityMatrix[ja]=mix_ratio*input_DensityMatrix[ja]+(1-mix_ratio)*NewDensityMatrix[ja]
-  end
-
-
-  
-  e1=0.0
-  for ja in 1:Nq^2
-    e1+=tr(DeltaMatrix[ja]'*DeltaMatrix[ja])
-  end
-  eout=real(e1)/Nq^2
-  
-  
-  energy=0
-   for ja in 1:Nq^2
-       ss=single_MoirePo[ja]+single_Ham[ja]+0.5*HartreeMatrix[ja]-0.5*FockMatrix[ja]
-       energy+=real(tr(ss*input_DensityMatrix[ja]))
-   end
-
-   energy_change=real(energy-energy_input)
-
-
-
- return  eout,energy_change,output_DensityMatrix,DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix
-end
-=#
-
 
 
 
@@ -618,7 +531,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
                        single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,ϵr::Float64,overlapmatrix::Array{ComplexF64,4},filling::Int,Area::Float64)
     eout=1.0
     itcount=0
-    dimension=length(wave)
+    num_spin=2
+    dimension=num_spin*length(wave)
     #loop_dic=construct_loop_dic(wave)
      loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val=construct_loop_dic(wave,Nq,T1,T2,ϵr,constq)
    
@@ -729,14 +643,18 @@ end
 
 
 function shift_vector(vector_toshift::Vector{ComplexF64},shiftamount::Vector{Int},wave::Vector{Vector{Int}})
-    shifted_vector=zeros(ComplexF64,length(wave))
+    num_spin=2
+    shifted_vector=zeros(ComplexF64,num_spin,length(wave))
+    vector_toshift=reshape(vector_toshift,num_spin,length(wave))
     for ja in eachindex(wave)
         pos=findfirst(item->item==wave[ja]+shiftamount,wave)
         if pos≠nothing
-        shifted_vector[ja]=vector_toshift[pos]
+        shifted_vector[:,ja]=vector_toshift[:,pos]
         end
     
     end
+    shifted_vector=reshape(shifted_vector,num_spin*length(wave))
+    vector_toshift=reshape(vector_toshift,num_spin*length(wave))
     return shifted_vector/norm(shifted_vector)
 
 end
@@ -750,8 +668,8 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},
 
   
     
-
-    dimension=length(wave)
+    num_spin=2
+    dimension=num_spin*length(wave)
     
     
     chern_allowedq=Vector{Int64}[]

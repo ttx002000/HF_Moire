@@ -4,7 +4,7 @@ using Plots
 using JLD2
 using CSV,DataFrames
 
-
+# The goal of this script is to do spinful calculation, and also allow me to do HF-projected skyrmion excitation calculation
 include("../../src/operators_R5G_contactinteraction_interpolation_withhBN_skyrmionexcitation.jl")
 
 args=parse.(Float64,ARGS)
