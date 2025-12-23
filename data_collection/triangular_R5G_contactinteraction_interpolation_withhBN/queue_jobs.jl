@@ -8,6 +8,10 @@ include("submit_job_v2.jl")
 filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "interpolation"
 
+aa= parse.(Int, ARGS)
+
+scratch_dir = ENV["SCRATCH"]
+misspath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBNn/data_output$(Int(aa[1]))/missedjobs.jld2")
 
 
 st=load("missedjobs.jld2")

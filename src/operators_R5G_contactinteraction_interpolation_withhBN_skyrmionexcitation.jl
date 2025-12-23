@@ -391,10 +391,10 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
   NewDensityMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
   HF_eigenvalue=Vector{Vector{Float64}}(undef,Nq^2)
   HF_eigenvector=Vector{Matrix{ComplexF64}}(undef,Nq^2)
-
+   nt = Threads.maxthreadid()
   input_DensityMatrix_reshaped=[reshape(input_DensityMatrix[ja],num_spin,length(wave),num_spin,length(wave)) for ja in 1:Nq^2]
-  Fock_local=[[zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave)) for _ in 1:Nq^2] for _ in 1:Threads.nthreads()]
-  Hartree_local=[[zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave)) for _ in 1:Nq^2] for _ in 1:Threads.nthreads()]
+  Fock_local=[[zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave)) for _ in 1:Nq^2] for _ in 1:nt]
+  Hartree_local=[[zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave)) for _ in 1:Nq^2] for _ in 1:nt]
 #=
   Threads.@threads for jk in 1:Nq^2
     Fk = FockMatrix[jk]
@@ -418,15 +418,24 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
      vvs=loop_dic_Fock[ja]
    for jk in 1:Nq^2, jk1 in 1:Nq^2
         dmk =input_DensityMatrix_reshaped[jk1]
-        lfv=@view loop_dic_Fock_val[jk,jk1,:]
-        opf= @view overlapmatrix[jk1,:,jk,:]
-        opm= @view overlapmatrix[jk,:,jk1,:]
-         Fk_local[jk][:,vvs[1],:,vvs[4]]+=dmk[:,vvs[3],:,vvs[2]]*opm[vvs[1],vvs[3]]*opf[vvs[2],vvs[4]]*lfv[ja]
+        #lfv=@view loop_dic_Fock_val[jk,jk1,:]
+        #opf= @view overlapmatrix[jk1,:,jk,:]
+        #opm= @view overlapmatrix[jk,:,jk1,:]
+
+        lfv= loop_dic_Fock_val[jk,jk1,ja]
+        opf=  overlapmatrix[jk1,vvs[2],jk,vvs[4]]
+        opm=  overlapmatrix[jk,vvs[1],jk1,vvs[3]]
+        ss=lfv*opf*opm
+        
+        for ii in 1:num_spin, jj in 1:num_spin
+          #Fk_local[jk][ii,vvs[1],jj,vvs[4]]+=dmk[ii,vvs[3],jj,vvs[2]]*opm[vvs[1],vvs[3]]*opf[vvs[2],vvs[4]]*lfv[ja]
+          Fk_local[jk][ii,vvs[1],jj,vvs[4]]+=dmk[ii,vvs[3],jj,vvs[2]]*ss
+        end
     end
  end
 
-  for jk in 1:Nq^2
-      for t_id in 1:Threads.nthreads()
+  Threads.@threads for jk in 1:Nq^2
+      for t_id in 1:nt
           FockMatrix[jk].+=reshape(Fock_local[t_id][jk],dimension,dimension)
       end
   end
@@ -439,9 +448,8 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
 
   
    
-   Hartree_Density=sum([input_DensityMatrix_reshaped[ja][1,:,1,:] .* transpose(overlapmatrix[ja,:,ja,:]) for ja in 1:Nq^2])
-   Hartree_Density+=sum([input_DensityMatrix_reshaped[ja][2,:,2,:] .* transpose(overlapmatrix[ja,:,ja,:]) for ja in 1:Nq^2])
-
+   Hartree_Density=sum([(input_DensityMatrix_reshaped[ja][1,:,1,:]+input_DensityMatrix_reshaped[ja][2,:,2,:]) .* transpose(overlapmatrix[ja,:,ja,:]) for ja in 1:Nq^2])
+   
 #=
  for jk in 1:Nq^2
     Hk=HartreeMatrix[jk]
@@ -457,26 +465,28 @@ Threads.@threads for ja in eachindex(loop_dic_Hartree)
   for jk in 1:Nq^2
    
      oph=@view overlapmatrix[jk,:,jk,:]
-      
-        Ht_local[jk][:,vvs[1],:,vvs[3]]+=Matrix{Float64}(I,num_spin,num_spin)*Hartree_Density[vvs[4],vvs[2]]*oph[vvs[1],vvs[3]]*loop_dic_Hartree_val[ja]
+     ss=Hartree_Density[vvs[4],vvs[2]]*oph[vvs[1],vvs[3]]*loop_dic_Hartree_val[ja]
+      for ii in 1:num_spin
+        Ht_local[jk][ii,vvs[1],ii,vvs[3]]+=ss
+      end
       
   end
 end
 
-  for jk in 1:Nq^2
-      for t_id in 1:Threads.nthreads()
+  Threads.@threads for jk in 1:Nq^2
+      for t_id in 1:nt
           HartreeMatrix[jk]+=reshape(Hartree_local[t_id][jk],dimension,dimension)
       end
   end
 
 
- for ja in 1:Nq^2
+ Threads.@threads for ja in 1:Nq^2
     HartreeMatrix[ja]=(HartreeMatrix[ja]+HartreeMatrix[ja]'-real(Diagonal(HartreeMatrix[ja])))/Area
     FockMatrix[ja]=(FockMatrix[ja]+FockMatrix[ja]'-real(Diagonal(FockMatrix[ja])))/Area
   end
  
 
- for ja in 1:Nq^2
+ Threads.@threads for ja in 1:Nq^2
    FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+HartreeMatrix[ja]-FockMatrix[ja])
    HF_eigenvalue[ja]=real(FFF.values)
    HF_eigenvector[ja]=FFF.vectors
@@ -484,7 +494,7 @@ end
 
  bound=(sort(reduce(vcat,HF_eigenvalue))[filling*Nq^2+1]+sort(reduce(vcat,HF_eigenvalue))[filling*Nq^2])/2
 
-  for ja in 1:Nq^2
+ Threads.@threads for ja in 1:Nq^2
     
        for jd in eachindex(HF_eigenvalue[ja])
           if HF_eigenvalue[ja][jd]<bound
