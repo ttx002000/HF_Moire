@@ -11,10 +11,10 @@ job_prefix = "interpolation"
 aa= parse.(Int, ARGS)
 
 scratch_dir = ENV["SCRATCH"]
-misspath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBNn/data_output$(Int(aa[1]))/missedjobs.jld2")
+misspath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN/data_output$(Int(aa[1]))/missedjobs.jld2")
 
 
-st=load("missedjobs.jld2")
+st=load(misspath)
 index=st["index"]
 start=1
 ee=length(index)
