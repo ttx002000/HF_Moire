@@ -674,13 +674,20 @@ end
 function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},
       allowedq::Vector{Vector{Int}},
        HF_eigenvector::Vector{Matrix{ComplexF64}},
-       single_eigenvector::Vector{Matrix{ComplexF64}},spinor_set::Matrix{Vector{ComplexF64}})
-
+       single_eigenvector_nospin::Vector{Matrix{ComplexF64}},spinor_set::Matrix{Vector{ComplexF64}})
+     
+     
   
     
     num_spin=2
     dimension=num_spin*length(wave)
-    
+     single_eigenvector=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
+     for ja in 1:Nq^2
+      AA=zeros(ComplexF64,num_spin,length(wave),dimension)
+      AA[1,:,1:length(wave)]=single_eigenvector_nospin[ja]
+      AA[2,:,length(wave)+1:dimension]=single_eigenvector_nospin[ja]
+      single_eigenvector[ja]=reshape(AA,dimension,dimension)
+     end
     
     chern_allowedq=Vector{Int64}[]
     for ja in 0:Nq,jb in 0:Nq
@@ -813,7 +820,6 @@ function triangle_chern(Nq::Int,wave::Vector{Vector{Int}},
    return chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uniform,uniform_single
 
 end
-
 
 
 function implement_DIIS(DIIS_input_projector::Vector{Vector{Matrix{ComplexF64}}},DIIS_input_DeltaMatrix::Vector{Vector{Matrix{ComplexF64}}},Nq::Int)
