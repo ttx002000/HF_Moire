@@ -630,7 +630,9 @@ end
 
 function metric(wavelist::Vector{Vector{Int64}},k::Vector{Int},
           q::Vector{Int},spinor_set::Matrix{Vector{ComplexF64}},Nq::Int)::Matrix{ComplexF64}
-    Amatrix=zeros(ComplexF64,length(wavelist),length(wavelist))
+    
+    num_spin=2     
+    Amatrix=zeros(ComplexF64,num_spin,length(wavelist),num_spin,length(wavelist))
  
 
 
@@ -641,11 +643,13 @@ function metric(wavelist::Vector{Vector{Int64}},k::Vector{Int},
     k2=findfirst(item->item==mod.(k+q,Nq),allowedq)
     g2=findfirst(item->item==wavelist[ja]+k+q-mod.(k+q,Nq),wavelist)
       if g1≠nothing && g2≠nothing
-         Amatrix[ja,ja]=spinor_set[k1,g1]'*spinor_set[k2,g2]
+         Amatrix[1,ja,1,ja]=spinor_set[k1,g1]'*spinor_set[k2,g2]
+         Amatrix[2,ja,2,ja]=spinor_set[k1,g1]'*spinor_set[k2,g2]
       end
     end
-    return Amatrix
+    return reshape(Amatrix,num_spin*length(wavelist),num_spin*length(wavelist))
 end
+
 
 
 
