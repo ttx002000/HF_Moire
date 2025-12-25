@@ -507,11 +507,12 @@ end
        output_DensityMatrix[ja]=mix_ratio*input_DensityMatrix[ja]+(1-mix_ratio)*NewDensityMatrix[ja]
   end
 
-    ss=zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave))
-    ss[1,:,1,:].=1.0
-    ss=reshape(ss,num_spin*length(wave),num_spin*length(wave))
+   
   Threads.@threads for ja in 1:Nq^2
-     output_DensityMatrix[ja].*=ss
+    dd=reshape(output_DensityMatrix[ja],num_spin,length(wave),num_spin,length(wave))
+     dd[1,:,2,:].=0.0
+     dd[2,:,2,:].=0.0
+      dd[2,:,1,:].=0.0
   end
   
   e1=0.0
