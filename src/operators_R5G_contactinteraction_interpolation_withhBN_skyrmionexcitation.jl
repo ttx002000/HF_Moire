@@ -413,26 +413,45 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
 
 
 
- Threads.@threads for ja in  eachindex(loop_dic_Fock)
-     Fk_local = Fock_local[Threads.threadid()]
-     vvs=loop_dic_Fock[ja]
-   for jk in 1:Nq^2, jk1 in 1:Nq^2
-        dmk =input_DensityMatrix_reshaped[jk1]
-        #lfv=@view loop_dic_Fock_val[jk,jk1,:]
-        #opf= @view overlapmatrix[jk1,:,jk,:]
-        #opm= @view overlapmatrix[jk,:,jk1,:]
+  Threads.@threads for ja in  eachindex(loop_dic_Fock)
+      Fk_local = Fock_local[Threads.threadid()]
+      vvs=loop_dic_Fock[ja]
+      if vvs[1]≠vvs[4]
 
-        lfv= loop_dic_Fock_val[jk,jk1,ja]
-        opf=  overlapmatrix[jk1,vvs[2],jk,vvs[4]]
-        opm=  overlapmatrix[jk,vvs[1],jk1,vvs[3]]
-        ss=lfv*opf*opm
-        
-        for ii in 1:num_spin, jj in 1:num_spin
-          #Fk_local[jk][ii,vvs[1],jj,vvs[4]]+=dmk[ii,vvs[3],jj,vvs[2]]*opm[vvs[1],vvs[3]]*opf[vvs[2],vvs[4]]*lfv[ja]
-          Fk_local[jk][ii,vvs[1],jj,vvs[4]]+=dmk[ii,vvs[3],jj,vvs[2]]*ss
-        end
-    end
- end
+          for jk in 1:Nq^2, jk1 in 1:Nq^2
+                dmk =input_DensityMatrix_reshaped[jk1]
+                #lfv=@view loop_dic_Fock_val[jk,jk1,:]
+                #opf= @view overlapmatrix[jk1,:,jk,:]
+                #opm= @view overlapmatrix[jk,:,jk1,:]
+
+                lfv= loop_dic_Fock_val[jk,jk1,ja]
+                opf=  overlapmatrix[jk1,vvs[2],jk,vvs[4]]
+                opm=  overlapmatrix[jk,vvs[1],jk1,vvs[3]]
+                ss=lfv*opf*opm
+              
+                  for ii in 1:num_spin, jj in 1:num_spin
+                    #Fk_local[jk][ii,vvs[1],jj,vvs[4]]+=dmk[ii,vvs[3],jj,vvs[2]]*opm[vvs[1],vvs[3]]*opf[vvs[2],vvs[4]]*lfv[ja]
+                      Fk_local[jk][ii,vvs[1],jj,vvs[4]]+=dmk[ii,vvs[3],jj,vvs[2]]*ss
+                  end
+
+            end
+      else
+            for jk in 1:Nq^2, jk1 in 1:Nq^2
+              dmk =input_DensityMatrix_reshaped[jk1]
+            
+              lfv= loop_dic_Fock_val[jk,jk1,ja]
+              opf=  overlapmatrix[jk1,vvs[2],jk,vvs[4]]
+              opm=  overlapmatrix[jk,vvs[1],jk1,vvs[3]]
+              ss=lfv*opf*opm
+            
+                for ii in 1:num_spin, jj in 1:ii
+            
+                    Fk_local[jk][ii,vvs[1],jj,vvs[4]]+=dmk[ii,vvs[3],jj,vvs[2]]*ss
+                end
+
+          end
+      end
+  end
 
   Threads.@threads for jk in 1:Nq^2
       for t_id in 1:nt
