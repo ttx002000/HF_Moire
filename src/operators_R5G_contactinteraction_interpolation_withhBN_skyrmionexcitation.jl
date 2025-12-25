@@ -503,7 +503,7 @@ end
        end
         NewDensityMatrix[ja]=0.5*(NewDensityMatrix[ja]'+ NewDensityMatrix[ja])
        DeltaMatrix[ja]=NewDensityMatrix[ja]-input_DensityMatrix[ja]
-       mix_ratio=0.0
+       mix_ratio=0.5
        output_DensityMatrix[ja]=mix_ratio*input_DensityMatrix[ja]+(1-mix_ratio)*NewDensityMatrix[ja]
   end
 
