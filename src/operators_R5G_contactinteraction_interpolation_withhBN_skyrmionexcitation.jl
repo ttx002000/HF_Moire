@@ -509,6 +509,7 @@ end
 
     ss=zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave))
     ss[1,:,1,:].=1.0
+    ss=reshape(ss,num_spin*length(wave),num_spin*length(wave))
   Threads.@threads for ja in 1:Nq^2
      output_DensityMatrix[ja].*=ss
   end
