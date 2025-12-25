@@ -508,12 +508,7 @@ end
   end
 
    
-  Threads.@threads for ja in 1:Nq^2
-    dd=reshape(output_DensityMatrix[ja],num_spin,length(wave),num_spin,length(wave))
-     dd[1,:,2,:].=0.0
-     dd[2,:,2,:].=0.0
-      dd[2,:,1,:].=0.0
-  end
+
   
   e1=0.0
   for ja in 1:Nq^2
