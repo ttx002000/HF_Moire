@@ -9,7 +9,7 @@ include("../../src/operators_R5G_contactinteraction_interpolation_withhBN_skyrmi
 
 args=parse.(Float64,ARGS)
 
-NL=args[1]
+NL=Int(args[1])
 
 Nq=Int(args[2]);
 θ=args[3]/180*pi;
