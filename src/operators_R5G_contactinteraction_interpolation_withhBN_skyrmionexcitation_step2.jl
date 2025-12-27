@@ -247,9 +247,13 @@ function initial_process(allowedq::Vector{Vector{Int}},nop_single_Ham::Vector{Ma
         push!(wave_diff,ja*b1T+jb*b2T)
       end
     end
+    
+
+    AA=randn(length(allowedq)*Nband,length(allowedq)*Nband)+im*randn(length(allowedq)*Nband,length(allowedq)*Nband)
+    initial_DensityMatrix=AA+AA'
 
 
-  return allowedq_dic,single_Ham,single_MoirePo,wave_diff
+  return allowedq_dic,single_Ham,single_MoirePo,wave_diff,initial_DensityMatrix
         
 end
 

@@ -57,7 +57,7 @@ b2T=Int.(round.(inv([T1 T2])*b2))
 
 
 
-allowedq_dic,single_Ham,single_MoirePo,wave_diff=initial_process(allowedq,nop_single_Ham,
+allowedq_dic,single_Ham,single_MoirePo,wave_diff,initial_DensityMatrix=initial_process(allowedq,nop_single_Ham,
                          nop_single_MoirePo,nop_HF_eigenvector,
                          Nband,qcutoff,b1,b2,b1T,b2T)
 
