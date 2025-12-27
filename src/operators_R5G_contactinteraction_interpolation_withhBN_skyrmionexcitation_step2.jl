@@ -221,7 +221,7 @@ function get_ff(nop_HF_eigenvector::Vector{Matrix{ComplexF64}},NL::Int,Nband::In
    return form_factors
 end
 
-function initial_process(allowedq::Vector{Vecotr{Int}},nop_single_Ham::Vector{Matrix{ComplexF64}},
+function initial_process(allowedq::Vector{Vector{Int}},nop_single_Ham::Vector{Matrix{ComplexF64}},
                          nop_single_MoirePo::Vector{Matrix{ComplexF64}},nop_HF_eigenvector::Vector{Matrix{ComplexF64}},
                          Nband::Int64,qcutoff::Float64,b1::Vector{Float64},b2::Vector{Float64},b1T::Vector{Int},b2T::Vector{Int})
   allowedq_dic=Dict{Vector{Int},Int}()
