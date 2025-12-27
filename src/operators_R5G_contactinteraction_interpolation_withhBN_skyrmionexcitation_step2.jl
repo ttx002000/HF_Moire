@@ -322,6 +322,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
                                                                                                                                                                                 input_DensityMatrix,single_Ham,
                                                                                                                                                                                 single_MoirePo,Coulomb_element,formfactors,
                                                                                                                                                                                 energy,filling,Area,sum_idx,diff_idx)
+          DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
         input_DensityMatrix=output_DensityMatrix
         
        
