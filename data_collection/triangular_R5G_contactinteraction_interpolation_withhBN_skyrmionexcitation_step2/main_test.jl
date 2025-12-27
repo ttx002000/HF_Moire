@@ -65,7 +65,8 @@ allowedq_dic,single_Ham,single_MoirePo,wave_diff,initial_DensityMatrix=initial_p
 
 Area=Nq^2*√3/2*norm(a1m)^2
 
-
+formfactors=get_ff(nop_HF_eigenvector,NL,Nband,wave
+                ,wave_diff,spinor_set,allowedq,allowedq_dic)
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix, allowedq,allowedq_dic,T1,T2,
                                                                                                                                     Nq,wave,wave_diff,single_Ham,
                                                                                                                                     single_MoirePo,constq,ϵr,formfactors,filling,Area)
