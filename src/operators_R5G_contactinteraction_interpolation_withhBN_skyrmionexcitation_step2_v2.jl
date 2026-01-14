@@ -52,33 +52,37 @@ function Construct_DensityMatrix(allowedq::Vector{Vector{Int}},
   HartreeMatrix=zeros(ComplexF64,Nq^2,Nbs,num_spin,Nq^2,Nbs,num_spin)
   FockMatrix=zeros(ComplexF64,Nq^2,Nbs,num_spin,Nq^2,Nbs,num_spin)
    nt = Threads.maxthreadid()
-  Xbuf = [Matrix{ComplexF64}(undef, Nbs, Nbs) for _ in 1:nt]
+   Xbuf = [Matrix{ComplexF64}(undef, Nbs, Nbs) for _ in 1:nt]
   Ybuf = [Matrix{ComplexF64}(undef, Nbs, Nbs) for _ in 1:nt]
-
+  ρbuf = [Matrix{ComplexF64}(undef, Nbs, Nbs) for _ in 1:nt]
   tic=time()
   Threads.@threads for k2 in eachindex(allowedq)
     tid=Threads.threadid()
+    ρb = ρbuf[tid]
     X=Xbuf[tid]
     Y=Ybuf[tid]
     for k3 in eachindex(allowedq),s1 in 1:num_spin, s2 in 1:num_spin
-    Fk_local=@view  FockMatrix[k2,:,s1,k3,:,s2] 
+    Fk_local=@view  FockMatrix[k2,:,s1,k3,:,s2]
+    Fk_buf=zeros(ComplexF64,Nbs,Nbs) 
        for k1 in eachindex(allowedq)
           #qindex=allowedq_dic[mod.(allowedq[k1]-allowedq[k3],Nq)]
           #k4=allowedq_dic[mod.(allowedq[k1]+allowedq[k2]-allowedq[k3],Nq)]
            qindex=diff_idx[k1,k3]
            k4=sum_idx[qindex,k2]
-           ρ=@view input_ds_reshaped[k4,:,s1,k1,:,s2]
+           ρview = @view  input_ds_reshaped[k4, :, s1, k1, :, s2]
+           copyto!(ρb, ρview)
            for qg in eachindex(wave_diff)
-             #Fk_local.+=Coulomb_element[qindex,qg]*(formf[k2,qindex,qg]*input_ds_reshaped[k4,:,k1,:]*formf[k3,qindex,qg]')
+           
              α=Coulomb_element[qindex,qg]  
              A=formf[k2,qindex,qg,s1]   
              B=formf[k3,qindex,qg,s2]
-             mul!(X,ρ,B')
+             mul!(X,ρb,B')
              mul!(Y,A,X)
-             Fk_local.+=α.*Y
+             Fk_buf.+=α.*Y
             end
          
        end
+    copyto!(Fk_local, Fk_buf)
       end
   end
   toc=time()
@@ -88,7 +92,7 @@ function Construct_DensityMatrix(allowedq::Vector{Vector{Int}},
 
   Threads.@threads for k2 in eachindex(allowedq)
     for k4 in eachindex(allowedq)
-    HT_local=@view HartreeMatrix[k2,:,:,k4,:,:]
+    HT_local=@view HartreeMatrix[k2,:,1,k4,:,1]
     #qindex=allowedq_dic[mod.(allowedq[k4]-allowedq[k2],Nq)]
      qindex=diff_idx[k4,k2]
      for qg in eachindex(wave_diff)
@@ -100,12 +104,13 @@ function Construct_DensityMatrix(allowedq::Vector{Vector{Int}},
           htdensity+=dot(formf[k3,qindex,qg,si],input_ds_reshaped[k3,:,si,k1,:,si])
         end
         β=Coulomb_element[qindex,qg]*htdensity
-        for si in 1:num_spin
-         HT_local[:,si,:,si].+=β.*formf[k2,qindex,qg,si]
-        end
+      
+         HT_local.+=β.*formf[k2,qindex,qg,1] #I used the knowledge here that Hartree are the same for both spin
+      
       end
    end
   end
+  HartreeMatrix[:,:,2,:,:,2]=copy(HartreeMatrix[:,:,1,:,:,1])
 
   toc=time()
   println(toc-tic,"finishHartree")
@@ -215,15 +220,15 @@ function get_ff(nop_HF_eigenvector::Vector{Matrix{ComplexF64}},NL::Int,Nband::In
            gk1plusq_pos=findfirst(item->item==gk1plusq,wave_diff)
            
            if gk1plusq_pos≠nothing
-            for si in 1:num_spin
+           
              
-                ff_local[jb,jc,si]=(diff_eigenvector_threads[gk1plusq_pos][:,:,ja])'*eigenvector_PWbasis[k2pos]
-            end
+                ff_local[jb,jc,1]=(diff_eigenvector_threads[gk1plusq_pos][:,:,ja])'*eigenvector_PWbasis[k2pos]
+         
            end
        end
      end
    end
-
+     form_factors[:,:,:,2]=form_factors[:,:,:,1]
 
 
    return form_factors
