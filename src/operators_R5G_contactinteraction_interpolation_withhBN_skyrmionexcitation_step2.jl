@@ -134,7 +134,7 @@ function Construct_DensityMatrix(allowedq::Vector{Vector{Int}},
        end
         NewDensityMatrix=0.5*(NewDensityMatrix'+ NewDensityMatrix)
        DeltaMatrix=NewDensityMatrix-input_DensityMatrix
-       mix_ratio=0.5
+       mix_ratio=rand()
        output_DensityMatrix=mix_ratio*input_DensityMatrix+(1-mix_ratio)*NewDensityMatrix
 
 
