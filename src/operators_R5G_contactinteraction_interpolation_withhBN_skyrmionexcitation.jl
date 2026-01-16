@@ -458,7 +458,7 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
           FockMatrix[jk].+=reshape(Fock_local[t_id][jk],dimension,dimension)
       end
   end
-
+  Fock_local=nothing
 
 
 
@@ -497,6 +497,8 @@ end
           HartreeMatrix[jk]+=reshape(Hartree_local[t_id][jk],dimension,dimension)
       end
   end
+
+  Hartree_local=nothing
 
 
  Threads.@threads for ja in 1:Nq^2
