@@ -430,10 +430,9 @@ function Construct_DensityMatrix(wl::WaveLookup,wave::Vector{Vector{Int64}},
    HF_eigenvector=FFF.vectors
 
 
-   evs = sort(HF_eigenvalue)     # one sort, not two
+    #=
+ evs = sort(HF_eigenvalue)     # one sort, not two
    bound = (evs[filling] + evs[filling+1]) / 2
-
-
 
     
   for jd in eachindex(HF_eigenvalue)
@@ -441,6 +440,8 @@ function Construct_DensityMatrix(wl::WaveLookup,wave::Vector{Vector{Int64}},
           NewDensityMatrix+=HF_eigenvector[:,jd]*(HF_eigenvector[:,jd])'
       end
   end
+  =#
+  NewDensityMatrix=HF_eigenvector[:,1:filling]*HF_eigenvector[:,1:filling]'
         NewDensityMatrix=0.5*(NewDensityMatrix'+ NewDensityMatrix)
        DeltaMatrix=NewDensityMatrix-input_DensityMatrix
        mix_ratio=0.5
