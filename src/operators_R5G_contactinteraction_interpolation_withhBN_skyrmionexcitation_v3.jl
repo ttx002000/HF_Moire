@@ -311,7 +311,7 @@ end
 function Construct_DensityMatrix(wl::WaveLookup,wave::Vector{Vector{Int64}},wave_n1::Vector{Int64},wave_n2::Vector{Int64},
                                input_DensityMatrix::Matrix{ComplexF64},single_Ham::Matrix{ComplexF64},
                                single_MoirePo::Matrix{ComplexF64},overlapmatrix::Matrix{ComplexF64},
-                               energy_input::Float64,filling::Int,Area::Float64,Coulomb_matrix::Matrix{Float64})
+                               energy_input::Float64,filling::Int,Area::Float64,Coulomb_matrix::Matrix{ComplexF64})
   
     num_spin=2
    dimension=num_spin*length(wave)
