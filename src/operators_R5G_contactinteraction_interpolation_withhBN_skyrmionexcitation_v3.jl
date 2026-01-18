@@ -88,7 +88,7 @@ end
 
 
 struct WaveLookup
-    pos::Matrix{Int32}   # 0 means “missing”
+    pos::Matrix{Int64}   # 0 means “missing”
     n1min::Int
     n2min::Int
 end
