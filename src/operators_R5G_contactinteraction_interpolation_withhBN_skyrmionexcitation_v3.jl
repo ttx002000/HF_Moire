@@ -449,13 +449,13 @@ function Construct_DensityMatrix(wl::WaveLookup,wave::Vector{Vector{Int64}},wave
 
 
 
-  eout=real(tr(DeltaMatrix'*DeltaMatrix))
+  eout=sum(abs2,DeltaMatrix)
   
   
 
  
-       ss=single_MoirePo+single_Ham+0.5*HartreeMatrix-0.5*FockMatrix
-       energy=real(tr(ss*input_DensityMatrix))
+    ss=single_MoirePo+single_Ham+0.5*HartreeMatrix-0.5*FockMatrix
+    energy = real(sum(ss .* transpose(input_DensityMatrix)))
 
 
    energy_change=real(energy-energy_input)
