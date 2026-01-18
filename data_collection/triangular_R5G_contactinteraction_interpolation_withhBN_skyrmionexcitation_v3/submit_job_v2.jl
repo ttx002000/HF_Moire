@@ -42,7 +42,7 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     ml julia/1.10.0
 
     # multithreading
-    export JULIA_NUM_THREADS=$SLURM_CPUS_PER_TASK
+    export JULIA_NUM_THREADS=$cpus_per_task
     export JULIA_DEPOT_PATH=\$SCRATCH/julia_depot
      
     PARAMS_FILE=$(param_file)
