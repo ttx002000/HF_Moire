@@ -93,11 +93,11 @@ struct WaveLookup
     n2min::Int
 end
 
-@inline function lookup(wl::WaveLookup, n1::Int, n2::Int)::Int32
+@inline function lookup(wl::WaveLookup, n1::Int, n2::Int)::Int64
     i1 = n1 - wl.n1min + 1
     i2 = n2 - wl.n2min + 1
     # bounds check + read
-    return (1 <= i1 <= size(wl.pos,1) && 1 <= i2 <= size(wl.pos,2)) ? wl.pos[i1,i2] : Int32(0)
+    return (1 <= i1 <= size(wl.pos,1) && 1 <= i2 <= size(wl.pos,2)) ? wl.pos[i1,i2] : Int64(0)
 end
 
 function build_wave_lookup(wave::Vector{Vector{Int64}})
@@ -107,9 +107,9 @@ function build_wave_lookup(wave::Vector{Vector{Int64}})
     n2min = minimum(w -> w[2], wave)
     n2max = maximum(w -> w[2], wave)
 
-    pos = fill(Int32(0), n1max - n1min + 1, n2max - n2min + 1)
+    pos = fill(Int64(0), n1max - n1min + 1, n2max - n2min + 1)
     @inbounds for p in 1:Ng
-        pos[wave[p][1] - n1min + 1, wave[p][2] - n2min + 1] = Int32(p)
+        pos[wave[p][1] - n1min + 1, wave[p][2] - n2min + 1] = Int64(p)
     end
     return WaveLookup(pos, n1min, n2min)
 end
@@ -308,7 +308,7 @@ function Coulomb(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64})::Float6
    return k==[0,0] ? D*9047.5636 : tanh(norm([T1 T2]*k*D))/norm(k[1]*T1+k[2]*T2)*9047.5636
 end
 
-function Construct_DensityMatrix(wl::WaveLookup,wave::Vector{Vector{Int64}},
+function Construct_DensityMatrix(wl::WaveLookup,wave::Vector{Vector{Int64}},wave_n1::Vector{Int64},wave_n2::Vector{Int64},
                                input_DensityMatrix::Matrix{ComplexF64},single_Ham::Matrix{ComplexF64},
                                single_MoirePo::Matrix{ComplexF64},overlapmatrix::Matrix{ComplexF64},
                                energy_input::Float64,filling::Int,Area::Float64,Coulomb_matrix::Matrix{Float64})
@@ -328,13 +328,14 @@ function Construct_DensityMatrix(wl::WaveLookup,wave::Vector{Vector{Int64}},
 
   tic=time()
   Threads.@threads for g1 in eachindex(wave)
-      w1 = wave[g1]; 
-      w1n1=w1[1]; 
-      w1n2=w1[2]
+    @inbounds begin
+      #w1 = wave[g1]; 
+      w1n1=wave_n1[g1]; 
+      w1n2=wave_n2[g1]
     for g4 in 1:g1
-          w4 = wave[g4]; 
-          w4n1=w4[1]; 
-          w4n2=w4[2]
+          #w4 = wave[g4]; 
+          w4n1=wave_n1[g4]; 
+          w4n2=wave_n2[g4]
           acc11 = 0.0 + 0.0im
           acc12 = 0.0 + 0.0im
           acc21 = 0.0 + 0.0im
@@ -342,12 +343,12 @@ function Construct_DensityMatrix(wl::WaveLookup,wave::Vector{Vector{Int64}},
 
         if g1≠g4
             for g2 in eachindex(wave)
-              w2 = wave[g2]
+             # w2 = wave[g2]
              
-              g3=lookup(wl,w1n1 + w2[1] - w4n1, w1n2 + w2[2] - w4n2)
+              g3=lookup(wl,w1n1 + wave_n1[g2] - w4n1, w1n2 + wave_n2[g2] - w4n2)
               if g3≠0
-                tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g1,g3]*overlapmatrix[g2,g4]
-              
+                #tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g1,g3]*overlapmatrix[g2,g4]
+                tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g2,g4]
                 acc11 += input_DM_reshaped[1,g3,1,g2] * tmp
                 acc12 += input_DM_reshaped[1,g3,2,g2] * tmp
                 acc21 += input_DM_reshaped[2,g3,1,g2] * tmp
@@ -363,12 +364,12 @@ function Construct_DensityMatrix(wl::WaveLookup,wave::Vector{Vector{Int64}},
             
         else
           for g2 in eachindex(wave)
-              w2 = wave[g2]
+              #w2 = wave[g2]
              
-              g3=lookup(wl,w1n1 + w2[1] - w4n1, w1n2 + w2[2] - w4n2)
+              g3=lookup(wl,w1n1 +wave_n1[g2]  - w4n1, w1n2 + wave_n2[g2] - w4n2)
               if g3≠0
-                tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g1,g3]*overlapmatrix[g2,g4]
-              
+                #tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g1,g3]*overlapmatrix[g2,g4]
+                tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g2,g4]
                 acc11 += input_DM_reshaped[1,g3,1,g2] * tmp
                 acc21 += input_DM_reshaped[2,g3,1,g2] * tmp
                 acc22 += input_DM_reshaped[2,g3,2,g2] * tmp
@@ -383,34 +384,37 @@ function Construct_DensityMatrix(wl::WaveLookup,wave::Vector{Vector{Int64}},
  
 
     end
+   end
   end
   toc=time()
   println(toc-tic,"focktime")
   tic=time()
 
   Threads.@threads for g1 in eachindex(wave)
-        w1 = wave[g1]; 
-        w1n1 = w1[1]; 
-        w1n2 = w1[2]
+    @inbounds begin
+        
+        w1n1 = wave_n1[g1]; 
+        w1n2 = wave_n2[g1]
      for g3 in 1:g1
-        w3 = wave[g3]; 
-        w3n1 = w3[1];
-        w3n2 = w3[2]
-        tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g1,g3]
+        
+        w3n1 = wave_n1[g3]; 
+        w3n2 = wave_n2[g3]
+        #tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g1,g3]
         acc = 0.0 + 0.0im
         for g2 in eachindex(wave)
-          w2 = wave[g2]
+       
           g4 = lookup(wl,
-                        w1n1 + w2[1] - w3n1,
-                        w1n2 + w2[2] - w3n2)
+                        w1n1 + wave_n1[g2] - w3n1,
+                        w1n2 + wave_n2[g2] - w3n2)
           if g4≠0
             acc += input_DM_traced[g4, g2] * overlapmatrix[g2, g4]
           end
         end
-        val = acc * tmp
+        val = acc * Coulomb_matrix[g1,g3]
         HartreeMatrix[1, g1, 1, g3] = val
         HartreeMatrix[2, g1, 2, g3] = val
      end
+    end
   end
 
  toc=time()
@@ -424,24 +428,14 @@ function Construct_DensityMatrix(wl::WaveLookup,wave::Vector{Vector{Int64}},
 
  
 
-
-   FFF=eigen(single_MoirePo+single_Ham+HartreeMatrix-FockMatrix)
+   H = single_MoirePo + single_Ham + HartreeMatrix - FockMatrix
+   FFF = eigen!(Hermitian(H))
    HF_eigenvalue=real(FFF.values)
    HF_eigenvector=FFF.vectors
 
 
-    #=
- evs = sort(HF_eigenvalue)     # one sort, not two
-   bound = (evs[filling] + evs[filling+1]) / 2
 
-    
-  for jd in eachindex(HF_eigenvalue)
-      if HF_eigenvalue[jd]<bound
-          NewDensityMatrix+=HF_eigenvector[:,jd]*(HF_eigenvector[:,jd])'
-      end
-  end
-  =#
-  NewDensityMatrix=HF_eigenvector[:,1:filling]*HF_eigenvector[:,1:filling]'
+       NewDensityMatrix=HF_eigenvector[:,1:filling]*HF_eigenvector[:,1:filling]'
         NewDensityMatrix=0.5*(NewDensityMatrix'+ NewDensityMatrix)
        DeltaMatrix=NewDensityMatrix-input_DensityMatrix
        mix_ratio=0.5
@@ -483,8 +477,13 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     itcount=0
     num_spin=2
     dimension=num_spin*length(wave)
-
-    Coulomb_matrix=[Coulomb(wave[g1]-wave[g2],T1,T2)/ϵr+constq for g1 in eachindex(wave), g2 in eachindex(wave)]
+    wave_n1 = Vector{Int64}(undef, length(wave))
+    wave_n2 = Vector{Int64}(undef, length(wave))
+     for g in 1:length(wave)
+        wave_n1[g] = Int32(wave[g][1])
+        wave_n2[g] = Int32(wave[g][2])
+    end
+    Coulomb_matrix=[(Coulomb(wave[g1]-wave[g2],T1,T2)/ϵr+constq)*overlapmatrix[g1,g2] for g1 in eachindex(wave), g2 in eachindex(wave)]
     wl = build_wave_lookup(wave)
     
     HF_eigenvalue=zeros(Float64,dimension)
@@ -500,7 +499,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     energy=0.0
     energy_change=0.0
   
-
+   println(Threads.nthreads())
    while (eout>1*10^(-22)) || (bad_count<4) || (abs(energy_change)>1*10^(-10))
       if eout<1*10^(-22)
        bad_count+=1
@@ -520,7 +519,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
         end
       
 
-       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(wl,wave,
+       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(wl,wave,wave_n1,wave_n2,
                                                                                                                                                                              dmk,single_Ham,
                                                                                                                                                                             single_MoirePo,overlapmatrix,
                                                                                                                                                                             energy,filling,Area,Coulomb_matrix)
@@ -533,7 +532,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
   
       
 
-        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(wl,wave,
+        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(wl,wave,wave_n1,wave_n2,
                                                                                                                                                                             input_DensityMatrix,single_Ham,
                                                                                                                                                                             single_MoirePo,overlapmatrix,
                                                                                                                                                                             energy,filling,Area,Coulomb_matrix)

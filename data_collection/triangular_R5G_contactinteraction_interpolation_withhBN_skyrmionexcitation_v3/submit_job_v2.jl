@@ -29,6 +29,7 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     #SBATCH --nodes=$nodes
     #SBATCH --requeue
     #SBATCH --ntasks=$ntasks
+    #SBATCH --cpus-per-task=$cpus_per_task
     #SBATCH --mem=$(mem)G
     #SBATCH --mail-type=BEGIN,FAIL,END
     #SBATCH --mail-user=ttx2000@stanford.edu
@@ -41,7 +42,7 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     ml julia/1.10.0
 
     # multithreading
-    export JULIA_NUM_THREADS=$ntasks
+    export JULIA_NUM_THREADS=$SLURM_CPUS_PER_TASK
     export JULIA_DEPOT_PATH=\$SCRATCH/julia_depot
      
     PARAMS_FILE=$(param_file)
