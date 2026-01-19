@@ -620,7 +620,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
       if (itcount>100 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-6))
       
         dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix)
-        if dmk==0
+        if (itcount>100 && abs(eout)>1)
             itcount=0
            
               A=randn(dimension,dimension)+im*randn(dimension,dimension)
