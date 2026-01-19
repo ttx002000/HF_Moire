@@ -89,16 +89,18 @@ end
 
 struct WaveLookup
     pos::Matrix{Int64}   # 0 means “missing”
-    n1min::Int
-    n2min::Int
+    n1min::Int64
+    n2min::Int64
 end
 
 @inline function lookup(wl::WaveLookup, n1::Int, n2::Int)::Int64
     i1 = n1 - wl.n1min + 1
     i2 = n2 - wl.n2min + 1
-    # bounds check + read
+     #bounds check + read
     return (1 <= i1 <= size(wl.pos,1) && 1 <= i2 <= size(wl.pos,2)) ? wl.pos[i1,i2] : Int64(0)
 end
+
+
 
 function build_wave_lookup(wave::Vector{Vector{Int64}})
     Ng = length(wave)
@@ -107,12 +109,118 @@ function build_wave_lookup(wave::Vector{Vector{Int64}})
     n2min = minimum(w -> w[2], wave)
     n2max = maximum(w -> w[2], wave)
 
+    
+ 
+
     pos = fill(Int64(0), n1max - n1min + 1, n2max - n2min + 1)
     @inbounds for p in 1:Ng
         pos[wave[p][1] - n1min + 1, wave[p][2] - n2min + 1] = Int64(p)
     end
     return WaveLookup(pos, n1min, n2min)
 end
+
+
+
+struct ShiftIndexer
+    dn1min::Int
+    dn1max::Int
+    dn2min::Int
+    dn2max::Int
+    S1::Int
+    NSHIFT::Int
+end
+
+function ShiftIndexer(wave_n1::Vector{Int64}, wave_n2::Vector{Int64})
+    n1min = Int(minimum(wave_n1));  n1max = Int(maximum(wave_n1))
+    n2min = Int(minimum(wave_n2));  n2max = Int(maximum(wave_n2))
+
+    dn1min = n1min - n1max
+    dn1max = n1max - n1min
+    dn2min = n2min - n2max
+    dn2max = n2max - n2min
+
+    S1 = dn1max - dn1min + 1
+    S2 = dn2max - dn2min + 1
+    NSHIFT = S1 * S2
+
+    return ShiftIndexer(dn1min, dn1max, dn2min, dn2max, S1, NSHIFT)
+end
+
+@inline function shift_id(ix::ShiftIndexer, dn1::Int, dn2::Int)::Int
+    return (dn1 - ix.dn1min + 1) + (dn2 - ix.dn2min) * ix.S1
+end
+
+struct ShiftCSR
+    ix::ShiftIndexer
+    offsets::Vector{Int64}   # length NSHIFT+1
+    g2_list::Vector{Int64}
+    g3_list::Vector{Int64}
+end
+
+
+function build_shiftcsr(wl::WaveLookup, wave_n1::Vector{Int64}, wave_n2::Vector{Int64})
+    Ng = length(wave_n1)
+    ix = ShiftIndexer(wave_n1, wave_n2)
+    NSHIFT = ix.NSHIFT
+
+    # -------- PASS 1: counts per shift --------
+    counts = fill(Int64(0), NSHIFT)
+
+    for dn2 in ix.dn2min:ix.dn2max
+        for dn1 in ix.dn1min:ix.dn1max
+            sid = shift_id(ix, dn1, dn2)
+            c = Int64(0)
+            @inbounds for g2 in 1:Ng
+                g3 = lookup(wl, wave_n1[g2] + dn1, wave_n2[g2] + dn2)
+                c += (g3 != 0)
+            end
+            counts[sid] = c
+        end
+    end
+
+    # -------- offsets (prefix sum) --------
+    offsets = Vector{Int32}(undef, NSHIFT + 1)
+    offsets[1] = 1
+    @inbounds for sid in 1:NSHIFT
+        offsets[sid+1] = offsets[sid] + counts[sid]
+    end
+
+    total = Int(offsets[end] - 1)
+    g2_list = Vector{Int64}(undef, total)
+    g3_list = Vector{Int64}(undef, total)
+
+    # -------- PASS 2: fill packed arrays --------
+    for dn2 in ix.dn2min:ix.dn2max
+        for dn1 in ix.dn1min:ix.dn1max
+            sid = shift_id(ix, dn1, dn2)
+            p = Int(offsets[sid])
+            @inbounds for g2 in 1:Ng
+                g3 = lookup(wl, wave_n1[g2] + dn1, wave_n2[g2] + dn2)
+                if g3 != 0
+                    g2_list[p] = Int32(g2)
+                    g3_list[p] = g3
+                    p += 1
+                end
+            end
+        end
+    end
+
+    return ShiftCSR(ix, offsets, g2_list, g3_list)
+end
+
+@inline function csr_range(csr::ShiftCSR, dn1::Int, dn2::Int)
+    sid = shift_id(csr.ix, dn1, dn2)
+    lo = Int(csr.offsets[sid])
+    hi = Int(csr.offsets[sid+1]) - 1
+    return lo, hi
+end
+
+function csr_stats(csr::ShiftCSR, Ng::Int)
+    total_pairs = Int(csr.offsets[end] - 1)
+    mean_pairs = total_pairs / csr.ix.NSHIFT
+    println("CSR stats: NSHIFT=$(csr.ix.NSHIFT), total_pairs=$total_pairs, mean_pairs/shift=$mean_pairs, Ng=$Ng")
+end
+
 
 
 
@@ -308,7 +416,7 @@ function Coulomb(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64})::Float6
    return k==[0,0] ? D*9047.5636 : tanh(norm([T1 T2]*k*D))/norm(k[1]*T1+k[2]*T2)*9047.5636
 end
 
-function Construct_DensityMatrix(wl::WaveLookup,wave::Vector{Vector{Int64}},wave_n1::Vector{Int64},wave_n2::Vector{Int64},
+function Construct_DensityMatrix(csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_n1::Vector{Int64},wave_n2::Vector{Int64},
                                input_DensityMatrix::Matrix{ComplexF64},single_Ham::Matrix{ComplexF64},
                                single_MoirePo::Matrix{ComplexF64},overlapmatrix::Matrix{ComplexF64},
                                energy_input::Float64,filling::Int,Area::Float64,Coulomb_matrix::Matrix{ComplexF64})
@@ -326,128 +434,123 @@ function Construct_DensityMatrix(wl::WaveLookup,wave::Vector{Vector{Int64}},wave
   input_DM_reshaped=reshape(input_DensityMatrix,num_spin,length(wave),num_spin,length(wave))
   input_DM_traced=input_DM_reshaped[1,:,1,:]+input_DM_reshaped[2,:,2,:]
 
-  tic=time()
   Threads.@threads for g1 in eachindex(wave)
     @inbounds begin
-      #w1 = wave[g1]; 
-      w1n1=wave_n1[g1]; 
-      w1n2=wave_n2[g1]
-    for g4 in 1:g1
-          #w4 = wave[g4]; 
-          w4n1=wave_n1[g4]; 
-          w4n2=wave_n2[g4]
-          acc11 = 0.0 + 0.0im
-          acc12 = 0.0 + 0.0im
-          acc21 = 0.0 + 0.0im
-          acc22 = 0.0 + 0.0im
-
-        if g1≠g4
-            for g2 in eachindex(wave)
-             # w2 = wave[g2]
-             
-              g3=lookup(wl,w1n1 + wave_n1[g2] - w4n1, w1n2 + wave_n2[g2] - w4n2)
-              if g3≠0
-                #tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g1,g3]*overlapmatrix[g2,g4]
-                tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g2,g4]
-                acc11 += input_DM_reshaped[1,g3,1,g2] * tmp
-                acc12 += input_DM_reshaped[1,g3,2,g2] * tmp
-                acc21 += input_DM_reshaped[2,g3,1,g2] * tmp
-                acc22 += input_DM_reshaped[2,g3,2,g2] * tmp
+    
+        w1n1=wave_n1[g1]; 
+        w1n2=wave_n2[g1]
+      for g4 in 1:g1
+          
+            w4n1=wave_n1[g4]; 
+            w4n2=wave_n2[g4]
+            acc11 = 0.0 + 0.0im
+            acc12 = 0.0 + 0.0im
+            acc21 = 0.0 + 0.0im
+            acc22 = 0.0 + 0.0im
+            dg_n1=w1n1- w4n1
+            dg_n2=w1n2- w4n2
+            lo, hi = csr_range(csr,dg_n1, dg_n2)
+          if g1≠g4
             
+              @inbounds for k in lo:hi
+                 g2 = Int(csr.g2_list[k])
+                 g3 = Int(csr.g3_list[k])
+              
+              
+                  tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g2,g4]
+                  acc11 += input_DM_reshaped[1,g3,1,g2] * tmp
+                  acc12 += input_DM_reshaped[1,g3,2,g2] * tmp
+                  acc21 += input_DM_reshaped[2,g3,1,g2] * tmp
+                  acc22 += input_DM_reshaped[2,g3,2,g2] * tmp
               end
+                
+          
+
+              FockMatrix[1,g1,1,g4] = acc11
+              FockMatrix[1,g1,2,g4] = acc12
+              FockMatrix[2,g1,1,g4] = acc21
+              FockMatrix[2,g1,2,g4] = acc22
+              
+          else
+            @inbounds for k in lo:hi
+                g2 = Int(csr.g2_list[k])
+                g3 = Int(csr.g3_list[k])
+              
+              
+                  tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g2,g4]
+                  acc11 += input_DM_reshaped[1,g3,1,g2] * tmp
+                  acc21 += input_DM_reshaped[2,g3,1,g2] * tmp
+                  acc22 += input_DM_reshaped[2,g3,2,g2] * tmp
             end
+                
+          
 
             FockMatrix[1,g1,1,g4] = acc11
-            FockMatrix[1,g1,2,g4] = acc12
             FockMatrix[2,g1,1,g4] = acc21
             FockMatrix[2,g1,2,g4] = acc22
-            
-        else
-          for g2 in eachindex(wave)
-              #w2 = wave[g2]
-             
-              g3=lookup(wl,w1n1 +wave_n1[g2]  - w4n1, w1n2 + wave_n2[g2] - w4n2)
-              if g3≠0
-                #tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g1,g3]*overlapmatrix[g2,g4]
-                tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g2,g4]
-                acc11 += input_DM_reshaped[1,g3,1,g2] * tmp
-                acc21 += input_DM_reshaped[2,g3,1,g2] * tmp
-                acc22 += input_DM_reshaped[2,g3,2,g2] * tmp
-            
-              end
-            end
-
-            FockMatrix[1,g1,1,g4] = acc11
-            FockMatrix[2,g1,1,g4] = acc21
-            FockMatrix[2,g1,2,g4] = acc22
-        end
- 
-
-    end
-   end
-  end
-  toc=time()
-  println(toc-tic,"focktime")
-  tic=time()
-
-  Threads.@threads for g1 in eachindex(wave)
-    @inbounds begin
-        
-        w1n1 = wave_n1[g1]; 
-        w1n2 = wave_n2[g1]
-     for g3 in 1:g1
-        
-        w3n1 = wave_n1[g3]; 
-        w3n2 = wave_n2[g3]
-        #tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g1,g3]
-        acc = 0.0 + 0.0im
-        for g2 in eachindex(wave)
-       
-          g4 = lookup(wl,
-                        w1n1 + wave_n1[g2] - w3n1,
-                        w1n2 + wave_n2[g2] - w3n2)
-          if g4≠0
-            acc += input_DM_traced[g4, g2] * overlapmatrix[g2, g4]
           end
+  
+
+      end
+    end
+  end
+
+
+  Threads.@threads for g1 in eachindex(wave)
+    @inbounds begin
+         w1n1=wave_n1[g1]; 
+         w1n2=wave_n2[g1]
+     for g3 in 1:g1
+     
+        w3n1 = wave_n1[g3];
+        w3n2 = wave_n2[g3]
+         
+        dg_n1=w1n1- w3n1
+        dg_n2=w1n2- w3n2
+        lo, hi = csr_range(csr,  dg_n1,  dg_n2)
+     
+        acc = 0.0 + 0.0im
+        @inbounds for k in lo:hi
+       
+        g2 = Int(csr.g2_list[k])
+        g4 = Int(csr.g3_list[k])
+         
+            acc += input_DM_traced[g4, g2] * overlapmatrix[g2, g4]
+        
         end
         val = acc * Coulomb_matrix[g1,g3]
+     
         HartreeMatrix[1, g1, 1, g3] = val
         HartreeMatrix[2, g1, 2, g3] = val
      end
     end
   end
 
- toc=time()
-  println(toc-tic,"Hartreetime")
 
-  tic=time()
   FockMatrix=reshape(FockMatrix,dimension,dimension)
   HartreeMatrix=reshape(HartreeMatrix,dimension,dimension)
 
 
     HartreeMatrix=(HartreeMatrix+HartreeMatrix'-real(Diagonal(HartreeMatrix)))/Area
     FockMatrix=(FockMatrix+FockMatrix'-real(Diagonal(FockMatrix)))/Area
+ 
 
-   toc=time() 
-     println(toc-tic,"the rest 1")
-
-     tic=time()
 
    H = single_MoirePo + single_Ham + HartreeMatrix - FockMatrix
    FFF = eigen!(Hermitian(H))
    HF_eigenvalue=real(FFF.values)
    HF_eigenvector=FFF.vectors
-   toc=time()
-    println(toc-tic,"the rest 2")
 
-       tic=time()
-       NewDensityMatrix=HF_eigenvector[:,1:filling]*HF_eigenvector[:,1:filling]'
-        NewDensityMatrix=0.5*(NewDensityMatrix'+ NewDensityMatrix)
+
+ 
+  NewDensityMatrix=HF_eigenvector[:,1:filling]*HF_eigenvector[:,1:filling]'
+      NewDensityMatrix=0.5*(NewDensityMatrix'+ NewDensityMatrix)
        DeltaMatrix=NewDensityMatrix-input_DensityMatrix
        mix_ratio=0.5
        output_DensityMatrix=mix_ratio*input_DensityMatrix+(1-mix_ratio)*NewDensityMatrix
 
-
+  
+  
    
 
   
@@ -460,13 +563,13 @@ function Construct_DensityMatrix(wl::WaveLookup,wave::Vector{Vector{Int64}},wave
   
 
  
-    ss=single_MoirePo+single_Ham+0.5*HartreeMatrix-0.5*FockMatrix
-    energy = real(sum(ss .* transpose(input_DensityMatrix)))
+  ss=single_MoirePo+single_Ham+0.5*HartreeMatrix-0.5*FockMatrix
+  energy = real(sum(ss .* transpose(input_DensityMatrix)))
 
 
    energy_change=real(energy-energy_input)
-   toc=time()
-  println(toc-tic,"the rest 3")
+
+
 
  return  eout,energy_change,output_DensityMatrix,DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix
 end
@@ -491,6 +594,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     end
     Coulomb_matrix=[(Coulomb(wave[g1]-wave[g2],T1,T2)/ϵr+constq)*overlapmatrix[g1,g2] for g1 in eachindex(wave), g2 in eachindex(wave)]
     wl = build_wave_lookup(wave)
+    csr = build_shiftcsr(wl, wave_n1, wave_n2)
     
     HF_eigenvalue=zeros(Float64,dimension)
     HF_eigenvector=zeros(ComplexF64,dimension,dimension)
@@ -525,7 +629,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
         end
       
 
-       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,6)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(wl,wave,wave_n1,wave_n2,
+       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,6)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(csr,wave,wave_n1,wave_n2,
                                                                                                                                                                              dmk,single_Ham,
                                                                                                                                                                             single_MoirePo,overlapmatrix,
                                                                                                                                                                             energy,filling,Area,Coulomb_matrix)
@@ -538,7 +642,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
   
       
 
-        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,6)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(wl,wave,wave_n1,wave_n2,
+        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,6)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(csr,wave,wave_n1,wave_n2,
                                                                                                                                                                             input_DensityMatrix,single_Ham,
                                                                                                                                                                             single_MoirePo,overlapmatrix,
                                                                                                                                                                             energy,filling,Area,Coulomb_matrix)
