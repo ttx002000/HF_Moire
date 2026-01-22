@@ -550,7 +550,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     eout=1.0
     itcount=0
   
-    dimension=num_spin*length(wave)
+    dimension=length(wave)
     wave_n1 = Vector{Int64}(undef, length(wave))
     wave_n2 = Vector{Int64}(undef, length(wave))
      for g in 1:length(wave)
