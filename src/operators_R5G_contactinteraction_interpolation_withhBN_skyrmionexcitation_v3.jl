@@ -228,7 +228,8 @@ end
 
 
 function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
-              uD::Float64,λ::Float64,enlarge_factor::Int,V0_hBN::Float64,V1_hBN::Float64,ψ_hBN::Float64,V2_scalar::Float64,ϕ::Float64)
+              uD::Float64,λ::Float64,enlarge_factor::Int,V0_hBN::Float64,V1_hBN::Float64,
+              ψ_hBN::Float64,V2_scalar::Float64,ϕ::Float64,ising::Float64)
    
     aGr=0.246
     ϵ=0.2504/aGr-1 #This is the normal one
@@ -374,8 +375,8 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
 
     
       dd=zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave))
-      dd[1,:,1,:]=single_Ham_spinless
-      dd[2,:,2,:]=single_Ham_spinless
+      dd[1,:,1,:]=single_Ham_spinless+ising*Matrix{Float64}(I,length(wave),length(wave))
+      dd[2,:,2,:]=single_Ham_spinless-ising*Matrix{Float64}(I,length(wave),length(wave))
       single_Ham=reshape(dd,dimension,dimension)
 
       ee=zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave))
