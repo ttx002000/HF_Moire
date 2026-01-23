@@ -405,6 +405,7 @@ function GR_descent(tole::Float64,p::myparams)
                     println("Increasing step size to ",step_sz)
                 end
             end
+            flush(stdout)
         end
 
 
