@@ -1,4 +1,4 @@
-using JLD2,LinearAlgebra,Plots,Statistics 
+using JLD2,LinearAlgebra,Statistics 
 
 function get_Ham(k::Vector{Float64},uD::Float64,valley::Int64,NL::Int)
  
@@ -346,7 +346,7 @@ function construct_parameters(radius::Float64,num_kpoints::Int64,
 
 
 
-    U_stoner=Us*√3/2*0.246^2
+    U_stoner=Us*√3/2*0.246^2*0.5
     
 
     pristine_eigenvector=zeros(ComplexF64,length(kx_list),length(ky_list),num_spin,num_valley,num_layers*num_sub,num_layers*num_sub)
