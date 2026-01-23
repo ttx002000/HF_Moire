@@ -1,4 +1,5 @@
-using JLD2,LinearAlgebra,Statistics 
+using LinearAlgebra,Statistics 
+using LinearAlgebra,Random
 
 function get_Ham(k::Vector{Float64},uD::Float64,valley::Int64,NL::Int)
  
