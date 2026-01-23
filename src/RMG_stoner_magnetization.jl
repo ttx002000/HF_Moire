@@ -381,7 +381,7 @@ function GR_descent(tole::Float64,p::myparams)
         Gr_record=[]
         val_record=[]
         Δ_current=copy(initial_Δ)
-        step_sz=0.01
+        step_sz=0.5
         Gr_current=ones(Float64,length(Δ_current))
         itcount=0
         
