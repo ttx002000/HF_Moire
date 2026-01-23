@@ -296,10 +296,10 @@ function objective_function(Δ_input::Vector{Float64},p::myparams)
                         for α in 1:norb
                             # A[β,m] = V[β,m]*conj(V[α,m])  and Aconj = conj(A)
                             for m in 1:norb
-                                c = conj(V[α,m])
+                                cc = conj(V[α,m])
                                 @simd for β in 1:norb
                                     
-                                    A[β,m] = V[β,m]*c
+                                    A[β,m] = V[β,m]*cc
                                 
                                 end
                             end
@@ -309,9 +309,9 @@ function objective_function(Δ_input::Vector{Float64},p::myparams)
                             for β in 1:norb
                             
                             
-                                s=dot(A[β,1:nocc],Zocc[1:nocc,β])
+                                ss=dot(A[β,1:nocc],Zocc[1:nocc,β])
                                 
-                                Dsv[β,α] += 2.0 * real(s)
+                                Dsv[β,α] += 2.0 * real(ss)
                             end
                         end
                     end
