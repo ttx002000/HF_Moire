@@ -30,6 +30,9 @@ DIIS_density,eout,potential_profile,kinetic_energy=iteration_loop(num_kpoints,ra
                   num_layers,ϵr,target_density,tg_dis,
                   bg_dis,active_flavor)
 
+ OBM=get_OBM(num_kpoints_forOBM,radius,num_layers,potential_profile,
+               target_density,temp)
+
 
 
 scratch_dir = ENV["SCRATCH"]
@@ -37,6 +40,7 @@ savepath=joinpath(scratch_dir, "RMG_Hartreeonly/data_output$(Int(args[13]))/$(ar
 
 
 
-jldsave(savepath,density_profile=DIIS_density[1],eout=eout,potential_profile=potential_profile,kinetic_energy=kinetic_energy)
+jldsave(savepath,density_profile=DIIS_density[1],eout=eout,potential_profile=potential_profile,
+        kinetic_energy=kinetic_energy, OBM=OBM)
 
 
