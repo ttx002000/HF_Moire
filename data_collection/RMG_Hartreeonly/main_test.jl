@@ -30,7 +30,7 @@ DIIS_density,eout,potential_profile,kinetic_energy=iteration_loop(num_kpoints,ra
                   num_layers,ϵr,target_density,tg_dis,
                   bg_dis,active_flavor)
 
- OBM=get_OBM(num_kpoints_forOBM,radius,num_layers,potential_profile,
+ OBM=get_OBM(num_kpoints_OBM,radius,num_layers,potential_profile,
                target_density,temp)
 
 
