@@ -320,7 +320,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
         potential_profile=zeros(Float64,num_layers)
         bad_count=0
 
-    while eout>10^(-12) || bad_count<DIIS_size
+    while eout>10^(-10) || bad_count<DIIS_size
         
         if eout>10^(-5)
             bad_count=0
