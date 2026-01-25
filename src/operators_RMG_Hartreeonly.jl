@@ -279,6 +279,85 @@ function get_kinetic_energy(kx_list::Vector{Float64},ky_list::Vector{Float64},nu
         return kE
 end
 
+function get_Ham_dx(k::Vector{Float64},potential_profile::Vector{Float64},valley::Int64,NL::Int)
+  step=1e-5
+ return (get_Ham(k.+[step,0.0],potential_profile,valley,NL)-get_Ham(k.-[step,0.0],potential_profile,valley,NL))/(2*step)
+end
+
+function get_Ham_dy(k::Vector{Float64},potential_profile::Vector{Float64},valley::Int64,NL::Int)
+  step=1e-5
+ return (get_Ham(k.+[0.0,step],potential_profile,valley,NL)-get_Ham(k.-[0.0,step],potential_profile,valley,NL))/(2*step)
+end
+
+function get_OBM(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potential_profile::Vector{Float64},
+               target_density::Float64,temp::Float64)
+
+    kxrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
+    kyrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
+    Area=4*π^2/(kxrange[2]-kxrange[1])/(kyrange[2]-kyrange[1])
+
+
+    eigenvalue=zeros(Float64,length(kxrange),length(kyrange),2*num_layers)
+    for ja in eachindex(kxrange)
+          for kb in eachindex(kyrange)
+            HH=get_Ham([kxrange[ja],kyrange[kb]],potential_profile,1,num_layers)
+            eigenvalue[ja,kb,:]=eigen(HH).values
+          end
+    end
+
+    sorted_condunction=sort(vec(eigenvalue[:,:,num_layers+1:2*num_layers]))
+    fermi_energy,_=find_FL(sorted_condunction,target_density,sorted_condunction[1],sorted_condunction[end],temp,Area,0.0)
+
+
+
+    M1=zeros(ComplexF64,length(kxrange),length(kyrange),num_layers)
+    M2=zeros(ComplexF64,length(kxrange),length(kyrange),num_layers)
+
+    
+      for ja in eachindex(kxrange)
+            for jb in eachindex(kyrange)
+                k=[kxrange[ja],kyrange[jb]]
+                HH=get_Ham(k,potential_profile,1,num_layers)
+              HH_dx=get_Ham_dx(k,potential_profile,1,num_layers)
+              HH_dy=get_Ham_dy(k,potential_profile,1,num_layers)
+              evals,evecs=eigen(HH)
+            for ll in num_layers+1:2*num_layers
+                for n in 1:2*num_layers
+                  if n≠ll
+                    vn=evecs[:,n]
+                    vtarget=evecs[:,ll]
+                    velx=vtarget'*HH_dx*vn
+                    vely=vn'*HH_dy*vtarget
+                    M1[ja,jb,ll-num_layers]+=-imag(velx*vely)/(evals[ll]-evals[n])
+                    M2[ja,jb,ll-num_layers]+=-imag(velx*vely)/(evals[ll]-evals[n])^2
+                  end
+                end
+            end
+          
+
+            end
+      end
+
+    total_M=0.0
+      for ja in eachindex(kxrange)
+        for jb in eachindex(kyrange)
+            for ll in num_layers+1:2*num_layers
+              total_M+=(M1[ja,jb,ll-num_layers]+2*(fermi_energy-eigenvalue[ja,jb,ll])*M2[ja,jb,ll-num_layers])*(1/(1+exp((eigenvalue[ja,jb,ll]-fermi_energy)/temp)))
+        end
+       end
+      end
+      conversion_factor=2*9.109383*10^(-31)*(10^(-9))^2*(10^(-3)* 1.60217663 * 10^(-19))/(1.0545718*10^(-34))^2        
+      orbital_magnetization=total_M/Area*1/target_density*conversion_factor
+
+
+
+
+  return orbital_magnetization
+end
+
+
+
+
 function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float64,
                   num_layers::Int,ϵr::Float64,target_density::Float64,tg_dis::Float64,
                   bg_dis::Float64,active_flavor::Int)
