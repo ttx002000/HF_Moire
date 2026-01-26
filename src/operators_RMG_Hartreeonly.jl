@@ -365,9 +365,7 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
 
         if abs(difference)>10^(-9)
             bad_count=0
-        end
-
-        if abs(difference)<10^(-9)
+        else
             bad_count+=1
         end
        end
