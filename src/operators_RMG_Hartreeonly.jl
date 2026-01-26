@@ -190,7 +190,7 @@ function get_density_profile(kx_list::Vector{Float64},ky_list::Vector{Float64},n
     
         
         sorted_condunction=sort(vec(eigenvalue[:,:,num_layers+1:2*num_layers]))
-        fermi_energy,_=find_FL(sorted_condunction,target_density,sorted_condunction[1],sorted_condunction[end],temp,Area,0.0)
+        fermi_energy,_=find_FL(sorted_condunction,target_density/active_flavor,sorted_condunction[1],sorted_condunction[end],temp,Area,0.0)
 
 
         density_layer=zeros(Float64,num_layers)
@@ -249,7 +249,7 @@ function get_kinetic_energy(kx_list::Vector{Float64},ky_list::Vector{Float64},nu
     
         
         sorted_condunction=sort(vec(eigenvalue[:,:,num_layers+1:2*num_layers]))
-        fermi_energy,_=find_FL(sorted_condunction,target_density,sorted_condunction[1],sorted_condunction[end],temp,Area,0.0)
+        fermi_energy,_=find_FL(sorted_condunction,target_density/active_flavor,sorted_condunction[1],sorted_condunction[end],temp,Area,0.0)
 
         kE=0.0
 
@@ -306,7 +306,7 @@ function get_OBM(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
     end
 
     sorted_condunction=sort(vec(eigenvalue[:,:,num_layers+1:2*num_layers]))
-    fermi_energy,_=find_FL(sorted_condunction,target_density,sorted_condunction[1],sorted_condunction[end],temp,Area,0.0)
+    fermi_energy,_=find_FL(sorted_condunction,target_density/active_flavor,sorted_condunction[1],sorted_condunction[end],temp,Area,0.0)
 
 
 
@@ -347,7 +347,7 @@ function get_OBM(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
        end
       end
       conversion_factor=2*9.109383*10^(-31)*(10^(-9))^2*(10^(-3)* 1.60217663 * 10^(-19))/(1.0545718*10^(-34))^2        
-      orbital_magnetization=total_M/Area*1/target_density*conversion_factor
+      orbital_magnetization=total_M/Area*1/target_density*conversion_factor*active_flavor
 
 
 
