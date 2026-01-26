@@ -362,6 +362,7 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
          difference=DOS_current-DOS_old
          DOS_old=DOS_current
          println(difference,"difference")
+         flush(stdout)
 
         if abs(difference)>10^(-9)
             bad_count=0
