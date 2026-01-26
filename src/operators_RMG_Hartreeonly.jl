@@ -74,6 +74,33 @@ function get_Ham(k::Vector{Float64},potential_profile::Vector{Float64},valley::I
                 Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[potential_profile[layer] -t0*ff;-t0*conj(ff) potential_profile[layer]]
             end
 
+    
+
+    elseif Ham_ver==3
+            Ham=zeros(ComplexF64,2*NL,2*NL)
+            
+            t0=2600
+            t1=356.1
+            t2=-8.3
+            t3=293
+            t4=144
+                ff=√3/2*0.246*(valley*k[1]+im*k[2])
+            for layer in 1:NL-1
+                Ham[2*layer-1:2*layer,2*layer+1:2*layer+2]=[-t4*conj(ff) -t3*ff;t1 -t4*conj(ff)]
+            end
+
+            if NL>2
+            for layer in 1:NL-2
+                Ham[2*layer-1:2*layer,2*layer+3:2*layer+4]=[0.0 t2;0.0 0.0]
+            end
+            end
+
+            Ham=Ham+Ham'
+
+            for layer in 1:NL
+                Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[potential_profile[layer] t0*conj(ff); t0*(ff) potential_profile[layer]]
+            end
+
     end
         
   
