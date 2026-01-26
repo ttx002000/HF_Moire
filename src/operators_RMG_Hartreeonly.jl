@@ -343,7 +343,7 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
     energy_cut=0.1
       bad_count=0
 
-    while sample_count<10^5 || (bin_count/active_flavor)<100 || abs(difference)>10^(-9) || bad_count<3
+    while sample_count<10^5 || (bin_count/active_flavor)<100 || abs(difference)>10^(-9) || bad_count<4
         if abs(difference)>10^(-9)
             bad_count=0
         end
