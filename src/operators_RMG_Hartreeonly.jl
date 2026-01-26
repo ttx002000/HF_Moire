@@ -315,6 +315,79 @@ function get_Ham_dy(k::Vector{Float64},potential_profile::Vector{Float64},valley
  return (get_Ham(k.+[0.0,step],potential_profile,valley,NL,Ham_ver)-get_Ham(k.-[0.0,step],potential_profile,valley,NL,Ham_ver))/(2*step)
 end
 
+
+function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potential_profile::Vector{Float64},
+               target_density::Float64,temp::Float64,active_flavor::Int,Ham_ver::Int)
+
+    kxrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
+    kyrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
+    Area=4*π^2/(kxrange[2]-kxrange[1])/(kyrange[2]-kyrange[1])
+
+
+    eigenvalue=zeros(Float64,length(kxrange),length(kyrange),2*num_layers)
+    for ja in eachindex(kxrange)
+          for kb in eachindex(kyrange)
+            HH=get_Ham([kxrange[ja],kyrange[kb]],potential_profile,1,num_layers,Ham_ver)
+            eigenvalue[ja,kb,:]=eigen(HH).values
+          end
+    end
+
+    sorted_condunction=sort(vec(eigenvalue[:,:,num_layers+1:2*num_layers]))
+    fermi_energy,_=find_FL(sorted_condunction,target_density/active_flavor,sorted_condunction[1],sorted_condunction[end],temp,Area,0.0)
+    
+    sample_count=0
+    bin_count=0
+    DOS_current=0.0
+    DOS_old=0.0
+    difference=0.1
+    energy_cut=0.1
+
+    while sample_count<10^5 || (bin_count/active_flavor)<100 || abs(difference)>10^(-6)
+       kx=(rand()-0.5)/0.5*radius
+       ky=(rand()-0.5)/0.5*radius
+       HH=get_Ham([kx,ky],potential_profile,1,num_layers,Ham_ver)
+       vals=eigen(HH).values
+       for jb in num_layers+1:2*num_layers
+         if abs(vals[jb]-fermi_energy)<energy_cut
+            bin_count+=active_flavor
+         end
+       end
+       sample_count+=1
+
+       if mod(sample_count,10^4)==0 && sample_count>10^5
+         Area_DOS=4*π^2/radius^2*sample_count
+         DOS_current=1/Area_DOS*bin_count/(2*energy_cut)
+         difference=DOS_current-DOS_old
+         DOS_old=DOS_current
+         println(difference,"difference")
+       end
+
+
+    end
+
+   
+
+
+
+
+
+
+  return DOS_current
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function get_OBM(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potential_profile::Vector{Float64},
                target_density::Float64,temp::Float64,active_flavor::Int,Ham_ver::Int)
 
