@@ -361,7 +361,7 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
          DOS_current=1/Area_DOS*bin_count/(2*energy_cut)
          difference=DOS_current-DOS_old
          DOS_old=DOS_current
-         println(difference,"difference")
+         println(difference,"difference",Int(bin_count/active_flavor),"binacount",sample_count,"samplecount")
          flush(stdout)
 
         if abs(difference)>10^(-8)
