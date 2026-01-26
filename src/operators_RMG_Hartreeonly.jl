@@ -344,7 +344,7 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
       bad_count=0
       current_bin=0
 
-    while sample_count<10^5 || (bin_count/active_flavor)<100 || abs(difference)>10^(-8) || bad_count<4
+    while sample_count<10^5 || (bin_count/active_flavor)<100 || abs(difference)>5*10^(-8) || bad_count<4
       
        kx=(rand()-0.5)/0.5*radius
        ky=(rand()-0.5)/0.5*radius
@@ -366,7 +366,7 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
          println(difference,"difference",Int(bin_count/active_flavor),"binacount",sample_count,"samplecount")
          flush(stdout)
 
-          if abs(difference)>10^(-8)
+          if abs(difference)>5*10^(-8)
               bad_count=0
           else
               bad_count+=1
