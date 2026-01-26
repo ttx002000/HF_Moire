@@ -22,21 +22,22 @@ bg_dis=args[9]
 active_flavor=Int(args[10])
 trytime=Int(args[11])
 num_kpoints_OBM=Int(args[12])
-file_pos=Int(args[13])
+Ham_ver=Int(args[13])
+file_pos=Int(args[14])
 
 
 
 DIIS_density,eout,potential_profile,kinetic_energy=iteration_loop(num_kpoints,radius,uD,temp,
                   num_layers,ϵr,target_density,tg_dis,
-                  bg_dis,active_flavor)
+                  bg_dis,active_flavor,Ham_ver)
 
  OBM=get_OBM(num_kpoints_OBM,radius,num_layers,potential_profile,
-               target_density,temp,active_flavor)
+               target_density,temp,active_flavor,Ham_ver)
 
 
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "RMG_Hartreeonly/data_output$(Int(args[13]))/$(args[1])nk$(args[2])radius$(args[3])uD$(args[4])T$(args[5])nL$(args[6])er$(args[7])tgden$(args[8])tgdis$(args[9])bgdis$(args[10])active$(args[11])try$(args[12])nkobm.jld2")
+savepath=joinpath(scratch_dir, "RMG_Hartreeonly/data_output$(Int(args[14]))/$(args[1])nk$(args[2])radius$(args[3])uD$(args[4])T$(args[5])nL$(args[6])er$(args[7])tgden$(args[8])tgdis$(args[9])bgdis$(args[10])active$(args[11])try$(args[12])nkobm$(args[13])hv.jld2")
 
 
 

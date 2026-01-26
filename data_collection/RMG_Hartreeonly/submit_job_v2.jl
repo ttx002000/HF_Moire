@@ -6,7 +6,7 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
   
 
     scratch_dir = ENV["SCRATCH"]
-    filepos=Int(args_list[1][13]) #ensure that all the jobs are to the same file positions
+    filepos=Int(args_list[1][14]) #ensure that all the jobs are to the same file positions
     outpath=joinpath(scratch_dir, "RMG_Hartreeonly/data_output$(filepos)/out")
     slurmpath=joinpath(scratch_dir, "RMG_Hartreeonly/data_output$(filepos)/slurmfiles")
     mkpath(outpath)

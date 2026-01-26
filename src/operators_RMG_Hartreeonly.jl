@@ -1,55 +1,81 @@
 using LinearAlgebra,Statistics 
 using Random
 
-function get_Ham(k::Vector{Float64},potential_profile::Vector{Float64},valley::Int64,NL::Int)
- 
-   Ham=zeros(ComplexF64,2,NL,2,NL)
+function get_Ham(k::Vector{Float64},potential_profile::Vector{Float64},valley::Int64,NL::Int,Ham_ver::Int)
+    if Ham_ver==1
+        Ham=zeros(ComplexF64,2,NL,2,NL)
 
-  t0=3100
-  t1=380
-  t2=-15
-  t3=-290
-  t4=-141
-  ff=√3/2*0.246*(valley*k[1]-im*k[2])
-  Delta2=2.0
-  δ=10.5
-  for layer in 1:NL-1
-     Ham[:,layer,:,layer+1]=[t4*ff t3*conj(ff);t1 t4*ff]
-  end
+        t0=3100
+        t1=380
+        t2=-15
+        t3=-290
+        t4=-141
+        ff=√3/2*0.246*(valley*k[1]-im*k[2])
+        Delta2=2.0
+        δ=10.5
+        for layer in 1:NL-1
+            Ham[:,layer,:,layer+1]=[t4*ff t3*conj(ff);t1 t4*ff]
+        end
 
-  if NL>2
-   for layer in 1:NL-2
-       Ham[:,layer,:,layer+2]=[0.0 t2/2;0.0 0.0]
-   end
- end
+        if NL>2
+        for layer in 1:NL-2
+            Ham[:,layer,:,layer+2]=[0.0 t2/2;0.0 0.0]
+        end
+        end
 
 
 
-  for layer in 1:NL
-      Ham[:,layer,:,layer]+=1/2*[potential_profile[layer] t0*ff;t0*conj(ff) potential_profile[layer]]
-  end
+        for layer in 1:NL
+            Ham[:,layer,:,layer]+=1/2*[potential_profile[layer] t0*ff;t0*conj(ff) potential_profile[layer]]
+        end
 
-   for layer in 1:NL
-      if layer==1 || layer==NL
-       Ham[:,layer,:,layer]+=1/2*[Delta2 0; 0 Delta2]
-      else
-         Ham[:,layer,:,layer]-=1/2*[Delta2 0; 0 Delta2]
-      end
-   end
+        for layer in 1:NL
+            if layer==1 || layer==NL
+            Ham[:,layer,:,layer]+=1/2*[Delta2 0; 0 Delta2]
+            else
+                Ham[:,layer,:,layer]-=1/2*[Delta2 0; 0 Delta2]
+            end
+        end
 
-   for layer in 1:NL
-      if layer==1
-         Ham[:,layer,:,layer]+=1/2*[0 0; 0 δ]
-      elseif layer==NL
-         Ham[:,layer,:,layer]+=1/2*[δ 0; 0 0]
-      else
-         Ham[:,layer,:,layer]+=1/2*[δ 0; 0 δ]
-      end
-   end
+        for layer in 1:NL
+            if layer==1
+                Ham[:,layer,:,layer]+=1/2*[0 0; 0 δ]
+            elseif layer==NL
+                Ham[:,layer,:,layer]+=1/2*[δ 0; 0 0]
+            else
+                Ham[:,layer,:,layer]+=1/2*[δ 0; 0 δ]
+            end
+        end
 
-   Ham=reshape(Ham,2*NL,2*NL)
-   Ham=Ham+Ham'
-  
+        Ham=reshape(Ham,2*NL,2*NL)
+        Ham=Ham+Ham'
+    elseif Ham_ver==2
+            Ham=zeros(ComplexF64,2*NL,2*NL)
+            
+            t0=3100
+            t1=380
+            t2=-21
+            t3=290
+            t4=141
+                ff=√3/2*0.246*(valley*k[1]-im*k[2])
+            for layer in 1:NL-1
+                Ham[2*layer-1:2*layer,2*layer+1:2*layer+2]=[t4*ff t3*conj(ff);t1 t4*ff]
+            end
+
+            if NL>2
+            for layer in 1:NL-2
+                Ham[2*layer-1:2*layer,2*layer+3:2*layer+4]=[0.0 t2/2;0.0 0.0]
+            end
+            end
+
+            Ham=Ham+Ham'
+
+            for layer in 1:NL
+                Ham[2*layer-1:2*layer,2*layer-1:2*layer]=[potential_profile[layer] -t0*ff;-t0*conj(ff) potential_profile[layer]]
+            end
+
+    end
+        
   
  return Ham
 end
@@ -166,7 +192,7 @@ end
 
 
 function get_density_profile(kx_list::Vector{Float64},ky_list::Vector{Float64},num_layers::Int,num_sub::Int,num_spin::Int,num_valley::Int,
-                             active_flavor::Int,Area::Float64,target_density::Float64,temp::Float64,current_potential_profile::Vector{Float64})
+                             active_flavor::Int,Area::Float64,target_density::Float64,temp::Float64,current_potential_profile::Vector{Float64},Ham_ver::Int)
 
         eigenvector=zeros(ComplexF64,length(kx_list),length(ky_list),num_layers*num_sub,num_layers*num_sub)
         eigenvalue=zeros(Float64,length(kx_list),length(ky_list),num_layers*num_sub)
@@ -178,7 +204,7 @@ function get_density_profile(kx_list::Vector{Float64},ky_list::Vector{Float64},n
         for ja in eachindex(kx_list)
             for jb in eachindex(ky_list)
             
-                        Ham=get_Ham([kx_list[ja],ky_list[jb]],current_potential_profile,1,num_layers)
+                        Ham=get_Ham([kx_list[ja],ky_list[jb]],current_potential_profile,1,num_layers,Ham_ver)
                     
                         Hamiltonian[ja,jb,:,:]=Ham
                         FFF=eigen(Ham)
@@ -237,7 +263,7 @@ function get_kinetic_energy(kx_list::Vector{Float64},ky_list::Vector{Float64},nu
         for ja in eachindex(kx_list)
             for jb in eachindex(ky_list)
             
-                        Ham=get_Ham([kx_list[ja],ky_list[jb]],current_potential_profile,1,num_layers)
+                        Ham=get_Ham([kx_list[ja],ky_list[jb]],current_potential_profile,1,num_layers,Ham_ver)
                     
                         Hamiltonian[ja,jb,:,:]=Ham
                         FFF=eigen(Ham)
@@ -279,18 +305,18 @@ function get_kinetic_energy(kx_list::Vector{Float64},ky_list::Vector{Float64},nu
         return kE
 end
 
-function get_Ham_dx(k::Vector{Float64},potential_profile::Vector{Float64},valley::Int64,NL::Int)
+function get_Ham_dx(k::Vector{Float64},potential_profile::Vector{Float64},valley::Int64,NL::Int,Ham_ver::Int)
   step=1e-5
- return (get_Ham(k.+[step,0.0],potential_profile,valley,NL)-get_Ham(k.-[step,0.0],potential_profile,valley,NL))/(2*step)
+ return (get_Ham(k.+[step,0.0],potential_profile,valley,NL,Ham_ver)-get_Ham(k.-[step,0.0],potential_profile,valley,NL,Ham_ver))/(2*step)
 end
 
-function get_Ham_dy(k::Vector{Float64},potential_profile::Vector{Float64},valley::Int64,NL::Int)
+function get_Ham_dy(k::Vector{Float64},potential_profile::Vector{Float64},valley::Int64,NL::Int,Ham_ver::Int)
   step=1e-5
- return (get_Ham(k.+[0.0,step],potential_profile,valley,NL)-get_Ham(k.-[0.0,step],potential_profile,valley,NL))/(2*step)
+ return (get_Ham(k.+[0.0,step],potential_profile,valley,NL,Ham_ver)-get_Ham(k.-[0.0,step],potential_profile,valley,NL,Ham_ver))/(2*step)
 end
 
 function get_OBM(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potential_profile::Vector{Float64},
-               target_density::Float64,temp::Float64,active_flavor::Int)
+               target_density::Float64,temp::Float64,active_flavor::Int,Ham_ver::Int)
 
     kxrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
     kyrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
@@ -300,7 +326,7 @@ function get_OBM(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
     eigenvalue=zeros(Float64,length(kxrange),length(kyrange),2*num_layers)
     for ja in eachindex(kxrange)
           for kb in eachindex(kyrange)
-            HH=get_Ham([kxrange[ja],kyrange[kb]],potential_profile,1,num_layers)
+            HH=get_Ham([kxrange[ja],kyrange[kb]],potential_profile,1,num_layers,Ham_ver)
             eigenvalue[ja,kb,:]=eigen(HH).values
           end
     end
@@ -317,9 +343,9 @@ function get_OBM(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
       for ja in eachindex(kxrange)
             for jb in eachindex(kyrange)
                 k=[kxrange[ja],kyrange[jb]]
-                HH=get_Ham(k,potential_profile,1,num_layers)
-              HH_dx=get_Ham_dx(k,potential_profile,1,num_layers)
-              HH_dy=get_Ham_dy(k,potential_profile,1,num_layers)
+                HH=get_Ham(k,potential_profile,1,num_layers,Ham_ver)
+              HH_dx=get_Ham_dx(k,potential_profile,1,num_layers,Ham_ver)
+              HH_dy=get_Ham_dy(k,potential_profile,1,num_layers,Ham_ver)
               evals,evecs=eigen(HH)
             for ll in num_layers+1:2*num_layers
                 for n in 1:2*num_layers
@@ -360,7 +386,7 @@ end
 
 function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float64,
                   num_layers::Int,ϵr::Float64,target_density::Float64,tg_dis::Float64,
-                  bg_dis::Float64,active_flavor::Int)
+                  bg_dis::Float64,active_flavor::Int,Ham_ver::Int64)
         
    
         kx_list=collect(LinRange(-radius,radius,num_kpoints))
@@ -422,7 +448,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
                                             tg_dis,bg_dis,ϵr)
         potential_profile=ppp[2:end-1]
         updated_density=get_density_profile(kx_list,ky_list,num_layers,num_sub,num_spin,num_valley,
-                                active_flavor,Area,target_density,temp,potential_profile)
+                                active_flavor,Area,target_density,temp,potential_profile,Ham_ver)
 
         residual_vec=updated_density-current_density
         DIIS_delta[mod(itcount,DIIS_size)+1]=residual_vec
