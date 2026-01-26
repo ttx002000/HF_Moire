@@ -290,7 +290,7 @@ function get_Ham_dy(k::Vector{Float64},potential_profile::Vector{Float64},valley
 end
 
 function get_OBM(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potential_profile::Vector{Float64},
-               target_density::Float64,temp::Float64)
+               target_density::Float64,temp::Float64,active_flavor::Int)
 
     kxrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
     kyrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
