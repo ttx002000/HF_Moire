@@ -356,7 +356,7 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
        end
        sample_count+=1
 
-       if mod(sample_count,2*10^4)==0 && sample_count>10^5
+       if mod(Int(bin_count/active_flavor),50)==0 && sample_count>10^5
          Area_DOS=4*π^2/radius^2*sample_count
          DOS_current=1/Area_DOS*bin_count/(2*energy_cut)
          difference=DOS_current-DOS_old
