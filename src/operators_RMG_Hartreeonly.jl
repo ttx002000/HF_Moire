@@ -372,7 +372,7 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
 
 
 
-  return DOS_current
+  return DOS_current,difference
 end
 
 

@@ -33,7 +33,7 @@ DIIS_density,eout,potential_profile,kinetic_energy=iteration_loop(num_kpoints,ra
 
  OBM=get_OBM(num_kpoints_OBM,radius,num_layers,potential_profile,
                target_density,temp,active_flavor,Ham_ver)
-DOS=get_DOS(num_kpoints_OBM,radius,num_layers,potential_profile,
+DOS,DOS_diff=get_DOS(num_kpoints_OBM,radius,num_layers,potential_profile,
                target_density,temp,active_flavor,Ham_ver)
 
 
@@ -43,6 +43,6 @@ savepath=joinpath(scratch_dir, "RMG_Hartreeonly/data_output$(Int(args[14]))/$(ar
 
 
 jldsave(savepath,density_profile=DIIS_density[1],eout=eout,potential_profile=potential_profile,
-        kinetic_energy=kinetic_energy, OBM=OBM,DOS=DOS)
+        kinetic_energy=kinetic_energy, OBM=OBM,DOS=DOS,DOS_diff=DOS_diff)
 
 
