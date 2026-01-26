@@ -344,13 +344,7 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
       bad_count=0
 
     while sample_count<10^5 || (bin_count/active_flavor)<100 || abs(difference)>10^(-9) || bad_count<4
-        if abs(difference)>10^(-9)
-            bad_count=0
-        end
-
-        if abs(difference)<10^(-9)
-            bad_count+=1
-        end
+      
        kx=(rand()-0.5)/0.5*radius
        ky=(rand()-0.5)/0.5*radius
        HH=get_Ham([kx,ky],potential_profile,1,num_layers,Ham_ver)
@@ -368,6 +362,14 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
          difference=DOS_current-DOS_old
          DOS_old=DOS_current
          println(difference,"difference")
+
+        if abs(difference)>10^(-9)
+            bad_count=0
+        end
+
+        if abs(difference)<10^(-9)
+            bad_count+=1
+        end
        end
 
 
