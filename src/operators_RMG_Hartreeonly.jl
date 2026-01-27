@@ -314,7 +314,7 @@ function get_kinetic_energy(kx_list::Vector{Float64},ky_list::Vector{Float64},nu
             for jb in eachindex(ky_list)
             
                         evecs=@view eigenvector[ja,jb,:,:]
-                        evecs=reshape(evecs,num_sub,num_layers,num_sub*num_layers)
+                        #evecs=reshape(evecs,num_sub,num_layers,num_sub*num_layers)
                         evals=@view eigenvalue[ja,jb,:]
                         hh=@view no_diag_Hamiltonian[ja,jb,:,:]
 
