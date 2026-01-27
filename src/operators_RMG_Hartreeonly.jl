@@ -137,7 +137,9 @@ function get_potential_profile(density_profile::Vector{Float64},top_gate::Float6
    end
       #println( potential_profile)
 
-   return potential_profile
+    potential_energy=1/2*sum(potential_profile.*tot_density_profile)
+
+   return potential_profile,potential_energy
 
 end
 
@@ -279,11 +281,13 @@ end
 
 function get_kinetic_energy(kx_list::Vector{Float64},ky_list::Vector{Float64},num_layers::Int,num_sub::Int,num_spin::Int,num_valley::Int,
                              active_flavor::Int,Area::Float64,target_density::Float64,temp::Float64,current_potential_profile::Vector{Float64})
+# printing the kinetic energy
+
 
         eigenvector=zeros(ComplexF64,length(kx_list),length(ky_list),num_layers*num_sub,num_layers*num_sub)
         eigenvalue=zeros(Float64,length(kx_list),length(ky_list),num_layers*num_sub)
 
-        Hamiltonian=zeros(ComplexF64,length(kx_list),length(ky_list),num_layers*num_sub,num_layers*num_sub)
+        no_diag_Hamiltonian=zeros(ComplexF64,length(kx_list),length(ky_list),num_layers*num_sub,num_layers*num_sub)
 
 
 
@@ -291,8 +295,8 @@ function get_kinetic_energy(kx_list::Vector{Float64},ky_list::Vector{Float64},nu
             for jb in eachindex(ky_list)
             
                         Ham=get_Ham([kx_list[ja],ky_list[jb]],current_potential_profile,1,num_layers,Ham_ver)
-                    
-                        Hamiltonian[ja,jb,:,:]=Ham
+                        nodiag_Ham=get_Ham([kx_list[ja],ky_list[jb]],zeros(Float64,length(current_potential_profile)),1,num_layers,Ham_ver)
+                        no_diag_Hamiltonian[ja,jb,:,:]=nodiag_Ham
                         FFF=eigen(Ham)
                         eigenvector[ja,jb,:,:]=FFF.vectors
                         eigenvalue[ja,jb,:]=real(FFF.values)
@@ -312,15 +316,11 @@ function get_kinetic_energy(kx_list::Vector{Float64},ky_list::Vector{Float64},nu
                         evecs=@view eigenvector[ja,jb,:,:]
                         evecs=reshape(evecs,num_sub,num_layers,num_sub*num_layers)
                         evals=@view eigenvalue[ja,jb,:]
-                        for bi in 1:num_layers
-                        
-                             kE+=num_spin*num_valley*evals[bi]
-                            
-                        end
+                        hh=@view no_diag_Hamiltonian[ja,jb,:,:]
 
                         for bi in num_layers+1:2*num_layers
                             
-                            kE+=active_flavor*evals[bi]*1/(1+exp((evals[bi]-fermi_energy)/temp))
+                            kE+=active_flavor*(evecs[:,bi]'*hh*evecs[:,bi])*1/(1+exp((evals[bi]-fermi_energy)/temp))
                             
                         end
             
@@ -329,7 +329,7 @@ function get_kinetic_energy(kx_list::Vector{Float64},ky_list::Vector{Float64},nu
         end
     
 
-        return kE
+        return kE/Area
 end
 
 function get_Ham_dx(k::Vector{Float64},potential_profile::Vector{Float64},valley::Int64,NL::Int,Ham_ver::Int)
@@ -535,6 +535,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
         current_density .+= target_density/num_layers
         potential_profile=zeros(Float64,num_layers)
         bad_count=0
+        potential_energy=0.0
 
     while eout>10^(-10) || bad_count<DIIS_size
         
@@ -555,7 +556,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
 
         
         DIIS_density[mod(itcount,DIIS_size)+1]=copy(current_density)
-        ppp=get_potential_profile(current_density,top_gate,bottom_gate,
+        ppp,potential_energy=get_potential_profile(current_density,top_gate,bottom_gate,
                                             tg_dis,bg_dis,ϵr)
         potential_profile=ppp[2:end-1]
         updated_density=get_density_profile(kx_list,ky_list,num_layers,num_sub,num_spin,num_valley,
@@ -585,11 +586,11 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
     end
     
     kinetic_energy=get_kinetic_energy(kx_list,ky_list,num_layers,num_sub,num_spin,num_valley,
-                                active_flavor,Area,target_density,temp,potential_profile)
+                                active_flavor,Area,target_density,temp,potential_profile)                           
+   
 
 
-
-  return DIIS_density,eout,potential_profile,kinetic_energy
+  return DIIS_density,eout,potential_profile,kinetic_energy,potential_energy
 
 end
 
