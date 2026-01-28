@@ -605,7 +605,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
       
 
           eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,DIIS_size)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix,DIIS_output_HFHam[mod(itcount,DIIS_size)+1]=Construct_DensityMatrix(csr,wave,wave_n1,wave_n2,
-                                                                                                                                                                             dmk,single_Ham,
+                                                                                                                                                                             input_DensityMatrix,single_Ham,
                                                                                                                                                                             single_MoirePo,overlapmatrix,
                                                                                                                                                                             energy,filling,Area,Coulomb_matrix,1,fk)
        
