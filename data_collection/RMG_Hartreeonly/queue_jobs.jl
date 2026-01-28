@@ -16,13 +16,15 @@ misspath=joinpath(scratch_dir, "RMG_Hartreeonly/data_output$(Int(aa[1]))/missedj
 st=load(misspath)
 
 index=st["index"]
-start=1
 ee=length(index)
 ba_size=300
 count=1
 while (count-1)*ba_size+1<=ee
-  submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*ba_size+start:min(count*ba_size+start,ee)]; time="2:00:00",cpus_per_task=4,mem=16)
-  println((count-1)*ba_size+start,min(count*ba_size+start,ee))
+  lo = (count-1)*ba_size + 1
+  hi = min(count*ba_size, ee)
+ index[lo:hi]
+  submit_job(filepath, @__DIR__, job_prefix,index[lo:hi]; time="2:00:00",cpus_per_task=4,mem=16)
+  println(lo,hi)
   sleep(5)
 
   global count+=1
