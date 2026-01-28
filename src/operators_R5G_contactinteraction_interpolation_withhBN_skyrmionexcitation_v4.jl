@@ -505,12 +505,12 @@ function Construct_DensityMatrix(csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_
    FFF = eigen!(Hermitian(H))
    HF_eigenvalue=real(FFF.values)
    HF_eigenvector=FFF.vectors
-
+  DeltaMatrix=H*input_DensityMatrix-input_DensityMatrix*H
 
  
   NewDensityMatrix=HF_eigenvector[:,1:filling]*HF_eigenvector[:,1:filling]'
       NewDensityMatrix=0.5*(NewDensityMatrix'+ NewDensityMatrix)
-       DeltaMatrix=NewDensityMatrix-input_DensityMatrix
+       #DeltaMatrix=NewDensityMatrix-input_DensityMatrix
        mix_ratio=0.5
        output_DensityMatrix=mix_ratio*input_DensityMatrix+(1-mix_ratio)*NewDensityMatrix
 
@@ -566,17 +566,18 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     HartreeMatrix=zeros(ComplexF64,dimension,dimension)
     FockMatrix=zeros(ComplexF64,dimension,dimension)
   
-
-    DIIS_input_DensityMatrix=Vector{Matrix{ComplexF64}}(undef,6)
-    DIIS_input_DeltaMatrix=Vector{Matrix{ComplexF64}}(undef,6)
+    DIIS_size=8
+    DIIS_input_DensityMatrix=Vector{Matrix{ComplexF64}}(undef,DIIS_size)
+    DIIS_input_DeltaMatrix=Vector{Matrix{ComplexF64}}(undef,DIIS_size)
     input_DensityMatrix=initial_DensityMatrix
     bad_count=0
     energy=0.0
     energy_change=0.0
+   
   
    println(Threads.nthreads())
-   while (eout>1*10^(-22)) || (bad_count<4) || (abs(energy_change)>1*10^(-10))
-      if eout<1*10^(-22)
+   while (eout>1*10^(-18)) || (bad_count<DIIS_size) || (abs(energy_change)>1*10^(-10))
+      if eout<1*10^(-18)
        bad_count+=1
       end
       
@@ -584,7 +585,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
 
       if (itcount>100 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-6))
       
-        dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix)
+        dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,DIIS_size)
         if (itcount>100 && abs(eout)>1)
             itcount=0
            
@@ -594,12 +595,12 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
         end
       
 
-       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,6)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(csr,wave,wave_n1,wave_n2,
+       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,DIIS_size)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(csr,wave,wave_n1,wave_n2,
                                                                                                                                                                              dmk,single_Ham,
                                                                                                                                                                             single_MoirePo,overlapmatrix,
                                                                                                                                                                             energy,filling,Area,Coulomb_matrix)
        
-        DIIS_input_DensityMatrix[mod(itcount,6)+1]=dmk
+        DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=dmk
         input_DensityMatrix=output_DensityMatrix
         println("using DIIS")
        
@@ -607,11 +608,11 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
   
       
 
-        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,6)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(csr,wave,wave_n1,wave_n2,
+        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,DIIS_size)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(csr,wave,wave_n1,wave_n2,
                                                                                                                                                                             input_DensityMatrix,single_Ham,
                                                                                                                                                                             single_MoirePo,overlapmatrix,
                                                                                                                                                                             energy,filling,Area,Coulomb_matrix)
-        DIIS_input_DensityMatrix[mod(itcount,6)+1]=input_DensityMatrix
+        DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=input_DensityMatrix
         input_DensityMatrix=output_DensityMatrix
         
        
@@ -660,17 +661,17 @@ end
 
 
 
-function implement_DIIS(DIIS_input_projector::Vector{Matrix{ComplexF64}},DIIS_input_DeltaMatrix::Vector{Matrix{ComplexF64}})
+function implement_DIIS(DIIS_input_projector::Vector{Matrix{ComplexF64}},DIIS_input_DeltaMatrix::Vector{Matrix{ComplexF64}},DIIS_size::Int)
 
 
 
-      Bmatrix=zeros(ComplexF64,7,7)
-      for ja in 1:6
-       Bmatrix[ja,7]=1
-       Bmatrix[7,ja]=1
+      Bmatrix=zeros(ComplexF64,DIIS_size+1,DIIS_size+1)
+      for ja in 1:DIIS_size
+       Bmatrix[ja,DIIS_size+1]=1
+       Bmatrix[DIIS_size+1,ja]=1
       end
   
-      for ja in 1:6,jb in 1:6
+      for ja in 1:DIIS_size,jb in 1:DIIS_size
    
              Bmatrix[ja,jb]+=real(tr((DIIS_input_DeltaMatrix[ja])'*(DIIS_input_DeltaMatrix[jb])))
           
@@ -678,9 +679,11 @@ function implement_DIIS(DIIS_input_projector::Vector{Matrix{ComplexF64}},DIIS_in
 
       inB=safe_inverse(Bmatrix)
       if inB≠0
-         coeff=inB*[0;0;0;0;0;0;1]
+         onh=zeros(Float64,DIIS_size+1)
+         onh[end]=1
+         coeff=inB* onh
          dmk=coeff[1]*(DIIS_input_projector[1]+DIIS_input_DeltaMatrix[1])
-         for ja in 2:6
+         for ja in 2:DIIS_size
            dmk+=coeff[ja]*(DIIS_input_projector[ja]+DIIS_input_DeltaMatrix[ja])
          end
          return dmk
