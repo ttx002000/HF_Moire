@@ -505,12 +505,12 @@ function Construct_DensityMatrix(csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_
    FFF = eigen!(Hermitian(H))
    HF_eigenvalue=real(FFF.values)
    HF_eigenvector=FFF.vectors
-  DeltaMatrix=H*input_DensityMatrix-input_DensityMatrix*H
+  #DeltaMatrix=H*input_DensityMatrix-input_DensityMatrix*H
 
  
   NewDensityMatrix=HF_eigenvector[:,1:filling]*HF_eigenvector[:,1:filling]'
       NewDensityMatrix=0.5*(NewDensityMatrix'+ NewDensityMatrix)
-       #DeltaMatrix=NewDensityMatrix-input_DensityMatrix
+       DeltaMatrix=NewDensityMatrix-input_DensityMatrix
        mix_ratio=0.5
        output_DensityMatrix=mix_ratio*input_DensityMatrix+(1-mix_ratio)*NewDensityMatrix
 
