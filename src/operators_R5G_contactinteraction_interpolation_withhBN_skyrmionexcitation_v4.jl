@@ -691,8 +691,8 @@ function implement_DIIS(DIIS_input_projector::Vector{Matrix{ComplexF64}},DIIS_in
   
       for ja in 1:DIIS_size,jb in 1:DIIS_size
    
-             Bmatrix[ja,jb]+=real(tr((DIIS_input_DeltaMatrix[ja])'*(DIIS_input_DeltaMatrix[jb])))
-          
+             #Bmatrix[ja,jb]+=real(tr((DIIS_input_DeltaMatrix[ja])'*(DIIS_input_DeltaMatrix[jb])))
+          Bmatrix[ja,jb]+=real(dot(DIIS_input_DeltaMatrix[ja],DIIS_input_DeltaMatrix[jb]))
       end
 
       inB=safe_inverse(Bmatrix)
