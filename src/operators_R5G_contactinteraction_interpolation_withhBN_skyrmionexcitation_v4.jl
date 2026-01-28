@@ -582,8 +582,8 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
    
   
    println(Threads.nthreads())
-   while (eout>1*10^(-19)) || (bad_count<DIIS_size) || (abs(energy_change)>1*10^(-10))
-      if eout<1*10^(-19)
+   while (eout>1*10^(-16)) || (bad_count<DIIS_size) || (abs(energy_change)>1*10^(-10))
+      if eout<1*10^(-16)
        bad_count+=1
       end
       
