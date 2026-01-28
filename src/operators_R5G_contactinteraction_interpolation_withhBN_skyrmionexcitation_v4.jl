@@ -678,7 +678,6 @@ end
 
 
 
-
 function implement_DIIS(DIIS_input_projector::Vector{Matrix{ComplexF64}},DIIS_input_DeltaMatrix::Vector{Matrix{ComplexF64}},DIIS_size::Int)
 
 
@@ -691,8 +690,8 @@ function implement_DIIS(DIIS_input_projector::Vector{Matrix{ComplexF64}},DIIS_in
   
       for ja in 1:DIIS_size,jb in 1:DIIS_size
    
-             #Bmatrix[ja,jb]+=real(tr((DIIS_input_DeltaMatrix[ja])'*(DIIS_input_DeltaMatrix[jb])))
-          Bmatrix[ja,jb]+=real(dot(DIIS_input_DeltaMatrix[ja],DIIS_input_DeltaMatrix[jb]))
+             Bmatrix[ja,jb]+=real(dot(DIIS_input_DeltaMatrix[ja],DIIS_input_DeltaMatrix[jb]))
+          
       end
 
       inB=safe_inverse(Bmatrix)
@@ -700,10 +699,15 @@ function implement_DIIS(DIIS_input_projector::Vector{Matrix{ComplexF64}},DIIS_in
          onh=zeros(Float64,DIIS_size+1)
          onh[end]=1
          coeff=inB* onh
-         dmk=coeff[1]*(DIIS_input_projector[1])
-         for ja in 2:DIIS_size
-           dmk+=coeff[ja]*(DIIS_input_projector[ja])
-         end
+         #dmk=coeff[1]*(DIIS_input_projector[1])
+         #for ja in 2:DIIS_size
+          # dmk+=coeff[ja]*(DIIS_input_projector[ja])
+         #end
+        dmk = zero(DIIS_input_projector[1])           # alloc once
+        @inbounds for ja in 1:DIIS_size
+            BLAS.axpy!(coeff[ja], DIIS_input_projector[ja], dmk)  # dmk += coeff[ja] * projector[ja]
+        end
+return dmk
          return dmk
       else
         return 0
