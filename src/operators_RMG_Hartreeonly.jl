@@ -362,14 +362,16 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
     sorted_condunction=sort(vec(eigenvalue[:,:,num_layers+1:2*num_layers]))
     fermi_energy,_=find_FL(sorted_condunction,target_density/active_flavor,sorted_condunction[1],sorted_condunction[end],temp,Area,0.0)
     
-    sample_count=0
-    bin_count=0
+    #sample_count=0
+    #bin_count=0
+    nt=Threads.maxthreadid()
+    bin_count=zeros(Int64,nt)
     DOS_current=0.0
     DOS_old=0.0
     difference=0.1
     energy_cut=0.1
-      bad_count=0
-      current_bin=0
+      #bad_count=0
+      #current_bin=0
   #=
     while sample_count<10^5 || (bin_count/active_flavor)<100 || abs(difference)>5*10^(-8) || bad_count<4
       
@@ -403,33 +405,37 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
 
     end
     =#
+    each_sc_count=10^6
+    for big_count in 1:3
+            Threads.@threads for sc in 1:each_sc_count
+            
+                kx=(rand()-0.5)/0.5*radius
+                ky=(rand()-0.5)/0.5*radius
+                HH=get_Ham([kx,ky],potential_profile,1,num_layers,Ham_ver)
+                vals=eigen(HH).values
+                for jb in num_layers+1:2*num_layers
+                    if abs(vals[jb]-fermi_energy)<energy_cut
+                        bin_count[Threads.@threadid()]+=active_flavor
+                    end
+                end
+             
 
-    while sample_count<2*10^6+3
-      
-       kx=(rand()-0.5)/0.5*radius
-       ky=(rand()-0.5)/0.5*radius
-       HH=get_Ham([kx,ky],potential_profile,1,num_layers,Ham_ver)
-       vals=eigen(HH).values
-       for jb in num_layers+1:2*num_layers
-         if abs(vals[jb]-fermi_energy)<energy_cut
-            bin_count+=active_flavor
-         end
-       end
-       sample_count+=1
+               
+                 
 
-       if mod(sample_count,10*6)==0
-         Area_DOS=4*π^2/radius^2*sample_count
-         DOS_current=1/Area_DOS*bin_count/(2*energy_cut)
-         difference=DOS_current-DOS_old
-         DOS_old=DOS_current
-         current_bin=Int(bin_count/active_flavor)
-         println(difference,"difference",Int(bin_count/active_flavor),"binacount",sample_count,"samplecount")
-         flush(stdout)
-
-      
-       end
+                
+             
 
 
+            end
+            
+            Area_DOS=4*π^2/radius^2*each_sc_count*big_count
+            DOS_current=1/Area_DOS*sum(bin_count)/(2*energy_cut)
+            difference=DOS_current-DOS_old
+            DOS_old=DOS_current
+                    
+            println(difference,"difference",Int(sum(bin_count)/active_flavor),"binacount",each_sc_count*big_count,"samplecount")
+            flush(stdout)
     end
 
    
