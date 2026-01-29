@@ -549,7 +549,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
         #ϵr=8.0
         eout=1.0
         #target_density=0.002
-        DIIS_size=5
+        DIIS_size=8
         #tg_dis=50.0
         #bg_dis=50.0
 
