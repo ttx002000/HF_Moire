@@ -415,7 +415,8 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
                 vals=eigen(HH).values
                 for jb in num_layers+1:2*num_layers
                     if abs(vals[jb]-fermi_energy)<energy_cut
-                        bin_count[Threads.@threadid()]+=active_flavor
+                        
+                        bin_count[Threads.threadid()]+=active_flavor
                     end
                 end
              
