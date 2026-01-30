@@ -546,6 +546,215 @@ end
 
 
 
+function get_manybodyoverlap(args)
+
+    NL=args[1]
+    θ=args[2]/180*pi;
+    constq=args[3]
+    ϵr=args[4]
+    uD=args[5]
+    filling=Int(args[6])
+    gcutoff=args[7]
+    λ=args[8]
+    trytimes=Int(args[9])
+    enlarge_factor=Int(args[10])
+    V0_hBN=args[11]
+    V1_hBN=args[12]
+    ψ_hBN=args[13]
+    V2_scalar=args[14]
+    ϕ=args[15]/180*π
+    filepos=Int(args[16])
+
+
+     scratch_dir = ENV["SCRATCH"]
+     seed_path=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v4/data_output$(Int(args[16]))/dispersion/seed/$(args[1])NL$(args[2])theta$(args[3])constq$(args[4])ϵr$(args[5])uD$(args[6])filling$(args[7])cutoff$(args[8])lambda$(args[9])trytime$(args[10])enlarge$(args[11])V0_hBN$(args[12])V1_hBN$(args[13])ψ_hBN$(args[14])V2_scalar$(args[15])ϕ.jld2")
+
+
+
+
+    st=load(seed_path)
+    densitymatrix=st["densitymatrix"]
+    a1m=st["a1m"]
+    a2m=st["a2m"]
+    wave=st["wave"]
+    T1=st["T1"]
+    T2=st["T2"]
+    single_Ham=st["single_Ham"]
+    single_MoirePo=st["single_MoirePo"]
+    HF_eigenvector=st["HF_eigenvector"]
+    spinor_set=st["spinor_set"]
+    b1T=[1,0]
+    b2T=[0,1]
+    b1=[T1 T2]*b1T
+    b2=[T1 T2]*b2T
+    Area=√3/2*norm(a1m)^2
+
+    overlapmatrix=zeros(ComplexF64,length(wave),length(wave))
+    
+    for jb in eachindex(wave), jd in eachindex(wave)
+    overlapmatrix[jb,jd]=spinor_set[jb]'*spinor_set[jd]
+    end
+
+    wave_n1 = Vector{Int64}(undef, length(wave))
+    wave_n2 = Vector{Int64}(undef, length(wave))
+    for g in eachindex(wave)
+        wave_n1[g] = Int32(wave[g][1])
+        wave_n2[g] = Int32(wave[g][2])
+    end
+    Coulomb_matrix=[(Coulomb(wave[g1]-wave[g2],T1,T2)/ϵr+constq)*overlapmatrix[g1,g2] for g1 in eachindex(wave), g2 in eachindex(wave)]
+    wl = build_wave_lookup(wave)
+    csr = build_shiftcsr(wl, wave_n1, wave_n2)
+
+
+    shift_set=vec([a1m/enlarge_factor*ja+a2m/enlarge_factor*jb for ja in 0:Int(enlarge_factor)-1, jb in 0:Int(enlarge_factor)-1])
+    shift_Hartree_Fockvector=Vector{Matrix{ComplexF64}}(undef,length(shift_set))
+    for ja in eachindex(shift_set)
+        hh=zeros(ComplexF64,length(wave),filling)
+        for jb in eachindex(wave)
+        hh[jb,:]=HF_eigenvector[jb,1:filling]*exp(-im*dot([T1 T2]*wave[jb],shift_set[ja])) #I think should be a minus sign, but double check
+        end
+
+        shift_Hartree_Fockvector[ja]=copy(hh)
+    end
+
+
+
+    H_matrixelement=zeros(ComplexF64,length(shift_set),length(shift_set))
+    manybody_overlap=zeros(ComplexF64,length(shift_set),length(shift_set))
+
+
+    for ja in eachindex(shift_set),jb in eachindex(shift_set)
+        Smatrix=shift_Hartree_Fockvector[ja]'*shift_Hartree_Fockvector[jb]
+        manybody_overlap[ja,jb]= det(Smatrix)
+    end
+
+
+        for ja in eachindex(shift_set),jb in 1:ja
+            println(ja,jb)
+            flush(stdout)
+                Smatrix=shift_Hartree_Fockvector[ja]'*shift_Hartree_Fockvector[jb]
+                X = Smatrix \ (shift_Hartree_Fockvector[ja]')     # (filling × Ng)
+                Projector = shift_Hartree_Fockvector[jb] * X 
+                #Projector=shift_Hartree_Fockvector[jb]*inv(Smatrix)*shift_Hartree_Fockvector[ja]'
+
+                H_matrixelement[ja,jb]=manybody_overlap[ja,jb]* Construct_DispersionMatrixelement(csr,wave,wave_n1,wave_n2,
+                                            Projector,single_Ham,
+                                        single_MoirePo,overlapmatrix,
+                                        Area,Coulomb_matrix)
+                H_matrixelement[jb,ja]= conj(H_matrixelement[ja,jb])
+       end
+
+
+    return manybody_overlap,H_matrixelement,shift_set
+
+end
+
+
+
+function Construct_DispersionMatrixelement(csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_n1::Vector{Int64},wave_n2::Vector{Int64},
+                               input_DensityMatrix::Matrix{ComplexF64},single_Ham::Matrix{ComplexF64},
+                               single_MoirePo::Matrix{ComplexF64},overlapmatrix::Matrix{ComplexF64},
+                               Area::Float64,Coulomb_matrix::Matrix{ComplexF64})
+  
+ 
+   dimension=length(wave)
+  HartreeMatrix=zeros(ComplexF64,length(wave),length(wave))
+  FockMatrix=zeros(ComplexF64,length(wave),length(wave))
+  input_DM=input_DensityMatrix
+ 
+
+  Threads.@threads for g1 in eachindex(wave)
+    @inbounds begin
+    
+        w1n1=wave_n1[g1]; 
+        w1n2=wave_n2[g1]
+      for g4 in eachindex(wave)
+          
+            w4n1=wave_n1[g4]; 
+            w4n2=wave_n2[g4]
+            acc = 0.0 + 0.0im
+         
+            dg_n1=w1n1- w4n1
+            dg_n2=w1n2- w4n2
+            lo, hi = csr_range(csr,dg_n1, dg_n2)
+          
+            
+              @inbounds for k in lo:hi
+                 g2 = Int(csr.g2_list[k])
+                 g3 = Int(csr.g3_list[k])
+              
+              
+                  tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g2,g4]
+                  acc += input_DM[g3,g2] * tmp
+                 
+              end
+                
+          
+
+              FockMatrix[g1,g4] = acc
+        
+              
+          
+  
+
+      end
+    end
+  end
+
+
+  Threads.@threads for g1 in eachindex(wave)
+    @inbounds begin
+         w1n1=wave_n1[g1]; 
+         w1n2=wave_n2[g1]
+     for g3 in eachindex(wave)
+     
+        w3n1 = wave_n1[g3];
+        w3n2 = wave_n2[g3]
+         
+        dg_n1=w1n1- w3n1
+        dg_n2=w1n2- w3n2
+        lo, hi = csr_range(csr,  dg_n1,  dg_n2)
+     
+        acc = 0.0 + 0.0im
+        @inbounds for k in lo:hi
+       
+        g2 = Int(csr.g2_list[k])
+        g4 = Int(csr.g3_list[k])
+         
+            acc += input_DM[g4, g2] * overlapmatrix[g2, g4]
+        
+        end
+        val = acc * Coulomb_matrix[g1,g3]
+     
+        HartreeMatrix[g1,g3] = val
+      
+     end
+    end
+  end
+
+
+
+
+
+   
+    H_phys = single_MoirePo + single_Ham + 0.5*(HartreeMatrix/Area - FockMatrix/Area)
+
+
+  Hmatrix_element =(sum(H_phys .* transpose(input_DensityMatrix)))
+
+
+   
+
+
+
+ return  Hmatrix_element 
+end
+
+
+
+
+
+
 
 
 function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
