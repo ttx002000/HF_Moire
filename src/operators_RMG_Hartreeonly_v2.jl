@@ -355,6 +355,8 @@ end
 function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potential_profile::Vector{Float64},
                target_density::Float64,temp::Float64,active_flavor::Int,Ham_ver::Int)
 
+    num_spin=2
+    num_valley=2
     kxrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
     kyrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
     Area=4*π^2/(kxrange[2]-kxrange[1])/(kyrange[2]-kyrange[1])
@@ -448,6 +450,8 @@ end
 function get_OBM(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potential_profile::Vector{Float64},
                target_density::Float64,temp::Float64,active_flavor::Int,Ham_ver::Int)
 
+    num_spin=2
+    num_valley=2
     kxrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
     kyrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
     Area=4*π^2/(kxrange[2]-kxrange[1])/(kyrange[2]-kyrange[1])
