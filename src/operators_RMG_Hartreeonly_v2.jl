@@ -373,7 +373,7 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
     v_e=[copy(vec(eigenvalue[:,:,1:num_layers])) for _ in 1:num_spin*num_valley]
     c_e=vec(eigenvalue[:,:,1+num_layers:2*num_layers])
     sorted_e=sort(vcat(v_e..., c_e))
-    fermi_energy,_=find_FL(sorted_e,target_density/active_flavor,sorted_e[1],sorted_e[end],temp,Area,num_spin*num_valley*num_layers*length(kx_list)*length(ky_list)/Area)
+    fermi_energy,_=find_FL(sorted_e,target_density/active_flavor,sorted_e[1],sorted_e[end],temp,Area,num_spin*num_valley*num_layers*length(kxrange)*length(kyrange)/Area)
 
 
     nt=Threads.maxthreadid()
@@ -469,7 +469,7 @@ function get_OBM(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
     v_e=[copy(vec(eigenvalue[:,:,1:num_layers])) for _ in 1:num_spin*num_valley]
     c_e=vec(eigenvalue[:,:,1+num_layers:2*num_layers])
     sorted_e=sort(vcat(v_e..., c_e))
-    fermi_energy,_=find_FL(sorted_e,target_density/active_flavor,sorted_e[1],sorted_e[end],temp,Area,num_spin*num_valley*num_layers*length(kx_list)*length(ky_list)/Area)
+    fermi_energy,_=find_FL(sorted_e,target_density/active_flavor,sorted_e[1],sorted_e[end],temp,Area,num_spin*num_valley*num_layers*length(kxrange)*length( kyrange)/Area)
 
 
 
