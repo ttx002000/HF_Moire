@@ -5,6 +5,9 @@
     "data_collection\\pentalayer_full_HF": true,
     "data_collection\\double_pentalayer_full_HF": true,
     "data_collection\\k5model": true,
-    "data_collection\\single_rhobohedral_full_HF_dualgateCoulomb_nocoherence": true
+    "data_collection\\single_rhobohedral_full_HF_dualgateCoulomb_nocoherence": true,
+    "data_collection\\triangular_R5G_contactinteraction_interpolation_withhBN_skyrmionexcitation_step3_v2": true,
+    "data_collection\\triangular_R5G_contactinteraction_interpolation_withhBN_skyrmionexcitation_step2": true,
+    "data_collection\\triangular_R5G_contactinteraction_interpolation_withhBN_skyrmionexcitation_step2_v2": true
   }
 }
