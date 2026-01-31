@@ -916,8 +916,8 @@ function implement_DIIS(DIIS_input_projector::Vector{Matrix{ComplexF64}},DIIS_in
         @inbounds for ja in 1:DIIS_size
             BLAS.axpy!(coeff[ja], DIIS_input_projector[ja], dmk)  # dmk += coeff[ja] * projector[ja]
         end
-return dmk
-         return dmk
+      return dmk
+       
       else
         return 0
       end
