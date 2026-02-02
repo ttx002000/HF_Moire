@@ -583,7 +583,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
         
         
 
-        current_density=0.5*updated_density+0.5* current_density,fermi_energy
+        current_density=0.5*updated_density+0.5* current_density
 
         
 
@@ -605,7 +605,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
    
 
 
-  return DIIS_density,eout,potential_profile,kinetic_energy,potential_energy
+  return DIIS_density,eout,potential_profile,kinetic_energy,potential_energy,fermi_energy
 
 end
 
