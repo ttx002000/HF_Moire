@@ -277,7 +277,7 @@ function get_density_profile(kx_list::Vector{Float64},ky_list::Vector{Float64},n
         density_bg=length(kx_list)*length(ky_list)*num_layers*num_spin*num_valley/(Area*num_layers)*ones(Float64,num_layers)
         density_profile=density_layer/Area.-density_bg
 
-        return density_profile
+        return density_profile,fermi_energy
 end
 
 
@@ -550,6 +550,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
         potential_profile=zeros(Float64,num_layers)
         bad_count=0
         potential_energy=0.0
+        fermi_energy=0.0
 
     while eout>10^(-9) || bad_count<DIIS_size
         
@@ -573,7 +574,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
         ppp,potential_energy=get_potential_profile(current_density,top_gate,bottom_gate,
                                             tg_dis,bg_dis,ϵr)
         potential_profile=ppp[2:end-1]
-        updated_density=get_density_profile(kx_list,ky_list,num_layers,num_sub,num_spin,num_valley,
+        updated_density,fermi_energy=get_density_profile(kx_list,ky_list,num_layers,num_sub,num_spin,num_valley,
                                 active_flavor,Area,target_density,temp,potential_profile,Ham_ver)
 
         residual_vec=updated_density-current_density
@@ -582,7 +583,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
         
         
 
-        current_density=0.5*updated_density+0.5* current_density
+        current_density=0.5*updated_density+0.5* current_density,fermi_energy
 
         
 
