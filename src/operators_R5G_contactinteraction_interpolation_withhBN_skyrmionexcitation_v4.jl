@@ -798,7 +798,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
       
       tic=time()
 
-      if (itcount>100 && abs(eout)>1) || (itcount>30 && abs(eout)<10^(-2))
+      if (itcount>150 && abs(eout)>10^3) || (itcount>30 && abs(eout)<10^(-2))
 
       
        # dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,DIIS_size)
