@@ -930,7 +930,7 @@ function safe_inverse(A)
   catch e
       if isa(e, SingularException)
           println("Matrix is singular, doing randomstart again.")
-          return pinv(A, 10^(-5))  # Use pseudoinverse as an alternative
+          return pinv(A, 10^(-8))  # Use pseudoinverse as an alternative
       else
           rethrow(e)  # If another error occurs, propagate it
       end
