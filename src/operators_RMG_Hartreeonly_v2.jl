@@ -420,7 +420,7 @@ function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
             difference=DOS_current-DOS_old
             DOS_old=DOS_current
                     
-            println(difference,"difference",Int(sum(bin_count)/active_flavor),"binacount",each_sc_count*big_count,"samplecount")
+            println(difference,"difference",sum(bin_count)/active_flavor,"binacount",each_sc_count*big_count,"samplecount")
             flush(stdout)
     end
 
