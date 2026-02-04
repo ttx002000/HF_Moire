@@ -502,20 +502,20 @@ function Construct_DensityMatrix(csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_
  
     H_phys = single_MoirePo + single_Ham + HartreeMatrix - FockMatrix
 
-    H_diag = (whether_DIIS==1 ? DIIS_H : H_phys)
+    #H_diag = (whether_DIIS==1 ? DIIS_H : H_phys)
 
 
    #H = single_MoirePo + single_Ham + HartreeMatrix - FockMatrix
-   #FFF = eigen!(Hermitian(H))
-   FFF = eigen!(Hermitian(H_diag))
+   FFF = eigen!(H_phys)
+   #FFF = eigen!(Hermitian(H_diag))
    HF_eigenvalue=real(FFF.values)
    HF_eigenvector=FFF.vectors
-  #DeltaMatrix=H*input_DensityMatrix-input_DensityMatrix*H
-   DeltaMatrix=H_phys*input_DensityMatrix-input_DensityMatrix*H_phys
+
+   #DeltaMatrix=H_phys*input_DensityMatrix-input_DensityMatrix*H_phys
  
       NewDensityMatrix=HF_eigenvector[:,1:filling]*HF_eigenvector[:,1:filling]'
       NewDensityMatrix=0.5*(NewDensityMatrix'+ NewDensityMatrix)
-       #DeltaMatrix=NewDensityMatrix-input_DensityMatrix
+       DeltaMatrix=NewDensityMatrix-input_DensityMatrix
        mix_ratio=0.5
        output_DensityMatrix=mix_ratio*input_DensityMatrix+(1-mix_ratio)*NewDensityMatrix
 
@@ -791,35 +791,35 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
    
   
    println(Threads.nthreads())
-   while (eout>1*10^(-16)) || (bad_count<DIIS_size) || (abs(energy_change)>1*10^(-10))
+   while (eout>1*10^(-16)) || (bad_count<DIIS_size) || (abs(energy_change)>1*10^(-9))
       if eout<1*10^(-16)
        bad_count+=1
       end
       
       tic=time()
 
-      if (itcount>150 && abs(eout)>10^3) || (itcount>30 && abs(eout)<10^(-2))
+      if (itcount>150 && abs(eout)>10) || (itcount>30 && abs(eout)<10^(-2))
 
       
-       # dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,DIIS_size)
-        #if (itcount>100 && abs(eout)>1)
-         #   itcount=0
+        dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,DIIS_size)
+        if (itcount>150 && abs(eout)>10)
+           itcount=0
            
-          #    A=randn(dimension,dimension)+im*randn(dimension,dimension)
-           #   dmk+=(A+A')*0.01
+              A=randn(dimension,dimension)+im*randn(dimension,dimension)
+              dmk=(A+A')*0.01
          
-        #end
+        end
 
-          fk= implement_DIIS(DIIS_output_HFHam,DIIS_input_DeltaMatrix,DIIS_size)
+          #fk= implement_DIIS(DIIS_output_HFHam,DIIS_input_DeltaMatrix,DIIS_size)
       
 
           eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,DIIS_size)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix,DIIS_output_HFHam[mod(itcount,DIIS_size)+1]=Construct_DensityMatrix(csr,wave,wave_n1,wave_n2,
-                                                                                                                                                                             input_DensityMatrix,single_Ham,
+                                                                                                                                                                             dmk,single_Ham,
                                                                                                                                                                             single_MoirePo,overlapmatrix,
-                                                                                                                                                                            energy,filling,Area,Coulomb_matrix,1,fk)
+                                                                                                                                                                            energy,filling,Area,Coulomb_matrix,0,zeros(ComplexF64,dimension,dimension))
        
-        #DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=dmk
-        DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=input_DensityMatrix
+        DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=dmk
+        #DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=input_DensityMatrix
         input_DensityMatrix=output_DensityMatrix
         println("using DIIS")
        
