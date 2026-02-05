@@ -7,8 +7,7 @@ using CSV,DataFrames
 # same  as v2, but for arbitrary geometry
 include("../../src/operators_R5G_contactinteraction_interpolation_withhBN_skyrmionexcitation_v5.jl")
 
-#args=parse.(Float64,ARGS)
-args=[5,1,0.6,30.0*10^4,5,35.0,1,3.51,1.0,1,28.9,21.0,-0.29,5.0,0.0,1.0]
+args=parse.(Float64,ARGS)
 
 NL=args[1]
 
