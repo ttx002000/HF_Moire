@@ -8,7 +8,7 @@ using CSV,DataFrames
 include("../../src/operators_R5G_contactinteraction_interpolation_withhBN_skyrmionexcitation_v2.jl")
 
 args=parse.(Float64,ARGS)
-
+#args=[5,3,0.6,30.0*10^4,5,35.0,1,3.51,1.0,1,1.0,28.9,21.0,-0.29,5.0,0.0,1.0]
 
 
 NL=args[1]
@@ -49,8 +49,8 @@ chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uni
 
 
 
-scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v2/data_output$(Int(args[17]))/$(args[1])NL$(args[2])Nq$(args[3])theta$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda$(args[10])trytime$(args[11])enlarge$(args[12])V0_hBN$(args[13])V1_hBN$(args[14])ψ_hBN$(args[15])V2_scalar$(args[16])ϕ.jld2")
+#scratch_dir = ENV["SCRATCH"]
+savepath=joinpath(@__DIR__, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v2/data_output$(Int(args[17]))/$(args[1])NL$(args[2])Nq$(args[3])theta$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda$(args[10])trytime$(args[11])enlarge$(args[12])V0_hBN$(args[13])V1_hBN$(args[14])ψ_hBN$(args[15])V2_scalar$(args[16])ϕ.jld2")
 #savepath="test.jld2"
 
 
