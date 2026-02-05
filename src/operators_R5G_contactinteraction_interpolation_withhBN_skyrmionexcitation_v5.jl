@@ -102,13 +102,17 @@ function Geometry(geonum::Int64)
       Ny=3;
       l1=[3,0]
       l2=[0,3]
+      Tr1=[1,0]
+      Tr2=[0,1]
   end
 
   if geonum==2
       Nx=3;
-      Ny=9;
+      Ny=3;
       l1=[1,1]*3
       l2=[-1,2]*3
+      Tr1=[1,1]
+      Tr2=[-1,2]
   end
 
    if geonum==3
@@ -116,11 +120,13 @@ function Geometry(geonum::Int64)
       Ny=6;
       l1=[6,0]
       l2=[0,6]
+      Tr1=[1,0]
+      Tr2=[0,1]
   end
   
   
 
-  return Nx,Ny,l1,l2
+  return Nx,Ny,l1,l2,Tr1,Tr2
 end
 
 
@@ -133,18 +139,21 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,geonum::Int64,gcutof
   
     G1=2π/aGr*[1,-1/√3]
     G2=2π/aGr*[0,2/√3]
-    Nx,Ny,l1,l2=Geometry(geonum)
+    Nx,Ny,l1,l2,Tr1,Tr2=Geometry(geonum)
 
     Rθ=[cos(θ) -sin(θ);sin(θ) cos(θ)]
-    b1=(G1-(1+ϵ)^(-1)*Rθ*G1)
-    b2=(G2-(1+ϵ)^(-1)*Rθ*G2)
-    a1m=inv([b1';b2'])*[2π,0]
-    a2m=inv([b1';b2'])*[0,2π]
+    b1_ps=(G1-(1+ϵ)^(-1)*Rθ*G1)
+    b2_ps=(G2-(1+ϵ)^(-1)*Rθ*G2)
+    a1m_ps=inv([b1_ps';b2_ps'])*[2π,0]
+    a2m_ps=inv([b1_ps';b2_ps'])*[0,2π]
     
-    
+    a1m=Tr1[1]*a1m_ps+Tr1[2]*a2m_ps;
+    a2m=Tr2[1]*a1m_ps+Tr2[2]*a2m_ps;
+    b1=inv([a1m';a2m'])*[2π,0]
+    b2=inv([a1m';a2m'])*[0,2π]
       
-    L1=l1[1]*a1m+l1[2]*a2m;
-    L2=l2[1]*a1m+l2[2]*a2m;
+    L1=l1[1]*a1m_ps+l1[2]*a2m_ps;
+    L2=l2[1]*a1m_ps+l2[2]*a2m_ps;
 
     Area=abs(L1[1]*L2[2]-L2[1]*L1[2]);
     
@@ -158,6 +167,9 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,geonum::Int64,gcutof
 
     b1T=Int.(round.(inv([T1 T2])*b1))
     b2T=Int.(round.(inv([T1 T2])*b2))
+
+    b1_ps_T=Int.(round.(inv([T1 T2])*b1_ps))
+    b2_ps_T=Int.(round.(inv([T1 T2])*b2_ps))
 
 
 
@@ -191,8 +203,9 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,geonum::Int64,gcutof
     
     
     wave=Vector{Int64}[]
-    cutoff=18
+    
     cutoffstandard=gcutoff*norm(b1)
+    cutoff=Int(round(gcutoff))*5
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
@@ -267,14 +280,14 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,geonum::Int64,gcutof
      
      for jc in eachindex(wave)
     
-        pos=findfirst(item->item==wave[jc]-b1T,wave)
+        pos=findfirst(item->item==wave[jc]-b1_ps_T,wave)
         if pos≠nothing
        
           single_MoirePo[ja][jc,pos]+=V1_hBN*exp(-im*ψ_hBN)*(spinor_set[ja,jc]'*op_1*spinor_set[ja,pos])
           single_MoirePo[ja][jc,pos]+=V2_scalar*exp(-im*ϕ)*(spinor_set[ja,jc]'*op_5*spinor_set[ja,pos])
         end
         
-        pos=findfirst(item->item==wave[jc]-b2T,wave)
+        pos=findfirst(item->item==wave[jc]-b2_ps_T,wave)
         if pos≠nothing
 
             single_MoirePo[ja][jc,pos]+=V1_hBN*exp(-im*ψ_hBN)*(spinor_set[ja,jc]'*op_2*spinor_set[ja,pos])
@@ -282,7 +295,7 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,geonum::Int64,gcutof
         end
 
 
-        pos=findfirst(item->item==wave[jc]+(b2T+b1T),wave)
+        pos=findfirst(item->item==wave[jc]+(b1_ps_T+b2_ps_T),wave)
         if pos≠nothing
 
             single_MoirePo[ja][jc,pos]+=V1_hBN*exp(-im*ψ_hBN)*(spinor_set[ja,jc]'*op_3*spinor_set[ja,pos])
@@ -314,7 +327,7 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,geonum::Int64,gcutof
     
 
     
-    return overlapmatrix, wave, input_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m, b1,b2,spinor_set,Area,b1T,b2T
+    return overlapmatrix, wave, input_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m, b1,b2,spinor_set,Area,b1T,b2T,a1m_ps,a2m_ps,b1_ps,b2_ps,b1_ps_T,b2_ps_T
       
 
        
@@ -621,7 +634,7 @@ function triangle_chern(wave::Vector{Vector{Int}},
        single_eigenvector::Vector{Matrix{ComplexF64}},spinor_set::Matrix{Vector{ComplexF64}},
        geonum::Int,b1T::Vector{Int},b2T::Vector{Int},NL::Int,filling::Int)
 
-   Nx,Ny,_,_=Geometry(geonum)
+   Nx,Ny,_,_,_,_=Geometry(geonum)
     
 
     

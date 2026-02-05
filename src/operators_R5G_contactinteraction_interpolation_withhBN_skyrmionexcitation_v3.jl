@@ -258,7 +258,7 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
     
     
     wave=Vector{Int64}[]
-    cutoff=18
+    cutoff=Int(round(gcutoff))*5
     cutoffstandard=gcutoff*norm(b1)
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
         gtest=ja*b1+jb*b2;
