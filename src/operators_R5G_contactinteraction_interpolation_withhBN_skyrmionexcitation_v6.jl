@@ -387,9 +387,9 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
 
       if defec_pos==1
          defec_pos_vec=(2*a2m-a1m)/enlarge_factor*2/3
-      elseif def_pos==2
+      elseif defec_pos==2
          defec_pos_vec=(2*a2m-a1m)/enlarge_factor*1/3
-      elseif def_pos==3
+      elseif defec_pos==3
         defec_pos_vec=(2*a2m-a1m)/enlarge_factor*0
       end
 
