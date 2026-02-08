@@ -379,7 +379,13 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
      
       A=randn(ComplexF64,dimension,dimension)
       input_DensityMatrix=(A+A')*1.0
-   
+    
+      if filepos==6 && rand()>0.5
+          seed_path="$(args[2])theta0.0constq$(args[10])enlarge$(args[7])cutoff$(args[6])filling.jld2"
+          st=load(seed_path)
+          
+          input_DensityMatrix=st["densitymatrix"]
+      end
 
     
 
