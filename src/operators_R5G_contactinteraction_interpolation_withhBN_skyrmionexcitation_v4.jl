@@ -780,7 +780,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     HartreeMatrix=zeros(ComplexF64,dimension,dimension)
     FockMatrix=zeros(ComplexF64,dimension,dimension)
   
-    DIIS_size=8
+    DIIS_size=5
     DIIS_input_DensityMatrix=Vector{Matrix{ComplexF64}}(undef,DIIS_size)
     DIIS_input_DeltaMatrix=Vector{Matrix{ComplexF64}}(undef,DIIS_size)
     DIIS_output_HFHam=Vector{Matrix{ComplexF64}}(undef,DIIS_size)
