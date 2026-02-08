@@ -385,6 +385,7 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
           st=load(seed_path)
           
           input_DensityMatrix=st["densitymatrix"]
+          println("teaking seed")
       end
 
     
