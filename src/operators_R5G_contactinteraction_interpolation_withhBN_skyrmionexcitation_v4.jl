@@ -870,7 +870,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
 
 
       itcount+=1
-     
+     #=
         if (itcount>250 && abs(eout)>100)
             itcount=0
            
@@ -879,6 +879,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
               println("doing a random start again")
          
         end
+        =#
       toc=time()
       println(toc-tic,"eout=$eout","energy_change=$energy_change","itcount=$itcount")
       flush(stdout)
