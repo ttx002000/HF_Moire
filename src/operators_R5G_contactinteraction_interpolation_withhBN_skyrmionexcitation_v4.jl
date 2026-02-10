@@ -821,7 +821,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
 
       
         dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,DIIS_size)
-        if (itcount>150 && abs(eout)>10)
+        if (itcount>1000 && abs(eout)>10)
            itcount=0
            
               A=randn(dimension,dimension)+im*randn(dimension,dimension)
@@ -870,16 +870,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
 
 
       itcount+=1
-     #=
-        if (itcount>250 && abs(eout)>100)
-            itcount=0
-           
-              A=randn(dimension,dimension)+im*randn(dimension,dimension)
-              input_DensityMatrix+=(A+A')*0.01
-              println("doing a random start again")
-         
-        end
-        =#
+  
       toc=time()
       println(toc-tic,"eout=$eout","energy_change=$energy_change","itcount=$itcount")
       flush(stdout)
