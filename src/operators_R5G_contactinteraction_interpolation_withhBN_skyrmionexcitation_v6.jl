@@ -391,6 +391,8 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
          defec_pos_vec=(2*a2m-a1m)/enlarge_factor*1/3
       elseif defec_pos==3
         defec_pos_vec=(2*a2m-a1m)/enlarge_factor*0
+      elseif defec_pos==4
+        defec_pos_vec=(2*a2m-a1m)/enlarge_factor*(-2/3)
       end
 
 
@@ -627,7 +629,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     HartreeMatrix=zeros(ComplexF64,dimension,dimension)
     FockMatrix=zeros(ComplexF64,dimension,dimension)
   
-    DIIS_size=8
+    DIIS_size=5
     DIIS_input_DensityMatrix=Vector{Matrix{ComplexF64}}(undef,DIIS_size)
     DIIS_input_DeltaMatrix=Vector{Matrix{ComplexF64}}(undef,DIIS_size)
     DIIS_output_HFHam=Vector{Matrix{ComplexF64}}(undef,DIIS_size)
@@ -636,6 +638,14 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     energy=0.0
     energy_change=0.0
    
+    eout_hist = Float64[]
+     PLATEAU_N = 10
+     PLATEAU_FRAC = 0.10
+     E_EPS = 1e-30
+
+    diis_fire_once = false
+    diis_cooldown = 0              # prevent immediate re-trigger after DIIS
+     DIIS_COOLDOWN = 10 
   
    println(Threads.nthreads())
    while (eout>1*10^(-16)) || (bad_count<DIIS_size) || (abs(energy_change)>1*10^(-9))
@@ -645,11 +655,11 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
       
       tic=time()
 
-      if (itcount>150 && abs(eout)>10) || (itcount>30 && abs(eout)<10^(-6))
+      if (itcount>150 && abs(eout)>10) || (itcount>30 && abs(eout)<10^(-6)) || diis_fire_once
 
       
         dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,DIIS_size)
-        if (itcount>150 && abs(eout)>10)
+        if (itcount>1000 && abs(eout)>10)
            itcount=0
            
               A=randn(dimension,dimension)+im*randn(dimension,dimension)
@@ -669,6 +679,11 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
         #DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=input_DensityMatrix
         input_DensityMatrix=output_DensityMatrix
         println("using DIIS")
+            if diis_fire_once
+            diis_fire_once = false
+            empty!(eout_hist)          # <-- yes: clear history after firing
+            diis_cooldown = DIIS_COOLDOWN
+           end
        
       else
   
@@ -693,17 +708,33 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
 
       itcount+=1
      
-        if (itcount>250 && abs(eout)>100)
-            itcount=0
-           
-              A=randn(dimension,dimension)+im*randn(dimension,dimension)
-              input_DensityMatrix+=(A+A')*0.01
-              println("doing a random start again")
-         
-        end
+     
       toc=time()
       println(toc-tic,"eout=$eout","energy_change=$energy_change","itcount=$itcount")
       flush(stdout)
+            # update cooldown
+            if diis_cooldown > 0
+                diis_cooldown -= 1
+            end
+
+            # update history
+            push!(eout_hist, eout)  # keep sign; we'll use abs where needed
+            if length(eout_hist) > PLATEAU_N
+                popfirst!(eout_hist)
+            end
+
+            # plateau detection (only if not cooling down and not already scheduled)
+            if !diis_fire_once && diis_cooldown == 0 && length(eout_hist) == PLATEAU_N
+                e0 = eout_hist[1]
+                e1 = eout_hist[end]
+                rel_change = abs(e1 - e0) / max(abs(e0), E_EPS)
+
+                if rel_change < PLATEAU_FRAC
+                    diis_fire_once = true
+                    println("Plateau detected: |Δe|/|e| ≈ $(rel_change). Will fire DIIS once.")
+                end
+            end
+     
      
     
   end
