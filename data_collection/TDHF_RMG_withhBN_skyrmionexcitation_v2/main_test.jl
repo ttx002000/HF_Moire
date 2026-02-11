@@ -12,7 +12,7 @@ include("../../src/operators_TDHF_RMG_skyrmionexcitation_v2.jl")
 args=parse.(Float64,ARGS)
 
 
-NL=args[1]
+NL=Int(args[1])
 Nq=Int(args[2]);
 θ=args[3]/180*pi;
 contact_strength=args[4]
