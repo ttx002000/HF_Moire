@@ -45,7 +45,7 @@ else
     println("contact interaction too large, using strategy 2")
       DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
                                                                             T1,T2,wave,single_Ham,
-                                                                            single_MoirePo,5*10^4,ϵr,
+                                                                            5*single_MoirePo,5*10^4,ϵr,
                                                                  overlapmatrix,filling,Area)
         last_input=copy(DIIS_input_DensityMatrix[1])
     DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(last_input,
