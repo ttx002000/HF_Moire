@@ -433,7 +433,7 @@ function Construct_DensityMatrix(csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_
   input_DM=input_DensityMatrix
  
 
-  Threads.@threads for g1 in eachindex(wave)
+  Threads.@threads :greedy for g1 in eachindex(wave)
     @inbounds begin
     
         w1n1=wave_n1[g1]; 
@@ -472,7 +472,7 @@ function Construct_DensityMatrix(csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_
   end
 
 
-  Threads.@threads for g1 in eachindex(wave)
+  Threads.@threads :greedy for g1 in eachindex(wave)
     @inbounds begin
          w1n1=wave_n1[g1]; 
          w1n2=wave_n2[g1]
