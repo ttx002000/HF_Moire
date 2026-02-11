@@ -36,11 +36,23 @@ overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_e
 
 Area=√3/2*norm(a1m)^2
 
-
-DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
+if constq<5*10^4
+  DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
                                                                             T1,T2,wave,single_Ham,
                                                                             single_MoirePo,constq,ϵr,
-                                                                            overlapmatrix,filling,Area)
+                                                                 overlapmatrix,filling,Area)
+else
+    println("contact interaction too large, using strategy 2")
+      DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
+                                                                            T1,T2,wave,single_Ham,
+                                                                            single_MoirePo,5*10^4,ϵr,
+                                                                 overlapmatrix,filling,Area)
+        last_input=copy(DIIS_input_DensityMatrix[1])
+    DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(last_input,
+                                                                            T1,T2,wave,single_Ham,
+                                                                            single_MoirePo,constq,ϵr,
+                                                                 overlapmatrix,filling,Area)
+end
 
 
 
