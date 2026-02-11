@@ -49,7 +49,7 @@ chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uni
 
 
 
-#scratch_dir = ENV["SCRATCH"]
+scratch_dir = ENV["SCRATCH"]
 savepath=joinpath(@__DIR__, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v2/data_output$(Int(args[17]))/$(args[1])NL$(args[2])Nq$(args[3])theta$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda$(args[10])trytime$(args[11])enlarge$(args[12])V0_hBN$(args[13])V1_hBN$(args[14])ψ_hBN$(args[15])V2_scalar$(args[16])ϕ.jld2")
 #savepath="test.jld2"
 
