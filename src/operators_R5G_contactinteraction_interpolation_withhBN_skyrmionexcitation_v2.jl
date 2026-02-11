@@ -464,16 +464,23 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
     bad_count=0
     energy=0.0
     energy_change=0.0
+
+      eout_hist = Float64[]
+     PLATEAU_N = 10
+     PLATEAU_FRAC = 0.10
+     E_EPS = 1e-30
   
 
-    while (eout>1*10^(-18)) || (bad_count<4) || (energy_change>1*10^(-9))
+    while (eout>1*10^(-18)) || (bad_count<4) || (energy_change>1*10^(-9)) || 
       if eout<1*10^(-18)
        bad_count+=1
+      else
+        bad_count=0
       end
       
       tic=time()
 
-      if (itcount>100 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-8))
+      if (itcount>100 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-8)) || diis_fire_once
       
         dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,Nq,DIIS_size)
         if dmk==0
@@ -491,6 +498,11 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
         DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=dmk
         input_DensityMatrix=output_DensityMatrix
         println("using DIIS")
+          if diis_fire_once
+            diis_fire_once = false
+            empty!(eout_hist)          # <-- yes: clear history after firing
+            diis_cooldown = DIIS_COOLDOWN
+           end
        
       else
   
@@ -515,6 +527,17 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
       toc=time()
       println(toc-tic,"eout=$eout","energy_change=$energy_change","itcount=$itcount")
       flush(stdout)
+
+        if !diis_fire_once && diis_cooldown == 0 && length(eout_hist) == PLATEAU_N
+            e0 = eout_hist[1]
+            e1 = eout_hist[end]
+            rel_change = abs(e1 - e0) / max(abs(e0), E_EPS)
+
+            if rel_change < PLATEAU_FRAC
+                diis_fire_once = true
+                println("Plateau detected: |Δe|/|e| ≈ $(rel_change). Will fire DIIS once.")
+            end
+        end
      
     
   end
