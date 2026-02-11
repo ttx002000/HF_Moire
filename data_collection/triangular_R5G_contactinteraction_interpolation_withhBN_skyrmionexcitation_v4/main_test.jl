@@ -42,7 +42,7 @@ if constq<5*10^4
                                                                             single_MoirePo,constq,ϵr,
                                                                  overlapmatrix,filling,Area)
 else
-    if V2_scalar=0.0
+    if V2_scalar==0.0
       println("contact interaction too large, using strategy 2")
         DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
                                                                               T1,T2,wave,single_Ham,
