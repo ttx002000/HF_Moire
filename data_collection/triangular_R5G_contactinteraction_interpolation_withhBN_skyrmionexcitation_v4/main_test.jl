@@ -1,7 +1,7 @@
 using Pkg
 Pkg.activate(joinpath(@__DIR__, "../.."))
 using JLD2
-
+BLAS.set_num_threads(1)
 
 # Basically the same as v1, but this one specifically deals with Nq=1 case, and also spinless
 include("../../src/operators_R5G_contactinteraction_interpolation_withhBN_skyrmionexcitation_v4.jl")
