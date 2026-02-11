@@ -411,23 +411,23 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
        end
         NewDensityMatrix[ja]=0.5*(NewDensityMatrix[ja]'+ NewDensityMatrix[ja])
        DeltaMatrix[ja]=NewDensityMatrix[ja]-input_DensityMatrix[ja]
-       mix_ratio=rand()
+       mix_ratio=0.5
        output_DensityMatrix[ja]=mix_ratio*input_DensityMatrix[ja]+(1-mix_ratio)*NewDensityMatrix[ja]
   end
 
 
   
-  e1=0.0
+  eout=0.0
   for ja in 1:Nq^2
-    e1+=tr(DeltaMatrix[ja]'*DeltaMatrix[ja])
+    eout+=sum(abs2,DeltaMatrix[ja])/Nq^2
   end
-  eout=real(e1)/Nq^2
+ 
   
   
   energy=0
    for ja in 1:Nq^2
        ss=single_MoirePo[ja]+single_Ham[ja]+0.5*HartreeMatrix[ja]-0.5*FockMatrix[ja]
-       energy+=real(tr(ss*input_DensityMatrix[ja]))
+       energy+=real(sum(ss .* transpose(input_DensityMatrix[ja])))
    end
 
    energy_change=real(energy-energy_input)
@@ -457,7 +457,7 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
     HartreeMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
     FockMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
   
-
+    DIIS_size=5
     DIIS_input_DensityMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
     input_DensityMatrix=initial_DensityMatrix
@@ -466,16 +466,16 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
     energy_change=0.0
   
 
-    while (eout>1*10^(-22)) || (bad_count<4) || (energy_change>1*10^(-10))
-      if eout<1*10^(-22)
+    while (eout>1*10^(-18)) || (bad_count<4) || (energy_change>1*10^(-9))
+      if eout<1*10^(-18)
        bad_count+=1
       end
       
       tic=time()
 
-      if (itcount>100 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-10))
+      if (itcount>100 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-8))
       
-        dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,Nq)
+        dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,Nq,DIIS_size)
         if dmk==0
             itcount=0
             dmk=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
@@ -486,9 +486,9 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
         end
       
 
-       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val,allowedq,T1,T2,Nq,wave,dmk,single_Ham,single_MoirePo,constq,ϵr,overlapmatrix,energy,filling,Area)
+       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,DIIS_size)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val,allowedq,T1,T2,Nq,wave,dmk,single_Ham,single_MoirePo,constq,ϵr,overlapmatrix,energy,filling,Area)
        
-        DIIS_input_DensityMatrix[mod(itcount,3)+1]=dmk
+        DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=dmk
         input_DensityMatrix=output_DensityMatrix
         println("using DIIS")
        
@@ -496,8 +496,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
   
       
 
-        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,ϵr,overlapmatrix,energy,filling,Area)
-        DIIS_input_DensityMatrix[mod(itcount,3)+1]=input_DensityMatrix
+        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,DIIS_size)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val,allowedq,T1,T2,Nq,wave,input_DensityMatrix,single_Ham,single_MoirePo,constq,ϵr,overlapmatrix,energy,filling,Area)
+        DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=input_DensityMatrix
         input_DensityMatrix=output_DensityMatrix
         
        
@@ -717,19 +717,23 @@ end
 
 
 
-function implement_DIIS(DIIS_input_projector::Vector{Vector{Matrix{ComplexF64}}},DIIS_input_DeltaMatrix::Vector{Vector{Matrix{ComplexF64}}},Nq::Int)
+function implement_DIIS(DIIS_input_projector::Vector{Vector{Matrix{ComplexF64}}},DIIS_input_DeltaMatrix::Vector{Vector{Matrix{ComplexF64}}},Nq::Int,DIIS_size::Int)
 
 
 
-      Bmatrix=zeros(ComplexF64,4,4)
-      for ja in 1:3
-       Bmatrix[ja,4]=1
-       Bmatrix[4,ja]=1
+     
+      Bmatrix=zeros(Float64,DIIS_size+1,DIIS_size+1)
+      for ja in 1:DIIS_size
+       Bmatrix[ja,DIIS_size+1]=1
+       Bmatrix[DIIS_size+1,ja]=1
       end
   
-      for ja in 1:3,jb in 1:3
+  
+   
+  
+      for ja in 1:DIIS_size,jb in 1:DIIS_size
           for jc in 1:Nq^2
-             Bmatrix[ja,jb]+=real(tr((DIIS_input_DeltaMatrix[ja][jc])'*(DIIS_input_DeltaMatrix[jb][jc])))
+             Bmatrix[ja,jb]+=real(dot(DIIS_input_DeltaMatrix[ja][jc],DIIS_input_DeltaMatrix[jb][jc]))
           end
       end
 
@@ -741,6 +745,26 @@ function implement_DIIS(DIIS_input_projector::Vector{Vector{Matrix{ComplexF64}}}
       else
         return 0
       end
+
+      inB=safe_inverse(Bmatrix)
+      if inB≠0
+         onh=zeros(Float64,DIIS_size+1)
+         onh[end]=1
+         coeff=inB* onh
+      
+        dmk = zero.(DIIS_input_projector[1])          # alloc once
+        @inbounds for ja in 1:DIIS_size
+            BLAS.axpy!(coeff[ja], DIIS_input_projector[ja], dmk)  # dmk += coeff[ja] * projector[ja]
+       
+            BLAS.axpy!(coeff[ja], DIIS_input_DeltaMatrix[ja], dmk)  # dmk += coeff[ja] * projector[ja]
+        end
+      return dmk
+       
+      else
+        return 0
+      end
+
+
 end
 
 
@@ -750,7 +774,7 @@ function safe_inverse(A)
   catch e
       if isa(e, SingularException)
           println("Matrix is singular, doing randomstart again.")
-          return pinv(A, 0.1)  # Use pseudoinverse as an alternative
+          return pinv(A, 0.001)  # Use pseudoinverse as an alternative
       else
           rethrow(e)  # If another error occurs, propagate it
       end
