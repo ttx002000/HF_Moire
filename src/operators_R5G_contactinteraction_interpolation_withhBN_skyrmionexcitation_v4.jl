@@ -179,7 +179,7 @@ function build_shiftcsr(wl::WaveLookup, wave_n1::Vector{Int64}, wave_n2::Vector{
     end
 
     # -------- offsets (prefix sum) --------
-    offsets = Vector{Int32}(undef, NSHIFT + 1)
+    offsets = Vector{Int64}(undef, NSHIFT + 1)
     offsets[1] = 1
     @inbounds for sid in 1:NSHIFT
         offsets[sid+1] = offsets[sid] + counts[sid]
