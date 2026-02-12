@@ -509,8 +509,8 @@ function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{
           
             
               @inbounds for k in lo:hi
-                 g2 = Int(csr.g2_list[k])
-                 g3 = Int(csr.g3_list[k])
+                 g2 =csr.g2_list[k]
+                 g3 =csr.g3_list[k]
               
               
                   tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g2,g4]
