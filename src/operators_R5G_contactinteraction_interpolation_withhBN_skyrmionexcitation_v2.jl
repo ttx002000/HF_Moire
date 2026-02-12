@@ -465,13 +465,19 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
     energy=0.0
     energy_change=0.0
 
-      eout_hist = Float64[]
+ 
+
+     eout_hist = Float64[]
      PLATEAU_N = 10
      PLATEAU_FRAC = 0.10
      E_EPS = 1e-30
+
+    diis_fire_once = false
+    diis_cooldown = 0              # prevent immediate re-trigger after DIIS
+     DIIS_COOLDOWN = 10 
   
 
-    while (eout>1*10^(-18)) || (bad_count<4) || (energy_change>1*10^(-9)) || 
+    while (eout>1*10^(-18)) || (bad_count<4) || (energy_change>1*10^(-9))
       if eout<1*10^(-18)
        bad_count+=1
       else
