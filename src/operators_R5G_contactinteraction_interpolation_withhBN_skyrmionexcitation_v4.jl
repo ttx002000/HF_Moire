@@ -441,6 +441,9 @@ mutable struct HFWork
     HF_eigenvalue::Vector{Float64}
     HF_eigenvector::Matrix{ComplexF64}
 
+    HF_eigenvalue_occ::Vector{Float64}        # length = filling
+    HF_eigenvector_occ::Matrix{ComplexF64}
+
     DIIS_input_DensityMatrix::Vector{Matrix{ComplexF64}}
     DIIS_input_DeltaMatrix::Vector{Matrix{ComplexF64}}
     diis_head::Int
@@ -448,12 +451,14 @@ mutable struct HFWork
     HartreeAccShift::Vector{ComplexF64}
 end
 
-function HFWork(dimension::Int, DIIS_size::Int, NSHIFT::Int)
+function HFWork(dimension::Int, DIIS_size::Int, NSHIFT::Int,filling::Int)
     Z = zeros(ComplexF64, dimension, dimension)
     HFWork(
         copy(Z), copy(Z), copy(Z), copy(Z), copy(Z), copy(Z),
         zeros(Float64, dimension),
         copy(Z),
+        zeros(Float64,filling+5),
+        zeros(ComplexF64,dimension,filling+5),
         [zeros(ComplexF64, dimension, dimension) for _ in 1:DIIS_size],
         [zeros(ComplexF64, dimension, dimension) for _ in 1:DIIS_size],
         1, 0,
@@ -613,14 +618,19 @@ function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{
  
    
 
-     FFF = eigen!(Hermitian(work.H_phys))
+      old = BLAS.get_num_threads()
+    
+       BLAS.set_num_threads(min(8,Threads.nthreads()))   # or some smaller number like 4/8
+       FFF = eigen!(Hermitian(work.H_phys),1:filling+5)        # or eigen(Hermitian(...), 1:filling)
+    
+      BLAS.set_num_threads(old)
    
 
-    copy!(work.HF_eigenvalue, real(FFF.values))
-    copy!(work.HF_eigenvector, FFF.vectors)
+    copy!(work.HF_eigenvalue_occ, real(FFF.values))
+    copy!(work.HF_eigenvector_occ, FFF.vectors)
 
  
-     @views Vocc = work.HF_eigenvector[:, 1:filling]
+     @views Vocc = work.HF_eigenvector_occ[:, 1:filling]
     mul!(work.NewDensityMatrix, Vocc, adjoint(Vocc))
     symmetrize_from_lower!(work.NewDensityMatrix)
 
@@ -891,7 +901,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     csr = build_shiftcsr(wl, wave_n1, wave_n2)
     
  
-    work = HFWork(dimension, DIIS_size, csr.ix.NSHIFT)
+    work = HFWork(dimension, DIIS_size, csr.ix.NSHIFT,filling)
 
   
 
@@ -1024,7 +1034,9 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     
   end
 
-
+   Ffull = eigen!(Hermitian(work.H_phys))   # or eigen(Hermitian(work.H_phys)) if you prefer non-mutating
+   copy!(work.HF_eigenvalue, real(Ffull.values)) 
+   copy!(work.HF_eigenvector, Ffull.vectors)
 
 
 
