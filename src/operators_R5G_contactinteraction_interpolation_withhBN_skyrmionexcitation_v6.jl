@@ -179,7 +179,7 @@ function build_shiftcsr(wl::WaveLookup, wave_n1::Vector{Int64}, wave_n2::Vector{
     end
 
     # -------- offsets (prefix sum) --------
-    offsets = Vector{Int32}(undef, NSHIFT + 1)
+    offsets = Vector{Int}(undef, NSHIFT + 1)
     offsets[1] = 1
     @inbounds for sid in 1:NSHIFT
         offsets[sid+1] = offsets[sid] + counts[sid]
@@ -197,7 +197,7 @@ function build_shiftcsr(wl::WaveLookup, wave_n1::Vector{Int64}, wave_n2::Vector{
             @inbounds for g2 in 1:Ng
                 g3 = lookup(wl, wave_n1[g2] + dn1, wave_n2[g2] + dn2)
                 if g3 != 0
-                    g2_list[p] = Int32(g2)
+                    g2_list[p] = Int(g2)
                     g3_list[p] = g3
                     p += 1
                 end
@@ -617,8 +617,8 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     wave_n1 = Vector{Int64}(undef, length(wave))
     wave_n2 = Vector{Int64}(undef, length(wave))
      for g in 1:length(wave)
-        wave_n1[g] = Int32(wave[g][1])
-        wave_n2[g] = Int32(wave[g][2])
+        wave_n1[g] = Int(wave[g][1])
+        wave_n2[g] = Int(wave[g][2])
     end
     Coulomb_matrix=[(Coulomb(wave[g1]-wave[g2],T1,T2)/ϵr+constq)*overlapmatrix[g1,g2] for g1 in eachindex(wave), g2 in eachindex(wave)]
     wl = build_wave_lookup(wave)
