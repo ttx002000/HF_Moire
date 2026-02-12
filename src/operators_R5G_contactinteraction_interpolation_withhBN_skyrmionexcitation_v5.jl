@@ -2,7 +2,7 @@ using LinearAlgebra
 using Arpack
 using Combinatorics
 using Random
-
+BLAS.set_num_threads(1)
 
 
 function get_Ham(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,NL::Int)
