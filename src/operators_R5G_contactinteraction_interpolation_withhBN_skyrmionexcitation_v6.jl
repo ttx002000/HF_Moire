@@ -650,10 +650,9 @@ function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{
  
    
 
-     tic=time()
+     
      FFF = eigen!(Hermitian(work.H_phys))
-      toc=time()
-    println(toc-tic,"diagonlization")
+      
 
     copy!(work.HF_eigenvalue, real(FFF.values))
     copy!(work.HF_eigenvector, FFF.vectors)
