@@ -458,8 +458,8 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
     FockMatrix=[zeros(ComplexF64,dimension,dimension) for _ in 1:Nq^2]
   
     DIIS_size=5
-    DIIS_input_DensityMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
-    DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,3)
+    DIIS_input_DensityMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,DIIS_size)
+    DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,DIIS_size)
     input_DensityMatrix=initial_DensityMatrix
     bad_count=0
     energy=0.0
