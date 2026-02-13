@@ -21,15 +21,14 @@ uD=args[6]
 filling=Int(args[7])
 gcutoff=args[8]
 λ=args[9]
-trytimes=Int(args[10])
-enlarge_factor=Int(args[11])
-V0_hBN=args[12]
-V1_hBN=args[13]
-ψ_hBN=args[14]
-V2_scalar=args[15]
-ϕ=args[16]/180*π
-bigQindex=Int(args[17])
-filepos=Int(args[18])
+enlarge_factor=Int(args[10])
+V0_hBN=args[11]
+V1_hBN=args[12]
+ψ_hBN=args[13]
+V2_scalar=args[14]
+ϕ=args[15]/180*π
+bigQindex=Int(args[16])
+filepos=Int(args[17])
 
 
 scratch_dir = ENV["SCRATCH"]
@@ -88,7 +87,7 @@ Amatrix,AmQmatrix,Bmatrix=Construct_Amatrix(Aindexset,AmQindexset,B2indexset,
  Sspectrum=eigvals(Smatrix)
  Aspectrum=eigvals(Amatrix)
 
-output_path=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v2/data_output$(Int(args[18]))/TDHF_result/$(args[1])NL$(args[2])Nq$(args[3])theta$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda$(args[10])trytime$(args[11])enlarge$(args[12])V0_hBN$(args[13])V1_hBN$(args[14])ψ_hBN$(args[15])V2_scalar$(args[16])ϕ$(args[17])bigQ.jld2")
+output_path=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v2/data_output$(Int(args[17]))/TDHF_result/$(args[1])NL$(args[2])Nq$(args[3])theta$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda$(args[10])enlarge$(args[11])V0_hBN$(args[12])V1_hBN$(args[13])ψ_hBN$(args[14])V2_scalar$(args[15])ϕ$(args[16])bigQ.jld2")
 
 
  jldsave(output_path,
