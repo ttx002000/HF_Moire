@@ -712,11 +712,27 @@ end
 
 
 
+function pick_random_jld2_path(folder::AbstractString)
+    jld2_files = filter(readdir(folder; join=true)) do p
+        isfile(p) && endswith(lowercase(p), ".jld2")
+    end
+
+    if isempty(jld2_files)
+        return nothing
+    end
+
+    return rand(jld2_files)
+end
 
 
+function transform_dm(dm_mbasis::Array{ComplexF64,4},wave::Vector{Vector{Int}},spinor_set::Vector{Vector{ComplexF64}})
+    dm_bandbasis=zeros(ComplexF64,length(wave),length(wave))
+     for ja in eachindex(wave), jb in eachindex(wave)
+    dm_bandbasis[ja,jb]=spinor_set[ja]'*dm_mbasis[:,ja,:,jb]*spinor_set[jb]
+   end
 
-
-
+   return dm_bandbasis
+end
 
 
 
