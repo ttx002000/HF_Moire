@@ -123,6 +123,16 @@ function Geometry(geonum::Int64)
       Tr1=[1,0]
       Tr2=[0,1]
   end
+
+
+  if geonum==4
+      Nx=6;
+      Ny=6;
+      l1=[1,1]*6
+      l2=[-1,2]*6
+      Tr1=[1,1]
+      Tr2=[-1,2]
+  end
   
   
 
@@ -144,15 +154,15 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,geonum::Int64,gcutof
     Rθ=[cos(θ) -sin(θ);sin(θ) cos(θ)]
     b1_ps=(G1-(1+ϵ)^(-1)*Rθ*G1)
     b2_ps=(G2-(1+ϵ)^(-1)*Rθ*G2)
-    a1m_ps=inv([b1_ps';b2_ps'])*[2π,0]
+    a1m_ps=inv([b1_ps';b2_ps'])*[2π,0] #This is the pristine a
     a2m_ps=inv([b1_ps';b2_ps'])*[0,2π]
     
-    a1m=Tr1[1]*a1m_ps+Tr1[2]*a2m_ps;
+    a1m=Tr1[1]*a1m_ps+Tr1[2]*a2m_ps;  #This is the unit cell a
     a2m=Tr2[1]*a1m_ps+Tr2[2]*a2m_ps;
     b1=inv([a1m';a2m'])*[2π,0]
     b2=inv([a1m';a2m'])*[0,2π]
       
-    L1=l1[1]*a1m_ps+l1[2]*a2m_ps;
+    L1=l1[1]*a1m_ps+l1[2]*a2m_ps; #This is the torus
     L2=l2[1]*a1m_ps+l2[2]*a2m_ps;
 
     Area=abs(L1[1]*L2[2]-L2[1]*L1[2]);
@@ -335,61 +345,249 @@ end
 
 
 
+mutable struct ConstructDM_Workspace
+    HartreeMatrix::Vector{Matrix{ComplexF64}}
+    FockMatrix::Vector{Matrix{ComplexF64}}
+    H_phys::Vector{Matrix{ComplexF64}}
+    output_DensityMatrix::Vector{Matrix{ComplexF64}}
+    DeltaMatrix::Vector{Matrix{ComplexF64}}
+    NewDensityMatrix::Vector{Matrix{ComplexF64}}
+    HF_eigenvalue::Vector{Vector{Float64}}
+    HF_eigenvector::Vector{Matrix{ComplexF64}}
+
+    Hartree_Density::Matrix{ComplexF64}   # dimension×dimension
+    all_eigs::Vector{Float64}             # length = length(allowedq)*dimension
 
 
-
-
-
-
-
-function construct_loop_dic(wave::Vector{Vector{Int}},allowedq::Vector{Vector{Int}},T1,T2,ϵr,constq)
-
-
-    loop_dic_Fock=Vector{Int}[]
-
-    for ja in eachindex(wave), jb in eachindex(wave), jc in eachindex(wave), jd in 1:ja
-      if wave[ja]+wave[jb]==wave[jc]+wave[jd]
-      
-        push!(loop_dic_Fock,[ja,jb,jc,jd])
-        
-      end
-    end
-
-    loop_dic_Fock_val=zeros(Float64,length(allowedq),length(allowedq),length(loop_dic_Fock))
-
-    Threads.@threads for k1 in eachindex(allowedq)
-        for k2 in eachindex(allowedq)
-      for waveset in eachindex(loop_dic_Fock)
-      cc=Coulomb(allowedq[k2]+wave[loop_dic_Fock[waveset][3]]-allowedq[k1]-wave[loop_dic_Fock[waveset][1]],T1,T2)/ϵr+constq
-      loop_dic_Fock_val[k1,k2,waveset]=cc
-    end
-    end
-   end
-   
-
-
-  loop_dic_Hartree=Vector{Int}[]
-    for ja in eachindex(wave), jb in eachindex(wave), jc in 1:ja, jd in eachindex(wave)
-      if wave[ja]+wave[jb]==wave[jc]+wave[jd]
-      
-        push!(loop_dic_Hartree,[ja,jb,jc,jd])
-      
-      end
-    end
-
-      loop_dic_Hartree_val=zeros(Float64,length(loop_dic_Hartree))
-      
-      for waveset in eachindex(loop_dic_Hartree)
-      cc=Coulomb(wave[loop_dic_Hartree[waveset][3]]-wave[loop_dic_Hartree[waveset][1]],T1,T2)/ϵr+constq
-      loop_dic_Hartree_val[waveset]=cc
-      end
- 
-
-
-    
-   return loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val
-
+    DIIS_input_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}}
+    DIIS_input_DeltaMatrix::Vector{Vector{Matrix{ComplexF64}}}
+    diis_head::Int
+    diis_len::Int
 end
+
+
+function init_ConstructDM_Workspace(allowedq, wave,DIIS_size)
+    dimension = length(wave)
+    Nk = length(allowedq)
+
+    HartreeMatrix = [zeros(ComplexF64, dimension, dimension) for _ in 1:Nk]
+    FockMatrix    = [zeros(ComplexF64, dimension, dimension) for _ in 1:Nk]
+   H_phys    = [zeros(ComplexF64, dimension, dimension) for _ in 1:Nk]
+    NewDensityMatrix = [zeros(ComplexF64, dimension, dimension) for _ in 1:Nk]
+
+    output_DensityMatrix = [zeros(ComplexF64, dimension, dimension) for _ in 1:Nk]
+    DeltaMatrix          = [zeros(ComplexF64, dimension, dimension) for _ in 1:Nk]
+
+    HF_eigenvalue  = [Vector{Float64}(undef, dimension) for _ in 1:Nk]
+    HF_eigenvector = [Matrix{ComplexF64}(undef, dimension, dimension) for _ in 1:Nk]
+
+    Hartree_Density = zeros(ComplexF64, dimension, dimension)
+    all_eigs = Vector{Float64}(undef, Nk * dimension)
+    DIIS_input_DensityMatrix=[[zeros(ComplexF64, dimension, dimension) for _ in 1:Nk] for _ in 1:DIIS_size]
+     DIIS_input_DeltaMatrix=[[zeros(ComplexF64, dimension, dimension) for _ in 1:Nk] for _ in 1:DIIS_size]
+
+
+    return ConstructDM_Workspace(
+        HartreeMatrix, FockMatrix,H_phys, output_DensityMatrix, DeltaMatrix,
+        NewDensityMatrix, HF_eigenvalue, HF_eigenvector, Hartree_Density, all_eigs,
+        DIIS_input_DensityMatrix,  DIIS_input_DeltaMatrix,1, 0)
+end
+
+struct LoopDic
+    # Fock quadruples (flat)
+    g1F::Vector{Int}
+    g2F::Vector{Int}
+    g3F::Vector{Int}
+    g4F::Vector{Int}
+
+    # Hartree quadruples (flat)
+    g1H::Vector{Int}
+    g2H::Vector{Int}
+    g3H::Vector{Int}
+    g4H::Vector{Int}
+
+    # Hartree Coulomb per Hartree-entry
+    hartree_val::Vector{Float64}
+
+    # For fast Fock Coulomb lookup in Construct_DensityMatrix:
+    dqidF::Vector{Int}           # length = length(g1F)
+    dkid::Matrix{Int}            # Nk×Nk
+    coulomb_dkdq::Matrix{Float64}# Ndk×Ndq
+end
+
+
+
+
+
+function construct_loop_dic(wave, allowedq, T1, T2, ϵr, constq)::LoopDic
+    Ng = length(wave)
+    Nk = length(allowedq)
+    nthreads = Threads.maxthreadid()
+
+    # -------------------------
+    # Fock quadruples (threaded build)
+    # -------------------------
+    g1F_buf = [Int[] for _ in 1:nthreads]
+    g2F_buf = [Int[] for _ in 1:nthreads]
+    g3F_buf = [Int[] for _ in 1:nthreads]
+    g4F_buf = [Int[] for _ in 1:nthreads]
+
+    Threads.@threads for ja in 1:Ng
+        tid = Threads.threadid()
+        b1 = g1F_buf[tid]; b2 = g2F_buf[tid]; b3 = g3F_buf[tid]; b4 = g4F_buf[tid]
+
+        for jb in 1:Ng, jc in 1:Ng, jd in 1:ja
+            if wave[ja] + wave[jb] == wave[jc] + wave[jd]
+                push!(b1, ja); push!(b2, jb); push!(b3, jc); push!(b4, jd)
+            end
+        end
+    end
+
+    nF = 0
+    @inbounds for t in 1:nthreads
+        nF += length(g1F_buf[t])
+    end
+    g1F = Vector{Int}(undef, nF)
+    g2F = Vector{Int}(undef, nF)
+    g3F = Vector{Int}(undef, nF)
+    g4F = Vector{Int}(undef, nF)
+
+    off = 0
+    @inbounds for t in 1:nthreads
+        len = length(g1F_buf[t])
+        if len > 0
+            copyto!(g1F, off+1, g1F_buf[t], 1, len)
+            copyto!(g2F, off+1, g2F_buf[t], 1, len)
+            copyto!(g3F, off+1, g3F_buf[t], 1, len)
+            copyto!(g4F, off+1, g4F_buf[t], 1, len)
+            off += len
+        end
+    end
+    g1F_buf=nothing
+    g2F_buf=nothing
+    g3F_buf=nothing
+    g4F_buf=nothing
+
+    # -------------------------
+    # Hartree quadruples (threaded build)
+    # -------------------------
+    g1H_buf = [Int[] for _ in 1:nthreads]
+    g2H_buf = [Int[] for _ in 1:nthreads]
+    g3H_buf = [Int[] for _ in 1:nthreads]
+    g4H_buf = [Int[] for _ in 1:nthreads]
+
+    Threads.@threads for ja in 1:Ng
+        tid = Threads.threadid()
+        b1 = g1H_buf[tid]; b2 = g2H_buf[tid]; b3 = g3H_buf[tid]; b4 = g4H_buf[tid]
+
+        for jb in 1:Ng, jc in 1:ja, jd in 1:Ng
+            if wave[ja] + wave[jb] == wave[jc] + wave[jd]
+                push!(b1, ja); push!(b2, jb); push!(b3, jc); push!(b4, jd)
+            end
+        end
+    end
+
+    nH = 0
+    @inbounds for t in 1:nthreads
+        nH += length(g1H_buf[t])
+    end
+    g1H = Vector{Int}(undef, nH)
+    g2H = Vector{Int}(undef, nH)
+    g3H = Vector{Int}(undef, nH)
+    g4H = Vector{Int}(undef, nH)
+
+    off = 0
+    @inbounds for t in 1:nthreads
+        len = length(g1H_buf[t])
+        if len > 0
+            copyto!(g1H, off+1, g1H_buf[t], 1, len)
+            copyto!(g2H, off+1, g2H_buf[t], 1, len)
+            copyto!(g3H, off+1, g3H_buf[t], 1, len)
+            copyto!(g4H, off+1, g4H_buf[t], 1, len)
+            off += len
+        end
+    end
+
+    g1H_buf=nothing
+    g2H_buf=nothing
+    g3H_buf=nothing
+    g4H_buf=nothing
+
+    # -------------------------
+    # Hartree Coulomb per Hartree-entry (threaded)
+    # -------------------------
+    hartree_val = Vector{Float64}(undef, nH)
+    Threads.@threads for w in 1:nH
+        q = wave[g3H[w]] - wave[g1H[w]]
+        hartree_val[w] = Coulomb(q, T1, T2)/ϵr + constq
+    end
+
+    # -------------------------
+    # dq indexing for Fock (setup; keep simple, single-thread)
+    # -------------------------
+    #pack(q1,q2) = (UInt64(reinterpret(UInt32, Int32(q1))) << 32) | UInt64(reinterpret(UInt32, Int32(q2)))
+
+    dq_map = Dict{Tuple{Int,Int},Int}()
+    dq1_list = Int[]; dq2_list = Int[]
+    dqidF = Vector{Int}(undef, nF)
+
+    @inbounds for w in 1:nF
+        dq = wave[g3F[w]] - wave[g1F[w]]
+        key = (dq[1], dq[2])
+        id = get(dq_map, key, 0)
+        if id == 0
+            push!(dq1_list, dq[1]); push!(dq2_list, dq[2])
+            id = length(dq1_list)
+            dq_map[key] = id
+        end
+        dqidF[w] = id
+    end
+    Ndq = length(dq1_list)
+
+    # -------------------------
+    # dk indexing for (jk,jk1) (setup; single-thread)
+    # -------------------------
+    dk_map = Dict{Tuple{Int,Int},Int}()
+    dk1_list = Int[]; dk2_list = Int[]
+    dkid = Matrix{Int}(undef, Nk, Nk)
+
+    @inbounds for jk in 1:Nk, jk1 in 1:Nk
+        dk1 = allowedq[jk1][1] - allowedq[jk][1]
+        dk2 = allowedq[jk1][2] - allowedq[jk][2]
+         key = (dk1, dk2)
+        id = get(dk_map, key, 0)
+        if id == 0
+            push!(dk1_list, dk1); push!(dk2_list, dk2)
+            id = length(dk1_list)
+            dk_map[key] = id
+        end
+        dkid[jk,jk1] = id
+    end
+    Ndk = length(dk1_list)
+
+    # -------------------------
+    # Coulomb table over (dk,dq) (threaded)
+    # -------------------------
+    coulomb_dkdq = Matrix{Float64}(undef, Ndk, Ndq)
+    Threads.@threads for idk in 1:Ndk
+        dk1 = dk1_list[idk]
+        dk2 = dk2_list[idk]
+        @inbounds for idq in 1:Ndq
+            q1 = dk1 + dq1_list[idq]
+            q2 = dk2 + dq2_list[idq]
+            coulomb_dkdq[idk,idq] = Coulomb([q1,q2], T1, T2)/ϵr + constq
+        end
+    end
+
+    return LoopDic(g1F,g2F,g3F,g4F, g1H,g2H,g3H,g4H, hartree_val, dqidF, dkid, coulomb_dkdq)
+end
+
+
+
+
+
+
+
 
 
 
@@ -401,8 +599,7 @@ function Coulomb(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64})::Float6
 end
 
 
-function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Fock_val::Array{Float64},
-                               loop_dic_Hartree::Vector{Vector{Int}},loop_dic_Hartree_val::Vector{Float64},
+function Construct_DensityMatrix(work::ConstructDM_Workspace,loop::LoopDic,
                               allowedq::Vector{Vector{Int}},
                               wave::Vector{Vector{Int64}},
                                input_DensityMatrix::Vector{Matrix{ComplexF64}},single_Ham::Vector{Matrix{ComplexF64}},
@@ -410,73 +607,128 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
                                energy_input::Float64,filling::Int,Area::Float64)
   
   
-   dimension=length(wave)
-  HartreeMatrix=[zeros(ComplexF64,dimension,dimension) for _ in eachindex(allowedq)]
-  FockMatrix=[zeros(ComplexF64,dimension,dimension) for _ in eachindex(allowedq)]
-  output_DensityMatrix=Vector{Matrix{ComplexF64}}(undef,length(allowedq))
-  DeltaMatrix=Vector{Matrix{ComplexF64}}(undef,length(allowedq))
-  NewDensityMatrix=[zeros(ComplexF64,dimension,dimension) for _ in eachindex(allowedq)]
-  HF_eigenvalue=Vector{Vector{Float64}}(undef,length(allowedq))
-  HF_eigenvector=Vector{Matrix{ComplexF64}}(undef,length(allowedq))
+    dimension=length(wave)
+    Nk = length(allowedq)
  
+   HartreeMatrix = work.HartreeMatrix
+    FockMatrix    = work.FockMatrix
+    output_DensityMatrix = work.output_DensityMatrix
+    DeltaMatrix          = work.DeltaMatrix
+    NewDensityMatrix     = work.NewDensityMatrix
+    HF_eigenvalue        = work.HF_eigenvalue
+    HF_eigenvector       = work.HF_eigenvector
+    Hartree_Density      = work.Hartree_Density
+    all_eigs             = work.all_eigs
+    H_phys               = work.H_phys
 
-  Threads.@threads for jk in eachindex(allowedq)
-    Fk = FockMatrix[jk]
-    for jk1 in eachindex(allowedq)
-        dmk = input_DensityMatrix[jk1]
-        lfv=loop_dic_Fock_val[jk,jk1,:]
-        opf=overlapmatrix[jk1,:,jk,:]
-        opm=overlapmatrix[jk,:,jk1,:]
-
-        for (ja,vvs) in pairs(loop_dic_Fock)
-          Fk[vvs[1],vvs[4]]+=dmk[vvs[3],vvs[2]]*opm[vvs[1],vvs[3]]*opf[vvs[2],vvs[4]]*lfv[ja]
-        end
-     end
-  end
-
-
-
-
-
-
-   Hartree_Density=sum([input_DensityMatrix[ja] .* transpose(overlapmatrix[ja,:,ja,:]) for ja in eachindex(allowedq)])
-
-
-
-  Threads.@threads for jk in eachindex(allowedq)
-    Hk=HartreeMatrix[jk]
-    oph=(overlapmatrix[jk,:,jk,:])   
-      for (ja,vvs) in pairs(loop_dic_Hartree)
-        Hk[vvs[1],vvs[3]]+=Hartree_Density[vvs[4],vvs[2]]*oph[vvs[1],vvs[3]]*loop_dic_Hartree_val[ja]
+      @inbounds for ja in 1:Nk
+          fill!(HartreeMatrix[ja], 0)
+          fill!(FockMatrix[ja],    0)
+          fill!(NewDensityMatrix[ja], 0)
+        
       end
+      fill!(Hartree_Density, 0)
+      
+
+
+   nF = length(loop.g1F)
+    Threads.@threads for jk in 1:Nk
+        Fk = FockMatrix[jk]
+        for jk1 in 1:Nk
+            dmk = input_DensityMatrix[jk1]
+            opf = @view overlapmatrix[jk1, :, jk,  :]
+            opm = @view overlapmatrix[jk,  :, jk1, :]
+
+            idk = loop.dkid[jk, jk1]
+
+            @inbounds for w in 1:nF
+                g1 = loop.g1F[w]
+                g2 = loop.g2F[w]
+                g3 = loop.g3F[w]
+                g4 = loop.g4F[w]
+
+                cc = loop.coulomb_dkdq[idk, loop.dqidF[w]]
+
+                Fk[g1, g4] += dmk[g3, g2] * opm[g1, g3] * opf[g2, g4] * cc
+            end
+        end
+    end
+
+
+
+
+
+
+
+   #Hartree_Density=sum([input_DensityMatrix[ja] .* transpose(overlapmatrix[ja,:,ja,:]) for ja in eachindex(allowedq)])
+   @inbounds for ja in 1:Nk
+        dmk = input_DensityMatrix[ja]
+        oph = @view overlapmatrix[ja, :, ja, :]
+        for j in 1:dimension, i in 1:dimension
+            # transpose(oph)[j,i] == oph[i,j]
+            Hartree_Density[j,i] += dmk[j,i] * oph[i,j]
+        end
+    end
+
+ nH = length(loop.g1H)
+    Threads.@threads for jk in 1:Nk
+        Hk  = HartreeMatrix[jk]
+        oph = @view overlapmatrix[jk, :, jk, :]
+
+        @inbounds for w in 1:nH
+            g1 = loop.g1H[w]
+            g2 = loop.g2H[w]
+            g3 = loop.g3H[w]
+            g4 = loop.g4H[w]
+
+            Hk[g1, g3] += Hartree_Density[g4, g2] * oph[g1, g3] * loop.hartree_val[w]
+        end
+    end
+
+
+
+  Threads.@threads for jk in eachindex(allowedq)
+    symmetrize_from_lower!(HartreeMatrix[jk])
+    symmetrize_from_lower!(FockMatrix[jk])
+    HartreeMatrix[jk] ./= Area
+    FockMatrix[jk]    ./= Area
+  end
+  Threads.@threads for jk in eachindex(allowedq)
+    copy!(H_phys[jk] , single_MoirePo[jk])
+        H_phys[jk]  .+= single_Ham[jk]
+       H_phys[jk]  .+= work.HartreeMatrix[jk]
+       H_phys[jk] .-= work.FockMatrix[jk]
   end
 
 
- for ja in eachindex(allowedq)
-    HartreeMatrix[ja]=(HartreeMatrix[ja]+HartreeMatrix[ja]'-real(Diagonal(HartreeMatrix[ja])))/Area
-    FockMatrix[ja]=(FockMatrix[ja]+FockMatrix[ja]'-real(Diagonal(FockMatrix[ja])))/Area
+   idx = 0
+  @inbounds for ja in eachindex(allowedq)
+        FFF = eigen(Hermitian(work.H_phys[ja]))
+        vals = real(FFF.values)
+        copy!(HF_eigenvalue[ja],vals)
+        copy!(HF_eigenvector[ja], FFF.vectors)
+
+        for j in 1:dimension
+            idx += 1
+            all_eigs[idx] = vals[j]
+        end
   end
- 
 
- for ja in eachindex(allowedq)
-   FFF=eigen(single_MoirePo[ja]+single_Ham[ja]+HartreeMatrix[ja]-FockMatrix[ja])
-   HF_eigenvalue[ja]=real(FFF.values)
-   HF_eigenvector[ja]=FFF.vectors
- end
+    nocc = filling * length(allowedq)
+    partialsort!(all_eigs, 1:nocc+1)
+    bound = 0.5 * (all_eigs[nocc] + all_eigs[nocc+1])
 
- bound=(sort(reduce(vcat,HF_eigenvalue))[filling*length(allowedq)+1]+sort(reduce(vcat,HF_eigenvalue))[filling*length(allowedq)])/2
+     mix_ratio=0.5
 
   for ja in eachindex(allowedq)
-    
-       for jd in eachindex(HF_eigenvalue[ja])
-          if HF_eigenvalue[ja][jd]<bound
-             NewDensityMatrix[ja]+=HF_eigenvector[ja][:,jd]*(HF_eigenvector[ja][:,jd])'
-          end
-       end
-        NewDensityMatrix[ja]=0.5*(NewDensityMatrix[ja]'+ NewDensityMatrix[ja])
-       DeltaMatrix[ja]=NewDensityMatrix[ja]-input_DensityMatrix[ja]
-       mix_ratio=rand()
-       output_DensityMatrix[ja]=mix_ratio*input_DensityMatrix[ja]+(1-mix_ratio)*NewDensityMatrix[ja]
+    occ=searchsortedlast(HF_eigenvalue[ja],bound)
+    @views Vocc= HF_eigenvector[ja][:,1:occ]
+     mul!(work.NewDensityMatrix[ja], Vocc, adjoint(Vocc))
+     
+       symmetrize_from_lower!(NewDensityMatrix[ja])
+       @. DeltaMatrix[ja]=NewDensityMatrix[ja]-input_DensityMatrix[ja]
+     
+       @. output_DensityMatrix[ja]=mix_ratio*input_DensityMatrix[ja]+(1-mix_ratio)*NewDensityMatrix[ja]
   end
 
 
@@ -489,22 +741,30 @@ function Construct_DensityMatrix(loop_dic_Fock::Vector{Vector{Int}},loop_dic_Foc
   
   
   energy=0
-   for ja in eachindex(allowedq)
-       ss=single_MoirePo[ja]+single_Ham[ja]+0.5*HartreeMatrix[ja]-0.5*FockMatrix[ja]
-    
-        energy+=real(sum(ss .* transpose(input_DensityMatrix[ja])))
-   end
+  for ja in eachindex(allowedq)
+  energy = real(dot(input_DensityMatrix[ja], single_MoirePo[ja])) +
+          real(dot(input_DensityMatrix[ja], single_Ham[ja])) +
+          0.5*real(dot(input_DensityMatrix[ja], HartreeMatrix[ja])) -
+          0.5*real(dot(input_DensityMatrix[ja], FockMatrix[ja]))
+  end
 
    energy_change=real(energy-energy_input)
 
 
 
- return  eout,energy_change,output_DensityMatrix,DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix
+ return  eout, energy_change, energy
 end
 
-
-
-
+@inline function symmetrize_from_lower!(A::Matrix{ComplexF64})
+    n = size(A,1)
+    @inbounds for i in 1:n
+        A[i,i] = complex(real(A[i,i]), 0.0)
+        for j in (i+1):n
+            A[i,j] = conj(A[j,i])   # fill UPPER from LOWER
+        end
+    end
+    return A
+end
 
 function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
                        allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},
@@ -513,58 +773,86 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
     eout=1.0
     itcount=0
     dimension=length(wave)
+    DIIS_size=3
 
-     loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val=construct_loop_dic(wave,allowedq,T1,T2,ϵr,constq)
+     #loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val=construct_loop_dic(wave,allowedq,T1,T2,ϵr,constq)
+    loop = construct_loop_dic(wave, allowedq, T1, T2, ϵr, constq)
+     work=init_ConstructDM_Workspace(allowedq, wave,DIIS_size)
+    
    
     
-    HF_eigenvalue=Vector{Vector{Float64}}(undef,length(allowedq))
-    HF_eigenvector=Vector{Matrix{ComplexF64}}(undef,length(allowedq))
-    HartreeMatrix=[zeros(ComplexF64,dimension,dimension) for _ in eachindex(allowedq)]
-    FockMatrix=[zeros(ComplexF64,dimension,dimension) for _ in eachindex(allowedq)]
-  
-    DIIS_size=3
-    DIIS_input_DensityMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,DIIS_size)
-    DIIS_input_DeltaMatrix=Vector{Vector{Matrix{ComplexF64}}}(undef,DIIS_size)
-    input_DensityMatrix=initial_DensityMatrix
+      input_DensityMatrix=initial_DensityMatrix
     bad_count=0
     energy=0.0
     energy_change=0.0
-  
 
-    while (eout>1*10^(-22)) || (bad_count<4) || (energy_change>1*10^(-10))
+    eout_hist = Float64[]
+     PLATEAU_N = 10
+     PLATEAU_FRAC = 0.10
+     E_EPS = 1e-30
 
-      if eout<1*10^(-22)
+    diis_fire_once = false
+    diis_cooldown = 0              # prevent immediate re-trigger after DIIS
+     DIIS_COOLDOWN = 10 
+
+
+    while (eout>1*10^(-18)) || (bad_count<DIIS_size) || (abs(energy_change)>1*10^(-9))
+
+      if eout<1*10^(-18)
        bad_count+=1
+      else
+        bad_count=0
       end
+       
+         if (itcount > 500 && abs(eout) > 10)
+                itcount = 0
+
+                # forget DIIS/plateau state completely
+                bad_count = 0
+                energy = 0.0
+                energy_change = 0.0
+                empty!(eout_hist)
+                diis_fire_once = false
+                diis_cooldown = 0
+                work.diis_head = 1
+                work.diis_len  = 0
+
+                # random restart DM (your style)
+                for ja in eachindex(allowedq)
+                  A = randn(dimension, dimension) + im*randn(dimension, dimension)
+                  input_DensityMatrix[ja] = (A + A') * 0.01
+                end
+                dmk_used=input_DensityMatrix
+                println("random start again")
+                
+        end
+
       
       tic=time()
-
-      if (itcount>100 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-10))
+      dmk_used = input_DensityMatrix
       
-        dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,allowedq,DIIS_size)
-        if dmk==0
-            itcount=0
-            dmk=[zeros(ComplexF64,dimension,dimension) for _ in eachindex(allowedq)]
-            for ja in eachindex(allowedq)
-              A=randn(dimension,dimension)+im*randn(dimension,dimension)
-              dmk[ja]+=(A+A')*0.01
-            end
-        end
+      if (itcount>100 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-10)) || diis_fire_once
       
+        dmk=implement_DIIS(work.DIIS_input_DensityMatrix,work.DIIS_input_DeltaMatrix,allowedq,DIIS_size)
+        dmk_used=dmk
 
-       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,DIIS_size)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val,allowedq,wave,dmk,single_Ham,single_MoirePo,overlapmatrix,energy,filling,Area)
+        eout, energy_change, energy=Construct_DensityMatrix(work, loop,allowedq,wave,dmk,single_Ham,single_MoirePo,overlapmatrix,energy,filling,Area)
        
-        DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=dmk
-        input_DensityMatrix=output_DensityMatrix
+       
         println("using DIIS")
-       
+        
+
+         if diis_fire_once
+            diis_fire_once = false
+            empty!(eout_hist)          # <-- yes: clear history after firing
+            diis_cooldown = DIIS_COOLDOWN
+          end
       else
   
       
 
-        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,DIIS_size)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val,allowedq,wave,input_DensityMatrix,single_Ham,single_MoirePo,overlapmatrix,energy,filling,Area)
-        DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=input_DensityMatrix
-        input_DensityMatrix=output_DensityMatrix
+        eout, energy_change, energy=Construct_DensityMatrix(work,loop,allowedq,wave,input_DensityMatrix,single_Ham,single_MoirePo,overlapmatrix,energy,filling,Area)
+        
         
        
          
@@ -573,7 +861,17 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
       end
 
     
+      work.diis_head, work.diis_len = diis_push!(
+        work.DIIS_input_DensityMatrix,
+             work.DIIS_input_DeltaMatrix,
+              dmk_used,              # <--- this is the fix: store the DM that was used
+              work.DeltaMatrix,
+              work.diis_head,
+              work.diis_len
+                )
 
+          
+      copy!(input_DensityMatrix, work.output_DensityMatrix)
 
 
       itcount+=1
@@ -581,6 +879,28 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
       toc=time()
       println(toc-tic,"eout=$eout","energy_change=$energy_change","itcount=$itcount")
       flush(stdout)
+
+      if diis_cooldown > 0
+            diis_cooldown -= 1
+      end
+
+
+       push!(eout_hist, eout)  # keep sign; we'll use abs where needed
+        if length(eout_hist) > PLATEAU_N
+            popfirst!(eout_hist)
+        end
+
+        # plateau detection (only if not cooling down and not already scheduled)
+        if !diis_fire_once && diis_cooldown == 0 && length(eout_hist) == PLATEAU_N
+            e0 = eout_hist[1]
+            e1 = eout_hist[end]
+            rel_change = abs(e1 - e0) / max(abs(e0), E_EPS)
+
+            if rel_change < PLATEAU_FRAC
+                diis_fire_once = true
+                println("Plateau detected: |Δe|/|e| ≈ $(rel_change). Will fire DIIS once.")
+            end
+        end
      
     
   end
@@ -591,12 +911,34 @@ function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
 
 
 
-  return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix
-
+  
+    return work.DIIS_input_DensityMatrix,
+       work.DIIS_input_DeltaMatrix,
+       work.HF_eigenvalue,
+       work.HF_eigenvector,
+       energy, eout,
+       work.HartreeMatrix,
+       work.FockMatrix
+  
 end
 
 
 
+@inline function diis_push!(
+    DIIS_input_DensityMatrix::Vector{Vector{Matrix{ComplexF64}}},
+    DIIS_input_DeltaMatrix::Vector{Vector{Matrix{ComplexF64}}},
+    input_DensityMatrix::Vector{Matrix{ComplexF64}},
+    DeltaMatrix::Vector{Matrix{ComplexF64}},
+    diis_head::Int,
+    diis_len::Int
+)
+    copy!(DIIS_input_DensityMatrix[diis_head], input_DensityMatrix)
+    copy!(DIIS_input_DeltaMatrix[diis_head],  DeltaMatrix)
+
+    diis_head = (diis_head == length(DIIS_input_DensityMatrix)) ? 1 : (diis_head + 1)
+    diis_len  = min(diis_len + 1, length(DIIS_input_DensityMatrix))
+    return diis_head, diis_len
+end
 
 
 
@@ -767,8 +1109,7 @@ function implement_DIIS(DIIS_input_projector::Vector{Vector{Matrix{ComplexF64}}}
   
       for ja in 1:DIIS_size,jb in 1:DIIS_size
           for jc in eachindex(allowedq)
-             #Bmatrix[ja,jb]+=real(tr((DIIS_input_DeltaMatrix[ja][jc])'*(DIIS_input_DeltaMatrix[jb][jc])))
-             Bmatrix[ja,jb]+=real(dot(DIIS_input_DeltaMatrix[ja][jc],DIIS_input_DeltaMatrix[jb][jc]))
+              Bmatrix[ja,jb]+=real(dot(DIIS_input_DeltaMatrix[ja][jc],DIIS_input_DeltaMatrix[jb][jc]))
           end
       end
 
@@ -777,7 +1118,6 @@ function implement_DIIS(DIIS_input_projector::Vector{Vector{Matrix{ComplexF64}}}
          onh=zeros(Float64,DIIS_size+1)
          onh[end]=1
          coeff=inB* onh
-         #AA=coeff[1]*(DIIS_input_projector[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_projector[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_projector[3]+DIIS_input_DeltaMatrix[3])
          
         AA =coeff[1]*(DIIS_input_projector[1]+DIIS_input_DeltaMatrix[1])           # alloc once
         @inbounds for ja in 2:DIIS_size
@@ -796,7 +1136,7 @@ function safe_inverse(A)
   catch e
       if isa(e, SingularException)
           println("Matrix is singular, doing randomstart again.")
-          return pinv(A, 0.1)  # Use pseudoinverse as an alternative
+          return pinv(A, 10^(-8))  # Use pseudoinverse as an alternative
       else
           rethrow(e)  # If another error occurs, propagate it
       end

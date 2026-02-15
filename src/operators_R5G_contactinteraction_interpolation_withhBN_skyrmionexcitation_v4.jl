@@ -925,7 +925,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
       else
         bad_count=0
       end
-     dmk_used = input_DensityMatrix
+    
 
        if (itcount > 500 && abs(eout) > 10)
                 itcount = 0
@@ -947,7 +947,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
                 println("random start again")
                 
        end
-      
+      dmk_used = input_DensityMatrix
       tic=time()
 
       if (itcount>150 && abs(eout)>10) || (itcount>30 && abs(eout)<10^(-7)) || diis_fire_once
