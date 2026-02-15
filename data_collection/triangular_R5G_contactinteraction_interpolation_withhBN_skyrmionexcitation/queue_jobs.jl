@@ -6,7 +6,7 @@ using JLD2
 include("submit_job_v2.jl")
 
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "enlarge"
+job_prefix = "v1"
 
 aa= parse.(Int, ARGS)
 
