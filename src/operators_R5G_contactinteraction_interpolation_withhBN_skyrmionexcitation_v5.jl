@@ -742,7 +742,7 @@ function Construct_DensityMatrix(work::ConstructDM_Workspace,loop::LoopDic,
   
   energy=0
   for ja in eachindex(allowedq)
-  energy = real(dot(input_DensityMatrix[ja], single_MoirePo[ja])) +
+  energy += real(dot(input_DensityMatrix[ja], single_MoirePo[ja])) +
           real(dot(input_DensityMatrix[ja], single_Ham[ja])) +
           0.5*real(dot(input_DensityMatrix[ja], HartreeMatrix[ja])) -
           0.5*real(dot(input_DensityMatrix[ja], FockMatrix[ja]))
