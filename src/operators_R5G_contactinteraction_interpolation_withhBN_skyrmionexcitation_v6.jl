@@ -782,7 +782,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
    
   
    println(Threads.nthreads())
-   while eout>10^(-16) || abs(energy_change)>10^(-9)
+   while eout>10^(-16) || abs(energy_change)>10^(-9) || bad_count< DIIS_size
       if eout<1*10^(-16)
        bad_count+=1
       else
@@ -810,7 +810,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
       
       tic=time()
 
-      if (itcount>150 && abs(eout)>10) || (itcount>30 && abs(eout)<10^(-6)) || diis_fire_once
+      if (itcount>150 && abs(eout)>10) || (itcount>30 && abs(eout)<10^(-7)) || diis_fire_once
 
       
         dmk=implement_DIIS(work.DIIS_input_DensityMatrix,work.DIIS_input_DeltaMatrix,DIIS_size)
