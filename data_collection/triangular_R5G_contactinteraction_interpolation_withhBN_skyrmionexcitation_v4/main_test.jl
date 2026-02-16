@@ -36,6 +36,20 @@ overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_e
 
 Area=√3/2*norm(a1m)^2
 
+
+scratch_dir = ENV["SCRATCH"]
+seed_path=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v4/data_output$(Int(args[16]))/seed")
+if only(rand())>0.5
+   seed_file_path=pick_random_jld2_path(seed_path)
+   if !(seed_file_path==nothing)
+      seed_file=load(seed_file_path)
+      initial_DensityMatrix=transform_dm(seed_file["densitymatrix"],wave,seed_file["spinor_set"],spinor_set)
+      println("Using seed from $seed_file_path")
+   end
+end
+
+
+
 if constq<5*10^4
   DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
                                                                             T1,T2,wave,single_Ham,

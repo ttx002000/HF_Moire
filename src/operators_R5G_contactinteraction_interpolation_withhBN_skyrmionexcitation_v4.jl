@@ -221,6 +221,27 @@ function csr_stats(csr::ShiftCSR, Ng::Int)
     println("CSR stats: NSHIFT=$(csr.ix.NSHIFT), total_pairs=$total_pairs, mean_pairs/shift=$mean_pairs, Ng=$Ng")
 end
 
+function pick_random_jld2_path(folder::AbstractString)
+    jld2_files = filter(readdir(folder; join=true)) do p
+        isfile(p) && endswith(lowercase(p), ".jld2")
+    end
+
+    if isempty(jld2_files)
+        return nothing
+    end
+
+    return rand(jld2_files)
+end
+
+
+function transform_dm(dm_old::Matrix{ComplexF64},wave::Vector{Vector{Int}},seed_spinor_set::Vector{Vector{ComplexF64}},spinor_set::Vector{Vector{ComplexF64}})
+    dm_new=zeros(ComplexF64,length(wave),length(wave))
+    for ja in eachindex(wave), jb in eachindex(wave)
+       dm_new[ja,jb]=(spinor_set[ja]'*seed_spinor_set[ja])*dm_old[ja,jb]*(seed_spinor_set[jb]'*spinor_set[jb])
+   end
+
+   return dm_new
+end
 
 
 
@@ -380,17 +401,7 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
       A=randn(ComplexF64,dimension,dimension)
       input_DensityMatrix=(A+A')*1.0
     
-      if filepos==6 && rand()>0.5
-        
-      scratch_dir = ENV["SCRATCH"]
-        
-        seed_path=joinpath(scratch_dir,"triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v4/data_output$(Int(args[16]))/seed/$(args[2])theta0.0constq$(args[10])enlarge$(args[7])cutoff$(args[6])filling_hBNMoire.jld2")
-          st=load(seed_path)
-          
-          input_DensityMatrix=st["densitymatrix"]
-          println("teaking seed")
-      end
-
+  
     
 
     
