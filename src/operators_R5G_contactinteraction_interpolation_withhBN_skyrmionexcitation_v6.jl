@@ -725,15 +725,14 @@ function pick_random_jld2_path(folder::AbstractString)
 end
 
 
-function transform_dm(dm_mbasis::Array{ComplexF64,4},wave::Vector{Vector{Int}},spinor_set::Vector{Vector{ComplexF64}})
-    dm_bandbasis=zeros(ComplexF64,length(wave),length(wave))
-     for ja in eachindex(wave), jb in eachindex(wave)
-    dm_bandbasis[ja,jb]=spinor_set[ja]'*dm_mbasis[:,ja,:,jb]*spinor_set[jb]
+function transform_dm(dm_old::Matrix{ComplexF64},wave::Vector{Vector{Int}},seed_spinor_set::Vector{Vector{ComplexF64}},spinor_set::Vector{Vector{ComplexF64}})
+    dm_new=zeros(ComplexF64,length(wave),length(wave))
+    for ja in eachindex(wave), jb in eachindex(wave)
+       dm_new[ja,jb]=(spinor_set[ja]'*seed_spinor_set[ja])*dm_old[ja,jb]*(seed_spinor_set[jb]'*spinor_set[jb])
    end
 
-   return dm_bandbasis
+   return dm_new
 end
-
 
 
 
