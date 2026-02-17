@@ -5,10 +5,12 @@ using JLD2
 
 include("submit_job_v2.jl")
 
-filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "v6"
 
 aa= parse.(Int, ARGS)
+
+
+filepath = joinpath(@__DIR__, "main_test.jl")
+job_prefix = "v6_$(Int(aa[1]))"
 
 scratch_dir = ENV["SCRATCH"]
 misspath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v6/data_output$(Int(aa[1]))/missedjobs.jld2")
