@@ -693,7 +693,7 @@ function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{
  
 
    energy = real(dot(input_DensityMatrix, single_MoirePo)) +
-         real(dot(input_DensityMatrix, single_Ham)) +  real(dot(input_DensityMatrix, pinning_po))
+         real(dot(input_DensityMatrix, single_Ham)) +  real(dot(input_DensityMatrix, pinning_po))+
          0.5*real(dot(input_DensityMatrix, work.HartreeMatrix)) -
          0.5*real(dot(input_DensityMatrix, work.FockMatrix))
 
