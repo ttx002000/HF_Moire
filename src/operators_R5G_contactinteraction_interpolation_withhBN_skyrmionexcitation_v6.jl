@@ -709,18 +709,17 @@ end
 
 
 
-
 function pick_random_jld2_path(folder::AbstractString)
+    isdir(folder) || return nothing
+
     jld2_files = filter(readdir(folder; join=true)) do p
         isfile(p) && endswith(lowercase(p), ".jld2")
     end
 
-    if isempty(jld2_files)
-        return nothing
-    end
-
+    isempty(jld2_files) && return nothing
     return rand(jld2_files)
 end
+
 
 
 function transform_dm(dm_old::Matrix{ComplexF64},wave::Vector{Vector{Int}},seed_spinor_set::Vector{Vector{ComplexF64}},spinor_set::Vector{Vector{ComplexF64}})
