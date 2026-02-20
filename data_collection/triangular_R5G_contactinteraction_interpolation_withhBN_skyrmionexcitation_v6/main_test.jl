@@ -40,7 +40,7 @@ overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, pinning_po, single_H
 
 scratch_dir = ENV["SCRATCH"]
 seed_path=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v6/data_output$(Int(args[19]))/seed")
-if only(rand())>0.4
+if only(rand())>0.3
    seed_file_path=pick_random_jld2_path(seed_path)
    if !(seed_file_path==nothing)
       seed_file=load(seed_file_path)
