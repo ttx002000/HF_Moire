@@ -516,8 +516,8 @@ function Construct_DensityMatrix(csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_
 
 
    #H = single_MoirePo + single_Ham + HartreeMatrix - FockMatrix
-   FFF = eigen!(H_phys)
-   #FFF = eigen!(Hermitian(H_diag))
+   FFF = eigen(H_phys)
+   #FFF = eigen(Hermitian(H_diag))
    HF_eigenvalue=real(FFF.values)
    HF_eigenvector=FFF.vectors
 

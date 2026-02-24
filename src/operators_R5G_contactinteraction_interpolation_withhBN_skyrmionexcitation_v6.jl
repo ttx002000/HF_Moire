@@ -660,7 +660,7 @@ function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{
       old = BLAS.get_num_threads()
     
        BLAS.set_num_threads(min(8,Threads.nthreads()))   # or some smaller number like 4/8
-       FFF = eigen!(Hermitian(work.H_phys),1:filling+5)        # or eigen(Hermitian(...), 1:filling)
+       FFF = eigen(Hermitian(work.H_phys),1:filling+5)        # or eigen(Hermitian(...), 1:filling)
     
       BLAS.set_num_threads(old)
    
@@ -890,7 +890,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     
   end
 
-   Ffull = eigen!(Hermitian(work.H_phys))   # or eigen(Hermitian(work.H_phys)) if you prefer non-mutating
+   Ffull = eigen(Hermitian(work.H_phys))   # or eigen(Hermitian(work.H_phys)) if you prefer non-mutating
    copy!(work.HF_eigenvalue, real(Ffull.values)) 
    copy!(work.HF_eigenvector, Ffull.vectors)
 
