@@ -39,7 +39,7 @@ overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, pinning_po, single_H
                                                                                                                                    λ,enlarge_factor,V0_hBN,V1_hBN,ψ_hBN,V2_scalar,ϕ,pin_coeff,ϵr,dedis,defec_pos)
 
 scratch_dir = ENV["SCRATCH"]
-#=
+
 seed_path=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v6/data_output$(Int(args[19]))/seed")
 if only(rand())>1.2
    seed_file_path=pick_random_jld2_path(seed_path)
@@ -49,13 +49,7 @@ if only(rand())>1.2
       println("Using seed from $seed_file_path")
    end
 end
-=#
 
-savepath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v6/data_output$(Int(args[19]))/$(args[1])NL$(args[2])theta$(args[3])constq$(args[4])ϵr$(args[5])uD$(args[6])filling$(args[7])cutoff$(args[8])lambda$(args[9])trytime$(args[10])enlarge$(args[11])V0_hBN$(args[12])V1_hBN$(args[13])ψ_hBN$(args[14])V2_scalar$(args[15])ϕ$(args[16])pincof$(args[17])dedis$(args[18])depos.jld2")
-if isfile(savepath)
-  seed_file=load(savepath)
-  initial_DensityMatrix=seed_file["densitymatrix"]
-end
 
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
                                                                             T1,T2,wave,single_Ham,
