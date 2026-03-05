@@ -221,124 +221,124 @@ end
 
 
 function get_density_profile(kx_list::Vector{Float64},ky_list::Vector{Float64},num_layers::Int,num_sub::Int,num_spin::Int,num_valley::Int,
-                             active_flavor::Int,Area::Float64,target_density::Float64,temp::Float64,current_potential_profile::Vector{Float64},Ham_ver::Int)
+                             Area::Float64,target_density_list::Matrix{Float64},temp::Float64,current_potential_profile::Vector{Float64},Ham_ver::Int)
+     
+        valley_set=[1,-1]
+        eigenvector=zeros(ComplexF64,length(kx_list),length(ky_list),num_valley,num_layers*num_sub,num_layers*num_sub)
+        eigenvalue=zeros(Float64,length(kx_list),length(ky_list),num_valley,num_layers*num_sub)
 
-        eigenvector=zeros(ComplexF64,length(kx_list),length(ky_list),num_layers*num_sub,num_layers*num_sub)
-        eigenvalue=zeros(Float64,length(kx_list),length(ky_list),num_layers*num_sub)
-
-        Hamiltonian=zeros(ComplexF64,length(kx_list),length(ky_list),num_layers*num_sub,num_layers*num_sub)
+        Hamiltonian=zeros(ComplexF64,length(kx_list),length(ky_list),num_valley,num_layers*num_sub,num_layers*num_sub)
 
 
-
+     for vi in 1:num_valley
         for ja in eachindex(kx_list)
             for jb in eachindex(ky_list)
             
-                        Ham=get_Ham([kx_list[ja],ky_list[jb]],current_potential_profile,1,num_layers,Ham_ver)
+                        Ham=get_Ham([kx_list[ja],ky_list[jb]],current_potential_profile,valley_set[vi],num_layers,Ham_ver)
                     
-                        Hamiltonian[ja,jb,:,:]=Ham
+                        Hamiltonian[ja,jb,vi,:,:]=Ham
                         FFF=eigen(Ham)
-                        eigenvector[ja,jb,:,:]=FFF.vectors
-                        eigenvalue[ja,jb,:]=real(FFF.values)
+                        eigenvector[ja,jb,vi,:,:]=FFF.vectors
+                        eigenvalue[ja,jb,vi,:]=real(FFF.values)
         
             end
         end
+     end
     
-        v_e=[copy(vec(eigenvalue[:,:,1:num_layers])) for _ in 1:num_spin*num_valley]
-        c_e=vec(eigenvalue[:,:,1+num_layers:2*num_layers])
-        sorted_e=sort(vcat(v_e..., c_e))
-        fermi_energy,_=find_FL(sorted_e,target_density/active_flavor,sorted_e[1],sorted_e[end],temp,Area,num_spin*num_valley*num_layers*length(kx_list)*length(ky_list)/Area)
+       fermi_energy_list=zeros(Float64,num_spin,num_valley)
+        for vi in 1:num_valley, si in 1:num_spin
+      
+         sorted_e=sort(vec(eigenvalue[:,:,vi,:]))
+         fermi_energy_list[si,vi],_=find_FL(sorted_e,target_density_list[si,vi],sorted_e[1],sorted_e[end],temp,Area,num_layers*length(kx_list)*length(ky_list)/Area)
+        end
 
-
-        density_layer=zeros(Float64,num_layers)
+        density_layer_resolved=zeros(Float64,num_spin,num_valley,num_layers)
 
         for ja in eachindex(kx_list)
             for jb in eachindex(ky_list)
-            
-                        evecs=@view eigenvector[ja,jb,:,:]
+                      for vi in 1:num_valley
+                        evecs=@view eigenvector[ja,jb,vi,:,:]
                         evecs=reshape(evecs,num_sub,num_layers,num_sub*num_layers)
-                        evals=@view eigenvalue[ja,jb,:]
-                        for bi in 1:num_layers
+                        evals=@view eigenvalue[ja,jb,vi,:]
+                        for si in 1:num_spin
+                         for bi in 1:2*num_layers
                         
-                            density_layer+=num_spin*num_valley*vec(sum(abs2,evecs[:,:,bi]; dims=1))*1/(1+exp((evals[bi]-fermi_energy)/temp))
+                            density_layer_resolved[si,vi,:]+=vec(sum(abs2,evecs[:,:,bi]; dims=1))*1/(1+exp((evals[bi]-fermi_energy_list[si,vi])/temp))
                             
+                         end
                         end
+                    end
 
-                        for bi in num_layers+1:2*num_layers
-                            
-                            density_layer+=active_flavor*vec(sum(abs2,evecs[:,:,bi]; dims=1))*1/(1+exp((evals[bi]-fermi_energy)/temp))
-                            
-                        end
-            
+                
         
             end
         end
         density_bg=length(kx_list)*length(ky_list)*num_layers*num_spin*num_valley/(Area*num_layers)*ones(Float64,num_layers)
-        density_profile=density_layer/Area.-density_bg
+        density_profile=dropdims(sum(density_layer_resolved, dims=(1,2)), dims=(1,2))/Area.-density_bg
 
-        return density_profile,fermi_energy
+        return density_profile,fermi_energy_list,density_layer_resolved
 end
 
 
 
 function get_kinetic_energy(kx_list::Vector{Float64},ky_list::Vector{Float64},num_layers::Int,num_sub::Int,num_spin::Int,num_valley::Int,
-                             active_flavor::Int,Area::Float64,target_density::Float64,temp::Float64,current_potential_profile::Vector{Float64},Ham_ver::Int)
+                            Area::Float64,target_density_list::Matrix{Float64},temp::Float64,current_potential_profile::Vector{Float64},Ham_ver::Int64)
 # printing the kinetic energy
 
+        valley_set=[1,-1]
+        eigenvector=zeros(ComplexF64,length(kx_list),length(ky_list),num_valley,num_layers*num_sub,num_layers*num_sub)
+        eigenvalue=zeros(Float64,length(kx_list),length(ky_list),num_valley,num_layers*num_sub)
 
-        eigenvector=zeros(ComplexF64,length(kx_list),length(ky_list),num_layers*num_sub,num_layers*num_sub)
-        eigenvalue=zeros(Float64,length(kx_list),length(ky_list),num_layers*num_sub)
-
-        no_diag_Hamiltonian=zeros(ComplexF64,length(kx_list),length(ky_list),num_layers*num_sub,num_layers*num_sub)
+        no_diag_Hamiltonian=zeros(ComplexF64,length(kx_list),length(ky_list),num_valley,num_layers*num_sub,num_layers*num_sub)
 
 
-
+     for vi in 1:num_valley
         for ja in eachindex(kx_list)
             for jb in eachindex(ky_list)
             
-                        Ham=get_Ham([kx_list[ja],ky_list[jb]],current_potential_profile,1,num_layers,Ham_ver)
-                        nodiag_Ham=get_Ham([kx_list[ja],ky_list[jb]],zeros(Float64,length(current_potential_profile)),1,num_layers,Ham_ver)
-                        no_diag_Hamiltonian[ja,jb,:,:]=nodiag_Ham
+                        Ham=get_Ham([kx_list[ja],ky_list[jb]],current_potential_profile,valley_set[vi],num_layers,Ham_ver)
+                        nodiag_Ham=get_Ham([kx_list[ja],ky_list[jb]],zeros(Float64,length(current_potential_profile)),valley_set[vi],num_layers,Ham_ver)
+                        no_diag_Hamiltonian[ja,jb,vi,:,:]=nodiag_Ham
                         FFF=eigen(Ham)
-                        eigenvector[ja,jb,:,:]=FFF.vectors
-                        eigenvalue[ja,jb,:]=real(FFF.values)
+                        eigenvector[ja,jb,vi,:,:]=FFF.vectors
+                        eigenvalue[ja,jb,vi,:]=real(FFF.values)
         
             end
         end
+    end
     
         
-        v_e=[copy(vec(eigenvalue[:,:,1:num_layers])) for _ in 1:num_spin*num_valley]
-        c_e=vec(eigenvalue[:,:,1+num_layers:2*num_layers])
-        sorted_e=sort(vcat(v_e..., c_e))
-        fermi_energy,_=find_FL(sorted_e,target_density/active_flavor,sorted_e[1],sorted_e[end],temp,Area,num_spin*num_valley*num_layers*length(kx_list)*length(ky_list)/Area)
+        fermi_energy_list=zeros(Float64,num_spin,num_valley)
+        for vi in 1:num_valley, si in 1:num_spin
+      
+         sorted_e=sort(vec(eigenvalue[:,:,vi,:]))
+         fermi_energy_list[si,vi],_=find_FL(sorted_e,target_density_list[si,vi],sorted_e[1],sorted_e[end],temp,Area,num_layers*length(kx_list)*length(ky_list)/Area)
+        end
 
-        kE=0.0
-
+        kE_resolved=zeros(Float64,num_spin,num_valley)
+    for vi in 1:num_valley
         for ja in eachindex(kx_list)
             for jb in eachindex(ky_list)
             
-                        evecs=@view eigenvector[ja,jb,:,:]
-                        #evecs=reshape(evecs,num_sub,num_layers,num_sub*num_layers)
-                        evals=@view eigenvalue[ja,jb,:]
-                        hh=@view no_diag_Hamiltonian[ja,jb,:,:]
+                        evecs=@view eigenvector[ja,jb,vi,:,:]
+                      
+                        evals=@view eigenvalue[ja,jb,vi,:]
+                        hh=@view no_diag_Hamiltonian[ja,jb,vi,:,:]
 
-                        for bi in num_layers+1:2*num_layers
+                    
+                        for si in 1:num_spin, bi in 1:2*num_layers
                             
-                            kE+=active_flavor*(evecs[:,bi]'*hh*evecs[:,bi])*1/(1+exp((evals[bi]-fermi_energy)/temp))
-                            
-                        end
-
-                        for bi in 1:num_layers
-                            
-                            kE+=num_spin*num_valley*(evecs[:,bi]'*hh*evecs[:,bi])*1/(1+exp((evals[bi]-fermi_energy)/temp))
+                            kE_resolved[si,vi]+=real((evecs[:,bi]'*hh*evecs[:,bi]))*1/(1+exp((evals[bi]-fermi_energy_list[si,vi])/temp))
                             
                         end
             
         
             end
         end
+    end
     
 
-        return kE/Area
+        return sum(kE_resolved)/Area,kE_resolved/Area
 end
 
 function get_Ham_dx(k::Vector{Float64},potential_profile::Vector{Float64},valley::Int64,NL::Int,Ham_ver::Int)
@@ -353,75 +353,71 @@ end
 
 
 function get_DOS(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potential_profile::Vector{Float64},
-               target_density::Float64,temp::Float64,active_flavor::Int,Ham_ver::Int)
+               target_density_list::Matrix{Float64},temp::Float64,Ham_ver::Int)
 
     num_spin=2
     num_valley=2
+    num_sub=2
+    valley_set=[1,-1]
     kxrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
     kyrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
     Area=4*π^2/(kxrange[2]-kxrange[1])/(kyrange[2]-kyrange[1])
 
 
-    eigenvalue=zeros(Float64,length(kxrange),length(kyrange),2*num_layers)
+    eigenvalue=zeros(Float64,length(kxrange),length(kyrange),num_valley,num_sub*num_layers)
+    for vi in 1:num_valley
     for ja in eachindex(kxrange)
-          for kb in eachindex(kyrange)
-            HH=get_Ham([kxrange[ja],kyrange[kb]],potential_profile,1,num_layers,Ham_ver)
-            eigenvalue[ja,kb,:]=real(eigen(HH).values)
+          for jb in eachindex(kyrange)
+            HH=get_Ham([kxrange[ja],kyrange[jb]],potential_profile,valley_set[vi],num_layers,Ham_ver)
+            eigenvalue[ja,jb,vi,:]=real.(eigen(HH).values)
           end
     end
-
-    v_e=[copy(vec(eigenvalue[:,:,1:num_layers])) for _ in 1:num_spin*num_valley]
-    c_e=vec(eigenvalue[:,:,1+num_layers:2*num_layers])
-    sorted_e=sort(vcat(v_e..., c_e))
-    fermi_energy,_=find_FL(sorted_e,target_density/active_flavor,sorted_e[1],sorted_e[end],temp,Area,num_spin*num_valley*num_layers*length(kxrange)*length(kyrange)/Area)
-
+   end
+       
+    fermi_energy_list=zeros(Float64,num_spin,num_valley)
+        for vi in 1:num_valley, si in 1:num_spin
+      
+         sorted_e=sort(vec(eigenvalue[:,:,vi,:]))
+         fermi_energy_list[si,vi],_=find_FL(sorted_e,target_density_list[si,vi],sorted_e[1],sorted_e[end],temp,Area,num_layers*length(kxrange)*length(kyrange)/Area)
+        end
 
     nt=Threads.maxthreadid()
-    bin_count=zeros(Int64,nt)
-    DOS_current=0.0
-    DOS_old=0.0
-    difference=0.1
+    println(fermi_energy_list)
+    
+    DOS_current=zeros(Float64,num_spin,num_valley)
+    DOS_old=zeros(Float64,num_spin,num_valley)
+    difference=zeros(Float64,num_spin,num_valley)
     energy_cut=0.1
 
     each_sc_count=10^6
-    for big_count in 1:3
-            Threads.@threads for sc in 1:each_sc_count
-            
-                kx=(rand()-0.5)/0.5*radius
-                ky=(rand()-0.5)/0.5*radius
-                HH=get_Ham([kx,ky],potential_profile,1,num_layers,Ham_ver)
-                vals=eigen(HH).values
-                for jb in num_layers+1:2*num_layers
-                    if abs(vals[jb]-fermi_energy)<energy_cut
-                        
-                        bin_count[Threads.threadid()]+=active_flavor
-                    end
-                end
 
-                for jb in 1:num_layers
-                    if abs(vals[jb]-fermi_energy)<energy_cut
-                        
-                        bin_count[Threads.threadid()]+=num_spin*num_valley
-                    end
-                end
-             
-
-               
-                 
-
+    for si in 1:num_spin, vi in 1:num_valley
+        bin_count=zeros(Int64,nt)
+        for big_count in 1:3
+                Threads.@threads for sc in 1:each_sc_count
                 
-             
+                    kx=(rand()-0.5)/0.5*radius
+                    ky=(rand()-0.5)/0.5*radius
+                    HH=get_Ham([kx,ky],potential_profile,valley_set[vi],num_layers,Ham_ver)
+                    vals=eigen(HH).values
+                    for jb in 1:2*num_layers
+                        if abs(vals[jb]-fermi_energy_list[si,vi])<energy_cut
+                            
+                            bin_count[Threads.threadid()]+=1
+                        end
+                    end
 
 
-            end
-            
-            Area_DOS=4*π^2/radius^2*each_sc_count*big_count
-            DOS_current=1/Area_DOS*sum(bin_count)/(2*energy_cut)
-            difference=DOS_current-DOS_old
-            DOS_old=DOS_current
-                    
-            println(difference,"difference",sum(bin_count)/active_flavor,"binacount",each_sc_count*big_count,"samplecount")
-            flush(stdout)
+                end
+                
+                Area_DOS=4*π^2/radius^2*each_sc_count*big_count
+                DOS_current[si,vi]=1/Area_DOS*sum(bin_count)/(2*energy_cut)
+                difference[si,vi]=DOS_current[si,vi]-DOS_old[si,vi]
+                DOS_old[si,vi]=DOS_current[si,vi]
+                        
+                println(difference[si,vi],"difference",sum(bin_count),"binacount",each_sc_count*big_count,"samplecount")
+                flush(stdout)
+        end
     end
 
    
@@ -448,42 +444,51 @@ end
 
 
 function get_OBM(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potential_profile::Vector{Float64},
-               target_density::Float64,temp::Float64,active_flavor::Int,Ham_ver::Int)
+               target_density_list::Matrix{Float64},temp::Float64,Ham_ver::Int)
 
     num_spin=2
     num_valley=2
+    num_sub=2
+    valley_set=[1,-1]
     kxrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
     kyrange=collect(LinRange(-radius,radius,num_kpoints_forOBM))
     Area=4*π^2/(kxrange[2]-kxrange[1])/(kyrange[2]-kyrange[1])
 
 
-    eigenvalue=zeros(Float64,length(kxrange),length(kyrange),2*num_layers)
+    eigenvalue=zeros(Float64,length(kxrange),length(kyrange),num_valley,num_sub*num_layers)
+    eigenvector=zeros(ComplexF64,length(kxrange),length(kyrange),num_valley,num_sub*num_layers,num_sub*num_layers)
+    for vi in 1:num_valley
     for ja in eachindex(kxrange)
-          for kb in eachindex(kyrange)
-            HH=get_Ham([kxrange[ja],kyrange[kb]],potential_profile,1,num_layers,Ham_ver)
-            eigenvalue[ja,kb,:]=eigen(HH).values
+          for jb in eachindex(kyrange)
+            HH=get_Ham([kxrange[ja],kyrange[jb]],potential_profile,valley_set[vi],num_layers,Ham_ver)
+            FFF=eigen(HH)
+            eigenvalue[ja,jb,vi,:]=real(FFF.values)
+            eigenvector[ja,jb,vi,:,:]=FFF.vectors
           end
+    end
     end
 
    
-    v_e=[copy(vec(eigenvalue[:,:,1:num_layers])) for _ in 1:num_spin*num_valley]
-    c_e=vec(eigenvalue[:,:,1+num_layers:2*num_layers])
-    sorted_e=sort(vcat(v_e..., c_e))
-    fermi_energy,_=find_FL(sorted_e,target_density/active_flavor,sorted_e[1],sorted_e[end],temp,Area,num_spin*num_valley*num_layers*length(kxrange)*length( kyrange)/Area)
+    fermi_energy_list=zeros(Float64,num_spin,num_valley)
+        for vi in 1:num_valley, si in 1:num_spin
+      
+         sorted_e=sort(vec(eigenvalue[:,:,vi,:]))
+         fermi_energy_list[si,vi],_=find_FL(sorted_e,target_density_list[si,vi],sorted_e[1],sorted_e[end],temp,Area,num_layers*length(kxrange)*length(kyrange)/Area)
+        end
 
 
-
-    M1=zeros(ComplexF64,length(kxrange),length(kyrange),num_layers)
-    M2=zeros(ComplexF64,length(kxrange),length(kyrange),num_layers)
-
-    
+    M1=zeros(ComplexF64,length(kxrange),length(kyrange),num_valley,num_layers)
+    M2=zeros(ComplexF64,length(kxrange),length(kyrange),num_valley,num_layers)
+ 
+    for vi in 1:num_valley
       for ja in eachindex(kxrange)
             for jb in eachindex(kyrange)
                 k=[kxrange[ja],kyrange[jb]]
-                HH=get_Ham(k,potential_profile,1,num_layers,Ham_ver)
-              HH_dx=get_Ham_dx(k,potential_profile,1,num_layers,Ham_ver)
-              HH_dy=get_Ham_dy(k,potential_profile,1,num_layers,Ham_ver)
-              evals,evecs=eigen(HH)
+           
+              HH_dx=get_Ham_dx(k,potential_profile,valley_set[vi],num_layers,Ham_ver)
+              HH_dy=get_Ham_dy(k,potential_profile,valley_set[vi],num_layers,Ham_ver)
+              evals=@view eigenvalue[ja,jb,vi,:]
+              evecs=@view eigenvector[ja,jb,vi,:,:]
             for ll in num_layers+1:2*num_layers
                 for n in 1:2*num_layers
                   if n≠ll
@@ -491,8 +496,8 @@ function get_OBM(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
                     vtarget=evecs[:,ll]
                     velx=vtarget'*HH_dx*vn
                     vely=vn'*HH_dy*vtarget
-                    M1[ja,jb,ll-num_layers]+=-imag(velx*vely)/(evals[ll]-evals[n])
-                    M2[ja,jb,ll-num_layers]+=-imag(velx*vely)/(evals[ll]-evals[n])^2
+                    M1[ja,jb,vi,ll-num_layers]+=-imag(velx*vely)/(evals[ll]-evals[n])
+                    M2[ja,jb,vi,ll-num_layers]+=-imag(velx*vely)/(evals[ll]-evals[n])^2
                   end
                 end
             end
@@ -500,30 +505,39 @@ function get_OBM(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
 
             end
       end
+    end
 
-    total_M=0.0
+     total_M_resolved=zeros(Float64,num_spin,num_valley)
+     for si in 1:num_spin, vi in 1:num_valley
       for ja in eachindex(kxrange)
         for jb in eachindex(kyrange)
             for ll in num_layers+1:2*num_layers
-              total_M+=(M1[ja,jb,ll-num_layers]+2*(fermi_energy-eigenvalue[ja,jb,ll])*M2[ja,jb,ll-num_layers])*(1/(1+exp((eigenvalue[ja,jb,ll]-fermi_energy)/temp)))
-        end
+              total_M_resolved[si,vi]+=(M1[ja,jb,vi,ll-num_layers]+2*(fermi_energy_list[si,vi]-eigenvalue[ja,jb,vi,ll])*M2[ja,jb,vi,ll-num_layers])*(1/(1+exp((eigenvalue[ja,jb,vi,ll]-fermi_energy_list[si,vi])/temp)))
+           end
        end
       end
-      conversion_factor=2*9.109383*10^(-31)*(10^(-9))^2*(10^(-3)* 1.60217663 * 10^(-19))/(1.0545718*10^(-34))^2        
-      orbital_magnetization=total_M/Area*1/target_density*conversion_factor*active_flavor
+    end
+
+    conversion_factor=2*9.109383*10^(-31)*(10^(-9))^2*(10^(-3)* 1.60217663 * 10^(-19))/(1.0545718*10^(-34))^2        
+    
+     orbital_magnetization=zeros(Float64,num_spin,num_valley)
+     for si in 1:num_spin, vi in 1:num_valley
+        if target_density_list[si,vi]≠0
+        orbital_magnetization[si,vi]=total_M_resolved[si,vi]/(Area*target_density_list[si,vi])*conversion_factor
+        end
+     end
 
 
 
-
-  return orbital_magnetization
+  return orbital_magnetization,total_M_resolved
 end
 
 
 
 
 function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float64,
-                  num_layers::Int,ϵr::Float64,target_density::Float64,tg_dis::Float64,
-                  bg_dis::Float64,active_flavor::Int,Ham_ver::Int64)
+                  num_layers::Int,ϵr::Float64,target_density_list::Matrix{Float64},tg_dis::Float64,
+                  bg_dis::Float64,Ham_ver::Int64)
         
    
         kx_list=collect(LinRange(-radius,radius,num_kpoints))
@@ -533,20 +547,16 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
         num_spin=2
         num_valley=2
         num_sub=2
-        #uD=20.0
-        #temp=0.1
-        #num_layers=13
-        #ϵr=8.0
+
         eout=1.0
-        #target_density=0.002
+
         DIIS_size=8
-        #tg_dis=50.0
-        #bg_dis=50.0
 
-        top_gate=-target_density/2+uD*ϵr*5.52635/0.335*10^(-5)
-        bottom_gate=-target_density/2-uD*ϵr*5.52635/0.335*10^(-5)
 
-        #active_flavor=1
+        top_gate=-sum(target_density_list)/2+uD*ϵr*5.52635/0.335*10^(-5)
+        bottom_gate=-sum(target_density_list)/2-uD*ϵr*5.52635/0.335*10^(-5)
+
+
     
         
        
@@ -558,14 +568,15 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
         DIIS_delta=Vector{Vector{Float64}}(undef,DIIS_size)
         current_density=randn(num_layers)
         current_density.-=mean(current_density)
-        current_density .+= target_density/num_layers
+        current_density .+= sum(target_density_list)/num_layers
         potential_profile=zeros(Float64,num_layers)
         bad_count=0
         potential_energy=0.0
-        fermi_energy=0.0
+        fermi_energy_list=zeros(Float64,num_spin,num_valley,num_layers)
+        density_layer_resolved=zeros(Float64,num_spin,num_valley,num_layers)
 
     while eout>10^(-9) || bad_count<DIIS_size
-        
+ 
         if eout>10^(-8)
             bad_count=0
         end
@@ -574,7 +585,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
             bad_count+=1
         end
 
-       if itcount>20
+       if itcount>DIIS_size*2
             println("using DIIS")
             current_density=implement_DIIS(DIIS_delta,DIIS_density,DIIS_size)      
     
@@ -586,8 +597,8 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
         ppp,potential_energy=get_potential_profile(current_density,top_gate,bottom_gate,
                                             tg_dis,bg_dis,ϵr)
         potential_profile=ppp[2:end-1]
-        updated_density,fermi_energy=get_density_profile(kx_list,ky_list,num_layers,num_sub,num_spin,num_valley,
-                                active_flavor,Area,target_density,temp,potential_profile,Ham_ver)
+        updated_density,fermi_energy_list,density_layer_resolved=get_density_profile(kx_list,ky_list,num_layers,num_sub,num_spin,num_valley,
+                                Area,target_density_list,temp,potential_profile,Ham_ver)
 
         residual_vec=updated_density-current_density
         DIIS_delta[mod(itcount,DIIS_size)+1]=residual_vec
@@ -612,12 +623,12 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
         itcount+=1
     end
     
-    kinetic_energy=get_kinetic_energy(kx_list,ky_list,num_layers,num_sub,num_spin,num_valley,
-                                active_flavor,Area,target_density,temp,potential_profile,Ham_ver)                           
+    kinetic_energy,kinetic_energy_resolved=get_kinetic_energy(kx_list,ky_list,num_layers,num_sub,num_spin,num_valley,
+                               Area,target_density_list,temp,potential_profile,Ham_ver)                           
    
 
 
-  return DIIS_density,eout,potential_profile,kinetic_energy,potential_energy,fermi_energy
+  return DIIS_density,density_layer_resolved,eout,potential_profile,kinetic_energy,kinetic_energy_resolved,potential_energy,fermi_energy_list
 
 end
 
