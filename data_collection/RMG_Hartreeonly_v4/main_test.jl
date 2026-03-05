@@ -47,6 +47,6 @@ savepath=joinpath(scratch_dir, "RMG_Hartreeonly_v4/data_output$(Int(args[16]))/$
 jldsave(savepath,density_profile=DIIS_density[1],density_layer_resolved=density_layer_resolved,eout=eout,potential_profile=potential_profile,
         kinetic_energy=kinetic_energy,kinetic_energy_resolved=kinetic_energy_resolved,
          OBM=OBM,total_M_resolved=total_M_resolved,DOS=DOS,DOS_diff=DOS_diff,
-        potential_energy=potential_energy,fermi_energy=fermi_energy)
+        potential_energy=potential_energy,fermi_energy_list=fermi_energy_list)
 
 
