@@ -25,6 +25,8 @@ num_kpoints_OBM=Int(args[14])
 Ham_ver=Int(args[15])
 file_pos=Int(args[16])
 
+target_density_list=zeros(2,2)
+target_density_list=[tg1 tg2;tg3 tg4]
 
 
 DIIS_density,density_layer_resolved,eout,potential_profile,kinetic_energy,kinetic_energy_resolved,potential_energy,fermi_energy_list=iteration_loop(num_kpoints,radius,uD,temp,
