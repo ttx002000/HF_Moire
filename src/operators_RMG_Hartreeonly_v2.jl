@@ -557,7 +557,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
         DIIS_density=Vector{Vector{Float64}}(undef,DIIS_size)
         DIIS_delta=Vector{Vector{Float64}}(undef,DIIS_size)
         current_density=randn(num_layers)
-        current_density.=mean(current_density)
+        current_density.-=mean(current_density)
         current_density .+= target_density/num_layers
         potential_profile=zeros(Float64,num_layers)
         bad_count=0
