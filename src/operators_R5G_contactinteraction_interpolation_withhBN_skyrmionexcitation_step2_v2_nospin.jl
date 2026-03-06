@@ -229,7 +229,7 @@ function get_ff(nop_HF_eigenvector::Vector{Matrix{ComplexF64}},NL::Int,Nband::In
      end
    end
    
-  pinning_po=reshape(pinning_po,length(allowedq),Nband,length(allowedq),Nband)
+  pinning_po=zeros(ComplexF64,length(allowedq),Nband,length(allowedq),Nband)
       if defec_pos==1
          defec_pos_vec=(2*a2m-a1m)*2/3
       elseif defec_pos==2
