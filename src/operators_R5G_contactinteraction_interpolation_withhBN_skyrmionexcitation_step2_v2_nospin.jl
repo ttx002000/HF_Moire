@@ -294,7 +294,7 @@ function initial_process(allowedq::Vector{Vector{Int}},nop_single_Ham::Vector{Ma
 
     
     wave_diff=Vector{Int}[]
-    cutoff=max(qcutoff*norm(b1)/norm(b1),qcutoff*norm(b1)/norm(b2))*8
+    cutoff=Int(round.(max(qcutoff*norm(b1)/norm(b1),qcutoff*norm(b1)/norm(b2))+1))*8
     for ja in -cutoff:cutoff, jb in -cutoff:cutoff
       if norm(ja*b1+jb*b2)<qcutoff*norm(b1)
         push!(wave_diff,ja*b1T+jb*b2T)
