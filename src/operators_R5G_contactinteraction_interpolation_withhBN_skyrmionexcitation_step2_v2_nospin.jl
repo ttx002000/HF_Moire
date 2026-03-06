@@ -247,7 +247,7 @@ function get_ff(nop_HF_eigenvector::Vector{Matrix{ComplexF64}},NL::Int,Nband::In
        meshk1plusq=mod.(allowedq[ja]+allowedq[jb],Nq)
        k2pos=allowedq_dic[meshk1plusq]
        qvec=-(allowedq[jb]+wave_diff[jc]) # The form factors is <k1,\alpha|exp(-iqr)|k2,\beta>
-       pinning_po[ja,:,k2pos,:]+=pin_coeff/(ϵr*Area)*form_factors[ja,jb,jc]*get_Fourier_potential(qvec,T1,T2,dedis)*exp(-im*dot([T1 T2]*qvec,defec_pos_vec))
+       pinning_po[ja,:,k2pos,:]+=pin_coeff/(ϵr*Area)*form_factors[ja,jb,jc]*get_Fourier_potential(qvec,T1,T2,dedis)*exp(im*dot([T1 T2]*qvec,defec_pos_vec))
     end
   end
   pinning_po=reshape(pinning_po,length(allowedq)*Nband,length(allowedq)*Nband)
