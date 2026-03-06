@@ -34,7 +34,7 @@ end
 function Construct_DensityMatrix(allowedq::Vector{Vector{Int}},
                                  Nq::Int64,Nband::Int64,wave_diff::Vector{Vector{Int64}},
                                input_DensityMatrix::Matrix{ComplexF64},single_Ham::Matrix{ComplexF64},
-                               single_MoirePo::Matrix{ComplexF64},Coulomb_element::Matrix{Float64},formf::Array{Matrix{ComplexF64}},
+                               single_MoirePo::Matrix{ComplexF64},pinning_po::Matrix{ComplexF64},Coulomb_element::Matrix{Float64},formf::Array{Matrix{ComplexF64}},
                                energy_input::Float64,filling::Int,Area::Float64,sum_idx::Matrix{Int},diff_idx::Matrix{Int})
   
 
@@ -44,38 +44,38 @@ function Construct_DensityMatrix(allowedq::Vector{Vector{Int}},
   HF_eigenvalue=zeros(Float64,Nq^2*Nband)
   HF_eigenvector=zeros(ComplexF64,Nq^2*Nband,Nq^2*Nband)
  
-   num_spin=2
-  Nbs=Int(Nband/num_spin)
-  input_ds_reshaped=reshape(input_DensityMatrix,Nq^2,Nbs,num_spin,Nq^2,Nbs,num_spin)
+
+  
+  input_ds_reshaped=reshape(input_DensityMatrix,Nq^2,Nband,Nq^2,Nband)
    
  
-  HartreeMatrix=zeros(ComplexF64,Nq^2,Nbs,num_spin,Nq^2,Nbs,num_spin)
-  FockMatrix=zeros(ComplexF64,Nq^2,Nbs,num_spin,Nq^2,Nbs,num_spin)
+  HartreeMatrix=zeros(ComplexF64,Nq^2,Nband,Nq^2,Nband)
+  FockMatrix=zeros(ComplexF64,Nq^2,Nband,Nq^2,Nband)
    nt = Threads.maxthreadid()
-   Xbuf = [Matrix{ComplexF64}(undef, Nbs, Nbs) for _ in 1:nt]
-  Ybuf = [Matrix{ComplexF64}(undef, Nbs, Nbs) for _ in 1:nt]
-  ρbuf = [Matrix{ComplexF64}(undef, Nbs, Nbs) for _ in 1:nt]
+   Xbuf = [Matrix{ComplexF64}(undef, Nband, Nband) for _ in 1:nt]
+  Ybuf = [Matrix{ComplexF64}(undef, Nband, Nband) for _ in 1:nt]
+  ρbuf = [Matrix{ComplexF64}(undef, Nband, Nband) for _ in 1:nt]
   tic=time()
   Threads.@threads for k2 in eachindex(allowedq)
     tid=Threads.threadid()
     ρb = ρbuf[tid]
     X=Xbuf[tid]
     Y=Ybuf[tid]
-    for k3 in eachindex(allowedq),s1 in 1:num_spin, s2 in 1:num_spin
-    Fk_local=@view  FockMatrix[k2,:,s1,k3,:,s2]
-    Fk_buf=zeros(ComplexF64,Nbs,Nbs) 
+    for k3 in eachindex(allowedq)
+    Fk_local=@view  FockMatrix[k2,:,k3,:]
+    Fk_buf=zeros(ComplexF64,Nband,Nband) 
        for k1 in eachindex(allowedq)
           #qindex=allowedq_dic[mod.(allowedq[k1]-allowedq[k3],Nq)]
           #k4=allowedq_dic[mod.(allowedq[k1]+allowedq[k2]-allowedq[k3],Nq)]
            qindex=diff_idx[k1,k3]
            k4=sum_idx[qindex,k2]
-           ρview = @view  input_ds_reshaped[k4, :, s1, k1, :, s2]
+           ρview = @view  input_ds_reshaped[k4, :, k1, :]
            copyto!(ρb, ρview)
            for qg in eachindex(wave_diff)
            
              α=Coulomb_element[qindex,qg]  
-             A=formf[k2,qindex,qg,s1]   
-             B=formf[k3,qindex,qg,s2]
+             A=formf[k2,qindex,qg]   
+             B=formf[k3,qindex,qg]
              mul!(X,ρb,B')
              mul!(Y,A,X)
              Fk_buf.+=α.*Y
@@ -92,25 +92,25 @@ function Construct_DensityMatrix(allowedq::Vector{Vector{Int}},
 
   Threads.@threads for k2 in eachindex(allowedq)
     for k4 in eachindex(allowedq)
-    HT_local=@view HartreeMatrix[k2,:,1,k4,:,1]
+    HT_local=@view HartreeMatrix[k2,:,k4,:]
     #qindex=allowedq_dic[mod.(allowedq[k4]-allowedq[k2],Nq)]
      qindex=diff_idx[k4,k2]
      for qg in eachindex(wave_diff)
         htdensity=zero(ComplexF64)
-        for k1 in eachindex(allowedq), si in 1:num_spin
+        for k1 in eachindex(allowedq)
           #k3=allowedq_dic[mod.(allowedq[k1]+allowedq[k2]-allowedq[k4],Nq)]
           k3=diff_idx[k1,qindex]
           #htdensity+=tr(input_ds_reshaped[k3,:,k1,:]*formf[k3,qindex,qg]')
-          htdensity+=dot(formf[k3,qindex,qg,si],input_ds_reshaped[k3,:,si,k1,:,si])
+          htdensity+=dot(formf[k3,qindex,qg],input_ds_reshaped[k3,:,k1,:])
         end
         β=Coulomb_element[qindex,qg]*htdensity
       
-         HT_local.+=β.*formf[k2,qindex,qg,1] #I used the knowledge here that Hartree are the same for both spin
+         HT_local.+=β.*formf[k2,qindex,qg] #I used the knowledge here that Hartree are the same for both spin
       
       end
    end
   end
-  HartreeMatrix[:,:,2,:,:,2]=copy(HartreeMatrix[:,:,1,:,:,1])
+
 
   toc=time()
   println(toc-tic,"finishHartree")
@@ -128,13 +128,13 @@ function Construct_DensityMatrix(allowedq::Vector{Vector{Int}},
  
 
 
-   FFF=eigen(single_MoirePo+single_Ham+HartreeMatrix-FockMatrix)
+   FFF=eigen(single_MoirePo+single_Ham+pinning_po+HartreeMatrix-FockMatrix)
    HF_eigenvalue=real(FFF.values)
    HF_eigenvector=FFF.vectors
 
 
  bound=(sort(reduce(vcat,HF_eigenvalue))[filling+1]+sort(reduce(vcat,HF_eigenvalue))[filling])/2
-
+ 
 
     
        for jd in eachindex(HF_eigenvalue)
@@ -166,13 +166,15 @@ end
 
 
 function get_ff(nop_HF_eigenvector::Vector{Matrix{ComplexF64}},NL::Int,Nband::Int,wave::Vector{Vector{Int}}
-                ,wave_diff::Vector{Vector{Int}},spinor_set::Matrix{Vector{ComplexF64}},allowedq::Vector{Vector{Int}},allowedq_dic::Dict{Vector{Int}})
-  num_spin=2
-  Nbs=Int(Nband/num_spin)
-  form_factors=[zeros(ComplexF64,Nbs,Nbs) for _ in eachindex(allowedq), _ in eachindex(allowedq), _ in eachindex(wave_diff), _ in 1:num_spin]
+                ,wave_diff::Vector{Vector{Int}},spinor_set::Matrix{Vector{ComplexF64}},allowedq::Vector{Vector{Int}},allowedq_dic::Dict{Vector{Int}},
+                a1m::Vector{Float64},a2m::Vector{Float64},T1::Vector{Float64},T2::Vector{Float64},
+                pin_coeff::Float64,dedis::Float64,defec_pos::Int,Area::Float64,ϵr::Float64)
+ 
 
-  eigenvector_PWbasis=[zeros(ComplexF64,2*NL,length(wave),Nbs) for _ in eachindex(allowedq)]
-  diff_eigenvector_threads=[zeros(ComplexF64,2*NL,length(wave),Nbs,length(allowedq)) for _ in eachindex(wave_diff)]
+  form_factors=[zeros(ComplexF64,Nband,Nband) for _ in eachindex(allowedq), _ in eachindex(allowedq), _ in eachindex(wave_diff)]
+
+  eigenvector_PWbasis=[zeros(ComplexF64,2*NL,length(wave),Nband) for _ in eachindex(allowedq)]
+  diff_eigenvector_threads=[zeros(ComplexF64,2*NL,length(wave),Nband,length(allowedq)) for _ in eachindex(wave_diff)]
   
   
  
@@ -181,7 +183,7 @@ function get_ff(nop_HF_eigenvector::Vector{Matrix{ComplexF64}},NL::Int,Nband::In
 
   for ja in eachindex(allowedq)
    
-    for jc in eachindex(wave), bi in 1:Nbs
+    for jc in eachindex(wave), bi in 1:Nband
       eigenvector_PWbasis[ja][:,jc,bi]=nop_HF_eigenvector[ja][jc,bi]*spinor_set[ja,jc]
     end
     
@@ -201,14 +203,14 @@ function get_ff(nop_HF_eigenvector::Vector{Matrix{ComplexF64}},NL::Int,Nband::In
    
 
 
-   eigenvector_PWbasis=[reshape(eigenvector_PWbasis[ja],2*NL*length(wave),Nbs) for ja in eachindex(allowedq)]
-   diff_eigenvector_threads=[reshape(diff_eigenvector_threads[ja],2*NL*length(wave),Nbs,length(allowedq)) for ja in eachindex(wave_diff)] 
+   eigenvector_PWbasis=[reshape(eigenvector_PWbasis[ja],2*NL*length(wave),Nband) for ja in eachindex(allowedq)]
+   diff_eigenvector_threads=[reshape(diff_eigenvector_threads[ja],2*NL*length(wave),Nband,length(allowedq)) for ja in eachindex(wave_diff)] 
 
 
 
 
    Threads.@threads for ja in 1:Nq^2
-    ff_local=@view  form_factors[ja,:,:,:]
+    ff_local=@view  form_factors[ja,:,:]
     for jb in 1:Nq^2
      
         meshk1plusq=mod.(allowedq[ja]+allowedq[jb],Nq)
@@ -220,17 +222,55 @@ function get_ff(nop_HF_eigenvector::Vector{Matrix{ComplexF64}},NL::Int,Nband::In
            if gk1plusq_pos≠nothing
            
              
-                ff_local[jb,jc,1]=(diff_eigenvector_threads[gk1plusq_pos][:,:,ja])'*eigenvector_PWbasis[k2pos]
+                ff_local[jb,jc]=(diff_eigenvector_threads[gk1plusq_pos][:,:,ja])'*eigenvector_PWbasis[k2pos]
          
            end
        end
      end
    end
-     form_factors[:,:,:,2]=form_factors[:,:,:,1]
+   
+  pinning_po=reshape(pinning_po,length(allowedq),Nband,length(allowedq),Nband)
+      if defec_pos==1
+         defec_pos_vec=(2*a2m-a1m)*2/3
+      elseif defec_pos==2
+         defec_pos_vec=(2*a2m-a1m)*1/3
+      elseif defec_pos==3
+        defec_pos_vec=(2*a2m-a1m)*0
+      elseif defec_pos==4
+        defec_pos_vec=(2*a2m-a1m)*(-2/3)
+      end
 
 
-   return form_factors
+
+  for ja in eachindex(allowedq)
+    for jb in eachindex(allowedq),jc in eachindex(wave_diff)
+       meshk1plusq=mod.(allowedq[ja]+allowedq[jb],Nq)
+       k2pos=allowedq_dic[meshk1plusq]
+       qvec=-(allowedq[jb]+wave_dicc[jc]) # The form factors is <k1,\alpha|exp(-iqr)|k2,\beta>
+       pinning_po[ja,:,k2pos,:]=pin_coeff/(ϵr*Area)*form_factors[ja,jb,jc]*get_Fourier_potential(qvec,T1,T2,dedis)*exp(-im*dot([T1 T2]*qvec,defec_pos_vec))
+    end
+  end
+  pinning_po=reshape(pinning_po,length(allowedq)*Nband,length(allowedq)*Nband)
+  pinning_po=0.5*(pinning_po+pinning_po')
+
+   return form_factors,pinning_po
 end
+
+
+
+
+function get_Fourier_potential(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64},d::Float64)
+   kvec=[T1 T2]*k
+   D=25
+    if k==[0,0]
+        return (D-d)*9047.5646
+    else
+        return 1/cosh(norm(kvec)*D)*sinh(norm(kvec)*(D-d))/norm(kvec)*9047.5646
+    end
+end
+
+
+
 
 function initial_process(allowedq::Vector{Vector{Int}},nop_single_Ham::Vector{Matrix{ComplexF64}},
                          nop_single_MoirePo::Vector{Matrix{ComplexF64}},nop_HF_eigenvector::Vector{Matrix{ComplexF64}},
@@ -240,13 +280,13 @@ function initial_process(allowedq::Vector{Vector{Int}},nop_single_Ham::Vector{Ma
       allowedq_dic[allowedq[ja]]=ja
     end
     
-    num_spin=2
-    Nbs=Int(Nband/num_spin)
-  single_Ham=zeros(ComplexF64,length(allowedq),Nbs,num_spin,length(allowedq),Nbs,num_spin)
-  single_MoirePo=zeros(ComplexF64,length(allowedq),Nbs,num_spin,length(allowedq),Nbs,num_spin)
-  for ja in eachindex(allowedq), si in 1:num_spin
-    single_Ham[ja,:,si,ja,:,si]=(nop_HF_eigenvector[ja]'*nop_single_Ham[ja]*nop_HF_eigenvector[ja])[1:Nbs,1:Nbs]
-    single_MoirePo[ja,:,si,ja,:,si]=(nop_HF_eigenvector[ja]'*nop_single_MoirePo[ja]*nop_HF_eigenvector[ja])[1:Nbs,1:Nbs]
+  
+
+  single_Ham=zeros(ComplexF64,length(allowedq),Nband,length(allowedq),Nband)
+  single_MoirePo=zeros(ComplexF64,length(allowedq),Nband,length(allowedq),Nband)
+  for ja in eachindex(allowedq)
+    single_Ham[ja,:,ja,:]=(nop_HF_eigenvector[ja]'*nop_single_Ham[ja]*nop_HF_eigenvector[ja])[1:Nband,1:Nband]
+    single_MoirePo[ja,:,ja,:]=(nop_HF_eigenvector[ja]'*nop_single_MoirePo[ja]*nop_HF_eigenvector[ja])[1:Nband,1:Nband]
   end
 
   single_Ham=reshape(single_Ham,length(allowedq)*Nband,length(allowedq)*Nband)
@@ -274,7 +314,7 @@ end
 function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
                        allowedq::Vector{Vector{Int64}},allowedq_dic::Dict{Vector{Int}},T1::Vector{Float64},T2::Vector{Float64},
                        Nq::Int,wave::Vector{Vector{Int64}},wave_diff::Vector{Vector{Int64}},single_Ham::Matrix{ComplexF64},
-                       single_MoirePo::Matrix{ComplexF64},constq::Float64,ϵr::Float64,formfactors::Array{Matrix{ComplexF64}},filling::Int,Area::Float64)
+                       single_MoirePo::Matrix{ComplexF64},pinning_po::Matrix{ComplexF64},constq::Float64,ϵr::Float64,formfactors::Array{Matrix{ComplexF64}},filling::Int,Area::Float64)
     eout=1.0
     itcount=0
  
@@ -322,7 +362,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,DIIS_size)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(allowedq,
                                                                                                                                                                                   Nq,Nband,wave_diff,
                                                                                                                                                                                 dmk,single_Ham,
-                                                                                                                                                                                single_MoirePo,Coulomb_element,formfactors,
+                                                                                                                                                                                single_MoirePo,pinning_po,Coulomb_element,formfactors,
                                                                                                                                                                                 energy,filling,Area,sum_idx,diff_idx)
        
         DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=dmk
@@ -336,7 +376,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
         eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,DIIS_size)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(allowedq,
                                                                                                                                                                                   Nq,Nband,wave_diff,
                                                                                                                                                                                 input_DensityMatrix,single_Ham,
-                                                                                                                                                                                single_MoirePo,Coulomb_element,formfactors,
+                                                                                                                                                                                single_MoirePo,pinning_po,Coulomb_element,formfactors,
                                                                                                                                                                                 energy,filling,Area,sum_idx,diff_idx)
           DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=input_DensityMatrix
         input_DensityMatrix=output_DensityMatrix
