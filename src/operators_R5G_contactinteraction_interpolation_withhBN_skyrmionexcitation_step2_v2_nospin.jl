@@ -337,29 +337,54 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     energy=0.0
     energy_change=0.0
   
+   
+     eout_hist = Float64[]
+     PLATEAU_N = 10
+     PLATEAU_FRAC = 0.10
+     E_EPS = 1e-30
 
-    while (eout>1*10^(-18)) || (bad_count<DIIS_size) || (abs(energy_change)>1*10^(-10))
+    diis_fire_once = false
+    diis_cooldown = 0              # prevent immediate re-trigger after DIIS
+     DIIS_COOLDOWN = 10 
+
+
+
+    while (eout>1*10^(-18)) || (bad_count<DIIS_size+3) || (abs(energy_change)>1*10^(-9))
  
       if eout<1*10^(-18)
        bad_count+=1
       else
         bad_count=0
       end
-      
+      dmk_used = input_DensityMatrix
       tic=time()
 
-      if (itcount>100 && abs(eout)>10^(-2)) || (itcount>30 && abs(eout)<10^(-10))
+          if (itcount > 1000 && abs(eout) > 10)
+                itcount = 0
+
+                # forget DIIS/plateau state completely
+                bad_count = 0
+                energy = 0.0
+                energy_change = 0.0
+                empty!(eout_hist)
+                diis_fire_once = false
+                diis_cooldown = 0
+                work.diis_head = 1
+                work.diis_len  = 0
+
+                # random restart DM (your style)
+                A = randn(Nq^2*Nband,Nq^2*Nband) + im*randn(Nq^2*Nband,Nq^2*Nband)
+                dmk = (A + A') * 0.01
+          end
+
+
+      if (itcount>150 && abs(eout)>10) || (itcount>30 && abs(eout)<10^(-7)) || diis_fire_once
       
         dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,DIIS_size)
-        if dmk==0
-            itcount=0
-             A=randn(Nq^2*Nband,Nq^2*Nband)+im*randn(Nq^2*Nband,Nq^2*Nband)
-            dmk=(A+A')*0.01
-          
-        end
-      
 
-       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,DIIS_size)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(allowedq,
+        dmk_used=dmk
+
+        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,DIIS_size)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix=Construct_DensityMatrix(allowedq,
                                                                                                                                                                                   Nq,Nband,wave_diff,
                                                                                                                                                                                 dmk,single_Ham,
                                                                                                                                                                                 single_MoirePo,pinning_po,Coulomb_element,formfactors,
@@ -368,6 +393,16 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
         DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=dmk
         input_DensityMatrix=output_DensityMatrix
         println("using DIIS")
+
+             
+     
+        
+
+           if diis_fire_once
+            diis_fire_once = false
+            empty!(eout_hist)          # <-- yes: clear history after firing
+            diis_cooldown = DIIS_COOLDOWN
+           end
        
       else
   
@@ -396,6 +431,30 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
       toc=time()
       println(toc-tic,"eout=$eout","energy_change=$energy_change","itcount=$itcount")
       flush(stdout)
+
+
+          # update cooldown
+        if diis_cooldown > 0
+            diis_cooldown -= 1
+        end
+
+        # update history
+        push!(eout_hist, eout)  # keep sign; we'll use abs where needed
+        if length(eout_hist) > PLATEAU_N
+            popfirst!(eout_hist)
+        end
+
+        # plateau detection (only if not cooling down and not already scheduled)
+        if !diis_fire_once && diis_cooldown == 0 && length(eout_hist) == PLATEAU_N
+            e0 = eout_hist[1]
+            e1 = eout_hist[end]
+            rel_change = abs(e1 - e0) / max(abs(e0), E_EPS)
+
+            if rel_change < PLATEAU_FRAC
+                diis_fire_once = true
+                println("Plateau detected: |Δe|/|e| ≈ $(rel_change). Will fire DIIS once.")
+            end
+        end
      
     
   end
