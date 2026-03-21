@@ -179,8 +179,8 @@ function safe_inverse(A)
       return inv(A)  # Attempt to compute inverse
   catch e
       if isa(e, SingularException)
-          println("Matrix is singular, doing randomstart again.")
-          return pinv(A, 0.1)  # Use pseudoinverse as an alternative
+          println("Matrix is singular, doing pseudoinverse.")
+          return pinv(A, 10^(-5))  # Use pseudoinverse as an alternative
       else
           rethrow(e)  # If another error occurs, propagate it
       end
@@ -574,7 +574,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
             bad_count+=1
         end
 
-       if itcount>20
+       if itcount>50
             println("using DIIS")
             current_density=implement_DIIS(DIIS_delta,DIIS_density,DIIS_size)      
     
