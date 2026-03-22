@@ -180,7 +180,7 @@ function safe_inverse(A)
   catch e
       if isa(e, SingularException)
           println("Matrix is singular, doing pseudoinverse.")
-          return pinv(A, 10^(-5))  # Use pseudoinverse as an alternative
+          return pinv(A,0.1)  # Use pseudoinverse as an alternative
       else
           rethrow(e)  # If another error occurs, propagate it
       end
@@ -539,7 +539,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
         #ϵr=8.0
         eout=1.0
         #target_density=0.002
-        DIIS_size=8
+        DIIS_size=5
         #tg_dis=50.0
         #bg_dis=50.0
 
