@@ -574,7 +574,7 @@ function iteration_loop(num_kpoints::Int,radius::Float64,uD::Float64,temp::Float
             bad_count+=1
         end
 
-       if itcount>50
+       if itcount>30
             println("using DIIS")
             current_density=implement_DIIS(DIIS_delta,DIIS_density,DIIS_size)      
     
