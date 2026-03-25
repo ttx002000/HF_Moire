@@ -5,10 +5,12 @@ using JLD2
 
 include("submit_job_v2.jl")
 
-filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "v4"
 
 aa= parse.(Int, ARGS)
+
+
+filepath = joinpath(@__DIR__, "main_test.jl")
+job_prefix = "v6_$(Int(aa[1]))"
 
 scratch_dir = ENV["SCRATCH"]
 misspath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v7/data_output$(Int(aa[1]))/missedjobs.jld2")
@@ -21,12 +23,12 @@ ee=length(index)
 ba_size=300
 count=1
 while (count-1)*ba_size+1<=ee
-  submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*ba_size+start:min(count*ba_size+start,ee)]; time="6:00:00",cpus_per_task=8,mem=32)
+  submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*ba_size+start:min(count*ba_size+start,ee)]; time="5:00:00",cpus_per_task=4,mem=8)
   println((count-1)*ba_size+start,min(count*ba_size+start,ee))
   sleep(5)
 
   global count+=1
-  if mod(count,5)==0
+  if mod(count,3)==0
     sleep(0)
   end
 

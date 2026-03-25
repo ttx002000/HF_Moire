@@ -179,7 +179,7 @@ function build_shiftcsr(wl::WaveLookup, wave_n1::Vector{Int64}, wave_n2::Vector{
     end
 
     # -------- offsets (prefix sum) --------
-    offsets = Vector{Int64}(undef, NSHIFT + 1)
+    offsets = Vector{Int}(undef, NSHIFT + 1)
     offsets[1] = 1
     @inbounds for sid in 1:NSHIFT
         offsets[sid+1] = offsets[sid] + counts[sid]
@@ -222,26 +222,6 @@ function csr_stats(csr::ShiftCSR, Ng::Int)
 end
 
 
-function pick_random_jld2_path(folder::AbstractString)
-    isdir(folder) || return nothing
-
-    jld2_files = filter(readdir(folder; join=true)) do p
-        isfile(p) && endswith(lowercase(p), ".jld2")
-    end
-
-    isempty(jld2_files) && return nothing
-    return rand(jld2_files)
-end
-
-function transform_dm(dm_old::Matrix{ComplexF64},wave::Vector{Vector{Int}},seed_spinor_set::Vector{Vector{ComplexF64}},spinor_set::Vector{Vector{ComplexF64}})
-    dm_new=zeros(ComplexF64,length(wave),length(wave))
-    for ja in eachindex(wave), jb in eachindex(wave)
-       dm_new[ja,jb]=(spinor_set[ja]'*seed_spinor_set[ja])*dm_old[ja,jb]*(seed_spinor_set[jb]'*spinor_set[jb])
-   end
-
-   return dm_new
-end
-
 
 
 
@@ -249,7 +229,7 @@ end
 
 function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
               uD::Float64,λ::Float64,enlarge_factor::Int,V0_hBN::Float64,V1_hBN::Float64,
-              ψ_hBN::Float64,V2_scalar::Float64,ϕ::Float64)
+              ψ_hBN::Float64,V2_scalar::Float64,ϕ::Float64,pin_coeff::Float64,ϵr::Float64,dedis::Float64,defec_pos::Int)
    
     aGr=0.246
     ϵ=0.2504/aGr-1 #This is the normal one
@@ -267,7 +247,7 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
     a2m=inv([b1';b2'])*[0,2π]
     am=norm(a1m);
     
-
+    Area=√3/2*am^2
     b1T=Int.(round.(inv([T1 T2])*b1))
     b2T=Int.(round.(inv([T1 T2])*b2))
 
@@ -285,8 +265,20 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
         if (gtest[1]^2+gtest[2]^2)<cutoffstandard^2
             push!(wave,ja*b1T+jb*b2T)
         end
+    end   
+    
+    wave_dict=Dict{Vector{Int64},Int64}()
+    for ja in eachindex(wave)
+     wave_dict[wave[ja]]=ja
     end
  
+    wave_diff=Vector{Int64}[]
+    for ja in eachindex(wave), jb in eachindex(wave)
+        push!(wave_diff,wave[ja]-wave[jb])
+       
+    end
+    wave_diff=unique(wave_diff)
+
     dimension=length(wave)
    
     
@@ -343,9 +335,9 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
      
     
       for jb in eachindex(wave)
-        
          
-          single_Ham[jb,jb]=norm([T1 T2]*wave[jb])^2*200
+         
+          single_Ham[jb,jb]=norm([T1 T2]*(wave[jb]))^2*200
 
          
       end
@@ -388,7 +380,33 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
       single_eigenvalue=real(FFF.values)
       single_eigenvector=FFF.vectors
     
-    
+     # more localized potential for small d
+     
+      pinning_po=zeros(ComplexF64,dimension,dimension)
+
+      if defec_pos==1
+         defec_pos_vec=(2*a2m-a1m)/enlarge_factor*2/3
+      elseif defec_pos==2
+         defec_pos_vec=(2*a2m-a1m)/enlarge_factor*1/3
+      elseif defec_pos==3
+        defec_pos_vec=(2*a2m-a1m)/enlarge_factor*0
+      elseif defec_pos==4
+        defec_pos_vec=(2*a2m-a1m)/enlarge_factor*(-2/3)
+      end
+
+
+      for jc in eachindex(wave)
+        for jd in eachindex(wave_diff)
+          if haskey(wave_dict,wave[jc]+wave_diff[jd])
+              pos=wave_dict[wave[jc]+wave_diff[jd]]
+              pinning_po[pos,jc]+=pin_coeff/(Area*ϵr)*get_Fourier_potential(wave_diff[jd],T1,T2,dedis)*(spinor_set[pos]'*op_5*spinor_set[jc])*exp(im*dot([T1 T2]*wave_diff[jd],defec_pos_vec))
+          end
+        end
+      
+      end
+
+      pinning_po=(pinning_po+pinning_po')/2
+     
 
 
     
@@ -398,16 +416,31 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
      
       A=randn(ComplexF64,dimension,dimension)
       input_DensityMatrix=(A+A')*1.0
-    
-  
+   
+
     
 
     
-    return overlapmatrix, wave, input_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector, T1, T2, a1m, a2m, b1,b2,spinor_set
+    return overlapmatrix, wave, input_DensityMatrix, single_MoirePo, pinning_po, single_Ham, single_eigenvalue,single_eigenvector, T1, T2, a1m, a2m, b1,b2,spinor_set,Area
       
 
        
 end
+
+
+
+
+function get_Fourier_potential(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64},d::Float64)
+   kvec=[T1 T2]*k
+   D=25
+    if k==[0,0]
+        return (D-d)*9047.5646
+    else
+        return 1/cosh(norm(kvec)*D)*sinh(norm(kvec)*(D-d))/norm(kvec)*9047.5646
+    end
+end
+
+
 
 @inline function symmetrize_from_lower!(A::Matrix{ComplexF64})
     n = size(A,1)
@@ -476,21 +509,14 @@ function HFWork(dimension::Int, DIIS_size::Int, NSHIFT::Int,filling::Int)
 end
 
 
-
-
-
-
-
-
-
 function Coulomb(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64})::Float64
    D=25
-   return 0.0
+   return k==[0,0] ? D*9047.5636 : tanh(norm([T1 T2]*k*D))/norm(k[1]*T1+k[2]*T2)*9047.5636
 end
 
 function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_n1::Vector{Int64},wave_n2::Vector{Int64},
                                input_DensityMatrix::Matrix{ComplexF64},single_Ham::Matrix{ComplexF64},
-                               single_MoirePo::Matrix{ComplexF64},overlapmatrix::Matrix{ComplexF64},
+                               single_MoirePo::Matrix{ComplexF64},pinning_po::Matrix{ComplexF64},overlapmatrix::Matrix{ComplexF64},
                                energy_input::Float64,filling::Int,Area::Float64,Coulomb_matrix::Matrix{ComplexF64})
   
  
@@ -523,8 +549,8 @@ function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{
           
             
               @inbounds for k in lo:hi
-                 g2 =csr.g2_list[k]
-                 g3 =csr.g3_list[k]
+                 g2 = Int(csr.g2_list[k])
+                 g3 = Int(csr.g3_list[k])
               
               
                   tmp=Coulomb_matrix[g1,g3]*overlapmatrix[g2,g4]
@@ -545,42 +571,42 @@ function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{
   end
 
 
-#=
- tic=time()
- 
-  Threads.@threads :greedy  for g1 in eachindex(wave)
-    @inbounds begin
-         w1n1=wave_n1[g1]; 
-         w1n2=wave_n2[g1]
-     for g3 in 1:g1
-     
-        w3n1 = wave_n1[g3];
-        w3n2 = wave_n2[g3]
-         
-        dg_n1=w1n1- w3n1
-        dg_n2=w1n2- w3n2
-        lo, hi = csr_range(csr,  dg_n1,  dg_n2)
-     
-        acc = 0.0 + 0.0im
-        @inbounds for k in lo:hi
-       
-        g2 = Int(csr.g2_list[k])
-        g4 = Int(csr.g3_list[k])
-         
-            acc +=input_DensityMatrix[g4, g2] * overlapmatrix[g2, g4]
+    #=
+    tic=time()
+    
+    Threads.@threads :greedy  for g1 in eachindex(wave)
+        @inbounds begin
+            w1n1=wave_n1[g1]; 
+            w1n2=wave_n2[g1]
+        for g3 in 1:g1
+        
+            w3n1 = wave_n1[g3];
+            w3n2 = wave_n2[g3]
+            
+            dg_n1=w1n1- w3n1
+            dg_n2=w1n2- w3n2
+            lo, hi = csr_range(csr,  dg_n1,  dg_n2)
+        
+            acc = 0.0 + 0.0im
+            @inbounds for k in lo:hi
+        
+            g2 = Int(csr.g2_list[k])
+            g4 = Int(csr.g3_list[k])
+            
+                acc +=input_DensityMatrix[g4, g2] * overlapmatrix[g2, g4]
+            
+            end
+            val = acc * Coulomb_matrix[g1,g3]
+        
+            work.HartreeMatrix[g1,g3] = val
         
         end
-        val = acc * Coulomb_matrix[g1,g3]
-     
-        work.HartreeMatrix[g1,g3] = val
-      
-     end
+        end
     end
-  end
- toc=time()
- println(toc-tic,"Hartree")
-=#
- 
+    toc=time()
+    println(toc-tic,"Hartree")
+    =#
+    
     ix = csr.ix
     accShift = work.HartreeAccShift
 
@@ -621,12 +647,15 @@ function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{
 
     copy!(work.H_phys, single_MoirePo)
     work.H_phys .+= single_Ham
+    work.H_phys .+= pinning_po
     work.H_phys .+= work.HartreeMatrix
     work.H_phys .-= work.FockMatrix
 
  
    
 
+     
+   
       old = BLAS.get_num_threads()
     
        BLAS.set_num_threads(min(8,Threads.nthreads()))   # or some smaller number like 4/8
@@ -661,12 +690,9 @@ function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{
   
 
  
-  #ss=single_MoirePo+single_Ham+0.5*work.HartreeMatrix-0.5*work.FockMatrix
-  #energy = real(sum(ss .* transpose(input_DensityMatrix)))
-   energy = real(dot(input_DensityMatrix, single_MoirePo)) +
-         real(dot(input_DensityMatrix, single_Ham)) +
-         0.5*real(dot(input_DensityMatrix, work.HartreeMatrix)) -
-         0.5*real(dot(input_DensityMatrix, work.FockMatrix))
+
+   energy = real(dot(input_DensityMatrix, single_MoirePo)) +real(dot(input_DensityMatrix, single_Ham)) +  real(dot(input_DensityMatrix, pinning_po))+ 0.5*real(dot(input_DensityMatrix, work.HartreeMatrix)) -0.5*real(dot(input_DensityMatrix, work.FockMatrix))
+         
 
    energy_change=real(energy-energy_input)
 
@@ -682,6 +708,27 @@ end
 
 
 
+function pick_random_jld2_path(folder::AbstractString)
+    isdir(folder) || return nothing
+
+    jld2_files = filter(readdir(folder; join=true)) do p
+        isfile(p) && endswith(lowercase(p), ".jld2")
+    end
+
+    isempty(jld2_files) && return nothing
+    return rand(jld2_files)
+end
+
+
+
+function transform_dm(dm_old::Matrix{ComplexF64},wave::Vector{Vector{Int}},seed_spinor_set::Vector{Vector{ComplexF64}},spinor_set::Vector{Vector{ComplexF64}})
+    dm_new=zeros(ComplexF64,length(wave),length(wave))
+    for ja in eachindex(wave), jb in eachindex(wave)
+       dm_new[ja,jb]=(spinor_set[ja]'*seed_spinor_set[ja])*dm_old[ja,jb]*(seed_spinor_set[jb]'*spinor_set[jb])
+   end
+
+   return dm_new
+end
 
 
 
@@ -691,7 +738,7 @@ end
 function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
                        T1::Vector{Float64},T2::Vector{Float64},
                       wave::Vector{Vector{Int64}},single_Ham::Matrix{ComplexF64},
-                       single_MoirePo::Matrix{ComplexF64},constq::Float64,ϵr::Float64,overlapmatrix::Matrix{ComplexF64},filling::Int,Area::Float64)
+                       single_MoirePo::Matrix{ComplexF64},pinning_po::Matrix{ComplexF64},constq::Float64,ϵr::Float64,overlapmatrix::Matrix{ComplexF64},filling::Int,Area::Float64)
     eout=1.0
     itcount=0
     bad_count=0
@@ -730,15 +777,15 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
    
   
    println(Threads.nthreads())
-   while (eout>1*10^(-16)) || (bad_count<DIIS_size+5) || (abs(energy_change)>1*10^(-9))
+   while eout>10^(-16) || abs(energy_change)>10^(-9) || bad_count< DIIS_size+4
       if eout<1*10^(-16)
        bad_count+=1
       else
         bad_count=0
       end
-    
+     dmk_used = input_DensityMatrix
 
-       if (itcount > 500 && abs(eout) > 10)
+    if (itcount > 1000 && abs(eout) > 10)
                 itcount = 0
 
                 # forget DIIS/plateau state completely
@@ -753,12 +800,9 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
 
                 # random restart DM (your style)
                 A = randn(dimension, dimension) + im*randn(dimension, dimension)
-                input_DensityMatrix = (A + A') * 0.01
-                dmk_used=input_DensityMatrix
-                println("random start again")
-                
-       end
-      dmk_used = input_DensityMatrix
+                dmk = (A + A') * 0.01
+    end
+      
       tic=time()
 
       if (itcount>150 && abs(eout)>10) || (itcount>30 && abs(eout)<10^(-7)) || diis_fire_once
@@ -772,7 +816,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
 
         eout, energy_change, energy=Construct_DensityMatrix(work,csr,wave,wave_n1,wave_n2,
                                                                                 dmk,single_Ham,
-                                                                                single_MoirePo,overlapmatrix,
+                                                                                single_MoirePo, pinning_po,overlapmatrix,
                                                                                energy,filling,Area,Coulomb_matrix)
        
      
@@ -790,7 +834,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
 
        eout, energy_change, energy=Construct_DensityMatrix(work,csr,wave,wave_n1,wave_n2,
                                                                                 input_DensityMatrix,single_Ham,
-                                                                                single_MoirePo,overlapmatrix,
+                                                                                single_MoirePo, pinning_po,overlapmatrix,
                                                                                energy,filling,Area,Coulomb_matrix)
    
         
@@ -861,11 +905,6 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
        work.FockMatrix
   
 end
-
-
-
-
-
 
 
 

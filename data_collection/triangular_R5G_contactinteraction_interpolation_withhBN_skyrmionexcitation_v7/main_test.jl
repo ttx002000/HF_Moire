@@ -3,8 +3,8 @@ Pkg.activate(joinpath(@__DIR__, "../.."))
 using JLD2
 
 
-# I copied v4. I want to use parabolic dispersion, and I want to get rid of Coulomb interaction. I still keep epsilonr parameter, but that's dummy.
-include("../../src/operators_R5G_contactinteraction_interpolation_withhBN_skyrmionexcitation_v7.jl")
+# Basically the same as v6, but I use parabolic dispersion. Which will help me to study rotational symmetric case
+include("../../src/operators_R5G_contactinteraction_interpolation_withhBN_skyrmionexcitation_v6.jl")
 
 args=parse.(Float64,ARGS)
 
@@ -25,21 +25,23 @@ V1_hBN=args[12]
 ψ_hBN=args[13]
 V2_scalar=args[14]
 ϕ=args[15]/180*π
-filepos=Int(args[16])
+pin_coeff=args[16]
+dedis=args[17]
+defec_pos=Int(args[18])
+filepos=Int(args[19])
 
 
 
 
 
 
-overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector, T1, T2, a1m, a2m, b1,b2,spinor_set=triangle_initial_Densitymatrix(Int(NL),θ,gcutoff,uD,λ,enlarge_factor,V0_hBN,V1_hBN,ψ_hBN,V2_scalar,ϕ)
-
-Area=√3/2*norm(a1m)^2
-
+overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, pinning_po, single_Ham, single_eigenvalue,single_eigenvector, T1, T2, a1m, a2m, b1,b2,spinor_set,Area=triangle_initial_Densitymatrix(Int(NL),θ,gcutoff,uD,
+                                                                                                                                   λ,enlarge_factor,V0_hBN,V1_hBN,ψ_hBN,V2_scalar,ϕ,pin_coeff,ϵr,dedis,defec_pos)
 
 scratch_dir = ENV["SCRATCH"]
-seed_path=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v7/data_output$(Int(args[16]))/seed")
-if only(rand())>0.5
+
+seed_path=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v7/data_output$(Int(args[19]))/seed")
+if only(rand())>1.2
    seed_file_path=pick_random_jld2_path(seed_path)
    if !(seed_file_path==nothing)
       seed_file=load(seed_file_path)
@@ -49,48 +51,18 @@ if only(rand())>0.5
 end
 
 
-
-if constq<5*10^4
-  DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
+DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
                                                                             T1,T2,wave,single_Ham,
-                                                                            single_MoirePo,constq,ϵr,
-                                                                 overlapmatrix,filling,Area)
-else
-    if V2_scalar==0.0
-      println("contact interaction too large, using strategy 2")
-        DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
-                                                                              T1,T2,wave,single_Ham,
-                                                                              5*single_MoirePo,5.0*10^4,ϵr,
-                                                                  overlapmatrix,filling,Area)
-          last_input=copy(DIIS_input_DensityMatrix[1])
-      DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(last_input,
-                                                                              T1,T2,wave,single_Ham,
-                                                                              single_MoirePo,constq,ϵr,
-                                                                  overlapmatrix,filling,Area)
-    else
-       println("contact interaction too large, using strategy 2")
-        DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
-                                                                              T1,T2,wave,single_Ham,
-                                                                              single_MoirePo,5.0*10^4,ϵr,
-                                                                  overlapmatrix,filling,Area)
-          last_input=copy(DIIS_input_DensityMatrix[1])
-      DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(last_input,
-                                                                              T1,T2,wave,single_Ham,
-                                                                              single_MoirePo,constq,ϵr,
-                                                                  overlapmatrix,filling,Area)
-    end
-end
+                                                                            single_MoirePo,pinning_po,constq,ϵr,
+                                                                            overlapmatrix,filling,Area)
 
 
 
 
 
 
-
-
-scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v7/data_output$(Int(args[16]))/$(args[1])NL$(args[2])theta$(args[3])constq$(args[4])ϵr$(args[5])uD$(args[6])filling$(args[7])cutoff$(args[8])lambda$(args[9])trytime$(args[10])enlarge$(args[11])V0_hBN$(args[12])V1_hBN$(args[13])ψ_hBN$(args[14])V2_scalar$(args[15])ϕ.jld2")
-
+savepath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v6/data_output$(Int(args[19]))/$(args[1])NL$(args[2])theta$(args[3])constq$(args[4])ϵr$(args[5])uD$(args[6])filling$(args[7])cutoff$(args[8])lambda$(args[9])trytime$(args[10])enlarge$(args[11])V0_hBN$(args[12])V1_hBN$(args[13])ψ_hBN$(args[14])V2_scalar$(args[15])ϕ$(args[16])pincof$(args[17])dedis$(args[18])depos.jld2")
+#savepath="test.jld2"
 
 
 jldsave(savepath,single_Ham=single_Ham,single_MoirePo=single_MoirePo,
@@ -100,6 +72,6 @@ jldsave(savepath,single_Ham=single_Ham,single_MoirePo=single_MoirePo,
                 HFeigenvalue=HF_eigenvalue,
                 HartreeMatrix=HartreeMatrix,FockMatrix=FockMatrix,HF_eigenvector=HF_eigenvector,
                 single_eigenvector=single_eigenvector,T1=T1,T2=T2,wave=wave,
-                a1m=a1m,a2m=a2m,b1=b1,b2=b2)
+                a1m=a1m,a2m=a2m,b1=b1,b2=b2,pinning_po=pinning_po)
 
 
