@@ -27,21 +27,22 @@ V1_hBN=args[12]
 V2_scalar=args[14]
 ϕ=args[15]/180*π
 ising=args[16]
-filepos=Int(args[17])
+defec_pos=Int(args[17])
+pin_coeff=args[18]
+dedis=args[19]
+filepos=Int(args[20])
 
 
 
 
 
+overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector, T1, T2, a1m, a2m, b1,b2,spinor_set,pinning_po,Area=triangle_initial_Densitymatrix(Int(NL),θ,gcutoff,uD,λ,enlarge_factor,V0_hBN,V1_hBN,ψ_hBN,V2_scalar,ϕ,ising,defec_pos,pin_coeff,ϵr,dedis)
 
-overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector, T1, T2, a1m, a2m, b1,b2,spinor_set=triangle_initial_Densitymatrix(Int(NL),θ,gcutoff,uD,λ,enlarge_factor,V0_hBN,V1_hBN,ψ_hBN,V2_scalar,ϕ,ising)
-
-Area=√3/2*norm(a1m)^2
 
 
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
-                                                                            T1,T2,wave,single_Ham,
-                                                                            single_MoirePo,constq,ϵr,
+                                                                             T1,T2,wave,single_Ham,
+                                                                            single_MoirePo,pinning_po,constq,ϵr,
                                                                             overlapmatrix,filling,Area)
 
 
@@ -49,8 +50,8 @@ DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,ene
 
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v3/data_output$(Int(args[17]))/$(args[1])NL$(args[2])theta$(args[3])constq$(args[4])ϵr$(args[5])uD$(args[6])filling$(args[7])cutoff$(args[8])lambda$(args[9])trytime$(args[10])enlarge$(args[11])V0_hBN$(args[12])V1_hBN$(args[13])ψ_hBN$(args[14])V2_scalar$(args[15])ϕ$(args[16])ising.jld2")
-#savepath="test.jld2"
+savepath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v3/data_output$(Int(args[20]))/$(args[1])NL$(args[2])theta$(args[3])constq$(args[4])ϵr$(args[5])uD$(args[6])filling$(args[7])cutoff$(args[8])lambda$(args[9])trytime$(args[10])enlarge$(args[11])V0_hBN$(args[12])V1_hBN$(args[13])ψ_hBN$(args[14])V2_scalar$(args[15])ϕ$(args[16])ising$(args[17])depos$(args[18])pinco$(args[19])dedis.jld2")
+
 
 
 jldsave(savepath,single_Ham=single_Ham,single_MoirePo=single_MoirePo,
@@ -60,6 +61,6 @@ jldsave(savepath,single_Ham=single_Ham,single_MoirePo=single_MoirePo,
                 HFeigenvalue=HF_eigenvalue,
                 HartreeMatrix=HartreeMatrix,FockMatrix=FockMatrix,HF_eigenvector=HF_eigenvector,
                 single_eigenvector=single_eigenvector,T1=T1,T2=T2,wave=wave,
-                a1m=a1m,a2m=a2m,b1=b1,b2=b2)
+                a1m=a1m,a2m=a2m,b1=b1,b2=b2,pinning_po=pinning_po)
 
 

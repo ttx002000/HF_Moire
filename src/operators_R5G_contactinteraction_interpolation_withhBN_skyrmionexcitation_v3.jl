@@ -226,10 +226,80 @@ end
 
 
 
+mutable struct HFWorkSpinful
+    # spinful storage
+    Hartree4::Array{ComplexF64,4}
+    Fock4::Array{ComplexF64,4}
+
+    # 2D persistent buffers
+    H_phys::Matrix{ComplexF64}
+    NewDensityMatrix::Matrix{ComplexF64}
+    DeltaMatrix::Matrix{ComplexF64}
+    output_DensityMatrix::Matrix{ComplexF64}
+
+    HF_eigenvalue::Vector{Float64}
+    HF_eigenvector::Matrix{ComplexF64}
+
+    HF_eigenvalue_occ::Vector{Float64}
+    HF_eigenvector_occ::Matrix{ComplexF64}
+
+    # DIIS history
+    DIIS_input_DensityMatrix::Vector{Matrix{ComplexF64}}
+    DIIS_input_DeltaMatrix::Vector{Matrix{ComplexF64}}
+    diis_head::Int
+    diis_len::Int
+     HartreeAccShift::Vector{ComplexF64}
+end
+
+function HFWorkSpinful(num_spin::Int, Ng::Int, DIIS_size::Int, NSHIFT::Int,filling::Int)
+    dimension = num_spin * Ng
+    Z = zeros(ComplexF64, dimension, dimension)
+    HFWorkSpinful(
+        zeros(ComplexF64, num_spin, Ng, num_spin, Ng),
+        zeros(ComplexF64, num_spin, Ng, num_spin, Ng),
+        copy(Z),
+        copy(Z),
+        copy(Z),
+        copy(Z),
+        zeros(Float64, dimension),
+        copy(Z),
+        zeros(Float64, filling + 5),
+        zeros(ComplexF64, dimension, filling + 5),
+        [zeros(ComplexF64, dimension, dimension) for _ in 1:DIIS_size],
+        [zeros(ComplexF64, dimension, dimension) for _ in 1:DIIS_size],
+        1,0,
+        zeros(ComplexF64, NSHIFT)
+    )
+end
+
+
+
+
+
+
+function get_Fourier_potential(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64},d::Float64)
+   kvec=[T1 T2]*k
+   D=25
+    if k==[0,0]
+        return (D-d)*9047.5646
+    else
+        return 1/cosh(norm(kvec)*D)*sinh(norm(kvec)*(D-d))/norm(kvec)*9047.5646
+    end
+end
+
+
+
+
+
+
+
+
+
 
 function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
               uD::Float64,λ::Float64,enlarge_factor::Int,V0_hBN::Float64,V1_hBN::Float64,
-              ψ_hBN::Float64,V2_scalar::Float64,ϕ::Float64,ising::Float64)
+              ψ_hBN::Float64,V2_scalar::Float64,ϕ::Float64,ising::Float64
+              ,defec_pos::Int,pin_coeff::Float64,ϵr::Float64,dedis::Float64)
    
     aGr=0.246
     ϵ=0.2504/aGr-1 #This is the normal one
@@ -246,7 +316,7 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
     a1m=inv([b1';b2'])*[2π,0]
     a2m=inv([b1';b2'])*[0,2π]
     am=norm(a1m);
-    
+        Area=√3/2*am^2
 
     b1T=Int.(round.(inv([T1 T2])*b1))
     b2T=Int.(round.(inv([T1 T2])*b2))
@@ -266,6 +336,23 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
             push!(wave,ja*b1T+jb*b2T)
         end
     end
+
+      wave_dict=Dict{Vector{Int64},Int64}()
+    for ja in eachindex(wave)
+     wave_dict[wave[ja]]=ja
+    end
+ 
+    wave_diff=Vector{Int64}[]
+    for ja in eachindex(wave), jb in eachindex(wave)
+        push!(wave_diff,wave[ja]-wave[jb])
+       
+    end
+    wave_diff=unique(wave_diff)
+
+
+
+
+
     num_spin=2
     dimension=num_spin*length(wave)
    
@@ -385,6 +472,41 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
       single_MoirePo=reshape(ee,dimension,dimension)
     
 
+     
+       # more localized potential for small d
+     
+      pinning_po=zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave))
+
+      if defec_pos==1
+         defec_pos_vec=(2*a2m-a1m)/enlarge_factor*2/3
+      elseif defec_pos==2
+         defec_pos_vec=(2*a2m-a1m)/enlarge_factor*1/3
+      elseif defec_pos==3
+        defec_pos_vec=(2*a2m-a1m)/enlarge_factor*0
+      elseif defec_pos==4
+        defec_pos_vec=(2*a2m-a1m)/enlarge_factor*(-2/3)
+      end
+
+
+      for jc in eachindex(wave)
+        for jd in eachindex(wave_diff)
+          if haskey(wave_dict,wave[jc]+wave_diff[jd])
+              pos=wave_dict[wave[jc]+wave_diff[jd]]
+              pinning_po[1,pos,1,jc]+=pin_coeff/(Area*ϵr)*get_Fourier_potential(wave_diff[jd],T1,T2,dedis)*(spinor_set[pos]'*op_5*spinor_set[jc])*exp(im*dot([T1 T2]*wave_diff[jd],defec_pos_vec))
+          end
+        end
+      
+      end
+
+      pinning_po[1,:,1,:]=(pinning_po[1,:,1,:]+pinning_po[1,:,1,:]')/2
+      pinning_po[2,:,2,:]=pinning_po[1,:,1,:]
+      pinning_po=reshape(pinning_po,dimension,dimension)
+
+
+
+
+
+
 
    
  
@@ -397,7 +519,7 @@ function triangle_initial_Densitymatrix(NL::Int,θ::Float64,gcutoff::Float64,
     
 
     
-    return overlapmatrix, wave, input_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector, T1, T2, a1m, a2m, b1,b2,spinor_set
+    return overlapmatrix, wave, input_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector, T1, T2, a1m, a2m, b1,b2,spinor_set,pinning_po, Area
       
 
        
@@ -417,26 +539,27 @@ function Coulomb(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64})::Float6
    return k==[0,0] ? D*9047.5636 : tanh(norm([T1 T2]*k*D))/norm(k[1]*T1+k[2]*T2)*9047.5636
 end
 
-function Construct_DensityMatrix(csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_n1::Vector{Int64},wave_n2::Vector{Int64},
+function Construct_DensityMatrix(work::HFWorkSpinful,csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_n1::Vector{Int64},wave_n2::Vector{Int64},
                                input_DensityMatrix::Matrix{ComplexF64},single_Ham::Matrix{ComplexF64},
-                               single_MoirePo::Matrix{ComplexF64},overlapmatrix::Matrix{ComplexF64},
-                               energy_input::Float64,filling::Int,Area::Float64,Coulomb_matrix::Matrix{ComplexF64},
-                               whether_DIIS::Int64,DIIS_H::Matrix{ComplexF64})
+                               single_MoirePo::Matrix{ComplexF64},pinning_po::Matrix{ComplexF64},overlapmatrix::Matrix{ComplexF64},
+                               energy_input::Float64,filling::Int,Area::Float64,Coulomb_matrix::Matrix{ComplexF64})
   
-    num_spin=2
-   dimension=num_spin*length(wave)
-  HartreeMatrix=zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave))
-  FockMatrix=zeros(ComplexF64,num_spin,length(wave),num_spin,length(wave))
-  output_DensityMatrix=zeros(ComplexF64,dimension,dimension)
-  DeltaMatrix=zeros(ComplexF64,dimension,dimension)
-  NewDensityMatrix=zeros(ComplexF64,dimension,dimension)
-  HF_eigenvalue=zeros(Float64,dimension)
-  HF_eigenvector=zeros(ComplexF64,dimension,dimension)
+  num_spin = 2
+Ng = length(wave)
+dimension = num_spin * Ng
+
+
+fill!(work.Hartree4, 0)
+fill!(work.Fock4, 0)
+
+Hartree2 = reshape(work.Hartree4, dimension, dimension)
+Fock2    = reshape(work.Fock4,    dimension, dimension)
+ 
 
   input_DM_reshaped=reshape(input_DensityMatrix,num_spin,length(wave),num_spin,length(wave))
   input_DM_traced=input_DM_reshaped[1,:,1,:]+input_DM_reshaped[2,:,2,:]
 
-  Threads.@threads for g1 in eachindex(wave)
+  Threads.@threads :greedy for g1 in eachindex(wave)
     @inbounds begin
     
         w1n1=wave_n1[g1]; 
@@ -468,10 +591,10 @@ function Construct_DensityMatrix(csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_
                 
           
 
-              FockMatrix[1,g1,1,g4] = acc11
-              FockMatrix[1,g1,2,g4] = acc12
-              FockMatrix[2,g1,1,g4] = acc21
-              FockMatrix[2,g1,2,g4] = acc22
+              work.Fock4[1,g1,1,g4] = acc11
+              work.Fock4[1,g1,2,g4] = acc12
+              work.Fock4[2,g1,1,g4] = acc21
+              work.Fock4[2,g1,2,g4] = acc22
               
           else
             @inbounds for k in lo:hi
@@ -487,9 +610,9 @@ function Construct_DensityMatrix(csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_
                 
           
 
-            FockMatrix[1,g1,1,g4] = acc11
-            FockMatrix[2,g1,1,g4] = acc21
-            FockMatrix[2,g1,2,g4] = acc22
+            work.Fock4[1,g1,1,g4] = acc11
+            work.Fock4[2,g1,1,g4] = acc21
+            work.Fock4[2,g1,2,g4] = acc22
           end
   
 
@@ -497,7 +620,7 @@ function Construct_DensityMatrix(csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_
     end
   end
 
-
+#=
   Threads.@threads for g1 in eachindex(wave)
     @inbounds begin
          w1n1=wave_n1[g1]; 
@@ -527,32 +650,68 @@ function Construct_DensityMatrix(csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_
      end
     end
   end
+  =#
+    ix = csr.ix
+    accShift = work.HartreeAccShift
+
+    offsets = csr.offsets
+    g2_list  = csr.g2_list
+    g3_list  = csr.g3_list   # in Hartree interpretation this is (g4)
+
+    @inbounds for sid in 1:ix.NSHIFT
+        acc = 0.0 + 0.0im
+        lo = Int(offsets[sid])
+        hi = Int(offsets[sid+1]) - 1
+        for k in lo:hi
+            g2 = Int(g2_list[k])
+            g4 = Int(g3_list[k])
+            acc +=  input_DM_traced[g4, g2] * overlapmatrix[g2, g4]
+        end
+        accShift[sid] = acc
+    end
+
+    Threads.@threads :greedy for g1 in eachindex(wave_n1)
+    @inbounds begin
+        w1n1 = Int(wave_n1[g1]); w1n2 = Int(wave_n2[g1])
+        for g3 in 1:g1
+            sid = shift_id(ix,
+                w1n1 - Int(wave_n1[g3]),
+                w1n2 - Int(wave_n2[g3])
+            )
+            work.Hartree4[1,g1,1,g3] = accShift[sid] * Coulomb_matrix[g1, g3]
+            work.Hartree4[2,g1,2,g3] = accShift[sid] * Coulomb_matrix[g1, g3]
+        end
+    end
+   end
 
 
-  FockMatrix=reshape(FockMatrix,dimension,dimension)
-  HartreeMatrix=reshape(HartreeMatrix,dimension,dimension)
-
-
-    HartreeMatrix=(HartreeMatrix+HartreeMatrix'-real(Diagonal(HartreeMatrix)))/Area
-    FockMatrix=(FockMatrix+FockMatrix'-real(Diagonal(FockMatrix)))/Area
+    Hartree2 .= (Hartree2 + Hartree2' - real(Diagonal(Hartree2))) / Area
+    Fock2    .= (Fock2    + Fock2'    - real(Diagonal(Fock2))) / Area
  
 
 
-   #H = single_MoirePo + single_Ham + HartreeMatrix - FockMatrix
-    H_phys = single_MoirePo + single_Ham + HartreeMatrix - FockMatrix
+   
+    work.H_phys .= single_MoirePo
+    work.H_phys .+= single_Ham
+    work.H_phys .+= pinning_po
+    work.H_phys .+= Hartree2
+    work.H_phys .-= Fock2
 
-    H_diag = (whether_DIIS==1 ? DIIS_H : H_phys)
-   FFF = eigen(Hermitian(H_diag))
-   HF_eigenvalue=real(FFF.values)
-   HF_eigenvector=FFF.vectors
+    
+    old = BLAS.get_num_threads()
+    BLAS.set_num_threads(min(8, Threads.nthreads()))
+    FFF = eigen(Hermitian(work.H_phys), 1:filling+5)
+    BLAS.set_num_threads(old)
 
-   DeltaMatrix=H_phys*input_DensityMatrix-input_DensityMatrix*H_phys
+    copy!(work.HF_eigenvalue_occ, real(FFF.values))
+    copy!(work.HF_eigenvector_occ, FFF.vectors)
+
+    @views Vocc = work.HF_eigenvector_occ[:, 1:filling]
+    mul!(work.NewDensityMatrix, Vocc, adjoint(Vocc))
+
  
-  NewDensityMatrix=HF_eigenvector[:,1:filling]*HF_eigenvector[:,1:filling]'
-      NewDensityMatrix=0.5*(NewDensityMatrix'+ NewDensityMatrix)
-       #DeltaMatrix=NewDensityMatrix-input_DensityMatrix
-       mix_ratio=0.5
-       output_DensityMatrix=mix_ratio*input_DensityMatrix+(1-mix_ratio)*NewDensityMatrix
+   work.NewDensityMatrix=1/2*(work.NewDensityMatrix+work.NewDensityMatrix')
+ 
 
   
   
@@ -560,23 +719,24 @@ function Construct_DensityMatrix(csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_
 
   
 
+  @. work.DeltaMatrix = work.NewDensityMatrix - input_DensityMatrix
+       mixing=0.5
+   @. work.output_DensityMatrix = mixing*input_DensityMatrix + (1-mixing)*work.NewDensityMatrix
 
 
-
-  eout=sum(abs2,DeltaMatrix)
+  eout=sum(abs2,work.DeltaMatrix)
   
   
 
  
-  ss=single_MoirePo+single_Ham+0.5*HartreeMatrix-0.5*FockMatrix
-  energy = real(sum(ss .* transpose(input_DensityMatrix)))
-
+  energy = real(dot(input_DensityMatrix, single_MoirePo)) +real(dot(input_DensityMatrix, single_Ham)) +  real(dot(input_DensityMatrix, pinning_po))+ 0.5*real(dot(input_DensityMatrix, Hartree2)) -0.5*real(dot(input_DensityMatrix, Fock2))
+   
 
    energy_change=real(energy-energy_input)
 
 
 
- return  eout,energy_change,output_DensityMatrix,DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix,H_phys
+  return eout, energy_change, energy
 end
 
 
@@ -586,11 +746,17 @@ end
 function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
                        T1::Vector{Float64},T2::Vector{Float64},
                       wave::Vector{Vector{Int64}},single_Ham::Matrix{ComplexF64},
-                       single_MoirePo::Matrix{ComplexF64},constq::Float64,ϵr::Float64,overlapmatrix::Matrix{ComplexF64},filling::Int,Area::Float64)
-    eout=1.0
+                       single_MoirePo::Matrix{ComplexF64}, pinning_po::Matrix{ComplexF64},constq::Float64,ϵr::Float64,overlapmatrix::Matrix{ComplexF64},filling::Int,Area::Float64)
+       eout=1.0
     itcount=0
+    bad_count=0
+    energy=0.0
+    energy_change=0.0
     num_spin=2
     dimension=num_spin*length(wave)
+  
+      DIIS_size=5
+       input_DensityMatrix=copy(initial_DensityMatrix)
     wave_n1 = Vector{Int64}(undef, length(wave))
     wave_n2 = Vector{Int64}(undef, length(wave))
      for g in 1:length(wave)
@@ -600,96 +766,170 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     Coulomb_matrix=[(Coulomb(wave[g1]-wave[g2],T1,T2)/ϵr+constq)*overlapmatrix[g1,g2] for g1 in eachindex(wave), g2 in eachindex(wave)]
     wl = build_wave_lookup(wave)
     csr = build_shiftcsr(wl, wave_n1, wave_n2)
-    
-    HF_eigenvalue=zeros(Float64,dimension)
-    HF_eigenvector=zeros(ComplexF64,dimension,dimension)
-    HartreeMatrix=zeros(ComplexF64,dimension,dimension)
-    FockMatrix=zeros(ComplexF64,dimension,dimension)
+    work = HFWorkSpinful(num_spin, length(wave), DIIS_size, csr.ix.NSHIFT,filling)
+
   
-    DIIS_size=8
-    DIIS_input_DensityMatrix=Vector{Matrix{ComplexF64}}(undef,DIIS_size)
-    DIIS_input_DeltaMatrix=Vector{Matrix{ComplexF64}}(undef,DIIS_size)
-    DIIS_output_HFHam=Vector{Matrix{ComplexF64}}(undef,DIIS_size)
-    input_DensityMatrix=initial_DensityMatrix
-    bad_count=0
-    energy=0.0
-    energy_change=0.0
   
+ 
+
+     eout_hist = Float64[]
+     PLATEAU_N = 10
+     PLATEAU_FRAC = 0.10
+     E_EPS = 1e-30
+
+    diis_fire_once = false
+    diis_cooldown = 0              # prevent immediate re-trigger after DIIS
+     DIIS_COOLDOWN = 10 
+
+
    println(Threads.nthreads())
-  while (eout>1*10^(-16)) || (bad_count<DIIS_size) || (abs(energy_change)>1*10^(-10))
-      if eout<1*10^(-16)
+  while (eout>1*10^(-18)) || (bad_count<DIIS_size+2) || (abs(energy_change)>1*10^(-10))
+      if eout<1*10^(-18)
        bad_count+=1
+      else
+        bad_count=0
       end
+
+           dmk_used = input_DensityMatrix
+
+
+        if (itcount > 1000 && abs(eout) > 10)
+                    itcount = 0
+
+                    # forget DIIS/plateau state completely
+                    bad_count = 0
+                    energy = 0.0
+                    energy_change = 0.0
+                    empty!(eout_hist)
+                    diis_fire_once = false
+                    diis_cooldown = 0
+                    work.diis_head = 1
+                    work.diis_len  = 0
+
+                    # random restart DM (your style)
+                    A = randn(dimension, dimension) + im*randn(dimension, dimension)
+                    dmk = (A + A') * 0.01
+        end
       
       tic=time()
 
-      if (itcount>100 && abs(eout)>1) || (itcount>30 && abs(eout)<10^(-2))
-      
-        fk= implement_DIIS(DIIS_output_HFHam,DIIS_input_DeltaMatrix,DIIS_size)
-        #dmk=implement_DIIS(DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix)
-        #if (itcount>100 && abs(eout)>1)
-         #   itcount=0
-           
-          #    A=randn(dimension,dimension)+im*randn(dimension,dimension)
-           #   dmk+=(A+A')*0.01
-         
-        #end
-      
+            if (itcount>150 && abs(eout)>10) || (itcount>30 && abs(eout)<10^(-7)) || diis_fire_once
+            
+                dmk=implement_DIIS(work.DIIS_input_DensityMatrix,work.DIIS_input_DeltaMatrix,DIIS_size)
+                
+                dmk_used=dmk
 
-       eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,DIIS_size)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix,DIIS_output_HFHam[mod(itcount,DIIS_size)+1]=Construct_DensityMatrix(csr,wave,wave_n1,wave_n2,
-                                                                                                                                                                             input_DensityMatrix,single_Ham,
-                                                                                                                                                                            single_MoirePo,overlapmatrix,
-                                                                                                                                                                            energy,filling,Area,Coulomb_matrix,1,fk)
-       
-        #DIIS_input_DensityMatrix[mod(itcount,6)+1]=dmk
-         DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=input_DensityMatrix
-        input_DensityMatrix=output_DensityMatrix
-        println("using DIIS")
-       
-      else
-  
-      
 
-        eout,energy_change,output_DensityMatrix,DIIS_input_DeltaMatrix[mod(itcount,DIIS_size)+1],HF_eigenvalue,HF_eigenvector,energy,HartreeMatrix,FockMatrix,DIIS_output_HFHam[mod(itcount,DIIS_size)+1]=Construct_DensityMatrix(csr,wave,wave_n1,wave_n2,
-                                                                                                                                                                            input_DensityMatrix,single_Ham,
-                                                                                                                                                                            single_MoirePo,overlapmatrix,
-                                                                                                                                                                            energy,filling,Area,Coulomb_matrix,0,zeros(ComplexF64,dimension,dimension))
-        DIIS_input_DensityMatrix[mod(itcount,DIIS_size)+1]=input_DensityMatrix
-        input_DensityMatrix=output_DensityMatrix
+                eout, energy_change, energy=Construct_DensityMatrix(work,csr,wave,wave_n1,wave_n2,dmk,single_Ham,
+                                                                                single_MoirePo,pinning_po,overlapmatrix,
+                                                                                    energy,filling,Area,Coulomb_matrix)
+                println("using DIIS")                                                                                                                                                               
+                
+                    if diis_fire_once
+                        diis_fire_once = false
+                        empty!(eout_hist)          # <-- yes: clear history after firing
+                        diis_cooldown = DIIS_COOLDOWN
+                    end
+                
+            else
         
-       
-         
-     
+            
+                eout, energy_change, energy=Construct_DensityMatrix(work,csr,wave,wave_n1,wave_n2,input_DensityMatrix,single_Ham,
+                                                                            single_MoirePo,pinning_po,overlapmatrix,
+                                                                                energy,filling,Area,Coulomb_matrix)
+            
+                
+            
 
-      end
+            end
 
     
 
 
 
+     work.diis_head, work.diis_len = diis_push!(
+        work.DIIS_input_DensityMatrix,
+        work.DIIS_input_DeltaMatrix,
+        dmk_used, 
+        work.DeltaMatrix,
+        work.diis_head,
+        work.diis_len
+          )
+
+    
+        copy!(input_DensityMatrix, work.output_DensityMatrix)
+
+
       itcount+=1
-     
+  
       toc=time()
       println(toc-tic,"eout=$eout","energy_change=$energy_change","itcount=$itcount")
       flush(stdout)
+
+
+          # update cooldown
+        if diis_cooldown > 0
+            diis_cooldown -= 1
+        end
+
+        # update history
+        push!(eout_hist, eout)  # keep sign; we'll use abs where needed
+        if length(eout_hist) > PLATEAU_N
+            popfirst!(eout_hist)
+        end
+
+        # plateau detection (only if not cooling down and not already scheduled)
+        if !diis_fire_once && diis_cooldown == 0 && length(eout_hist) == PLATEAU_N
+            e0 = eout_hist[1]
+            e1 = eout_hist[end]
+            rel_change = abs(e1 - e0) / max(abs(e0), E_EPS)
+
+            if rel_change < PLATEAU_FRAC
+                diis_fire_once = true
+                println("Plateau detected: |Δe|/|e| ≈ $(rel_change). Will fire DIIS once.")
+            end
+        end
      
     
   end
 
+   Ffull = eigen(Hermitian(work.H_phys))   # or eigen(Hermitian(work.H_phys)) if you prefer non-mutating
+   copy!(work.HF_eigenvalue, real(Ffull.values)) 
+   copy!(work.HF_eigenvector, Ffull.vectors)
 
 
 
 
 
-
-  return DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix
-
+  
+    return work.DIIS_input_DensityMatrix,
+       work.DIIS_input_DeltaMatrix,
+       work.HF_eigenvalue,
+       work.HF_eigenvector,
+       energy, eout,
+       reshape(work.Hartree4,dimension,dimension),
+       reshape(work.Fock4,dimension,dimension)
 end
 
 
 
 
 
+@inline function diis_push!(
+    DIIS_input_DensityMatrix::Vector{Matrix{ComplexF64}},
+    DIIS_input_DeltaMatrix::Vector{Matrix{ComplexF64}},
+    input_DensityMatrix::Matrix{ComplexF64},
+    DeltaMatrix::Matrix{ComplexF64},
+    diis_head::Int,
+    diis_len::Int
+)
+    copy!(DIIS_input_DensityMatrix[diis_head], input_DensityMatrix)
+    copy!(DIIS_input_DeltaMatrix[diis_head],  DeltaMatrix)
+
+    diis_head = (diis_head == length(DIIS_input_DensityMatrix)) ? 1 : (diis_head + 1)
+    diis_len  = min(diis_len + 1, length(DIIS_input_DensityMatrix))
+    return diis_head, diis_len
+end
 
 
 
@@ -720,18 +960,16 @@ function implement_DIIS(DIIS_input_projector::Vector{Matrix{ComplexF64}},DIIS_in
           
       end
 
-      inB=safe_inverse(Bmatrix)
+     inB=safe_inverse(Bmatrix)
       if inB≠0
          onh=zeros(Float64,DIIS_size+1)
          onh[end]=1
          coeff=inB* onh
-         #dmk=coeff[1]*(DIIS_input_projector[1])
-         #for ja in 2:DIIS_size
-          # dmk+=coeff[ja]*(DIIS_input_projector[ja])
-         #end
         dmk = zero(DIIS_input_projector[1])           # alloc once
         @inbounds for ja in 1:DIIS_size
             BLAS.axpy!(coeff[ja], DIIS_input_projector[ja], dmk)  # dmk += coeff[ja] * projector[ja]
+       
+            BLAS.axpy!(coeff[ja], DIIS_input_DeltaMatrix[ja], dmk)  # dmk += coeff[ja] * projector[ja]
         end
       return dmk
        
@@ -747,7 +985,7 @@ function safe_inverse(A)
   catch e
       if isa(e, SingularException)
           println("Matrix is singular, doing randomstart again.")
-          return pinv(A, 0.1)  # Use pseudoinverse as an alternative
+          return pinv(A, 0.00001)  # Use pseudoinverse as an alternative
       else
           rethrow(e)  # If another error occurs, propagate it
       end
