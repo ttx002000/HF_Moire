@@ -6,7 +6,7 @@ using JLD2
 # The structure is basically the same as the skyrmion excitation v4, but this is for 2D gas
 include("../../src/2Dgas_attraction.jl")
 
-#args=parse.(Float64,ARGS)
+args=parse.(Float64,ARGS)
 #args=[1,3.51,0.0,10.0,1.0,1.0,1.0,1.0,1.0]
 
 scale=args[1]
