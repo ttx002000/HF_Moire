@@ -436,7 +436,7 @@ end
 
 function attraction_po(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64},lpo::Float64)::Float64
    knorm=norm(k[1]*T1+k[2]*T2)
-   return -exp(knorm^2*lpo^2)
+   return -exp(-knorm^2*lpo^2)
 end
 
 
