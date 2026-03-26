@@ -251,6 +251,8 @@ mutable struct HFWork
     HF_eigenvalue::Vector{Float64}
     HF_eigenvector::Matrix{ComplexF64}
 
+    HF_eigenvalue_occ::Vector{Float64}        # length = filling
+    HF_eigenvector_occ::Matrix{ComplexF64}
 
     DIIS_input_DensityMatrix::Vector{Matrix{ComplexF64}}
     DIIS_input_DeltaMatrix::Vector{Matrix{ComplexF64}}
@@ -259,12 +261,14 @@ mutable struct HFWork
     HartreeAccShift::Vector{ComplexF64}
 end
 
-function HFWork(dimension::Int, DIIS_size::Int, NSHIFT::Int)
+function HFWork(dimension::Int, DIIS_size::Int, NSHIFT::Int,filling::Int)
     Z = zeros(ComplexF64, dimension, dimension)
     HFWork(
         copy(Z), copy(Z), copy(Z), copy(Z), copy(Z), copy(Z),
         zeros(Float64, dimension),
         copy(Z),
+        zeros(Float64,filling+5),
+        zeros(ComplexF64,dimension,filling+5),
         [zeros(ComplexF64, dimension, dimension) for _ in 1:DIIS_size],
         [zeros(ComplexF64, dimension, dimension) for _ in 1:DIIS_size],
         1, 0,
@@ -280,7 +284,7 @@ end
 
 function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{Int64}},wave_n1::Vector{Int64},wave_n2::Vector{Int64},
                                input_DensityMatrix::Matrix{ComplexF64},single_Ham::Matrix{ComplexF64},
-                               energy_input::Float64,density::Float64,temp::Float64,Area::Float64,Coulomb_matrix::Matrix{Float64})
+                               energy_input::Float64,filling::Int,Area::Float64,Coulomb_matrix::Matrix{Float64})
   
  
    dimension=length(wave)
@@ -289,7 +293,7 @@ function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{
 
     fill!(work.HartreeMatrix, 0)
     fill!(work.FockMatrix, 0)
-   fill!(work.NewDensityMatrix, 0)
+  
 
 
   
@@ -386,24 +390,17 @@ function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{
       old = BLAS.get_num_threads()
     
        BLAS.set_num_threads(min(8,Threads.nthreads()))   # or some smaller number like 4/8
-       FFF = eigen(Hermitian(work.H_phys))        # or eigen(Hermitian(...), 1:filling)
+       FFF = eigen(Hermitian(work.H_phys),1:filling+5)        # or eigen(Hermitian(...), 1:filling)
     
       BLAS.set_num_threads(old)
    
 
-    copy!(work.HF_eigenvalue, real(FFF.values))
-    copy!(work.HF_eigenvector, FFF.vectors)
-
-    fermi_level,_=find_FL(work.HF_eigenvalue,density,work.HF_eigenvalue[1],work.HF_eigenvalue[end],temp,Area,0.0)
-    fermifactor=fermi_function.((work.HF_eigenvalue.-fermi_level)/temp)
-    entropy=sum(s_function.((work.HF_eigenvalue.-fermi_level)/temp))
+    copy!(work.HF_eigenvalue_occ, real(FFF.values))
+    copy!(work.HF_eigenvector_occ, FFF.vectors)
 
  
-   
-    mul!(work.NewDensityMatrix,
-     work.HF_eigenvector * Diagonal(fermifactor),
-     adjoint(work.HF_eigenvector))
-    
+     @views Vocc = work.HF_eigenvector_occ[:, 1:filling]
+    mul!(work.NewDensityMatrix, Vocc, adjoint(Vocc))
     symmetrize_from_lower!(work.NewDensityMatrix)
 
   @. work.DeltaMatrix = work.NewDensityMatrix - input_DensityMatrix
@@ -427,63 +424,12 @@ function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{
 
    energy =  real(dot(input_DensityMatrix, single_Ham)) + 0.5*real(dot(input_DensityMatrix, work.HartreeMatrix)) -0.5*real(dot(input_DensityMatrix, work.FockMatrix))
          
-  
-   freeenergy= energy-temp*entropy
 
    energy_change=real(energy-energy_input)
 
 
 
- return eout, energy_change, energy,freeenergy
-end
-
-
-function s_function(x::Float64)
-    absx=abs(x)
-   return log(1+exp(-absx))+absx/(1+exp(absx))
-
-end
-
-
-
-function fermi_function(x::Float64)
-  if x>0
-    return exp(-x)/(1+exp(-x))
-  else
-    return 1/(1+exp(x))
-
-  end
-end
-
-
-function find_FL(quasi_particle_energy::Vector{Float64},target_density::Float64,val_s::Float64,val_e::Float64,temp::Float64,Area::Float64,bg_particle_density::Float64)
-  try_FL=(val_s+val_e)/2
-
-  
-  if target_density==0.0
-    stan=10^(-9)
-  else
-    stan=abs(10^(-8)*target_density)
-  end
-  #fermifactor=[1/(exp((quasi_particle_energy[ja]-try_FL)/temp)+1) for ja in eachindex(quasi_particle_energy)]
-  fermifactor=fermi_function.((quasi_particle_energy.-try_FL)/temp)
- 
-  fl=sum(fermifactor)/Area-bg_particle_density
-
-
-
- if abs(fl-target_density)<stan
-  
-    return try_FL,fl
-  elseif fl-target_density>=stan
- 
-    return find_FL(quasi_particle_energy,target_density,val_s, try_FL,temp,Area,bg_particle_density)
-  elseif fl-target_density<=-stan
- 
-    return find_FL(quasi_particle_energy,target_density,try_FL,val_e,temp,Area,bg_particle_density)
-   end
- 
-
+ return eout, energy_change, energy
 end
 
 
@@ -497,12 +443,11 @@ end
 function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
                        T1::Vector{Float64},T2::Vector{Float64},
                       wave::Vector{Vector{Int64}},single_Ham::Matrix{ComplexF64},
-                     constq::Float64,gatedis::Float64,density::Float64,temp::Float64,Area::Float64,lpo::Float64,attstr::Float64)
+                     constq::Float64,gatedis::Float64,filling::Int,Area::Float64,lpo::Float64,attstr::Float64)
     eout=1.0
     itcount=0
     bad_count=0
     energy=0.0
-    freeenergy=0.0
     energy_change=0.0
     DIIS_size=5
     input_DensityMatrix=copy(initial_DensityMatrix)
@@ -520,7 +465,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     csr = build_shiftcsr(wl, wave_n1, wave_n2)
     
  
-    work = HFWork(dimension, DIIS_size, csr.ix.NSHIFT)
+    work = HFWork(dimension, DIIS_size, csr.ix.NSHIFT,filling)
 
   
 
@@ -575,9 +520,9 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
       
       
 
-        eout, energy_change, energy,freeenergy=Construct_DensityMatrix(work,csr,wave,wave_n1,wave_n2,
+        eout, energy_change, energy=Construct_DensityMatrix(work,csr,wave,wave_n1,wave_n2,
                                                                                 dmk,single_Ham,                                                                           
-                                                                               energy,density,temp,Area,Coulomb_matrix)
+                                                                               energy,filling,Area,Coulomb_matrix)
        
      
         println("using DIIS")
@@ -592,9 +537,9 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
   
       
 
-       eout, energy_change, energy,freeenergy=Construct_DensityMatrix(work,csr,wave,wave_n1,wave_n2,
+       eout, energy_change, energy=Construct_DensityMatrix(work,csr,wave,wave_n1,wave_n2,
                                                                                 input_DensityMatrix,single_Ham,                                                       
-                                                                               energy,density,temp,Area,Coulomb_matrix)
+                                                                               energy,filling,Area,Coulomb_matrix)
    
         
        
@@ -648,6 +593,9 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     
   end
 
+   Ffull = eigen(Hermitian(work.H_phys))   # or eigen(Hermitian(work.H_phys)) if you prefer non-mutating
+   copy!(work.HF_eigenvalue, real(Ffull.values)) 
+   copy!(work.HF_eigenvector, Ffull.vectors)
 
 
 
@@ -656,7 +604,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
        work.DIIS_input_DeltaMatrix,
        work.HF_eigenvalue,
        work.HF_eigenvector,
-       energy,freeenergy, eout,
+       energy, eout,
        work.HartreeMatrix,
        work.FockMatrix
   

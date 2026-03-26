@@ -13,11 +13,12 @@ scale=args[1]
 gcutoff=args[2]
 constq=args[3]
 gatedis=args[4]
-filling=Int(args[5])
+density=args[5]
 lpo=args[6]
 attstr=args[7]
-trytime=Int(args[8])
-filepos=Int(args[9])
+temp=args[8]
+trytime=Int(args[9])
+filepos=Int(args[10])
 
 
 
@@ -26,10 +27,10 @@ wave, initial_DensityMatrix,  single_Ham, T1, T2, a1m, a2m, b1,b2,Area=triangle_
 
 
 
-DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
+DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,freeenergy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
                                                                             T1,T2,wave,single_Ham,
                                                                             constq,gatedis,
-                                                                            filling,Area,lpo,attstr)
+                                                                            density,temp,Area,lpo,attstr)
 
 
 
@@ -37,7 +38,7 @@ DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,ene
 
 scratch_dir = ENV["SCRATCH"]
 
-savepath=joinpath(scratch_dir, "2Dgas_attraction/data_output$(Int(args[9]))/$(args[1])scale$(args[2])gcut$(args[3])constq$(args[4])gatedis$(args[5])filling$(args[6])lpo$(args[7])attstr$(args[8])trytime.jld2")
+savepath=joinpath(scratch_dir, "2Dgas_attraction/data_output$(Int(args[10]))/$(args[1])scale$(args[2])gcut$(args[3])constq$(args[4])gatedis$(args[5])density$(args[6])lpo$(args[7])attstr$(args[8])temp$(args[9])trytime.jld2")
 #savepath="test.jld2"
 
 
@@ -47,6 +48,6 @@ jldsave(savepath,single_Ham=single_Ham,
                 HFeigenvalue=HF_eigenvalue,
                 HartreeMatrix=HartreeMatrix,FockMatrix=FockMatrix,HF_eigenvector=HF_eigenvector,
                  T1=T1,T2=T2,wave=wave,
-                a1m=a1m,a2m=a2m,b1=b1,b2=b2)
+                a1m=a1m,a2m=a2m,b1=b1,b2=b2,freeenergy=freeenergy)
 
 
