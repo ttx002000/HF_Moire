@@ -7,7 +7,7 @@ using JLD2
 include("../../src/2Dgas_attraction.jl")
 
 #args=parse.(Float64,ARGS)
-args=[1,3.51,0.0,10.0,1.0,1.0,1.0,1.0,1.0]
+#args=[1,3.51,0.0,10.0,1.0,1.0,1.0,1.0,1.0]
 
 scale=args[1]
 gcutoff=args[2]
