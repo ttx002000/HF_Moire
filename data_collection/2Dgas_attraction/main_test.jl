@@ -35,6 +35,7 @@ DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,ene
 
 
 
+scratch_dir = ENV["SCRATCH"]
 
 savepath=joinpath(scratch_dir, "2Dgas_attraction/data_output$(Int(args[9]))/$(args[1])scale$(args[2])gcut$(args[3])constq$(args[4])gatedis$(args[5])filling$(args[6])lpo$(args[7])attstr$(args[8])trytime.jld2")
 #savepath="test.jld2"
