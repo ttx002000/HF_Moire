@@ -896,9 +896,11 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
    Ffull = eigen(Hermitian(work.H_phys))   # or eigen(Hermitian(work.H_phys)) if you prefer non-mutating
    copy!(work.HF_eigenvalue, real(Ffull.values)) 
    copy!(work.HF_eigenvector, Ffull.vectors)
-
-
-
+   Hartree2=reshape(work.Hartree4,dimension,dimension)
+   Fock2 = reshape(work.Fock4,dimension,dimension)
+  
+    Hartree2 .= (Hartree2 + Hartree2' - real(Diagonal(Hartree2))) / Area
+    Fock2    .= (Fock2    + Fock2'    - real(Diagonal(Fock2))) / Area
 
 
   
@@ -907,8 +909,8 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
        work.HF_eigenvalue,
        work.HF_eigenvector,
        energy, eout,
-       reshape(work.Hartree4,dimension,dimension),
-       reshape(work.Fock4,dimension,dimension)
+       Hartree2,
+       Fock2
 end
 
 
