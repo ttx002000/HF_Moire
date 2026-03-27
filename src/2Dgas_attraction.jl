@@ -152,7 +152,7 @@ function triangle_initial_Densitymatrix(scale::Float64,gcutoff::Float64)
   
   
     b1=scale*[1,0]
-    b2=scale*[0,1]
+    b2=scale*[-1/2,√3/2]
     T1=b1
     T2=b2
 
@@ -394,7 +394,7 @@ function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{
     copy!(work.HF_eigenvalue, real(FFF.values))
     copy!(work.HF_eigenvector, FFF.vectors)
 
-    fermi_level,_=find_FL(work.HF_eigenvalue,density,work.HF_eigenvalue[1],work.HF_eigenvalue[end],temp,Area,0.0)
+    fermi_level,_=find_FL(work.HF_eigenvalue,density,work.HF_eigenvalue[1]-10*temp,work.HF_eigenvalue[end]+10*temp,temp,Area,0.0)
     fermifactor=fermi_function.((work.HF_eigenvalue.-fermi_level)/temp)
     entropy=sum(s_function.((work.HF_eigenvalue.-fermi_level)/temp))
 
