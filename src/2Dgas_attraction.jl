@@ -434,7 +434,7 @@ function Construct_DensityMatrix(work::HFWork,csr::ShiftCSR,wave::Vector{Vector{
 
 
 
- return eout, energy_change, energy,freeenergy
+ return eout, energy_change, energy,freeenergy,fermi_level,fermifactor
 end
 
 
@@ -507,6 +507,10 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
     DIIS_size=5
     input_DensityMatrix=copy(initial_DensityMatrix)
   
+    fermi_level=0.0
+    fermifactor=zeros(Float64, length(wave))
+
+
     dimension=length(wave)
     wave_n1 = Vector{Int64}(undef, length(wave))
     wave_n2 = Vector{Int64}(undef, length(wave))
@@ -575,7 +579,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
       
       
 
-        eout, energy_change, energy,freeenergy=Construct_DensityMatrix(work,csr,wave,wave_n1,wave_n2,
+        eout, energy_change, energy,freeenergy,fermi_level,fermifactor=Construct_DensityMatrix(work,csr,wave,wave_n1,wave_n2,
                                                                                 dmk,single_Ham,                                                                           
                                                                                energy,density,temp,Area,Coulomb_matrix)
        
@@ -592,7 +596,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
   
       
 
-       eout, energy_change, energy,freeenergy=Construct_DensityMatrix(work,csr,wave,wave_n1,wave_n2,
+       eout, energy_change, energy,freeenergy,fermi_level,fermifactor=Construct_DensityMatrix(work,csr,wave,wave_n1,wave_n2,
                                                                                 input_DensityMatrix,single_Ham,                                                       
                                                                                energy,density,temp,Area,Coulomb_matrix)
    
@@ -658,7 +662,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
        work.HF_eigenvector,
        energy,freeenergy, eout,
        work.HartreeMatrix,
-       work.FockMatrix
+       work.FockMatrix,fermi_level,fermifactor
   
 end
 
