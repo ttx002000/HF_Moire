@@ -160,7 +160,7 @@ function triangle_initial_Densitymatrix(scale::Float64,gcutoff::Float64)
     a2m=inv([b1';b2'])*[0,2π]
     am=norm(a1m);
     
-    Area=am^2
+    Area=abs(a1m[1]*a2m[2]-a1m[2]*a2m[1])
     b1T=Int.(round.(inv([T1 T2])*b1))
     b2T=Int.(round.(inv([T1 T2])*b2))
 
