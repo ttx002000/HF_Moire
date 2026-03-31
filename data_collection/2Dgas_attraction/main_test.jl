@@ -27,7 +27,7 @@ wave, initial_DensityMatrix,  single_Ham, T1, T2, a1m, a2m, b1,b2,Area=triangle_
 
 
 
-DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,freeenergy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
+DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,freeenergy,eout,HartreeMatrix,FockMatrix,fermi_level,fermifactor=iteration_loop(initial_DensityMatrix,
                                                                             T1,T2,wave,single_Ham,
                                                                             constq,gatedis,
                                                                             density,temp,Area,lpo,attstr)
