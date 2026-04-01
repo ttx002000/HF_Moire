@@ -48,6 +48,6 @@ jldsave(savepath,single_Ham=single_Ham,
                 HFeigenvalue=HF_eigenvalue,
                 HartreeMatrix=HartreeMatrix,FockMatrix=FockMatrix,HF_eigenvector=HF_eigenvector,
                  T1=T1,T2=T2,wave=wave,
-                a1m=a1m,a2m=a2m,b1=b1,b2=b2,freeenergy=freeenergy,fermi_level=fermi_level,fermifactor=fermifactor)
+                a1m=a1m,a2m=a2m,b1=b1,b2=b2,freeenergy=freeenergy,fermi_level=fermi_level,fermifactor=fermifactor,Area=Area)
 
 
