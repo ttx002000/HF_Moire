@@ -575,7 +575,9 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
 
                 # random restart DM (your style)
                 A = randn(dimension, dimension) + im*randn(dimension, dimension)
-                dmk = (A + A') * 0.01
+                input_DensityMatrix = (A + A') * 0.01
+                dmk_used=input_DensityMatrix
+                println("random start again")
     end
       
       tic=time()
