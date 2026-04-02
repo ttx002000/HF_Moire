@@ -26,6 +26,18 @@ filepos=Int(args[10])
 wave, initial_DensityMatrix,  single_Ham, T1, T2, a1m, a2m, b1,b2,Area=triangle_initial_Densitymatrix(scale,gcutoff)
 
 
+scratch_dir = ENV["SCRATCH"]
+
+seed_path=joinpath(scratch_dir, "2Dgas_attraction/data_output$(Int(args[10]))/seed")
+if only(rand())>0.2
+   seed_file_path=pick_random_jld2_path(seed_path)
+   if !(seed_file_path==nothing)
+      seed_file=load(seed_file_path)
+      initial_DensityMatrix=seed_file["densitymatrix"]
+      println("Using seed from $seed_file_path")
+   end
+end
+
 
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,freeenergy,eout,HartreeMatrix,FockMatrix,fermi_level,fermifactor=iteration_loop(initial_DensityMatrix,
                                                                             T1,T2,wave,single_Ham,

@@ -487,6 +487,16 @@ function find_FL(quasi_particle_energy::Vector{Float64},target_density::Float64,
 end
 
 
+function pick_random_jld2_path(folder::AbstractString)
+    isdir(folder) || return nothing
+
+    jld2_files = filter(readdir(folder; join=true)) do p
+        isfile(p) && endswith(lowercase(p), ".jld2")
+    end
+
+    isempty(jld2_files) && return nothing
+    return rand(jld2_files)
+end
 
 function attraction_po(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64},lpo::Float64)::Float64
    knorm=norm(k[1]*T1+k[2]*T2)
