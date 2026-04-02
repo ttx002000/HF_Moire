@@ -461,9 +461,9 @@ function find_FL(quasi_particle_energy::Vector{Float64},target_density::Float64,
 
   
   if target_density==0.0
-    stan=10^(-9)
+    stan=10^(-8)
   else
-    stan=abs(10^(-8)*target_density)
+    stan=abs(10^(-7)*target_density)
   end
   #fermifactor=[1/(exp((quasi_particle_energy[ja]-try_FL)/temp)+1) for ja in eachindex(quasi_particle_energy)]
   fermifactor=fermi_function.((quasi_particle_energy.-try_FL)/temp)
