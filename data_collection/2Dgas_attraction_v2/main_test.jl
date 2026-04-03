@@ -26,7 +26,7 @@ wave, initial_DensityMatrix,  single_Ham, T1, T2, a1m, a2m, b1,b2,Area=triangle_
 
 scratch_dir = ENV["SCRATCH"]
 
-seed_path=joinpath(scratch_dir, "2Dgas_attraction_v2/data_output$(Int(args[10]))/seed")
+seed_path=joinpath(scratch_dir, "2Dgas_attraction_v2/data_output$(Int(args[9]))/seed")
 if only(rand())>0.2
    seed_file_path=pick_random_jld2_path(seed_path)
    if !(seed_file_path==nothing)
