@@ -1,6 +1,34 @@
 
 using LinearAlgebra
 
+mutable struct HFWorkRMG
+    Fock_matrix::Array{ComplexF64,3}          # (dim, dim, Nk)
+    Hartree_matrix::Matrix{ComplexF64}        # (dim, dim)
+    density_matrix_new::Array{ComplexF64,3}   # (dim, dim, Nk)
+    output_density_matrix::Array{ComplexF64,3}
+    DeltaMatrix::Array{ComplexF64,3}
+
+    HF_eigenvalues::Matrix{Float64}           # (dim, Nk)
+    HF_eigenvectors::Array{ComplexF64,3}      # (dim, dim, Nk)
+
+    # workspace for finite-T occupations / temporary vectors
+    fermifactor::Vector{Float64}
+    evals_flat::Vector{Float64}
+    occ_matrix::Matrix{Float64}               # (dim, Nk)
+
+    # thread-local scratch for diagonalization / DM reconstruction
+    H_scratch::Vector{Matrix{ComplexF64}}     # one dense (dim,dim) matrix per Julia thread
+    Vocc_scratch::Vector{Matrix{ComplexF64}}  # one dense (dim,dim) matrix per Julia thread
+
+    # DIIS storage
+    DIIS_input_density_matrix::Vector{Array{ComplexF64,3}}
+    DIIS_input_DeltaMatrix::Vector{Array{ComplexF64,3}}
+    diis_head::Int
+    diis_len::Int
+
+    # optional scratch for Hartree diagonal accumulation
+    density_sum_k::Matrix{ComplexF64}         # (dim, dim)
+end
 
 
 function Coulomb(dis::Float64,kvec::Vector{Float64})::Float64
@@ -17,7 +45,7 @@ function Coulomb(dis::Float64,kvec::Vector{Float64})::Float64
 
 
 end
-
+#=
 function find_FL(quasi_particle_energy::Vector{Float64},target_density::Float64,val_s::Float64,val_e::Float64,temp::Float64,Area::Float64,bg_particle_density::Float64)
   try_FL=(val_s+val_e)/2
 
@@ -45,6 +73,59 @@ function find_FL(quasi_particle_energy::Vector{Float64},target_density::Float64,
    end
  
 
+end
+=#
+
+
+
+@inline function fermi_occ(x::Float64)::Float64
+    if x > 40.0
+        return 0.0
+    elseif x < -40.0
+        return 1.0
+    else
+        return 1.0 / (exp(x) + 1.0)
+    end
+end
+
+
+function find_FL_iterative!(
+    fermifactor::Vector{Float64},
+    quasi_particle_energy::Vector{Float64},
+    target_density::Float64,
+    val_s::Float64,
+    val_e::Float64,
+    temp::Float64,
+    Area::Float64,
+    bg_particle_density::Float64;
+    maxiter::Int = 300,
+)
+    lo = val_s
+    hi = val_e
+    try_FL = 0.5 * (lo + hi)
+
+    stan = target_density == 0.0 ? 1e-9 : abs(1e-8 * target_density)
+
+    fl = 0.0
+    for _ in 1:maxiter
+        try_FL = 0.5 * (lo + hi)
+
+        @inbounds for i in eachindex(quasi_particle_energy)
+            fermifactor[i] = fermi_occ((quasi_particle_energy[i] - try_FL) / temp)
+        end
+
+        fl = sum(fermifactor) / Area - bg_particle_density
+
+        if abs(fl - target_density) < stan
+            return try_FL, fl
+        elseif fl > target_density
+            hi = try_FL
+        else
+            lo = try_FL
+        end
+    end
+
+    return try_FL, fl
 end
 
 
@@ -161,51 +242,38 @@ end
 
 
 
-function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
-  density_matrix::Array{ComplexF64},single_matrix::Array{ComplexF64},
-  energy_input::Float64,BG_density_matrix::Array{ComplexF64},fcmatrix::Array{Matrix{Float64}},Area::Float64,dimension::Int,
-  target_density::Float64,temp::Float64,itcount::Int)
- 
+
+
+function Construct_projector!(
+    work::HFWorkRMG,
+    k_set::Vector{Vector{Float64}},
+    ϵr::Float64,
+    density_matrix::Array{ComplexF64,3},
+    single_matrix::Array{ComplexF64,3},
+    energy_input::Float64,
+    BG_density_matrix::Array{ComplexF64,3},
+    hfcmatrix::Matrix{Float64},
+    fcmatrix::Matrix{Matrix{Float64}},
+    Area::Float64,
+    dimension::Int,
+    target_density::Float64,
+    temp::Float64,
+    mixing::Float64
+)
   
 
- Fock_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
- Hartree_matrix=zeros(ComplexF64,dimension,dimension)
- HF_eigenvalues=zeros(Float64,dimension,length(k_set))
- HF_eigenvectors=zeros(ComplexF64,dimension,dimension,length(k_set))
 
+  Nk = length(k_set)
 
- #=
- 
- Threads.@threads for ja in eachindex(k_set)
+    fill!(work.Fock_matrix, 0)
+    fill!(work.Hartree_matrix, 0)
 
-    for jb in 1:valley_num
-        Fock_matrix[:,:,jb,ja]+=1/(ϵr*Area)*dropdims(sum(fcmatrix[:,:,ja,:].*density_matrix[:,:,jb,:],dims=3),dims=3)
-    end
- end
- =#
+tic=time()
 
- 
-
-
-#=
- Threads.@threads for ja in 1:dimension
-  for jb in 1:ja-1
-  Fock_matrix[ja,jb,:]+=fcmatrix[ja,jb,:,:]*density_matrix[ja,jb,:]
-  end
- end
- Threads.@threads for ja in eachindex(k_set)
-   Fock_matrix[:,:,ja]+=Fock_matrix[:,:,ja]'
- end
-
- Threads.@threads for ja in 1:dimension
-    Fock_matrix[ja,ja,:]+=fcmatrix[ja,ja,:,:]*density_matrix[ja,ja,:]
- end
- Fock_matrix=Fock_matrix*1/(ϵr*Area)
- =#
- Threads.@threads for ja in 1:dimension
+ Threads.@threads :greedy for ja in 1:dimension
   for jb in 1:(ja - 1)
       mul!(
-          @view(Fock_matrix[ja, jb, :]),
+          @view(work.Fock_matrix[ja, jb, :]),
           @view(fcmatrix[ja, jb][:, :]),
           @view(density_matrix[ja, jb, :]),
           1,
@@ -213,103 +281,181 @@ function Construct_projector(k_set::Vector{Vector{Float64}},ϵr::Float64,
       )
   end
  end
- 
 
- Threads.@threads for ja in eachindex(k_set)
-  axpy!(1, @view(Fock_matrix[:, :, ja])', @view(Fock_matrix[:, :, ja]))
- end
+
+
 
 
  Threads.@threads for ja in 1:dimension
   mul!(
-      @view(Fock_matrix[ja, ja, :]),
+      @view(work.Fock_matrix[ja, ja, :]),
       @view(fcmatrix[ja, ja][:, :]),
       @view(density_matrix[ja, ja, :]),
       1,
       1,
   )
  end
- Fock_matrix=Fock_matrix*1/(ϵr*Area)
+  symmetrize_from_lower_3d!(work.Fock_matrix)
+    work.Fock_matrix .*= 1 / (ϵr * Area)
 
 
+ toc=time()
+ println("Focktime",toc-tic)
  
- hfcmatrix=zeros(Float64,dimension,dimension)
- for ja in 1:dimension
-   for jb in 1:ja
-      hfcmatrix[ja,jb]+=fcmatrix[ja,jb][1,1]
-   end
-   for jb in ja+1:dimension
-    hfcmatrix[ja,jb]+=fcmatrix[jb,ja][1,1]
-   end
- end
 
- Hartree_matrix+=1/(ϵr*Area)*diagm(hfcmatrix*diag(dropdims(sum(density_matrix,dims=3),dims=3)))
+ tic=time()
+   fill!(work.density_sum_k, 0)
+   work.density_sum_k .= dropdims(sum(density_matrix, dims=3), dims=3)
 
-
-
- Threads.@threads for ja in eachindex(k_set)
- 
-    FFF=eigen(Hartree_matrix-Fock_matrix[:,:,ja]+single_matrix[:,:,ja])
-    HF_eigenvectors[:,:,ja]=FFF.vectors
-    HF_eigenvalues[:,ja]=real(FFF.values)
-  
- 
- end
-
-  
- #fermi_level=(sort(vec(HF_eigenvalues))[Int(length(vec(HF_eigenvalues))/2)+1]+sort(vec(HF_eigenvalues))[Int(length(vec(HF_eigenvalues))/2)])/2
-
- val_s=sort(vec(HF_eigenvalues))[1]
- val_e=sort(vec(HF_eigenvalues))[end]
- bg_particle_density=dimension/(2*Area)*length(k_set)
-
- fermi_level,renormalized_density=find_FL(vec(HF_eigenvalues),target_density,val_s,val_e,temp,Area,bg_particle_density)
-
-
-
- density_matrix_new=zeros(ComplexF64,dimension,dimension,length(k_set))
- 
- for jb in 1:dimension
- Threads.@threads for ja in eachindex(k_set) 
-           density_matrix_new[:,:,ja]+=HF_eigenvectors[:,jb,ja]*(HF_eigenvectors[:,jb,ja])'*1/(exp((HF_eigenvalues[jb,ja]-fermi_level)/temp)+1)
+   
+    diag_density = diag(work.density_sum_k)
+    hartree_diag = hfcmatrix * diag_density
+    @inbounds for ja in 1:dimension
+        work.Hartree_matrix[ja, ja] = hartree_diag[ja] / (ϵr * Area)
     end
- end
+
+toc=time()
+ println("Hartreetime",toc-tic)
 
 
- density_matrix_new-=BG_density_matrix 
 
- if itcount<15
-  update_rate=0.2 
- else
-    update_rate=rand() 
- end
+            tic = time()
 
- output_density_matrix=density_matrix_new*update_rate+density_matrix*(1-update_rate)
+    # keep Julia threading for the k-loop, but avoid BLAS oversubscription
+    old_blas_threads = BLAS.get_num_threads()
+    BLAS.set_num_threads(1)
+
+    Threads.@threads for ja in eachindex(k_set)
+        tid = Threads.threadid()
+        Htmp = work.H_scratch[tid]
+
+        copy!(Htmp, work.Hartree_matrix)
+        @views Htmp .-= work.Fock_matrix[:, :, ja]
+        @views Htmp .+= single_matrix[:, :, ja]
+
+        FFF = eigen!(Hermitian(Htmp))
+        @views copy!(work.HF_eigenvectors[:, :, ja], FFF.vectors)
+        @views copy!(work.HF_eigenvalues[:, ja], real(FFF.values))
+    end
+
+    BLAS.set_num_threads(old_blas_threads)
+
+    work.evals_flat .= vec(work.HF_eigenvalues)
+    val_s = minimum(work.evals_flat)
+    val_e = maximum(work.evals_flat)
+    bg_particle_density = dimension / (2 * Area) * Nk
+
+    fermi_level, renormalized_density = find_FL_iterative!(
+        work.fermifactor,
+        work.evals_flat,
+        target_density,
+        val_s,
+        val_e,
+        temp,
+        Area,
+        bg_particle_density,
+    )
+
+    @inbounds for ja in 1:Nk, jb in 1:dimension
+        work.occ_matrix[jb, ja] = fermi_occ((work.HF_eigenvalues[jb, ja] - fermi_level) / temp)
+    end
+
+    Threads.@threads for ja in 1:Nk
+        tid = Threads.threadid()
+        Vocc = work.Vocc_scratch[tid]
+
+        @views copy!(Vocc, work.HF_eigenvectors[:, :, ja])
+
+        @inbounds for band in 1:dimension
+            occ = work.occ_matrix[band, ja]
+            @views Vocc[:, band] .*= occ
+        end
+
+        mul!(
+            @view(work.density_matrix_new[:, :, ja]),
+            Vocc,
+            adjoint(@view(work.HF_eigenvectors[:, :, ja])),
+            1.0,
+            0.0,
+        )
+
+        @views work.density_matrix_new[:, :, ja] .-= BG_density_matrix[:, :, ja]
+    end
+
+    toc = time()
+    println("constructing DMtime", toc - tic)
+
+   tic=time()
+    @. work.output_density_matrix = mixing * density_matrix + (1 - mixing) * work.density_matrix_new
+    @. work.DeltaMatrix = work.density_matrix_new - density_matrix
 
 
- DeltaMatrix=density_matrix_new-density_matrix
- eout=0.0
- for ja in eachindex(k_set)
-   eout+=real(tr(DeltaMatrix[:,:,ja]*DeltaMatrix[:,:,ja]'))/length(k_set)
- end
 
- energy=0.0
- for ja in eachindex(k_set)
-   energy+=real(tr(density_matrix[:,:,ja]*(Hartree_matrix/2-Fock_matrix[:,:,ja]/2+single_matrix[:,:,ja]))/length(k_set))
- end
+    eout = real(sum(abs2, work.DeltaMatrix) / Nk)
+    energy = 0.0
+    @inbounds for ja in eachindex(k_set)
+        energy += real(tr(
+            density_matrix[:,:,ja] *
+            (work.Hartree_matrix/2 - work.Fock_matrix[:,:,ja]/2 + single_matrix[:,:,ja])
+        )) / Nk
+    end
+
+    energy_change = energy - energy_input
 
  energy_change=real(energy-energy_input)
 
+ toc=time()
+  println("othertime",toc-tic)
 
-
- return  eout,energy_change, output_density_matrix,DeltaMatrix,HF_eigenvalues,fermi_level,HF_eigenvectors,real(energy),Hartree_matrix,Fock_matrix,renormalized_density
-
+    return eout, energy_change, real(energy), fermi_level, renormalized_density
 
 end
 
 
 
+@inline function symmetrize_from_lower_3d!(A::Array{ComplexF64,3})
+    n1, n2, nk = size(A)
+    @assert n1 == n2
+    @inbounds for k in 1:nk
+        for i in 1:n1
+            A[i,i,k] = complex(real(A[i,i,k]), 0.0)
+            for j in (i+1):n1
+                A[i,j,k] = conj(A[j,i,k])
+            end
+        end
+    end
+    return A
+end
 
+@inline function symmetrize_from_lower_2d!(A::Matrix{ComplexF64})
+    n = size(A,1)
+    @assert n == size(A,2)
+    @inbounds for i in 1:n
+        A[i,i] = complex(real(A[i,i]), 0.0)
+        for j in (i+1):n
+            A[i,j] = conj(A[j,i])
+        end
+    end
+    return A
+end
+
+
+
+@inline function diis_push!(
+    DIIS_input_density_matrix::Vector{Array{ComplexF64,3}},
+    DIIS_input_DeltaMatrix::Vector{Array{ComplexF64,3}},
+    input_density_matrix::Array{ComplexF64,3},
+    DeltaMatrix::Array{ComplexF64,3},
+    diis_head::Int,
+    diis_len::Int
+)
+    copy!(DIIS_input_density_matrix[diis_head], input_density_matrix)
+    copy!(DIIS_input_DeltaMatrix[diis_head],  DeltaMatrix)
+
+    diis_head = (diis_head == length(DIIS_input_density_matrix)) ? 1 : (diis_head + 1)
+    diis_len  = min(diis_len + 1, length(DIIS_input_density_matrix))
+    return diis_head, diis_len
+end
 
 
 function get_initial_proj(k_set::Vector{Vector{Float64}},eig_vec_set::Array{Vector{Matrix{ComplexF64}}},NL::Int)
@@ -331,8 +477,8 @@ function get_initial_proj(k_set::Vector{Vector{Float64}},eig_vec_set::Array{Vect
  initial_density_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
 
  for ja in eachindex(k_set)
-   A=randn(dimension,dimension)+im*randn(dimension,dimension)
-
+   #A=randn(dimension,dimension)+im*randn(dimension,dimension)
+   A=0.5*ones(dimension,dimension)
    initial_density_matrix[:,:,ja]+=(A+A')*0.1
  end
 
@@ -341,222 +487,74 @@ function get_initial_proj(k_set::Vector{Vector{Float64}},eig_vec_set::Array{Vect
  return initial_density_matrix, BG_density_matrix
 end
 
-function iteration_noDIIS(initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},
-                           ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},ildis::Float64,Area::Float64,NL::Int,target_density::Float64,temp::Float64)
-  valley_num=2
-  spin_num=2
-  layer_num=2
-  sublattice_num=2*NL
-  dimension=valley_num*spin_num*layer_num*sublattice_num
-  eout=1.0
-  itcount=0
-  bad_count=0
-  energy=0.0
-  energy_change=0.0
-  fermi_level=0.0
-  renormalized_density=0.0
-  HF_eigenvalues=zeros(Float64,dimension,length(k_set))
-  HF_eigenvectors=zeros(ComplexF64,dimension,dimension,length(k_set))
 
+function HFWorkRMG(dimension::Int, Nk::Int, DIIS_size::Int)
+    Z3 = zeros(ComplexF64, dimension, dimension, Nk)
+    Z2 = zeros(ComplexF64, dimension, dimension)
 
-  DIIS_input_density_matrix=Vector{Array{ComplexF64}}(undef,3)
-  DIIS_input_DeltaMatrix=Vector{Array{ComplexF64}}(undef,3)
+    nscratch = Threads.maxthreadid()
 
-  input_density_matrix=initial_density_matrix
+    return HFWorkRMG(
+        copy(Z3),  # Fock_matrix
+        copy(Z2),  # Hartree_matrix
+        copy(Z3),  # density_matrix_new
+        copy(Z3),  # output_density_matrix
+        copy(Z3),  # DeltaMatrix
 
-  Fock_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
-  Hartree_matrix=zeros(ComplexF64,dimension,dimension)
+        zeros(Float64, dimension, Nk),  # HF_eigenvalues
+        copy(Z3),                       # HF_eigenvectors
 
-  itcount=0
+        zeros(Float64, dimension * Nk), # fermifactor
+        zeros(Float64, dimension * Nk), # evals_flat
+        zeros(Float64, dimension, Nk),  # occ_matrix
 
-   #=
-  #z_pos=[0.335*[0,0,1,1,2,2,3,3,4,4],0.335*[-4,-4,-3,-3,-2,-2,-1,-1,0,0].-ildis]
-  z_pos=Vector{Vector{Float64}}(undef,2)
-  z_pos[1]=0.335*[i for i in 0:NL-1 for _ in 1:2]
-  z_pos[2]=0.335*[i for i in -NL+1:0 for _ in 1:2].-ildis
-  
-  fcmatrix=zeros(Float64,dimension,dimension,length(k_set),length(k_set))
+        [zeros(ComplexF64, dimension, dimension) for _ in 1:nscratch], # H_scratch
+        [zeros(ComplexF64, dimension, dimension) for _ in 1:nscratch], # Vocc_scratch
 
+        [zeros(ComplexF64, dimension, dimension, Nk) for _ in 1:DIIS_size], # DIIS_input_density_matrix
+        [zeros(ComplexF64, dimension, dimension, Nk) for _ in 1:DIIS_size], # DIIS_input_DeltaMatrix
+        1,  # diis_head
+        0,  # diis_len
 
-  #for ja in eachindex(k_set), jb in eachindex(k_set)
-   #fcmatrix[:,:,ja,jb]+=Coulomb_matrix(z_pos,k_set[ja]-k_set[jb]) #need fix
-  #end
-  tic=time()
-  Threads.@threads for ja in eachindex(k_set) 
-    for jb in 1:ja
-   fcmatrix[:,:,ja,jb]+=Coulomb_matrix(z_pos,k_set[ja]-k_set[jb],NL) #need fix
-    end
-  end
-   
-  for ja in eachindex(k_set), jb in ja+1:length(k_set)
-    fcmatrix[:,:,ja,jb]+=fcmatrix[:,:,jb,ja]
-  end
-  toc=time()
-  println("formfactorstime",toc-tic)
-  =#
-
-  z_pos=zeros(Float64,layer_num,sublattice_num)
-  z_pos[1,:]=0.335*[i for i in 0:NL-1 for _ in 1:2]
-  z_pos[2,:]=0.335*[i for i in -NL+1:0 for _ in 1:2].-ildis
-  z_pos=reshape(z_pos,layer_num*sublattice_num)
-  sublayer_i=zeros(Int,valley_num,spin_num,sublattice_num*layer_num)
-  for ja in 1:valley_num,jb in 1:spin_num, jc in 1:sublattice_num*layer_num
-    sublayer_i[ja,jb,jc]=jc
-  end
-  sublayer_i=reshape(sublayer_i,dimension)
-
-  fcmatrix=Matrix{Matrix{Float64}}(undef,dimension,dimension)
-  smaller_fc=Matrix{Matrix{Float64}}(undef,layer_num*sublattice_num,layer_num*sublattice_num)
-
-  tic=time()
-
-  Threads.@threads for ja in 1:sublattice_num*layer_num
-   for jb in 1:ja
-      smaller_fc[ja,jb]=zeros(Float64,length(k_set),length(k_set))
-        for jc in 1:length(k_set), jd in 1:jc
-         smaller_fc[ja,jb][jc,jd]+=Coulomb(abs(z_pos[ja]-z_pos[jb]),k_set[jc]-k_set[jd])
-        end
-
-        for jc in 1:length(k_set), jd in jc+1:length(k_set)
-         smaller_fc[ja,jb][jc,jd]+=smaller_fc[ja,jb][jd,jc]
-        end
-   end
- end
-
- Threads.@threads for ja in 1:dimension
-   for jb in 1:ja
-
-      sub_one=max(sublayer_i[ja],sublayer_i[jb])
-      sub_two=min(sublayer_i[ja],sublayer_i[jb])
-     fcmatrix[ja,jb]=smaller_fc[sub_one,sub_two]
-       
-   end
- end
-
- smaller_fc=nothing
-
- toc=time()
- println("formfactorstime",toc-tic)
-
-
-
-  while (eout>1*10^(-12)) || (bad_count<4) || (energy_change>1*10^(-6))
-      if eout<1*10^(-12)
-       bad_count+=1
-      end
-      
-      tic=time()
-
-      if (itcount>60 && abs(eout)>10^(-2)) || (itcount>50 && abs(eout)<10^(-8))
-      
-        dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
-        if dmk==0
-            itcount=0
-            dmk=zeros(ComplexF64,dimension,dimension,length(k_set))
-            for ja in eachindex(k_set)
-              A=randn(dimension,dimension)+im*randn(dimension,dimension)
-              dmk[:,:,ja]+=(A+A')*0.01
-            end
-        end
-       
-
-        eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix,renormalized_density=Construct_projector(k_set,ϵr,
-                                                                                                                                                              dmk,single_matrix,
-                                                                                                                                                              energy,BG_density_matrix,
-                                                                                                                                                              fcmatrix,Area,dimension,target_density,temp,itcount)
-        DIIS_input_density_matrix[mod(itcount,3)+1]=dmk
-        input_density_matrix=output_density_matrix
-        println("using DIIS")
-       
-      else
-  
-        eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix,renormalized_density=Construct_projector(k_set,ϵr,
-                                                                                                                                                                                          input_density_matrix,single_matrix,
-                                                                                                                                                                                           energy,BG_density_matrix,
-                                                                                                                                                                                           fcmatrix,Area,dimension,target_density,temp,itcount)
-                                                                                                                                                                                           
-
-        DIIS_input_density_matrix[mod(itcount,3)+1]=input_density_matrix
-        input_density_matrix=output_density_matrix
-         
-     
-
-      end
-
-    
-
-
-
-      itcount+=1
-     
-      toc=time()
-      println(toc-tic,"eout=$eout","energy_change=$energy_change","itcount=$itcount")
-      flush(stdout)
-     
-    
-  end
- 
- 
-
-
-  
-  return HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density
-
-
+        copy(Z2),  # density_sum_k
+    )
 end
+
+
 
 
 function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::Array{ComplexF64},
                            ϵr::Float64,k_set::Vector{Vector{Float64}},single_matrix::Array{ComplexF64},ildis::Float64,Area::Float64,NL::Int,target_density::Float64,temp::Float64)
-  valley_num=2
-  spin_num=2
-  layer_num=2
-  sublattice_num=2*NL
-  dimension=valley_num*spin_num*layer_num*sublattice_num
-  eout=1.0
-  itcount=0
-  bad_count=0
-  energy=0.0
-  energy_change=0.0
-  fermi_level=0.0
-  renormalized_density=0.0
-  HF_eigenvalues=zeros(Float64,dimension,length(k_set))
-  HF_eigenvectors=zeros(ComplexF64,dimension,dimension,length(k_set))
+   valley_num = 2
+    spin_num = 2
+    layer_num = 2
+    sublattice_num = 2 * NL
+    dimension = valley_num * spin_num * layer_num * sublattice_num
+    Nk = length(k_set)
 
+    DIIS_size = 5
+    mixing = 0.5
 
-  DIIS_input_density_matrix=Vector{Array{ComplexF64}}(undef,3)
-  DIIS_input_DeltaMatrix=Vector{Array{ComplexF64}}(undef,3)
+    eout = 1.0
+    itcount = 0
+    bad_count = 0
+    energy = 0.0
+    energy_change = 0.0
+    fermi_level = 0.0
+    renormalized_density = 0.0
 
-  input_density_matrix=initial_density_matrix
+    input_density_matrix = copy(initial_density_matrix)
 
-  Fock_matrix=zeros(ComplexF64,dimension,dimension,length(k_set))
-  Hartree_matrix=zeros(ComplexF64,dimension,dimension)
+    work = HFWorkRMG(dimension, Nk, DIIS_size)
 
-  itcount=0
+    eout_hist = Float64[]
+    PLATEAU_N = 10
+    PLATEAU_FRAC = 0.10
+    E_EPS = 1e-30
 
-  #=
-  #z_pos=[0.335*[0,0,1,1,2,2,3,3,4,4],0.335*[-4,-4,-3,-3,-2,-2,-1,-1,0,0].-ildis]
-  z_pos=Vector{Vector{Float64}}(undef,2)
-  z_pos[1]=0.335*[i for i in 0:NL-1 for _ in 1:2]
-  z_pos[2]=0.335*[i for i in -NL+1:0 for _ in 1:2].-ildis
-  
-  fcmatrix=zeros(Float64,dimension,dimension,length(k_set),length(k_set))
-
-
-
-  tic=time()
-  Threads.@threads for ja in eachindex(k_set) 
-    for jb in 1:ja
-   fcmatrix[:,:,ja,jb]+=Coulomb_matrix(z_pos,k_set[ja]-k_set[jb],NL) #need fix
-    end
-  end
-   
-  for ja in eachindex(k_set), jb in ja+1:length(k_set)
-    fcmatrix[:,:,ja,jb]+=fcmatrix[:,:,jb,ja]
-  end
-  toc=time()
-  println("formfactorstime",toc-tic)
-  =#
+    diis_fire_once = false
+    diis_cooldown = 0
+    DIIS_COOLDOWN = 10
   
 
 
@@ -577,7 +575,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
 
   tic=time()
 
-  Threads.@threads for ja in 1:sublattice_num*layer_num
+  Threads.@threads :greedy for ja in 1:sublattice_num*layer_num
    for jb in 1:ja
       smaller_fc[ja,jb]=zeros(Float64,length(k_set),length(k_set))
         for jc in 1:length(k_set), jd in 1:jc
@@ -590,7 +588,7 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
    end
  end
 
- Threads.@threads for ja in 1:dimension
+ Threads.@threads :greedy for ja in 1:dimension
    for jb in 1:ja
 
       sub_one=max(sublayer_i[ja],sublayer_i[jb])
@@ -602,6 +600,18 @@ function iteration(initial_density_matrix::Array{ComplexF64},BG_density_matrix::
 
 smaller_fc=nothing
 
+
+      hfcmatrix=zeros(Float64,dimension,dimension)
+  for ja in 1:dimension
+    for jb in 1:ja
+        hfcmatrix[ja,jb]+=fcmatrix[ja,jb][1,1]
+    end
+    for jb in ja+1:dimension
+      hfcmatrix[ja,jb]+=fcmatrix[jb,ja][1,1]
+    end
+  end
+
+
  toc=time()
  println("formfactorstime",toc-tic)
 
@@ -610,86 +620,148 @@ smaller_fc=nothing
 
 
 
-
-  while (eout>1*10^(-12)) || (bad_count<4) || (energy_change>1*10^(-6))
-      if eout<1*10^(-12)
-       bad_count+=1
-      end
+while (eout > 1e-12) || (bad_count < DIIS_size + 2) || (abs(energy_change) > 1e-6)
       
-      tic=time()
+   if itcount>10
+    break
+   end
+        if eout < 1e-12
+            bad_count += 1
+        else
+            bad_count = 0
+        end
 
-      if (itcount>60 && abs(eout)>10^(-2)) || (itcount>50 && abs(eout)<10^(-6))
-      
-        dmk=implement_DIIS(DIIS_input_density_matrix,DIIS_input_DeltaMatrix,k_set)
-        if dmk==0
-            itcount=0
-            dmk=zeros(ComplexF64,dimension,dimension,length(k_set))
-            for ja in eachindex(k_set)
-              A=randn(dimension,dimension)+im*randn(dimension,dimension)
-              dmk[:,:,ja]+=(A+A')*0.01
+        dmk_used = input_density_matrix
+        tic = time()
+
+        use_diis = ((itcount > 60 && abs(eout) > 1e-2) ||
+                    (itcount > 50 && abs(eout) < 1e-6) ||
+                    diis_fire_once) && (work.diis_len >= 2)
+
+        if use_diis
+            dmk = implement_DIIS(
+                work.DIIS_input_density_matrix,
+                work.DIIS_input_DeltaMatrix,
+                k_set,
+                work.diis_len
+            )
+
+            if dmk === nothing
+                A = randn(dimension, dimension, Nk) .+ im * randn(dimension, dimension, Nk)
+                dmk = similar(input_density_matrix)
+                @inbounds for k in 1:Nk
+                    dmk[:,:,k] .= 0.01 .* (A[:,:,k] + A[:,:,k]')
+                end
+                itcount = 0
+                work.diis_head = 1
+                work.diis_len = 0
+                empty!(eout_hist)
+                diis_fire_once = false
+                diis_cooldown = 0
+                println("DIIS failed, random restart")
+            end
+
+            dmk_used = dmk
+            eout, energy_change, energy, fermi_level, renormalized_density = Construct_projector!(
+                work,
+                k_set, ϵr,
+                dmk,
+                single_matrix,
+                energy,
+                BG_density_matrix,
+                hfcmatrix,
+                fcmatrix,
+                Area,
+                dimension,
+                target_density,
+                temp,
+                mixing,
+            )
+            println("using DIIS")
+
+            if diis_fire_once
+                diis_fire_once = false
+                empty!(eout_hist)
+                diis_cooldown = DIIS_COOLDOWN
+            end
+        else
+            eout, energy_change, energy, fermi_level, renormalized_density = Construct_projector!(
+                work,
+                k_set, ϵr,
+                input_density_matrix,
+                single_matrix,
+                energy,
+                BG_density_matrix,
+                hfcmatrix,
+                fcmatrix,
+                Area,
+                dimension,
+                target_density,
+                temp,
+                mixing,
+            )
+        end
+
+        work.diis_head, work.diis_len = diis_push!(
+            work.DIIS_input_density_matrix,
+            work.DIIS_input_DeltaMatrix,
+            dmk_used,
+            work.DeltaMatrix,
+            work.diis_head,
+            work.diis_len
+        )
+
+        copy!(input_density_matrix, work.output_density_matrix)
+
+        itcount += 1
+        println(time() - tic, "eout=$eout", "energy_change=$energy_change", "itcount=$itcount")
+        flush(stdout)
+
+        if diis_cooldown > 0
+            diis_cooldown -= 1
+        end
+
+        push!(eout_hist, eout)
+        if length(eout_hist) > PLATEAU_N
+            popfirst!(eout_hist)
+        end
+
+        if !diis_fire_once && diis_cooldown == 0 && length(eout_hist) == PLATEAU_N
+            e0 = eout_hist[1]
+            e1 = eout_hist[end]
+            rel_change = abs(e1 - e0) / max(abs(e0), E_EPS)
+            if rel_change < PLATEAU_FRAC
+                diis_fire_once = true
+                println("Plateau detected: |Δe|/|e| ≈ $(rel_change). Will fire DIIS once.")
             end
         end
-       
+    end
 
-        eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix,renormalized_density=Construct_projector(k_set,ϵr,
-                                                                                                                                                              dmk,single_matrix,
-                                                                                                                                                              energy,BG_density_matrix,
-                                                                                                                                                              fcmatrix,Area,dimension,target_density,temp,itcount)
-        DIIS_input_density_matrix[mod(itcount,3)+1]=dmk
-        input_density_matrix=output_density_matrix
-        println("using DIIS")
-       
-      else
-  
-        eout,energy_change,output_density_matrix,DIIS_input_DeltaMatrix[mod(itcount,3)+1],HF_eigenvalues,fermi_level,HF_eigenvectors,energy,Hartree_matrix,Fock_matrix,renormalized_density=Construct_projector(k_set,ϵr,
-                                                                                                                                                                                          input_density_matrix,single_matrix,
-                                                                                                                                                                                           energy,BG_density_matrix,
-                                                                                                                                                                                           fcmatrix,Area,dimension,target_density,temp,itcount)
-                                                                                                                                                                                           
-
-        DIIS_input_density_matrix[mod(itcount,3)+1]=input_density_matrix
-        input_density_matrix=output_density_matrix
-         
-     
-
-      end
-
-    
-
-
-
-      itcount+=1
-     
-      toc=time()
-      println(toc-tic,"eout=$eout","energy_change=$energy_change","itcount=$itcount")
-      flush(stdout)
-     
-    
-  end
- 
- 
-
-
-  
-  return HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density
-
-
+    return work.HF_eigenvalues,
+           work.HF_eigenvectors,
+           energy,
+           work.DIIS_input_density_matrix,
+           fermi_level,
+           work.Hartree_matrix,
+           work.Fock_matrix,
+           eout,
+           renormalized_density
 end
 
 
 
 
-function implement_DIIS(DIIS_input_projector::Vector{Array{ComplexF64}},DIIS_input_DeltaMatrix::Vector{Array{ComplexF64}},k_set::Vector{Vector{Float64}})
+function implement_DIIS(DIIS_input_projector::Vector{Array{ComplexF64,3}},DIIS_input_DeltaMatrix::Vector{Array{ComplexF64,3}},k_set::Vector{Vector{Float64}},DIIS_size::Int)
 
 
 
-      Bmatrix=zeros(ComplexF64,4,4)
-      for ja in 1:3
-       Bmatrix[ja,4]=1
-       Bmatrix[4,ja]=1
+      Bmatrix=zeros(ComplexF64,DIIS_size+1,DIIS_size+1)
+      for ja in 1:DIIS_size
+       Bmatrix[ja,DIIS_size+1]=1
+       Bmatrix[DIIS_size+1,ja]=1
       end
   
-      for ja in 1:3,jb in 1:3
+      for ja in 1:DIIS_size,jb in 1:DIIS_size
           for jc in eachindex(k_set)
              Bmatrix[ja,jb]+=real(tr((DIIS_input_DeltaMatrix[ja][:,:,jc])'*(DIIS_input_DeltaMatrix[jb][:,:,jc])))
           end
@@ -697,8 +769,17 @@ function implement_DIIS(DIIS_input_projector::Vector{Array{ComplexF64}},DIIS_inp
 
       inB=safe_inverse(Bmatrix)
       if inB≠0
-         coeff=inB*[0;0;0;1]
-         dmk=coeff[1]*(DIIS_input_projector[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_projector[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_projector[3]+DIIS_input_DeltaMatrix[3])
+         onh=zeros(Float64,DIIS_size+1)
+         onh[end]=1
+         coeff=inB* onh
+
+        dmk = zero(DIIS_input_projector[1])           # alloc once
+        @inbounds for ja in 1:DIIS_size
+            BLAS.axpy!(coeff[ja], DIIS_input_projector[ja], dmk)  # dmk += coeff[ja] * projector[ja]
+       
+            BLAS.axpy!(coeff[ja], DIIS_input_DeltaMatrix[ja], dmk)  # dmk += coeff[ja] * projector[ja]
+        end
+         #dmk=coeff[1]*(DIIS_input_projector[1]+DIIS_input_DeltaMatrix[1])+coeff[2]*(DIIS_input_projector[2]+DIIS_input_DeltaMatrix[2])+coeff[3]*(DIIS_input_projector[3]+DIIS_input_DeltaMatrix[3])
          return dmk
       else
         return 0
@@ -706,13 +787,14 @@ function implement_DIIS(DIIS_input_projector::Vector{Array{ComplexF64}},DIIS_inp
 end
 
 
+
 function safe_inverse(A)
   try
       return inv(A)  # Attempt to compute inverse
   catch e
       if isa(e, SingularException)
-          println("Matrix is singular, doing randomstart again.")
-          return 0  # Use pseudoinverse as an alternative
+          println("Matrix is singular, doing pseudoinverse.")
+          return pinv(A, 10^(-8))  # Use pseudoinverse as an alternative
       else
           rethrow(e)  # If another error occurs, propagate it
       end

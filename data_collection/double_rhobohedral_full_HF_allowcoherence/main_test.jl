@@ -29,6 +29,7 @@ savepath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence/data_output$(I
 
   
 jldsave(savepath,
+             Area=Area,BG_density_matrix=BG_density_matrix,
              final_density_matrix=DIIS_input_density_matrix[1],HF_eigenvalues=HF_eigenvalues,
              k_set=k_set,eig_vec_set=eig_vec_set,HF_eigenvectors=HF_eigenvectors,fermi_level=fermi_level,energy=energy,eig_set=eig_set,
              single_matrix=single_matrix,Hartree_matrix=Hartree_matrix,Fock_matrix=Fock_matrix,k_index=k_index,eout=eout,renormalized_density=renormalized_density)
