@@ -1,6 +1,8 @@
-using JLD2
+using Pkg
+Pkg.activate(joinpath(@__DIR__, "../.."))
+using JLD2,LinearAlgebra
 include("../../src/operators_double_RMG_full_HF_allowcoherence.jl")
-using LinearAlgebra,Plots
+
 args=parse.(Float64,ARGS)
 #args=[1.4,15.0,10.0,20.0,8.0,1.0,5.0,0.0,0.1,1.0,1.0]
 radius=args[1]
