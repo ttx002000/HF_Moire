@@ -2,7 +2,7 @@ using Pkg
 Pkg.activate(joinpath(@__DIR__, "../.."))
 using LinearAlgebra
 using JLD2
-
+aa= parse.(Int, ARGS)
 include("submit_job_v2.jl")
 
 filepath = joinpath(@__DIR__, "main_test.jl")
