@@ -10,22 +10,25 @@ job_prefix = "wf"
 
 
 
-st=load("missedjobs.jld2")
+scratch_dir = ENV["SCRATCH"]
+misspath=joinpath(scratch_dir, "graphene_wf/data_output$(Int(aa[1]))/missedjobs.jld2")
+
+st=load(misspath)
+
 index=st["index"]
 start=1
 ee=length(index)
 ba_size=300
 count=1
 while (count-1)*ba_size+1<=ee
-  submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*ba_size+start:min(count*ba_size+start,ee)]; time="6:00:00",ntasks=4,mem=256)
+  submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*ba_size+start:min(count*ba_size+start,ee)];time="6:00:00",ntasks=4,mem=256)
   println((count-1)*ba_size+start,min(count*ba_size+start,ee))
   sleep(5)
 
   global count+=1
-  if mod(count,5)==0
-    sleep(1800)
+  if mod(count,3)==0
+    sleep(0)
   end
 
 
 end
-
