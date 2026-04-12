@@ -17,7 +17,8 @@ wf=args[5]
 den_st=args[6]
 den_end=args[7]
 den_num=Int(args[8])
-file_pos=Int(args[9])
+hv=Int(args[9])
+file_pos=Int(args[10])
 
 
 
@@ -36,16 +37,16 @@ density_list=collect(range(den_st, stop=den_end, length=den_num))
 
 aba_record, abc_record,energy_diff_reference=get_reference_CNP(
                             temp,kx_grid,
-                             ky_grid,Nq,NL)
+                             ky_grid,Nq,NL,hv)
 
 energy_diff,entropy_diff=big_func(uD,aba_record,abc_record,
         wf,temp,kx_grid,
-         ky_grid,Nq,NL,density_list)
+         ky_grid,Nq,NL,density_list,hv)
 
 
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "graphene_wf/data_output$(Int(args[9]))/$(args[1])D$(args[2])Nq$(args[3])temp$(args[4])NL$(args[5])wf$(args[6])denstart$(args[7])denend$(args[8])dennum.jld2")
+savepath=joinpath(scratch_dir, "graphene_wf/data_output$(Int(args[10]))/$(args[1])D$(args[2])Nq$(args[3])temp$(args[4])NL$(args[5])wf$(args[6])denstart$(args[7])denend$(args[8])dennum$(args[9])hv.jld2")
 
 
 
