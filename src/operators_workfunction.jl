@@ -193,6 +193,7 @@ function get_ABAB_Ham(k::Vector{Float64},uD::Float64,hv::Int)
     Ham[7,7]+=δ+γ5-1.5*uD
     Ham[8,8]+=γ2-1.5*uD
  elseif hv==2
+     Ham=zeros(ComplexF64,2*4,2*4)
     γ0=2600
     γ1=356.1
     γ2=-20.6
