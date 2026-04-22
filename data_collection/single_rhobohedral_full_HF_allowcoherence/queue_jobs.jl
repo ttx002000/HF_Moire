@@ -5,37 +5,34 @@ using JLD2
 
 include("submit_job_v2.jl")
 
+
+aa= parse.(Int, ARGS)
+
+
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "single_RMG"
+job_prefix = "double_RMG_$(Int(aa[1]))"
 
+scratch_dir = ENV["SCRATCH"]
+misspath=joinpath(scratch_dir, "single_RMG_full_HF_allowcoherence/data_output$(Int(aa[1]))/missedjobs.jld2")
 
+st=load(misspath)
 
-#=
-st=load("missedjobs.jld2")
 index=st["index"]
-count=0
-for ja in 1:length(index)
-  global count+=1
-  arguments=index[ja]
-  submit_job(filepath, @__DIR__, job_prefix,arguments; time="1:00:00",ntasks=4,mem=16)
-  if mod(count,100)==0
-    sleep(400)
-  end
-  println(ja)
-end
-=#
-
-
-
-st=load("missedjobs.jld2")
-index=st["index"]
-start=5600+2800
+start=1
 ee=length(index)
-ba_size=200
+ba_size=300
 count=1
 while (count-1)*ba_size+1<=ee
   submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*ba_size+start:min(count*ba_size+start,ee)]; time="1:00:00",ntasks=4,mem=16)
   println((count-1)*ba_size+start,min(count*ba_size+start,ee))
   sleep(5)
+
   global count+=1
+  if mod(count,3)==0
+    sleep(0)
+  end
+
+
 end
+
+
