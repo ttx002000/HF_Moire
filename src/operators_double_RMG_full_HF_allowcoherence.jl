@@ -620,12 +620,10 @@ smaller_fc=nothing
 
 
 
-while (eout > 1e-12) || (bad_count < DIIS_size + 2) || (abs(energy_change) > 1e-6)
+while (eout > 1e-14) || (bad_count < DIIS_size + 2) || (abs(energy_change) > 1e-8)
       
-   if itcount>10
-    break
-   end
-        if eout < 1e-12
+ 
+        if eout < 1e-14
             bad_count += 1
         else
             bad_count = 0
