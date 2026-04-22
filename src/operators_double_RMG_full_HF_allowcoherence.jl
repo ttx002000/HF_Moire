@@ -634,7 +634,7 @@ while (eout > 1e-14) || (bad_count < DIIS_size + 2) || (abs(energy_change) > 1e-
 
         use_diis = ((itcount > 60 && abs(eout) > 1e-2) ||
                     (itcount > 50 && abs(eout) < 1e-6) ||
-                    diis_fire_once) && (work.diis_len >= 2)
+                    diis_fire_once) && (work.diis_len >= 4)
 
         if use_diis
             dmk = implement_DIIS(
