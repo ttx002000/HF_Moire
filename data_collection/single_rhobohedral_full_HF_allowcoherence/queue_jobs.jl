@@ -10,7 +10,7 @@ aa= parse.(Int, ARGS)
 
 
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "double_RMG_$(Int(aa[1]))"
+job_prefix = "single_RMG_$(Int(aa[1]))"
 
 scratch_dir = ENV["SCRATCH"]
 misspath=joinpath(scratch_dir, "single_RMG_full_HF_allowcoherence/data_output$(Int(aa[1]))/missedjobs.jld2")
