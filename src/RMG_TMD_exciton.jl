@@ -225,9 +225,9 @@ function get_single_particle(radius::Float64,num_points::Int,
   vset=[1,-1]
   stacking=1
   if m_TMD>0
-       CNP_TMD=-(NL-1)*uD+deltaE # Check this
+       CNP_TMD=-abs((NL-1)*uD/2)+deltaE # Check this
   else
-       CNP_TMD=(NL-1)*uD-deltaE # Check this
+       CNP_TMD=abs((NL-1)*uD/2)-deltaE # Check this
   end
   kx_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
   ky_grid=collect(range(-radius/2, stop=+radius/2, length=num_points))
