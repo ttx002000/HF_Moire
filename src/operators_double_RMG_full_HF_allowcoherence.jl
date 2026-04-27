@@ -457,6 +457,18 @@ end
     return diis_head, diis_len
 end
 
+function pick_random_jld2_path(folder::AbstractString)
+    isdir(folder) || return nothing
+
+    jld2_files = filter(readdir(folder; join=true)) do p
+        isfile(p) && endswith(lowercase(p), ".jld2")
+    end
+
+    isempty(jld2_files) && return nothing
+    return rand(jld2_files)
+end
+
+
 
 function get_initial_proj(k_set::Vector{Vector{Float64}},eig_vec_set::Array{Vector{Matrix{ComplexF64}}},NL::Int)
  

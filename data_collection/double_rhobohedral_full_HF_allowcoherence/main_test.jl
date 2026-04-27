@@ -25,6 +25,22 @@ println("finish1")
 
 
 initial_density_matrix, BG_density_matrix=get_initial_proj(k_set,eig_vec_set,NL)
+
+scratch_dir = ENV["SCRATCH"]
+
+seed_path=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence/data_output$(Int(args[11]))/seed")
+if only(rand())>0.2
+   seed_file_path=pick_random_jld2_path(seed_path)
+   if !(seed_file_path==nothing)
+      seed_file=load(seed_file_path)
+      initial_density_matrix=seed_file["densitymatrix"]
+      println("Using seed from $seed_file_path")
+   end
+end
+
+
+
+
 HF_eigenvalues,HF_eigenvectors,energy, DIIS_input_density_matrix,fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density=iteration(initial_density_matrix,BG_density_matrix,ϵr,k_set,single_matrix,ildis,Area,NL,target_density,temp)
 scratch_dir = ENV["SCRATCH"]
 savepath=joinpath(scratch_dir, "double_RMG_full_HF_allowcoherence/data_output$(Int(args[11]))/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])CNP$(args[5])er$(args[6])ildis$(args[7])NL$(args[8])tgden$(args[9])temp$(args[10])trytime.jld2")
