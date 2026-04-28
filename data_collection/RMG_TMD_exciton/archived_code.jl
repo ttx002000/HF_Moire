@@ -3,27 +3,6 @@ using LinearAlgebra
 #To do
 #(1) Check the units of m_{TMD} in constructing the single particle Hamiltonian
 
-struct BasisSelection
-    # RMG blocks are explicit (spin, valley) pairs.
-    # Empty means no RMG.
-    rmg_blocks::Vector{Tuple{Int,Int}}
-
-    # TMD spins to include.
-    # Empty means no TMD.
-    tmd_spins::Vector{Int}
-end
-
-function BasisSelection(;
-    rmg_blocks::Vector{Tuple{Int,Int}} = [(spin, valley) for valley in 1:2 for spin in 1:2],
-    tmd_spins::Vector{Int} = [1, 2],
-)
-    isempty(rmg_blocks) && isempty(tmd_spins) &&
-        error("BasisSelection cannot have both no RMG and no TMD.")
-    return BasisSelection(rmg_blocks, tmd_spins)
-end
-
-
-
 
 struct BasisState
     material::Symbol
@@ -36,53 +15,29 @@ struct BasisState
 end
 
 
-
 function build_basis_RMG_TMD(
     NL::Int,
     z0_RMG::Float64,
-    z_TMD::Float64;
-    selection::BasisSelection = BasisSelection(),
+    z_TMD::Float64,
 )
     basis = BasisState[]
 
     # RMG channels: 1, ..., 2NL
-    for (spin, valley) in selection.rmg_blocks
-        for layer in 1:NL
-            for sublat in 1:2
-                z = z0_RMG + 0.335 * (layer - 1)
+    for valley in 1:2, spin in 1:2, layer in 1:NL, sublat in 1:2
+        z = z0_RMG + 0.335 * (layer - 1)
 
-                # This matches the order of your RMG Hamiltonian
-                channel = 2 * (layer - 1) + sublat
+        # This matches the order of your RMG Hamiltonian
+        channel = 2 * (layer - 1) + sublat
 
-                push!(basis, BasisState(
-                    :RMG,
-                    spin,
-                    valley,
-                    layer,
-                    sublat,
-                    z,
-                    channel,
-                ))
-            end
-        end
+        push!(basis, BasisState(:RMG, spin, valley, layer, sublat, z, channel))
     end
 
     # TMD channel: 2NL + 1
     tmd_channel = 2 * NL + 1
 
-    for spin in selection.tmd_spins
-        push!(basis, BasisState(
-            :TMD,
-            spin,
-            0,
-            1,
-            1,
-            z_TMD,
-            tmd_channel,
-        ))
+    for spin in 1:2
+        push!(basis, BasisState(:TMD, spin, 0, 1, 1, z_TMD, tmd_channel))
     end
-
-    isempty(basis) && error("The basis is empty. Include at least one RMG or TMD state.")
 
     return basis
 end
@@ -118,50 +73,6 @@ function tmd_index(basis::Vector{BasisState}, spin::Int)
     idx === nothing && error("Missing TMD basis state: spin=$spin")
     return idx
 end
-
-
-
-
-function rmg_blocks_present(basis::Vector{BasisState})
-    blocks = Tuple{Int,Int}[]
-
-    for b in basis
-        if b.material == :RMG
-            block = (b.spin, b.valley)
-            if !(block in blocks)
-                push!(blocks, block)
-            end
-        end
-    end
-
-    return blocks
-end
-
-
-function tmd_spins_present(basis::Vector{BasisState})
-    spins = Int[]
-
-    for b in basis
-        if b.material == :TMD
-            if !(b.spin in spins)
-                push!(spins, b.spin)
-            end
-        end
-    end
-
-    return spins
-end
-
-
-function has_RMG(basis::Vector{BasisState})
-    return any(b -> b.material == :RMG, basis)
-end
-
-
-function has_TMD(basis::Vector{BasisState})
-    return any(b -> b.material == :TMD, basis)
-end
-
 
 
 
@@ -309,8 +220,7 @@ function Hamiltonian(k::Vector{Float64},uD::Float64,valley::Int64,stacking::Int,
 end
 
 function get_single_particle(radius::Float64,num_points::Int,
-    uD::Float64,deltaE::Float64,NL::Int,m_TMD::Float64,z_TMD::Float64;
-    selection::BasisSelection = BasisSelection(),)
+    uD::Float64,deltaE::Float64,NL::Int,m_TMD::Float64,z_TMD::Float64)
 
   vset=[1,-1]
   stacking=1
@@ -331,59 +241,50 @@ function get_single_particle(radius::Float64,num_points::Int,
         push!(k_index, [ix, iy])
    end
 
-    basis = build_basis_RMG_TMD(
-        NL,
-        0.0,
-        z_TMD;
-        selection = selection,
-    )
+    basis = build_basis_RMG_TMD(NL,0.0,z_TMD)
 
     dimension = length(basis)
     Nk = length(k_set)
 
     single_matrix = zeros(ComplexF64, dimension, dimension, Nk)
     
-   rmg_blocks = rmg_blocks_present(basis)
-    tmd_spins = tmd_spins_present(basis)
-
     rmg_inds = Dict{Tuple{Int,Int}, Vector{Int}}()
-    for block in rmg_blocks
-        spin, valley = block
-        rmg_inds[block] = rmg_block_indices(basis, spin, valley, NL)
+    for spin in 1:2, valley in 1:2
+        rmg_inds[(spin, valley)] = rmg_block_indices(basis, spin, valley, NL)
     end
 
     tmd_inds = Dict{Int,Int}()
-    for spin in tmd_spins
+    for spin in 1:2
         tmd_inds[spin] = tmd_index(basis, spin)
     end
-
   
 
 
 
+      
   for ik in eachindex(k_set)
         k = k_set[ik]
 
         # RMG blocks
-        for block in rmg_blocks
-            spin, valley = block
-            inds = rmg_inds[block]
-
+        for spin in 1:2, valley in 1:2
+            inds = rmg_inds[(spin, valley)]
             H_RMG = Hamiltonian(k, uD, vset[valley], stacking, NL)
 
             @views single_matrix[inds, inds, ik] .= H_RMG
         end
 
         # TMD blocks
-        for spin in tmd_spins
+        for spin in 1:2
             i = tmd_inds[spin]
 
-            ε_TMD = dot(k, k) / (2 * m_TMD) * 76.1996 + CNP_TMD
+            # Check units. This is schematic unless m_TMD is already in your code units.
+            ε_TMD = dot(k, k) / (2 * m_TMD)*76.1996 + CNP_TMD
 
             single_matrix[i, i, ik] = ε_TMD
         end
-    end
 
+        # RMG-TMD tunneling is zero unless you add it explicitly.
+  end
 
 
 
@@ -392,11 +293,11 @@ function get_single_particle(radius::Float64,num_points::Int,
     # blockwise
     # ------------------------------------------------------------
 
-     rmg_eig_set = Dict{Tuple{Int,Int}, Matrix{Float64}}()
+    rmg_eig_set = Dict{Tuple{Int,Int}, Matrix{Float64}}()
     rmg_eig_vec_set = Dict{Tuple{Int,Int}, Array{ComplexF64,3}}()
 
-    for block in rmg_blocks
-        inds = rmg_inds[block]
+    for spin in 1:2, valley in 1:2
+        inds = rmg_inds[(spin, valley)]
         dim_rmg = length(inds)
 
         vals = zeros(Float64, dim_rmg, Nk)
@@ -410,14 +311,14 @@ function get_single_particle(radius::Float64,num_points::Int,
             vecs[:, :, ik] .= F.vectors
         end
 
-        rmg_eig_set[block] = vals
-        rmg_eig_vec_set[block] = vecs
+        rmg_eig_set[(spin, valley)] = vals
+        rmg_eig_vec_set[(spin, valley)] = vecs
     end
 
     tmd_eig_set = Dict{Int, Vector{Float64}}()
     tmd_eig_vec_set = Dict{Int, Vector{ComplexF64}}()
 
-    for spin in tmd_spins
+    for spin in 1:2
         i = tmd_inds[spin]
 
         vals = zeros(Float64, Nk)
@@ -425,6 +326,7 @@ function get_single_particle(radius::Float64,num_points::Int,
             vals[ik] = real(single_matrix[i, i, ik])
         end
 
+        # TMD has one orbital per spin, so local eigenvector is just [1]
         tmd_eig_set[spin] = vals
         tmd_eig_vec_set[spin] = ComplexF64[1.0 + 0.0im]
     end
@@ -663,36 +565,33 @@ function get_initial_proj(
     basis::Vector{BasisState},
     single_matrix::Array{ComplexF64,3},
     NL::Int,
-    m_TMD::Float64,
+    m_TMD::Float64       # :conduction or :valence
 )
     dimension = length(basis)
     Nk = length(k_set)
 
     BG_density_matrix = zeros(ComplexF64, dimension, dimension, Nk)
 
-    rmg_blocks = rmg_blocks_present(basis)
-    tmd_spins = tmd_spins_present(basis)
-
+    # Precompute indices
     rmg_inds = Dict{Tuple{Int,Int}, Vector{Int}}()
-    for block in rmg_blocks
-        spin, valley = block
-        rmg_inds[block] = rmg_block_indices(basis, spin, valley, NL)
+    for spin in 1:2, valley in 1:2
+        rmg_inds[(spin, valley)] = rmg_block_indices(basis, spin, valley, NL)
     end
 
     tmd_inds = Dict{Int,Int}()
-    for spin in tmd_spins
+    for spin in 1:2
         tmd_inds[spin] = tmd_index(basis, spin)
     end
 
- # RMG background:
-    # For every included RMG spin/valley block, fill the NL valence bands.
+    # RMG background: fill valence bands in each spin/valley block
     for ik in 1:Nk
-        for block in rmg_blocks
-            inds = rmg_inds[block]
+        for spin in 1:2, valley in 1:2
+            inds = rmg_inds[(spin, valley)]
 
             H_RMG = single_matrix[inds, inds, ik]
             F = eigen(Hermitian(H_RMG))
 
+            # For NL-layer RMG: first NL bands are valence bands
             for band in 1:NL
                 v = F.vectors[:, band]
                 BG_density_matrix[inds, inds, ik] .+= v * v'
@@ -700,15 +599,20 @@ function get_initial_proj(
         end
     end
 
-    if m_TMD < 0
+    # TMD background
+    if  m_TMD>0
+        # empty TMD conduction band at neutrality
+        nothing
+    else
+        # filled TMD valence band at neutrality
         for ik in 1:Nk
-            for spin in tmd_spins
+            for spin in 1:2
                 i = tmd_inds[spin]
                 BG_density_matrix[i, i, ik] = 1.0
             end
         end
+   
     end
-
 
    
 
@@ -717,7 +621,7 @@ function get_initial_proj(
 
     for ik in 1:Nk
         A = randn(dimension, dimension) .+ im .* randn(dimension, dimension)
-        initial_density_matrix[:, :, ik] .=1.0 .* (A + A')
+        initial_density_matrix[:, :, ik] .=0.1 .* (A + A')
     end
 
     return initial_density_matrix, BG_density_matrix
@@ -1133,20 +1037,4 @@ function safe_inverse(A)
           return nothing  # If another error occurs, propagate it
       end
   end
-end
-
-function get_selection(sel::Int)
-    if sel==1
-     return BasisSelection(
-        rmg_blocks = [(1, 1)],
-        tmd_spins = [1],
-        )
-    elseif sel==2
-
-        return BasisSelection(
-            rmg_blocks = [(1, 1),(1, 2),(2, 1),(2, 2)],
-            tmd_spins = [1],
-        )
-    end
-
 end

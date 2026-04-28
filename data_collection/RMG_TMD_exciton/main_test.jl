@@ -18,41 +18,56 @@ m_TMD=args[7]
 NL=Int(args[8])
 target_density=args[9]
 temp=args[10]
-trytime=args[11]
-file_pos=args[12]
+sel=Int(args[11])
+trytime=args[12]
+file_pos=args[13]
 
-basis, k_set, k_index, Area, single_matrix, single_particle_wf=get_single_particle(radius,num_points,
-    uD,deltaE,NL,m_TMD,z_TMD)
+
+selection = get_selection(sel) 
+
+
+
+basis, k_set, k_index, Area, single_matrix, single_particle_wf =get_single_particle(radius,
+        num_points,
+        uD,
+        deltaE,
+        NL,
+        m_TMD,
+        z_TMD;
+        selection = selection,
+    )
 
 println("finish1")
 
-initial_density_matrix, BG_density_matrix=get_initial_proj(
-            k_set,
-            basis,
-            single_matrix,
-            NL,
-            m_TMD
-        )
+initial_density_matrix, BG_density_matrix =
+    get_initial_proj(
+        k_set,
+        basis,
+        single_matrix,
+        NL,
+        m_TMD,
+    )
 
 
 HF_eigenvalues,HF_eigenvectors,energy,
- DIIS_input_density_matrix,
- fermi_level,Hartree_matrix,Fock_matrix,eout,renormalized_density= iteration(
-            initial_density_matrix,
-            BG_density_matrix,
-            ϵr,
-            k_set,
-            single_matrix,
-            basis,
-            Area,
-            NL,
-            z_TMD,
-            target_density,
-            temp
+DIIS_input_density_matrix,fermi_level,
+Hartree_matrix,Fock_matrix,
+eout,renormalized_density = iteration(
+    initial_density_matrix,
+    BG_density_matrix,
+    ϵr,
+    k_set,
+    single_matrix,
+    basis,
+    Area,
+    NL,
+    z_TMD,
+    target_density,
+    temp,
 )
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "RMG_TMD_exciton/data_output$(Int(args[12]))/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])deltaE$(args[5])er$(args[6])ztmd$(args[7])mTMD$(args[8])NL$(args[9])tgden$(args[10])temp$(args[11])trytime.jld2")
+savepath=joinpath(scratch_dir, "RMG_TMD_exciton/data_output$(Int(args[13]))/$(args[1])radius$(args[2])num_points$(args[3])uD$(args[4])deltaE$(args[5])er$(args[6])ztmd$(args[7])mTMD$(args[8])NL$(args[9])tgden$(args[10])temp$(args[11])sel$(args[12])trytime.jld2")
 
   
 jldsave(savepath,
