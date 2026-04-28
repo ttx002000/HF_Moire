@@ -1147,6 +1147,12 @@ function get_selection(sel::Int)
             rmg_blocks = [(1, 1),(1, 2),(2, 1),(2, 2)],
             tmd_spins = [1],
         )
+    elseif sel==3
+
+        return BasisSelection(
+            rmg_blocks = [(1, 1),(1, 2),(2, 1),(2, 2)],
+            tmd_spins = [1,2],
+        )   
     end
 
 end
