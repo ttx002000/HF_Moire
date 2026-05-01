@@ -10,7 +10,7 @@ args=parse.(Float64,ARGS)
 
 scale=args[1]
 gcutoff=args[2]
-constq=args[3]
+rs=args[3]
 target_density=args[4]
 temp=args[5]
 trytime=Int(args[6])
@@ -37,7 +37,7 @@ end
 
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,freeenergy,eout,HartreeMatrix,FockMatrix,fermi_level,fermifactor=iteration_loop(initial_DensityMatrix,
                                                                             T1,T2,wave,single_Ham,
-                                                                            constq,
+                                                                            rs,
                                                                             target_density,temp,Area)
 
 
@@ -46,7 +46,7 @@ DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,ene
 
 scratch_dir = ENV["SCRATCH"]
 
-savepath=joinpath(scratch_dir, "2Dgas/data_output$(Int(args[7]))/$(args[1])scale$(args[2])gcut$(args[3])constq$(args[4])density$(args[5])temp$(args[6])trytime.jld2")
+savepath=joinpath(scratch_dir, "2Dgas/data_output$(Int(args[7]))/$(args[1])scale$(args[2])gcut$(args[3])rs$(args[4])density$(args[5])temp$(args[6])trytime.jld2")
 #savepath="test.jld2"
 
 

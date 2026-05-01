@@ -503,7 +503,7 @@ end
 function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
                        T1::Vector{Float64},T2::Vector{Float64},
                       wave::Vector{Vector{Int64}},single_Ham::Matrix{ComplexF64},
-                     constq::Float64,density::Float64,temp::Float64,Area::Float64)
+                     rs::Float64,density::Float64,temp::Float64,Area::Float64)
     eout=1.0
     itcount=0
     bad_count=0
@@ -525,7 +525,7 @@ function iteration_loop(initial_DensityMatrix::Matrix{ComplexF64},
         wave_n2[g] = Int(wave[g][2])
     end
     #constq should be 2pi r_s
-    Coulomb_matrix=[Coulomb(wave[g1]-wave[g2],T1,T2)*constq for g1 in eachindex(wave), g2 in eachindex(wave)]
+    Coulomb_matrix=[Coulomb(wave[g1]-wave[g2],T1,T2)*2π*rs for g1 in eachindex(wave), g2 in eachindex(wave)]
     
     wl = build_wave_lookup(wave)
     csr = build_shiftcsr(wl, wave_n1, wave_n2)
