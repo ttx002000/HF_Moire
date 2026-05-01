@@ -4,6 +4,8 @@ Pkg.activate(joinpath(@__DIR__, "../.."))
 # where will the pairing happen.  We should also keep two spins for the TMD. Since it's spin valley locked.
 
 # This code is modified from double_RMG_allow_coherence
+
+#update:I allow arbitrary flavor to be kept
 using JLD2,LinearAlgebra
 include("../../src/RMG_TMD_exciton.jl")
 
