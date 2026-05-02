@@ -13,7 +13,7 @@ filepath = joinpath(@__DIR__, "main_test.jl")
 job_prefix = "RMG_TMD_bandprojected_$(Int(aa[1]))"
 
 scratch_dir = ENV["SCRATCH"]
-misspath=joinpath(scratch_dir, "operators_RMG_TMD_exciton_bandprojected/data_output$(Int(aa[1]))/missedjobs.jld2")
+misspath=joinpath(scratch_dir, "RMG_TMD_exciton_bandprojected/data_output$(Int(aa[1]))/missedjobs.jld2")
 
 st=load(misspath)
 
