@@ -89,6 +89,12 @@ struct ProjectedModel
     # size: Nactive × Nactive × Nk
     single_matrix::Array{ComplexF64,3}
 
+
+    # single-particle microscopic wavefunctions
+    # U_by_flavor[f][:, n, ik] is the microscopic eigenvector
+    # for local active band n in flavor f at momentum ik.
+    U_by_flavor::Vector{Array{ComplexF64,3}}
+
     # bookkeeping
     active_flavor::Vector{Int}              # active index a -> flavor id
     local_band_of_active::Vector{Int}       # active index a -> local band inside flavor
@@ -591,12 +597,13 @@ function build_projected_model(
     k_set,
 )
 
-        return ProjectedModel(
+            return ProjectedModel(
         active,
         k_set,
         k_index,
         Area,
         single_matrix,
+        U_by_flavor,
         active_flavor,
         local_band_of_active,
         active_in_flavor,
