@@ -466,7 +466,16 @@ function build_projected_single_particle(
                 single_matrix[a, a, ik] =
                     real(eig.values[ab.band]) + ab.energy_shift
 
-                U_by_flavor[f][:, local_band, ik] .= eig.vectors[:, ab.band]
+                v = copy(eig.vectors[:, ab.band])
+
+                fix_RMG_band_gauge!(
+                    v,
+                    ab.band,
+                    NL,
+                    uD,
+                )
+
+                U_by_flavor[f][:, local_band, ik] .= v
             end
 
         elseif ab.material == :TMD
@@ -499,6 +508,33 @@ end
 
 
 
+
+function fix_RMG_band_gauge!(
+    v::AbstractVector{ComplexF64},
+    band::Int,
+    NL::Int,
+    uD::Float64;
+    tol::Float64 = 1e-12,
+)
+    is_conduction = band > NL
+
+    if uD > 0
+        ref_index = is_conduction ? 2 * NL : 1
+    else
+        ref_index = is_conduction ? 1 : 2 * NL
+    end
+
+    z = v[ref_index]
+
+    if abs(z) < tol
+        ref_index = argmax(abs.(v))
+        z = v[ref_index]
+    end
+
+    v .*= conj(z) / abs(z)
+
+    return v
+end
 
 
 function build_projected_formfactors(
