@@ -501,21 +501,29 @@ function get_OBM(num_kpoints_forOBM::Int,radius::Float64,num_layers::Int,potenti
             end
       end
 
+    total_M1=0.0
+    total_M2=0.0
+
+
     total_M=0.0
       for ja in eachindex(kxrange)
         for jb in eachindex(kyrange)
             for ll in num_layers+1:2*num_layers
-              total_M+=(M1[ja,jb,ll-num_layers]+2*(fermi_energy-eigenvalue[ja,jb,ll])*M2[ja,jb,ll-num_layers])*(1/(1+exp((eigenvalue[ja,jb,ll]-fermi_energy)/temp)))
+            total_M+=(M1[ja,jb,ll-num_layers]+2*(fermi_energy-eigenvalue[ja,jb,ll])*M2[ja,jb,ll-num_layers])*(1/(1+exp((eigenvalue[ja,jb,ll]-fermi_energy)/temp)))
+            total_M1+=(M1[ja,jb,ll-num_layers])*(1/(1+exp((eigenvalue[ja,jb,ll]-fermi_energy)/temp)))
+            total_M2+=(2*(fermi_energy-eigenvalue[ja,jb,ll])*M2[ja,jb,ll-num_layers])*(1/(1+exp((eigenvalue[ja,jb,ll]-fermi_energy)/temp)))
+           
         end
        end
       end
       conversion_factor=2*9.109383*10^(-31)*(10^(-9))^2*(10^(-3)* 1.60217663 * 10^(-19))/(1.0545718*10^(-34))^2        
       orbital_magnetization=total_M/Area*1/target_density*conversion_factor*active_flavor
+      orbital_magnetization_M1=total_M1/Area*1/target_density*conversion_factor*active_flavor
+      orbital_magnetization_M2=total_M2/Area*1/target_density*conversion_factor*active_flavor
 
 
 
-
-  return orbital_magnetization
+  return orbital_magnetization,orbital_magnetization_M1,orbital_magnetization_M2
 end
 
 
