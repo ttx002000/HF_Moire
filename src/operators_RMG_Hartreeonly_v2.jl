@@ -1,5 +1,11 @@
 using LinearAlgebra,Statistics 
 using Random
+BLAS.set_num_threads(1)
+
+println("Julia Threads.nthreads() = ", Threads.nthreads())
+println("Julia Threads.maxthreadid() = ", Threads.maxthreadid())
+println("BLAS.get_num_threads() = ", BLAS.get_num_threads())
+flush(stdout)
 
 function get_Ham(k::Vector{Float64},potential_profile::Vector{Float64},valley::Int64,NL::Int,Ham_ver::Int)
     if Ham_ver==1

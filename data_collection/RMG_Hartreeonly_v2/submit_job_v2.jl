@@ -42,13 +42,20 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
     ml julia/1.10.0
 
     # multithreading
+    
     export JULIA_NUM_THREADS=$cpus_per_task
+    export OMP_NUM_THREADS=1
+    export OPENBLAS_NUM_THREADS=1
+    export MKL_NUM_THREADS=1
+    export BLIS_NUM_THREADS=1
+    export VECLIB_MAXIMUM_THREADS=1
+    export NUMEXPR_NUM_THREADS=1
     export JULIA_DEPOT_PATH=\$OAK/ttx/julia_depot
      
     PARAMS_FILE=$(param_file)
     PARAMS=\$(sed -n "\${SLURM_ARRAY_TASK_ID}p" \$PARAMS_FILE)
     # run the script
-    julia $filepath \$PARAMS """
+    julia --threads=\$SLURM_CPUS_PER_TASK $filepath \$PARAMS """
     
     slurmfile = joinpath(slurmpath, "$(job_prefix)_array_$(unique_id)")
     open(slurmfile, "w") do io
