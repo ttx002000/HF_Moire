@@ -129,6 +129,76 @@ function get_ABCA_Ham(k::Vector{Float64},uD::Float64,hv::Int)
 
 
     Ham=[D1 H12 H13 H14;H21 D2 H23 H24; H31 H32 D3 H34; H41 H42 H43 D4]
+ elseif hv==3
+
+   
+
+
+
+    ff=get_f(k)
+   gamma0=3160.0
+   gamma1=390.0
+   gamma2=-20.0
+   gamma3=315.0
+   gamma4=44.0
+   gamma5=38.0
+   Deltap=50.0
+    
+    Ham_inla=zeros(ComplexF64,4,2,4,2)
+
+
+    TAB=[gamma4*ff -gamma3*conj(ff); gamma1 gamma4*ff]
+    
+
+
+
+   Tnext = [0.0        gamma2/2;
+         gamma5/2   0.0]
+
+
+
+    Ham_inla[1,:,2,:]=TAB
+    Ham_inla[2,:,3,:]=TAB
+    Ham_inla[3,:,4,:]=TAB
+    Ham_inla[1,:,3,:]=Tnext
+    Ham_inla[2,:,4,:]=Tnext
+    Ham_inla=reshape(Ham_inla,8,8)
+    Ham_inla=Ham_inla+Ham_inla'
+
+
+
+    Ham_diag = zeros(ComplexF64, 4, 2, 4, 2)
+
+    # onsite energies in sublattice order (A, B)
+    onsite = [
+        0.0      Deltap;   # layer 1: A1, B1
+        Deltap   0.0;      # layer 2: A2, B2
+        0.0      Deltap;   # layer 3: A3, B3
+        Deltap   0.0       # layer 4: A4, B4
+    ]
+
+    for l in 1:4
+        Ham_diag[l, 1, l, 1] += onsite[l, 1]+(-l+5/2)*uD                 # A_l
+        Ham_diag[l, 2, l, 2] += onsite[l, 2]+(-l+5/2)*uD                  # B_l
+
+        Ham_diag[l, 1, l, 2] += -gamma0 * ff                 # A_l -> B_l
+        Ham_diag[l, 2, l, 1] += -gamma0 * conj(ff)           # B_l -> A_l
+    end
+
+    Ham_diag = reshape(Ham_diag, 8, 8)
+
+
+
+   Ham=Ham_diag+Ham_inla
+
+
+
+
+
+ 
+
+
+
 
  end
 
@@ -243,7 +313,77 @@ function get_ABAB_Ham(k::Vector{Float64},uD::Float64,hv::Int)
     Ham[7,7]+=δ+γ5-1.5*uD
     Ham[8,8]+=γ2-1.5*uD
 
- end
+  elseif hv==3
+
+    ff=get_f(k)
+   gamma0=3160.0
+   gamma1=390.0
+   gamma2=-20.0
+   gamma3=315.0
+   gamma4=44.0
+   gamma5=38.0
+   Deltap=50.0
+    
+    Ham_inla=zeros(ComplexF64,4,2,4,2)
+
+
+    TAB=[gamma4*ff -gamma3*conj(ff); gamma1 gamma4*ff]
+    
+
+    TBA = [gamma4*conj(ff)   gamma1;
+            -gamma3*ff        gamma4*conj(ff)]
+
+    T13 = [gamma2/2   0;
+          0          gamma5/2]
+
+    T24 = [gamma5/2   0;
+          0          gamma2/2]
+
+    Ham_inla[1,:,2,:]=TAB
+    Ham_inla[2,:,3,:]=TBA
+    Ham_inla[3,:,4,:]=TAB
+    Ham_inla[1,:,3,:]=T13
+    Ham_inla[2,:,4,:]=T24
+    Ham_inla=reshape(Ham_inla,8,8)
+    Ham_inla=Ham_inla+Ham_inla'
+
+
+
+    Ham_diag = zeros(ComplexF64, 4, 2, 4, 2)
+
+    # onsite energies in sublattice order (A, B)
+    onsite = [
+        0.0      Deltap;   # layer 1: A1, B1
+        Deltap   0.0;      # layer 2: A2, B2
+        0.0      Deltap;   # layer 3: A3, B3
+        Deltap   0.0       # layer 4: A4, B4
+    ]
+
+    for l in 1:4
+        Ham_diag[l, 1, l, 1] = onsite[l, 1]+(-l+5/2)*uD                  # A_l
+        Ham_diag[l, 2, l, 2] = onsite[l, 2]+(-l+5/2)*uD                  # B_l
+
+        Ham_diag[l, 1, l, 2] = -gamma0 * ff                 # A_l -> B_l
+        Ham_diag[l, 2, l, 1] = -gamma0 * conj(ff)           # B_l -> A_l
+    end
+
+    Ham_diag = reshape(Ham_diag, 8, 8)
+
+
+
+   Ham=Ham_diag+Ham_inla
+
+
+
+  end
+
+
+
+
+
+
+
+
    return Ham
 end
 
