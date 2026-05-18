@@ -1406,7 +1406,17 @@ function get_projected_selection(
                 TMDBandSpec(:TMD_s1, 1, 0, 1, m_TMD, deltaE, z_TMD),
             ],
         )
+    elseif sel==2
+
+            return ProjectedSelection(
+            [
+                RMGBandSpec(:RMG_s1_vp, 1, +1, NL+1, 0.0, z_RMG),
+            ],
+            [
+                TMDBandSpec(:TMD_s1, 1, 0, 1, m_TMD, deltaE, z_TMD),
+            ],
+        )
     else
-        error("For now only sel == 1 is implemented.")
+           error("For now only sel == 1 and 2 is implemented.")
     end
 end
