@@ -987,7 +987,7 @@ end
 function tdhf_filename_for_step(args, stepnum::Int)
     return "$(args[1])NL$(args[2])theta$(args[3])constq$(args[4])ϵr$(args[5])uD$(args[6])filling$(args[7])cutoff$(args[8])lambda$(args[9])trytime$(args[10])enlarge$(args[11])V0_hBN$(args[12])V1_hBN$(args[13])ψ_hBN$(args[14])V2_scalar$(args[15])ϕ$(args[16])pincof$(args[17])dedis$(args[18])depos" *
            "$(args[22])refreshevery" *
-           "$(args[24])dt$(args[25])dAx$(args[26])dAy$(args[27])gamma$(args[28])temp$(args[29])workcutoff" *
+           "$(args[24])dt$(args[25])Ex$(args[26])Ey$(args[27])gamma$(args[28])temp$(args[29])workcutoff" *
            "$(stepnum)stepnum.jld2"
 end
 
@@ -1053,7 +1053,10 @@ function load_tdhf_starting_point(args)
     plot_every = Int(args[23])
 
     dt = args[24]
-    deltaA_step = [args[25], args[26]]
+
+    Efield = [args[25], args[26]]
+    deltaA_step = -Efield .* dt
+    dAshift_dt = deltaA_step ./ dt
 
     gamma = args[27]
     temp = args[28]
@@ -1070,13 +1073,13 @@ function load_tdhf_starting_point(args)
         refresh_every,
         plot_every,
         dt,
-        deltaA_step[1],
-        deltaA_step[2],
+        Efield[1],
+        Efield[2],
         gamma,
         temp,
-        gcutoff_work
+        gcutoff_work,
+        start_step
     ])
-
     # -------------------------
     # Load from seed or checkpoint
     # -------------------------
