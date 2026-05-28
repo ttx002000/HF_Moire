@@ -901,17 +901,42 @@ function tdhf_one_step!(
         a2m
     )
 
-    # 6. Transport density matrix to new instantaneous basis
-            old_blas_threads = BLAS.get_num_threads()
+        # 6. Transport density matrix to new instantaneous basis.
+        # We use the unitary/isometric part W of S for the actual projected-band dynamics.
+        # The raw nonunitarity of S is kept as a diagnostic.
+
+        unitary_data = right_unitary_part_from_overlap(Smatrix)
+        unitary_overlap = unitary_data.unitary_overlap
+
+        trace_before_old_basis_step = real(tr(Prj))
+        trace_after_old_basis_step = real(tr(Prj_star))
+
+        old_blas_threads = BLAS.get_num_threads()
         BLAS.set_num_threads(min(Threads.nthreads(), 8))
 
-        Prj_new = Smatrix * Prj_star * Smatrix'
+        raw_Prj_after_transport = Smatrix * Prj_star * Smatrix'
+        Prj_new = unitary_overlap * Prj_star * unitary_overlap'
 
         BLAS.set_num_threads(old_blas_threads)
+
+        raw_Prj_after_transport = (raw_Prj_after_transport + raw_Prj_after_transport') / 2
         Prj_new = (Prj_new + Prj_new') / 2
 
+        trace_after_raw_transport = real(tr(raw_Prj_after_transport))
+        trace_after_unitary_transport = real(tr(Prj_new))
+
+        step_transport_diagnostics = (
+            trace_change_old_basis = trace_after_old_basis_step - trace_before_old_basis_step,
+            raw_transport_trace_change = trace_after_raw_transport - trace_after_old_basis_step,
+            unitary_transport_trace_change = trace_after_unitary_transport - trace_after_old_basis_step,
+            raw_overlap_nonunitarity = unitary_data.raw_overlap_nonunitarity,
+            unitary_overlap_error = unitary_data.unitary_overlap_error,
+            smallest_gram_eigenvalue = unitary_data.smallest_gram_eigenvalue,
+            largest_gram_eigenvalue = unitary_data.largest_gram_eigenvalue
+        )
+
     return Prj_new, proj_new, Ashift_new, eps, bath_eigenvectors,
-           chemical_potential, particle_number_check
+        chemical_potential, particle_number_check, step_transport_diagnostics
 end
 
 
@@ -987,7 +1012,7 @@ end
 function tdhf_filename_for_step(args, stepnum::Int)
     return "$(args[1])NL$(args[2])theta$(args[3])constq$(args[4])ϵr$(args[5])uD$(args[6])filling$(args[7])cutoff$(args[8])lambda$(args[9])trytime$(args[10])enlarge$(args[11])V0_hBN$(args[12])V1_hBN$(args[13])ψ_hBN$(args[14])V2_scalar$(args[15])ϕ$(args[16])pincof$(args[17])dedis$(args[18])depos" *
            "$(args[22])refreshevery" *
-           "$(args[24])dt$(args[25])Ex$(args[26])Ey$(args[27])gamma$(args[28])temp$(args[29])workcutoff" *
+           "$(args[24])dt$(args[25])Emag$(args[26])Eag$(args[27])gamma$(args[28])temp$(args[29])workcutoff" *
            "$(stepnum)stepnum.jld2"
 end
 
@@ -1022,6 +1047,25 @@ function tdhf_file_path_for_step(args, stepnum::Int)
 end
 
 
+function electric_field_from_magnitude_angle(
+    electric_field_magnitude::Float64,
+    electric_field_angle_degree::Float64,
+    a1m::Vector{Float64}
+)
+    aag = electric_field_angle_degree / 180.0 * π
+
+    xhat = a1m / norm(a1m)
+
+    # +90 degree rotation of xhat in the current Cartesian coordinate system
+    yhat = [-xhat[2], xhat[1]]
+
+    return electric_field_magnitude * (cos(aag) .* xhat .+ sin(aag) .* yhat)
+end
+
+
+
+
+
 function load_tdhf_starting_point(args)
     # -------------------------
     # Fixed model parameters
@@ -1054,9 +1098,8 @@ function load_tdhf_starting_point(args)
 
     dt = args[24]
 
-    Efield = [args[25], args[26]]
-    deltaA_step = -Efield .* dt
-    dAshift_dt = deltaA_step ./ dt
+    electric_field_magnitude = args[25]
+    electric_field_angle_degree = args[26]
 
     gamma = args[27]
     temp = args[28]
@@ -1064,22 +1107,7 @@ function load_tdhf_starting_point(args)
 
     start_step = Int(args[30])
 
-    dAshift_dt = deltaA_step ./ dt
-    Efield = -dAshift_dt
 
-    tdhf_args = Float64.([
-        total_steps,
-        save_every,
-        refresh_every,
-        plot_every,
-        dt,
-        Efield[1],
-        Efield[2],
-        gamma,
-        temp,
-        gcutoff_work,
-        start_step
-    ])
     # -------------------------
     # Load from seed or checkpoint
     # -------------------------
@@ -1181,8 +1209,39 @@ function load_tdhf_starting_point(args)
 
     Area = abs(a1m[1] * a2m[2] - a1m[2] * a2m[1])
 
+
+            Efield = electric_field_from_magnitude_angle(
+            electric_field_magnitude,
+            electric_field_angle_degree,
+            a1m
+        )
+
+        deltaA_step = -Efield .* dt
+        dAshift_dt = deltaA_step ./ dt
+
+        tdhf_args = Float64.([
+            total_steps,
+            save_every,
+            refresh_every,
+            plot_every,
+            dt,
+            electric_field_magnitude,
+            electric_field_angle_degree,
+            Efield[1],
+            Efield[2],
+            gamma,
+            temp,
+            gcutoff_work,
+            start_step
+        ])
+
+
+
+
+
+
     params = TDHFParams(
-        NL,
+        Int(NL),
         uD,
         λ,
         enlarge_factor,
@@ -1241,9 +1300,11 @@ function load_tdhf_starting_point(args)
     println("  plot_every = ", plot_every)
     println("  time_now = ", time_now)
     println("  Ashift = ", Ashift)
+    println("  electric_field_magnitude = ", electric_field_magnitude)
+    println("  electric_field_angle_degree = ", electric_field_angle_degree)
+    println("  Efield Cartesian = ", Efield)
     println("  deltaA_step = ", deltaA_step)
     println("  dAshift_dt = ", dAshift_dt)
-    println("  Efield = ", Efield)
     println("  gamma = ", gamma)
     println("  temp = ", temp)
     println("  gcutoff_work = ", gcutoff_work)
@@ -1357,7 +1418,8 @@ function run_tdhf_from_args!(args)
     for step_index in state.first_evolution_step:state.total_steps
         trace_before_step = real(tr(Prj))
 
-        Prj, proj, Ashift, eps, bath_eigenvectors, chemical_potential, particle_number_check =
+            Prj, proj, Ashift, eps, bath_eigenvectors, chemical_potential,
+        particle_number_check, step_transport_diagnostics =
             tdhf_one_step!(
                 work,
                 Prj,
@@ -1395,23 +1457,32 @@ function run_tdhf_from_args!(args)
         eigs_Prj = eigvals(Hermitian(Prj))
 
         diagnostics = (
-            step_index = step_index,
-            time_now = time_now,
-            trace = real(tr(Prj)),
-            trace_error = real(tr(Prj)) - params.filling,
-            trace_change_step = trace_change_step,
-            trace_change_refresh = trace_change_refresh,
-            min_eigenvalue = minimum(eigs_Prj),
-            max_eigenvalue = maximum(eigs_Prj),
-            hermiticity_error = norm(Prj - Prj'),
-            idempotency_error = norm(Prj * Prj - Prj),
-            frobenius_norm_squared = sum(abs2, Prj),
-            Ashift_x = Ashift[1],
-            Ashift_y = Ashift[2],
-            dimension = length(wave_work),
-            chemical_potential = chemical_potential,
-            particle_number_check = particle_number_check
-        )
+        step_index = step_index,
+        time_now = time_now,
+        trace = real(tr(Prj)),
+        trace_error = real(tr(Prj)) - params.filling,
+        trace_change_step = trace_change_step,
+        trace_change_refresh = trace_change_refresh,
+
+        trace_change_old_basis = step_transport_diagnostics.trace_change_old_basis,
+        raw_transport_trace_change = step_transport_diagnostics.raw_transport_trace_change,
+        unitary_transport_trace_change = step_transport_diagnostics.unitary_transport_trace_change,
+        raw_overlap_nonunitarity = step_transport_diagnostics.raw_overlap_nonunitarity,
+        unitary_overlap_error = step_transport_diagnostics.unitary_overlap_error,
+        smallest_gram_eigenvalue = step_transport_diagnostics.smallest_gram_eigenvalue,
+        largest_gram_eigenvalue = step_transport_diagnostics.largest_gram_eigenvalue,
+
+        min_eigenvalue = minimum(eigs_Prj),
+        max_eigenvalue = maximum(eigs_Prj),
+        hermiticity_error = norm(Prj - Prj'),
+        idempotency_error = norm(Prj * Prj - Prj),
+        frobenius_norm_squared = sum(abs2, Prj),
+        Ashift_x = Ashift[1],
+        Ashift_y = Ashift[2],
+        dimension = length(wave_work),
+        chemical_potential = chemical_potential,
+        particle_number_check = particle_number_check
+    )
 
         push!(diagnostics_record, diagnostics)
 
@@ -1515,6 +1586,60 @@ function Densitymap_customize(
 end
 
 
+
+function right_unitary_part_from_overlap(
+    overlap_matrix::Matrix{ComplexF64};
+    eigenvalue_floor::Float64 = 1e-12
+)
+    gram_matrix = overlap_matrix' * overlap_matrix
+    gram_matrix = (gram_matrix + gram_matrix') / 2
+
+    gram_eigen = eigen(Hermitian(gram_matrix))
+
+    inverse_sqrt_eigenvalues = similar(gram_eigen.values)
+
+    @inbounds for index in eachindex(gram_eigen.values)
+        clamped_value = max(real(gram_eigen.values[index]), eigenvalue_floor)
+        inverse_sqrt_eigenvalues[index] = 1.0 / sqrt(clamped_value)
+    end
+
+    gram_inverse_sqrt =
+        gram_eigen.vectors *
+        Diagonal(inverse_sqrt_eigenvalues) *
+        gram_eigen.vectors'
+
+    unitary_overlap = overlap_matrix * gram_inverse_sqrt
+
+    raw_overlap_nonunitarity =
+        norm(gram_matrix - I(size(gram_matrix, 1)))
+
+    unitary_overlap_error =
+        norm(unitary_overlap' * unitary_overlap - I(size(unitary_overlap, 2)))
+
+    smallest_gram_eigenvalue = minimum(real.(gram_eigen.values))
+    largest_gram_eigenvalue = maximum(real.(gram_eigen.values))
+
+    return (
+        unitary_overlap = unitary_overlap,
+        raw_overlap_nonunitarity = raw_overlap_nonunitarity,
+        unitary_overlap_error = unitary_overlap_error,
+        smallest_gram_eigenvalue = smallest_gram_eigenvalue,
+        largest_gram_eigenvalue = largest_gram_eigenvalue
+    )
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
 function charge_density_file_path_for_step(args, step_index::Int, layer_index::Int)
     checkpoint_path = tdhf_file_path_for_step(args, step_index)
 
@@ -1573,7 +1698,6 @@ function save_charge_density_one_layer!(
         zvec = zvec,
         xrange = xrange,
         yrange = yrange,
-        densitymatrix_projected = densitymatrix_projected,
         layer_index = layer_index,
         step_index = step_index,
         args = args
@@ -1593,10 +1717,10 @@ function save_charge_density_all_layers!(
     params::TDHFParams,
     step_index::Int
 )
-    xrange = collect(range(0.0, stop = norm(params.a1m), length = 80))
-    yrange = collect(range(0.0, stop = 1.5 * norm(params.a1m), length = 80))
+    xrange = collect(range(0.0, stop = norm(params.a1m), length = 160))
+    yrange = collect(range(0.0, stop = 1.5 * norm(params.a1m), length = 160))
 
-    for layer_index in 1:params.NL
+    for layer_index in params.NL-1:params.NL
         save_charge_density_one_layer!(
             args,
             Prj,
