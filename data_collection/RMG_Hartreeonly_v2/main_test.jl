@@ -1,7 +1,7 @@
 using Pkg
 Pkg.activate(joinpath(@__DIR__, "../.."))
 using JLD2
-
+using Plots,StaticArrays
 
 include("../../src/operators_RMG_Hartreeonly_v2.jl")
 
