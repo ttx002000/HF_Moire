@@ -1717,7 +1717,7 @@ function save_charge_density_all_layers!(
     params::TDHFParams,
     step_index::Int
 )
-    xrange = collect(range(0.0, stop = norm(params.a1m), length = 160))
+    xrange = collect(range(0.0, stop = 1.1*norm(params.a1m), length = 160))
     yrange = collect(range(0.0, stop = 1.5 * norm(params.a1m), length = 160))
 
     for layer_index in params.NL-1:params.NL
