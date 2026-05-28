@@ -1398,22 +1398,31 @@ function run_tdhf_from_args!(args)
 
     start_step = Int(args[30])
 
-    if start_step == 0
-        save_tdhf_file!(
-            state.args,
-            Prj,
-            Ashift,
-            wave_work,
-            0,
-            time_now,
-            diagnostics_record,
-            state.tdhf_args,
-            state.seed_file_path,
-            state.deltaA_step,
-            state.dAshift_dt,
-            state.Efield
-        )
-    end
+        if start_step == 0
+            save_tdhf_file!(
+                state.args,
+                Prj,
+                Ashift,
+                wave_work,
+                0,
+                time_now,
+                diagnostics_record,
+                state.tdhf_args,
+                state.seed_file_path,
+                state.deltaA_step,
+                state.dAshift_dt,
+                state.Efield
+            )
+
+            save_charge_density_all_layers!(
+                state.args,
+                Prj,
+                wave_work,
+                proj,
+                params,
+                0
+            )
+        end
 
     for step_index in state.first_evolution_step:state.total_steps
         trace_before_step = real(tr(Prj))
