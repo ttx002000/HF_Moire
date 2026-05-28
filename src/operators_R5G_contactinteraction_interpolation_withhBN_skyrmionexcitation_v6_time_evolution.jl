@@ -1523,7 +1523,7 @@ function charge_density_file_path_for_step(args, step_index::Int, layer_index::I
 
     return joinpath(
         charge_density_dir,
-        "CD_layer$(layer_index)_" * basename(checkpoint_path)
+        "CD_layer$(layer_index)" * basename(checkpoint_path)
     )
 end
 
