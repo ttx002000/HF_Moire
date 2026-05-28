@@ -1518,9 +1518,12 @@ end
 function charge_density_file_path_for_step(args, step_index::Int, layer_index::Int)
     checkpoint_path = tdhf_file_path_for_step(args, step_index)
 
+    charge_density_dir = joinpath(dirname(checkpoint_path), "CD_data")
+    mkpath(charge_density_dir)
+
     return joinpath(
-        dirname(checkpoint_path),
-        "CD_layer$(layer_index)" * basename(checkpoint_path)
+        charge_density_dir,
+        "CD_layer$(layer_index)_" * basename(checkpoint_path)
     )
 end
 
