@@ -670,13 +670,6 @@ function Build_HHF!(work::TDHFWork,csr::ShiftCSR,wave::Vector{Vector{Int64}},wav
 end
 
 
-@inline function sinc_stable(x::Float64)
-    if abs(x) < 1e-10
-        return 1.0 - x^2 / 6.0
-    else
-        return sin(x) / x
-    end
-end
 
 
 
@@ -695,24 +688,38 @@ function build_S_matrix(
 )
     S = zeros(ComplexF64, length(wave_new), length(wave_old))
 
-    TMAT = [T1 T2]
+    old_index = Dict{Tuple{Int64, Int64}, Int64}()
 
-   Threads.@threads :greedy for i in eachindex(wave_new)
-       @inbounds for j in eachindex(wave_old)
-        pnew = TMAT * wave_new[i] + Ashift_new
-        pold = TMAT * wave_old[j] + Ashift_old
-
-        Q = pold - pnew
-
-        x1 = dot(Q, L1) / 2.0
-        x2 = dot(Q, L2) / 2.0
-
-        Iq = exp(im * dot(Q, L1 + L2) / 2.0) *
-             sinc_stable(x1) *
-             sinc_stable(x2)
-
-        S[i, j] = Iq * (spinor_new[i]' * spinor_old[j])
+    # Keep this serial: Dict writes are not thread-safe.
+    @inbounds for old_momentum_index in eachindex(wave_old)
+        old_label = (
+            Int64(wave_old[old_momentum_index][1]),
+            Int64(wave_old[old_momentum_index][2])
+        )
+        old_index[old_label] = Int64(old_momentum_index)
     end
+
+    # Safe to thread: each thread writes to a different row of S,
+    # and old_index is read-only here.
+    Threads.@threads :greedy for new_momentum_index in eachindex(wave_new)
+        @inbounds begin
+            new_label = (
+                Int64(wave_new[new_momentum_index][1]),
+                Int64(wave_new[new_momentum_index][2])
+            )
+
+            old_momentum_index = get(old_index, new_label, Int64(0))
+
+            if old_momentum_index != 0
+                amp = spinor_new[new_momentum_index]' * spinor_old[old_momentum_index]
+
+                if abs(amp) > 1e-12
+                    S[new_momentum_index, old_momentum_index] = amp / abs(amp)
+                else
+                    S[new_momentum_index, old_momentum_index] = 1.0 + 0.0im
+                end
+            end
+        end
     end
 
     return S
@@ -905,34 +912,23 @@ function tdhf_one_step!(
         # We use the unitary/isometric part W of S for the actual projected-band dynamics.
         # The raw nonunitarity of S is kept as a diagnostic.
 
-        unitary_data = right_unitary_part_from_overlap(Smatrix)
-        unitary_overlap = unitary_data.unitary_overlap
-
-        trace_before_old_basis_step = real(tr(Prj))
+                trace_before_old_basis_step = real(tr(Prj))
         trace_after_old_basis_step = real(tr(Prj_star))
 
         old_blas_threads = BLAS.get_num_threads()
         BLAS.set_num_threads(min(Threads.nthreads(), 8))
 
-        raw_Prj_after_transport = Smatrix * Prj_star * Smatrix'
-        Prj_new = unitary_overlap * Prj_star * unitary_overlap'
+        Prj_new = Smatrix * Prj_star * Smatrix'
 
         BLAS.set_num_threads(old_blas_threads)
 
-        raw_Prj_after_transport = (raw_Prj_after_transport + raw_Prj_after_transport') / 2
         Prj_new = (Prj_new + Prj_new') / 2
 
-        trace_after_raw_transport = real(tr(raw_Prj_after_transport))
-        trace_after_unitary_transport = real(tr(Prj_new))
+        trace_after_transport = real(tr(Prj_new))
 
         step_transport_diagnostics = (
             trace_change_old_basis = trace_after_old_basis_step - trace_before_old_basis_step,
-            raw_transport_trace_change = trace_after_raw_transport - trace_after_old_basis_step,
-            unitary_transport_trace_change = trace_after_unitary_transport - trace_after_old_basis_step,
-            raw_overlap_nonunitarity = unitary_data.raw_overlap_nonunitarity,
-            unitary_overlap_error = unitary_data.unitary_overlap_error,
-            smallest_gram_eigenvalue = unitary_data.smallest_gram_eigenvalue,
-            largest_gram_eigenvalue = unitary_data.largest_gram_eigenvalue
+            transport_trace_change = trace_after_transport - trace_after_old_basis_step
         )
 
     return Prj_new, proj_new, Ashift_new, eps, bath_eigenvectors,
@@ -1474,12 +1470,7 @@ function run_tdhf_from_args!(args)
         trace_change_refresh = trace_change_refresh,
 
         trace_change_old_basis = step_transport_diagnostics.trace_change_old_basis,
-        raw_transport_trace_change = step_transport_diagnostics.raw_transport_trace_change,
-        unitary_transport_trace_change = step_transport_diagnostics.unitary_transport_trace_change,
-        raw_overlap_nonunitarity = step_transport_diagnostics.raw_overlap_nonunitarity,
-        unitary_overlap_error = step_transport_diagnostics.unitary_overlap_error,
-        smallest_gram_eigenvalue = step_transport_diagnostics.smallest_gram_eigenvalue,
-        largest_gram_eigenvalue = step_transport_diagnostics.largest_gram_eigenvalue,
+        transport_trace_change = step_transport_diagnostics.transport_trace_change,
 
         min_eigenvalue = minimum(eigs_Prj),
         max_eigenvalue = maximum(eigs_Prj),
@@ -1596,46 +1587,6 @@ end
 
 
 
-function right_unitary_part_from_overlap(
-    overlap_matrix::Matrix{ComplexF64};
-    eigenvalue_floor::Float64 = 1e-12
-)
-    gram_matrix = overlap_matrix' * overlap_matrix
-    gram_matrix = (gram_matrix + gram_matrix') / 2
-
-    gram_eigen = eigen(Hermitian(gram_matrix))
-
-    inverse_sqrt_eigenvalues = similar(gram_eigen.values)
-
-    @inbounds for index in eachindex(gram_eigen.values)
-        clamped_value = max(real(gram_eigen.values[index]), eigenvalue_floor)
-        inverse_sqrt_eigenvalues[index] = 1.0 / sqrt(clamped_value)
-    end
-
-    gram_inverse_sqrt =
-        gram_eigen.vectors *
-        Diagonal(inverse_sqrt_eigenvalues) *
-        gram_eigen.vectors'
-
-    unitary_overlap = overlap_matrix * gram_inverse_sqrt
-
-    raw_overlap_nonunitarity =
-        norm(gram_matrix - I(size(gram_matrix, 1)))
-
-    unitary_overlap_error =
-        norm(unitary_overlap' * unitary_overlap - I(size(unitary_overlap, 2)))
-
-    smallest_gram_eigenvalue = minimum(real.(gram_eigen.values))
-    largest_gram_eigenvalue = maximum(real.(gram_eigen.values))
-
-    return (
-        unitary_overlap = unitary_overlap,
-        raw_overlap_nonunitarity = raw_overlap_nonunitarity,
-        unitary_overlap_error = unitary_overlap_error,
-        smallest_gram_eigenvalue = smallest_gram_eigenvalue,
-        largest_gram_eigenvalue = largest_gram_eigenvalue
-    )
-end
 
 
 
