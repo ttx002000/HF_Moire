@@ -10,7 +10,7 @@ aa= parse.(Int, ARGS)
 
 
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "v6_$(Int(aa[1]))"
+job_prefix = "time_$(Int(aa[1]))"
 
 scratch_dir = ENV["SCRATCH"]
 misspath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v6_time_evolution/data_output$(Int(aa[1]))/missedjobs.jld2")
