@@ -33,8 +33,8 @@ while (count - 1) * ba_size + 1 <= ee
         job_prefix,
         index[batch_start:batch_end];
         time = "12:00:00",
-        cpus_per_task = 4,
-        mem = 8
+        cpus_per_task = 16,
+        mem = 32
     )
 
     println(batch_start, " ", batch_end)
