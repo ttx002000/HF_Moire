@@ -856,25 +856,8 @@ function tdhf_one_step!(
 
 
 
-    # 1. Build H_HF[Prj, Ashift] in the old instantaneous basis
-    Build_HHF!(
-        work,
-        book.csr,
-        wave_work,
-        book.wave_n1,
-        book.wave_n2,
-        Prj,
-        proj.single_Ham,
-        proj.single_MoirePo,
-        proj.pinning_po,
-        proj.overlapmatrix,
-        Area,
-        proj.Coulomb_matrix
-    )
-
-    H_HF_used = copy(work.H_phys)
-    HartreeMatrix_used = copy(work.HartreeMatrix)
-    FockMatrix_used = copy(work.FockMatrix)
+  
+    
 
 
     # 2. Physical TDHF + reservoir step in the old A-basis
@@ -936,9 +919,8 @@ function tdhf_one_step!(
             transport_trace_change = trace_after_transport - trace_after_old_basis_step
         )
 
-    return Prj_new, proj_new, Ashift_new, eps, bath_eigenvectors,
-        chemical_potential, particle_number_check, step_transport_diagnostics,
-        H_HF_used, HartreeMatrix_used, FockMatrix_used
+  return Prj_new, proj_new, Ashift_new, eps, bath_eigenvectors,
+    chemical_potential, particle_number_check, step_transport_diagnostics
 end
 
 
@@ -1167,7 +1149,7 @@ function load_tdhf_starting_point(args)
 
         Prj = (Prj + Prj') / 2
 
-        first_evolution_step = 1
+        
 
     else
         checkpoint_path = tdhf_file_path_for_step(args, start_step)
@@ -1193,7 +1175,7 @@ function load_tdhf_starting_point(args)
 
         seed = load(seed_file_path)
 
-        first_evolution_step = start_step + 1
+        
     end
 
     # -------------------------
@@ -1295,7 +1277,6 @@ function load_tdhf_starting_point(args)
 
     println("TDHF starting point:")
     println("  start_step = ", start_step)
-    println("  first_evolution_step = ", first_evolution_step)
     println("  total_steps = ", total_steps)
     println("  save_every = ", save_every)
     println("  refresh_every = ", refresh_every)
@@ -1321,8 +1302,6 @@ function load_tdhf_starting_point(args)
         proj = proj,
         work = work,
         params = params,
-
-        first_evolution_step = first_evolution_step,
         total_steps = total_steps,
         save_every = save_every,
         refresh_every = refresh_every,
@@ -1354,13 +1333,13 @@ function save_tdhf_file!(
     deltaA_step,
     dAshift_dt,
     Efield,
-    H_HF_used,
-    HartreeMatrix_used,
-    FockMatrix_used
+    work,
+    proj
 )
     save_file_path = tdhf_file_path_for_step(args, step_index)
-   
 
+    mkpath(dirname(save_file_path))
+    
     JLD2.jldsave(
         save_file_path;
         Prj = Prj,
@@ -1375,9 +1354,11 @@ function save_tdhf_file!(
         deltaA_step = deltaA_step,
         dAshift_dt = dAshift_dt,
         Efield = Efield,
-        H_HF = H_HF_used,
-        HartreeMatrix = HartreeMatrix_used,
-        FockMatrix = FockMatrix_used,
+
+        H_HF = copy(work.H_phys),
+        HartreeMatrix = copy(work.HartreeMatrix),
+        FockMatrix = copy(work.FockMatrix),
+        spinor_set = proj.spinor_set
     )
 
     println("Saved TDHF file: ", save_file_path)
@@ -1404,23 +1385,67 @@ function run_tdhf_from_args!(args)
     time_now = state.time_now
     diagnostics_record = state.diagnostics_record
 
-    start_step = Int(args[30])
+    current_step = Int(args[30])
 
-        if start_step == 0
+    while current_step <= state.total_steps
+
+        # ------------------------------------------------------------
+        # Current convention:
+        # current_step = n means:
+        #   Prj      = P_n
+        #   Ashift   = A_n
+        #   time_now = n * dt
+        #
+        # Build H_HF[P_n, A_n] before saving/evolving.
+        # ------------------------------------------------------------
+        Build_HHF!(
+            work,
+            book.csr,
+            wave_work,
+            book.wave_n1,
+            book.wave_n2,
+            Prj,
+            proj.single_Ham,
+            proj.single_MoirePo,
+            proj.pinning_po,
+            proj.overlapmatrix,
+            params.Area,
+            proj.Coulomb_matrix
+        )
+
+        # ------------------------------------------------------------
+        # Save checkpoint at the current step, before evolution.
+        # This includes step 0 naturally.
+        # ------------------------------------------------------------
+        if current_step == 0 ||
+           current_step % state.save_every == 0 ||
+           current_step == state.total_steps
+
             save_tdhf_file!(
                 state.args,
                 Prj,
                 Ashift,
                 wave_work,
-                0,
+                current_step,
                 time_now,
                 diagnostics_record,
                 state.tdhf_args,
                 state.seed_file_path,
                 state.deltaA_step,
                 state.dAshift_dt,
-                state.Efield
+                state.Efield,
+                work,
+                proj
             )
+        end
+
+        # ------------------------------------------------------------
+        # Save charge density at the current step, before evolution.
+        # This also includes step 0 naturally.
+        # ------------------------------------------------------------
+        if current_step == 0 ||
+           current_step % state.plot_every == 0 ||
+           current_step == state.total_steps
 
             save_charge_density_all_layers!(
                 state.args,
@@ -1428,16 +1453,23 @@ function run_tdhf_from_args!(args)
                 wave_work,
                 proj,
                 params,
-                0
+                current_step
             )
         end
 
-    for step_index in state.first_evolution_step:state.total_steps
+        # If this is the final requested state, stop after saving it.
+        if current_step == state.total_steps
+            break
+        end
+
+        # ------------------------------------------------------------
+        # Evolve current_step -> current_step + 1
+        # tdhf_one_step! should use the already-built work.H_phys.
+        # ------------------------------------------------------------
         trace_before_step = real(tr(Prj))
 
-            Prj, proj, Ashift, eps, bath_eigenvectors, chemical_potential,
-        particle_number_check, step_transport_diagnostics,
-        H_HF_used, HartreeMatrix_used, FockMatrix_used =
+        Prj, proj, Ashift, eps, bath_eigenvectors,
+        chemical_potential, particle_number_check, step_transport_diagnostics =
             tdhf_one_step!(
                 work,
                 Prj,
@@ -1449,13 +1481,18 @@ function run_tdhf_from_args!(args)
             )
 
         time_now += params.dt
+        next_step = current_step + 1
 
         trace_after_step = real(tr(Prj))
         trace_change_step = trace_after_step - trace_before_step
 
+        # ------------------------------------------------------------
+        # Refresh cutoff basis after arriving at next_step.
+        # Then diagnostics for next_step refer to the refreshed basis.
+        # ------------------------------------------------------------
         trace_change_refresh = 0.0
 
-        if step_index % state.refresh_every == 0
+        if next_step % state.refresh_every == 0
             trace_before_refresh = real(tr(Prj))
 
             Prj, wave_work, book, proj, work =
@@ -1475,32 +1512,32 @@ function run_tdhf_from_args!(args)
         eigs_Prj = eigvals(Hermitian(Prj))
 
         diagnostics = (
-        step_index = step_index,
-        time_now = time_now,
-        trace = real(tr(Prj)),
-        trace_error = real(tr(Prj)) - params.filling,
-        trace_change_step = trace_change_step,
-        trace_change_refresh = trace_change_refresh,
+            step_index = next_step,
+            time_now = time_now,
+            trace = real(tr(Prj)),
+            trace_error = real(tr(Prj)) - params.filling,
+            trace_change_step = trace_change_step,
+            trace_change_refresh = trace_change_refresh,
 
-        trace_change_old_basis = step_transport_diagnostics.trace_change_old_basis,
-        transport_trace_change = step_transport_diagnostics.transport_trace_change,
+            trace_change_old_basis = step_transport_diagnostics.trace_change_old_basis,
+            transport_trace_change = step_transport_diagnostics.transport_trace_change,
 
-        min_eigenvalue = minimum(eigs_Prj),
-        max_eigenvalue = maximum(eigs_Prj),
-        hermiticity_error = norm(Prj - Prj'),
-        idempotency_error = norm(Prj * Prj - Prj),
-        frobenius_norm_squared = sum(abs2, Prj),
-        Ashift_x = Ashift[1],
-        Ashift_y = Ashift[2],
-        dimension = length(wave_work),
-        chemical_potential = chemical_potential,
-        particle_number_check = particle_number_check
-    )
+            min_eigenvalue = minimum(eigs_Prj),
+            max_eigenvalue = maximum(eigs_Prj),
+            hermiticity_error = norm(Prj - Prj'),
+            idempotency_error = norm(Prj * Prj - Prj),
+            frobenius_norm_squared = sum(abs2, Prj),
+            Ashift_x = Ashift[1],
+            Ashift_y = Ashift[2],
+            dimension = length(wave_work),
+            chemical_potential = chemical_potential,
+            particle_number_check = particle_number_check
+        )
 
         push!(diagnostics_record, diagnostics)
 
         println(
-            "step = ", step_index,
+            "step = ", next_step,
             " time = ", time_now,
             " Tr(P)-N = ", diagnostics.trace_error,
             " min/max eig = ", diagnostics.min_eigenvalue, " / ", diagnostics.max_eigenvalue,
@@ -1510,36 +1547,7 @@ function run_tdhf_from_args!(args)
             " dim = ", length(wave_work)
         )
 
-            if step_index % state.plot_every == 0 || step_index == state.total_steps
-            save_charge_density_all_layers!(
-                state.args,
-                Prj,
-                wave_work,
-                proj,
-                params,
-                step_index
-            )
-            end
-
-        if step_index % state.save_every == 0 || step_index == state.total_steps
-                    save_tdhf_file!(
-                args,
-                Prj,
-                Ashift,
-                wave_work,
-                step_index,
-                time_now,
-                diagnostics_record,
-                tdhf_args,
-                seed_file_path,
-                deltaA_step,
-                dAshift_dt,
-                Efield,
-                H_HF_used,
-                HartreeMatrix_used,
-                FockMatrix_used
-            )
-        end
+        current_step = next_step
     end
 
     return nothing
