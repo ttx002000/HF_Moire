@@ -713,11 +713,11 @@ function build_S_matrix(
             if old_momentum_index != 0
                 amp = spinor_new[new_momentum_index]' * spinor_old[old_momentum_index]
 
-                if abs(amp) > 1e-12
-                    S[new_momentum_index, old_momentum_index] = amp / abs(amp)
-                else
-                    S[new_momentum_index, old_momentum_index] = 1.0 + 0.0im
+                if abs(amp) <= 1e-12
+                    error("Tiny spinor overlap in build_S_matrix: abs(amp) = $(abs(amp))")
                 end
+
+                S[new_momentum_index, old_momentum_index] = amp / abs(amp)
             end
         end
     end
