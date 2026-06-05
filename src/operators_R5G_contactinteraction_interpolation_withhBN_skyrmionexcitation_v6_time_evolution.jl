@@ -1161,6 +1161,13 @@ function load_tdhf_starting_point(args)
         println("Loading TDHF checkpoint: ", checkpoint_path)
         checkpoint = load(checkpoint_path)
 
+        @assert haskey(checkpoint, "step_index") "Checkpoint is missing key step_index: $checkpoint_path"
+        @assert Int(checkpoint["step_index"]) == start_step (
+            "Checkpoint step_index = $(checkpoint["step_index"]) but requested start_step = $start_step. " *
+            "checkpoint_path = $checkpoint_path"
+        )
+
+
         Prj = checkpoint["Prj"]
         Ashift = checkpoint["Ashift"]
         wave_work = checkpoint["wave_work"]
