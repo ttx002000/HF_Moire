@@ -872,6 +872,11 @@ function tdhf_one_step!(
         proj.Coulomb_matrix
     )
 
+    H_HF_used = copy(work.H_phys)
+    HartreeMatrix_used = copy(work.HartreeMatrix)
+    FockMatrix_used = copy(work.FockMatrix)
+
+
     # 2. Physical TDHF + reservoir step in the old A-basis
     Prj_star, eps, bath_eigenvectors, chemical_potential, particle_number_check  =
         evolve_old_basis_dissipative_step(
@@ -916,7 +921,7 @@ function tdhf_one_step!(
         trace_after_old_basis_step = real(tr(Prj_star))
 
         old_blas_threads = BLAS.get_num_threads()
-        BLAS.set_num_threads(min(Threads.nthreads(), 8))
+        BLAS.set_num_threads(min(Threads.nthreads(), 16))
 
         Prj_new = Smatrix * Prj_star * Smatrix'
 
@@ -932,7 +937,8 @@ function tdhf_one_step!(
         )
 
     return Prj_new, proj_new, Ashift_new, eps, bath_eigenvectors,
-        chemical_potential, particle_number_check, step_transport_diagnostics
+        chemical_potential, particle_number_check, step_transport_diagnostics,
+        H_HF_used, HartreeMatrix_used, FockMatrix_used
 end
 
 
@@ -1347,7 +1353,10 @@ function save_tdhf_file!(
     seed_file_path,
     deltaA_step,
     dAshift_dt,
-    Efield
+    Efield,
+    H_HF_used,
+    HartreeMatrix_used,
+    FockMatrix_used
 )
     save_file_path = tdhf_file_path_for_step(args, step_index)
    
@@ -1365,7 +1374,10 @@ function save_tdhf_file!(
         seed_file_path = seed_file_path,
         deltaA_step = deltaA_step,
         dAshift_dt = dAshift_dt,
-        Efield = Efield
+        Efield = Efield,
+        H_HF = H_HF_used,
+        HartreeMatrix = HartreeMatrix_used,
+        FockMatrix = FockMatrix_used,
     )
 
     println("Saved TDHF file: ", save_file_path)
@@ -1424,7 +1436,8 @@ function run_tdhf_from_args!(args)
         trace_before_step = real(tr(Prj))
 
             Prj, proj, Ashift, eps, bath_eigenvectors, chemical_potential,
-        particle_number_check, step_transport_diagnostics =
+        particle_number_check, step_transport_diagnostics,
+        H_HF_used, HartreeMatrix_used, FockMatrix_used =
             tdhf_one_step!(
                 work,
                 Prj,
@@ -1509,19 +1522,22 @@ function run_tdhf_from_args!(args)
             end
 
         if step_index % state.save_every == 0 || step_index == state.total_steps
-            save_tdhf_file!(
-                state.args,
+                    save_tdhf_file!(
+                args,
                 Prj,
                 Ashift,
                 wave_work,
                 step_index,
                 time_now,
                 diagnostics_record,
-                state.tdhf_args,
-                state.seed_file_path,
-                state.deltaA_step,
-                state.dAshift_dt,
-                state.Efield
+                tdhf_args,
+                seed_file_path,
+                deltaA_step,
+                dAshift_dt,
+                Efield,
+                H_HF_used,
+                HartreeMatrix_used,
+                FockMatrix_used
             )
         end
     end
