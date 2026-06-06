@@ -25,7 +25,8 @@ V1_hBN=args[12]
 ψ_hBN=args[13]
 V2_scalar=args[14]
 ϕ=args[15]/180*π
-filepos=Int(args[16])
+gateD=args[16]
+filepos=Int(args[17])
 
 
 
@@ -37,7 +38,7 @@ overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_e
 
 
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
-                                                    allowedq,T1,T2,wave,single_Ham,single_MoirePo,constq,ϵr,overlapmatrix,filling,Area)
+                                                    allowedq,T1,T2,wave,single_Ham,single_MoirePo,constq,ϵr,overlapmatrix,filling,Area,gateD)
 
 
 chern,Flink,chern_single,Flink_single,uniform,uniform_single=triangle_chern(wave,allowedq,HF_eigenvector,single_eigenvector,spinor_set,geonum,b1T,b2T,Int(NL),filling)
@@ -46,7 +47,7 @@ chern,Flink,chern_single,Flink_single,uniform,uniform_single=triangle_chern(wave
 
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v5/data_output$(Int(args[16]))/$(args[1])NL$(args[2])geonum$(args[3])theta$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda$(args[10])trytime$(args[11])V0_hBN$(args[12])V1_hBN$(args[13])ψ_hBN$(args[14])V2_scalar$(args[15])ϕ.jld2")
+savepath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v5/data_output$(Int(args[17]))/$(args[1])NL$(args[2])geonum$(args[3])theta$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda$(args[10])trytime$(args[11])V0_hBN$(args[12])V1_hBN$(args[13])ψ_hBN$(args[14])V2_scalar$(args[15])ϕ$(args[16])gateD.jld2")
 
 #savepath="test.jld2"
 

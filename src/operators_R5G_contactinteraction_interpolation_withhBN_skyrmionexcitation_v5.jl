@@ -419,7 +419,7 @@ end
 
 
 
-function construct_loop_dic(wave, allowedq, T1, T2, ϵr, constq)::LoopDic
+function construct_loop_dic(wave, allowedq, T1, T2, ϵr, constq,gateD)::LoopDic
     Ng = length(wave)
     Nk = length(allowedq)
     nthreads = Threads.maxthreadid()
@@ -519,7 +519,7 @@ function construct_loop_dic(wave, allowedq, T1, T2, ϵr, constq)::LoopDic
     hartree_val = Vector{Float64}(undef, nH)
     Threads.@threads for w in 1:nH
         q = wave[g3H[w]] - wave[g1H[w]]
-        hartree_val[w] = Coulomb(q, T1, T2)/ϵr + constq
+        hartree_val[w] = Coulomb(q, T1, T2, gateD)/ϵr + constq
     end
 
     # -------------------------
@@ -575,7 +575,7 @@ function construct_loop_dic(wave, allowedq, T1, T2, ϵr, constq)::LoopDic
         @inbounds for idq in 1:Ndq
             q1 = dk1 + dq1_list[idq]
             q2 = dk2 + dq2_list[idq]
-            coulomb_dkdq[idk,idq] = Coulomb([q1,q2], T1, T2)/ϵr + constq
+            coulomb_dkdq[idk,idq] = Coulomb([q1,q2], T1, T2,gateD)/ϵr + constq
         end
     end
 
@@ -593,8 +593,8 @@ end
 
 
 
-function Coulomb(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64})::Float64
-   D=25
+function Coulomb(k::Vector{Int},T1::Vector{Float64},T2::Vector{Float64},gateD::Float64)::Float64
+   D=gateD
    return k==[0,0] ? D*9047.5636 : tanh(norm([T1 T2]*k*D))/norm(k[1]*T1+k[2]*T2)*9047.5636
 end
 
@@ -769,14 +769,15 @@ end
 function iteration_loop(initial_DensityMatrix::Vector{Matrix{ComplexF64}},
                        allowedq::Vector{Vector{Int64}},T1::Vector{Float64},T2::Vector{Float64},
                        wave::Vector{Vector{Int64}},single_Ham::Vector{Matrix{ComplexF64}},
-                       single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,ϵr::Float64,overlapmatrix::Array{ComplexF64,4},filling::Int,Area::Float64)
+                       single_MoirePo::Vector{Matrix{ComplexF64}},constq::Float64,ϵr::Float64,overlapmatrix::Array{ComplexF64,4},
+                       filling::Int,Area::Float64,gateD::Float64)
     eout=1.0
     itcount=0
     dimension=length(wave)
     DIIS_size=3
 
      #loop_dic_Fock,loop_dic_Fock_val,loop_dic_Hartree,loop_dic_Hartree_val=construct_loop_dic(wave,allowedq,T1,T2,ϵr,constq)
-    loop = construct_loop_dic(wave, allowedq, T1, T2, ϵr, constq)
+    loop = construct_loop_dic(wave, allowedq, T1, T2, ϵr, constq,gateD)
      work=init_ConstructDM_Workspace(allowedq, wave,DIIS_size)
     
    
