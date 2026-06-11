@@ -54,7 +54,7 @@ function main(args)
     direction=[Int(args[31]),Int(args[32])]
 
 
-    ckp_list=collect(start_steps:save_every:total_steps)
+    ckp_list=collect(start_step:save_every:total_steps)
 
     scratch_dir = ENV["SCRATCH"]
 
