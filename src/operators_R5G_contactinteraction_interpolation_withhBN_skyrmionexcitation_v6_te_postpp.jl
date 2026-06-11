@@ -43,7 +43,7 @@ function main(args)
 
     dt = args[24]
 
-    electric_field_magnitude = args[25]
+    E_mag = args[25]
     electric_field_angle_degree = args[26]
 
     gamma = args[27]
@@ -251,7 +251,7 @@ function main(args)
                 label = "Tr(P)",
                 linewidth = 2,
                 marker = :circle,
-                title="nu$filling, E$E_mag,γ$gamma,uD$(uD),VBg$V2_scalar,dt$dt"
+                title="nu$filling, E$(E_mag),γ$gamma,uD$(uD),VBg$V2_scalar,dt$dt"
             )
 
             fig2=plot(ckp_list,phase_record,xlabel="step",ylabel="wrapped phase/2pi",title="nu=$filling, E=$E_mag,γ=$gamma,uD=$(uD),VBg=$V2_scalar,dt=$dt",legend=false)
