@@ -36,7 +36,7 @@ filepos=Int(args[20])
 
 
 
-overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m, b1,b2,spinor_set,Area,b1T,b2T,a1m_ps,a2m_ps,b1_ps,b2_ps,b1_ps_T,b2_ps_T=triangle_initial_Densitymatrix(Int(NL),θ,geonum,gcutoff,uD,λ,V0_hBN,V1_hBN,ψ_hBN,V2_scalar,ϕ,V3_scalar,ϕ3)
+overlapmatrix, wave, initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m, b1,b2,spinor_set,Area,b1T,b2T,a1m_ps,a2m_ps,b1_ps,b2_ps,b1_ps_T,b2_ps_T=triangle_initial_Densitymatrix(Int(NL),θ,geonum,gcutoff,uD,λ,V0_hBN,V1_hBN,ψ_hBN,V2_scalar,ϕ,V3_scalar,ϕ3,r3)
 
      
 DIIS_input_DensityMatrix,DIIS_input_DeltaMatrix,HF_eigenvalue,HF_eigenvector,energy,eout,HartreeMatrix,FockMatrix=iteration_loop(initial_DensityMatrix,
