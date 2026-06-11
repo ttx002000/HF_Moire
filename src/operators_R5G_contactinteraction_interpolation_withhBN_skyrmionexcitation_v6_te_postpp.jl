@@ -100,7 +100,7 @@ function main(args)
              
 
                 checkpoint_path =
-                    joinpath(basefolder,"$(args[1])NL$(args[2])theta$(args[3])constq$(args[4])ϵr$(args[5])uD$(args[6])filling$(args[7])cutoff$(args[8])lambda$(args[9])trytime$(args[10])enlarge$(args[11])V0_hBN$(args[12])V1_hBN$(args[13])ψ_hBN$(args[14])V2_scalar$(args[15])ϕ$(args[16])pincof$(args[17])dedis$(args[18])depos" *
+                    joinpath(base_folder,"$(args[1])NL$(args[2])theta$(args[3])constq$(args[4])ϵr$(args[5])uD$(args[6])filling$(args[7])cutoff$(args[8])lambda$(args[9])trytime$(args[10])enlarge$(args[11])V0_hBN$(args[12])V1_hBN$(args[13])ψ_hBN$(args[14])V2_scalar$(args[15])ϕ$(args[16])pincof$(args[17])dedis$(args[18])depos" *
                     "$(args[22])refreshevery" *
                     "$(args[24])dt$(args[25])Emag$(args[26])Eag$(args[27])gamma$(args[28])temp$(args[29])workcutoff" *
                     "$(ckpoint)stepnum.jld2")
