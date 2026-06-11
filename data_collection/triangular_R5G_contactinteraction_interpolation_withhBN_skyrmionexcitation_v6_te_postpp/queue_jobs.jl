@@ -32,9 +32,9 @@ while (count - 1) * ba_size + 1 <= ee
         @__DIR__,
         job_prefix,
         index[batch_start:batch_end];
-        time = "12:00:00",
-        cpus_per_task = 16,
-        mem = 32
+        time = "1:00:00",
+        cpus_per_task = 4,
+        mem = 16
     )
 
     println(batch_start, " ", batch_end)
