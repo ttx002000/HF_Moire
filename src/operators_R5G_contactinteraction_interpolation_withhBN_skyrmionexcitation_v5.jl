@@ -155,7 +155,7 @@ end
 
 
 
-function transform_dm(dm_old::Matrix{ComplexF64},wave::Vector{Vector{Int}},allowedq::Vector{Vector{Int}},seed_spinor_set::Vector{Vector{ComplexF64}},spinor_set::Vector{Vector{ComplexF64}})
+function transform_dm(dm_old::Vector{Matrix{ComplexF64}},wave::Vector{Vector{Int}},allowedq::Vector{Vector{Int}},seed_spinor_set::Matrix{Vector{ComplexF64}},spinor_set::Matrix{Vector{ComplexF64}})
     dm_new=[zeros(ComplexF64,length(wave),length(wave)) for _ in eachindex(allowedq)]
     for ja in eachindex(wave), jb in eachindex(wave), jc in eachindex(allowedq)
        dm_new[jc][ja,jb]=(spinor_set[jc,ja]'*seed_spinor_set[jc,ja])*dm_old[jc][ja,jb]*(seed_spinor_set[jc,jb]'*spinor_set[jc,jb])
