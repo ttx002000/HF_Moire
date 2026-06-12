@@ -141,6 +141,31 @@ end
 
 
 
+
+function pick_random_jld2_path(folder::AbstractString)
+    isdir(folder) || return nothing
+
+    jld2_files = filter(readdir(folder; join=true)) do p
+        isfile(p) && endswith(lowercase(p), ".jld2")
+    end
+
+    isempty(jld2_files) && return nothing
+    return rand(jld2_files)
+end
+
+
+
+function transform_dm(dm_old::Matrix{ComplexF64},wave::Vector{Vector{Int}},allowedq::Vector{Vector{Int}},seed_spinor_set::Vector{Vector{ComplexF64}},spinor_set::Vector{Vector{ComplexF64}})
+    dm_new=[zeros(ComplexF64,length(wave),length(wave)) for _ in eachindex(allowedq)]
+    for ja in eachindex(wave), jb in eachindex(wave), jc in eachindex(allowedq)
+       dm_new[jc][ja,jb]=(spinor_set[jc,ja]'*seed_spinor_set[jc,ja])*dm_old[jc][ja,jb]*(seed_spinor_set[jc,jb]'*spinor_set[jc,jb])
+   end
+
+   return dm_new
+end
+
+
+
 function triangle_initial_Densitymatrix(NL::Int,θ::Float64,geonum::Int64,gcutoff::Float64,uD::Float64,λ::Float64,
                                         V0_hBN::Float64,V1_hBN::Float64,ψ_hBN::Float64,V2_scalar::Float64,ϕ::Float64)
    
