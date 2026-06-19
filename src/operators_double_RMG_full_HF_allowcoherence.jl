@@ -333,7 +333,7 @@ toc=time()
         @views Htmp .-= work.Fock_matrix[:, :, ja]
         @views Htmp .+= single_matrix[:, :, ja]
 
-        FFF = eigen!(Hermitian(Htmp))
+        FFF = eigen(Hermitian(Htmp))
         @views copy!(work.HF_eigenvectors[:, :, ja], FFF.vectors)
         @views copy!(work.HF_eigenvalues[:, ja], real(FFF.values))
     end

@@ -902,7 +902,7 @@ function Construct_projector!(
         @views Htmp .-= work.Fock_matrix[:, :, ik]
         @views Htmp .+= single_matrix[:, :, ik]
 
-        F = eigen!(Hermitian(Htmp))
+        F = eigen(Hermitian(Htmp))
 
         @views copy!(work.HF_eigenvectors[:, :, ik], F.vectors)
         @views copy!(work.HF_eigenvalues[:, ik], real(F.values))

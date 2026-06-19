@@ -263,14 +263,14 @@ function get_single_particle(
     for k_red in 1:Nkred
         for n_index in valid_ns[k_red]
             gid = gid_padded[n_index, k_red]
-            single_particle_matrix[n_index, n_index, k_red] = band_energies[gid]
+            single_particle_matrix[n_index, n_index, k_red] = band_energies[gid] # The invalid indices are just set to 0
         end
     end
 
 
    
 
-    formfactors = zeros(ComplexF64, Nn, Nn, Nkred, Nkred)
+    formfactors = zeros(ComplexF64, Nn, Nn, Nkred, Nkred) # The invalid ones are just set to zero
 
     @inbounds for k1_red in 1:Nkred
         for k2_red in 1:Nkred
@@ -636,7 +636,7 @@ function construct_projector!(
             work.Hartree_matrix[r, r, k_red] .-
             work.Fock_matrix[r, r, k_red]
 
-        FFF = eigen!(Hermitian(@view Htmp[r, r]))
+        FFF = eigen(Hermitian(@view Htmp[r, r]))
 
         @views work.HF_eigenvalues[r, k_red] .= real.(FFF.values)
         @views work.HF_eigenvectors[r, r, k_red] .= FFF.vectors
