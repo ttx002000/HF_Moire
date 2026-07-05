@@ -1457,6 +1457,9 @@ function save_tdhf_file!(
     electric_field_magnitude
 )
     save_file_path = tdhf_file_path_for_step(args, step_index)
+    F_HHF = eigen(Hermitian(work.H_phys))
+    HHF_eigenvalue = real(F_HHF.values)
+    HHF_eigenmatrix = Matrix(F_HHF.vectors)
 
     mkpath(dirname(save_file_path))
     
@@ -1481,7 +1484,9 @@ function save_tdhf_file!(
         spinor_set = proj.spinor_set,
         steps_per_flux = steps_per_flux,
         Ashift_angle_degree = Ashift_angle_degree,
-        electric_field_magnitude = electric_field_magnitude
+        electric_field_magnitude = electric_field_magnitude,
+        HHF_eigenvalue = HHF_eigenvalue,
+        HHF_eigenmatrix = HHF_eigenmatrix
     )
 
     println("Saved TDHF file: ", save_file_path)
