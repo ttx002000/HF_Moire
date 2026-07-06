@@ -1077,11 +1077,20 @@ function seed_filename_from_args(args)
 end
 
 function tdhf_filename_for_step(args, stepnum::Int)
+    return "$(args[1])NL$(args[2])the$(args[3])Cq$(args[4])ϵr$(args[5])uD$(args[6])nu$(args[7])cut$(args[8])lbd$(args[9])try$(args[10])elg$(args[11])V0_h$(args[12])V1_h$(args[13])ψ_h$(args[14])V2_sc$(args[15])ϕ$(args[16])pin$(args[17])dedis$(args[18])depo" *
+           "$(args[22])rfr" *
+           "$(args[24])dt$(args[25])SPF$(args[26])Aag$(args[27])gm$(args[28])tp$(args[29])workct" *
+           "$(stepnum)step.jld2"
+end
+
+#=
+function tdhf_filename_for_step(args, stepnum::Int)
     return "$(args[1])NL$(args[2])theta$(args[3])constq$(args[4])ϵr$(args[5])uD$(args[6])filling$(args[7])cutoff$(args[8])lambda$(args[9])trytime$(args[10])enlarge$(args[11])V0_hBN$(args[12])V1_hBN$(args[13])ψ_hBN$(args[14])V2_scalar$(args[15])ϕ$(args[16])pincof$(args[17])dedis$(args[18])depos" *
            "$(args[22])refreshevery" *
            "$(args[24])dt$(args[25])SPF$(args[26])Aag$(args[27])gamma$(args[28])temp$(args[29])workcutoff" *
            "$(stepnum)stepnum.jld2"
 end
+=#
 
 function hf_output_dir_from_args(args)
     scratch_dir = ENV["SCRATCH"]
@@ -1770,7 +1779,7 @@ function charge_density_file_path_for_step(args, step_index::Int, layer_index::I
 
     return joinpath(
         charge_density_dir,
-        "CD_layer$(layer_index)" * basename(checkpoint_path)
+        "CDl$(layer_index)" * basename(checkpoint_path)
     )
 end
 
