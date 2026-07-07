@@ -2,6 +2,7 @@ using LinearAlgebra
 using Arpack
 using Combinatorics
 using Random
+using StaticArrays
 using JLD2
 BLAS.set_num_threads(1)
 
@@ -1949,6 +1950,17 @@ function run_lambda_tdhf_from_seed!(
             params,
             args,
         )
+
+            save_charge_density!(
+            state.checkpoint_dir,
+            args,
+            Prj,
+            Ashift,
+            wave_work,
+            proj,
+            params,
+            current_step,
+        )
         end
 
         if current_step == state.total_steps
@@ -2403,4 +2415,156 @@ function run_tdhf_from_args!(args::Vector{Float64})
     )
 
     return nothing
+end
+
+function charge_density_dir_from_checkpoint_dir(checkpoint_dir::String)
+    return joinpath(checkpoint_dir, "CD_data")
+end
+
+
+function charge_density_path_from_args(
+    checkpoint_dir::String,
+    args::Vector{Float64},
+    step_index::Int,
+)
+    cd_dir = charge_density_dir_from_checkpoint_dir(checkpoint_dir)
+    mkpath(cd_dir)
+
+    checkpoint_name = basename(
+        checkpoint_path_from_args(checkpoint_dir, args, step_index)
+    )
+
+    return joinpath(cd_dir, "CD" * checkpoint_name)
+end
+
+
+function Densitymap_customize(
+    xrange::Vector{Float64},
+    yrange::Vector{Float64},
+    DM::Matrix{ComplexF64},
+    wave::Vector{Vector{Int64}},
+    T1::Vector{Float64},
+    T2::Vector{Float64},
+)
+    N = length(wave)
+
+    coeff = Dict{Tuple{Int64, Int64}, ComplexF64}()
+
+    @inbounds for j in 1:N, i in 1:N
+        d = (
+            wave[i][1] - wave[j][1],
+            wave[i][2] - wave[j][2],
+        )
+
+        coeff[d] = get(coeff, d, 0.0 + 0.0im) + DM[i, j]
+    end
+
+    deltas = collect(keys(coeff))
+    c = ComplexF64[coeff[d] for d in deltas]
+
+    kvecs = Vector{SVector{2, Float64}}(undef, length(deltas))
+
+    T1s = SVector{2, Float64}(T1[1], T1[2])
+    T2s = SVector{2, Float64}(T2[1], T2[2])
+
+    @inbounds for n in eachindex(deltas)
+        d1, d2 = deltas[n]
+        kvecs[n] = d1 * T1s + d2 * T2s
+    end
+
+    zvec = zeros(Float64, length(xrange), length(yrange))
+
+    Threads.@threads for jb in eachindex(yrange)
+        y = yrange[jb]
+
+        @inbounds for ja in eachindex(xrange)
+            r = SVector{2, Float64}(xrange[ja], y)
+            s = 0.0 + 0.0im
+
+            @simd for n in eachindex(c)
+                s += c[n] * cis(dot(kvecs[n], r))
+            end
+
+            zvec[ja, jb] = real(s)
+        end
+    end
+
+    return zvec
+end
+
+
+function save_charge_density!(
+    checkpoint_dir::String,
+    args::Vector{Float64},
+    Prj::Matrix{ComplexF64},
+    Ashift::Vector{Float64},
+    wave_work::Vector{Vector{Int64}},
+    proj,
+    params::TDHFParams,
+    step_index::Int,
+)
+    N = length(wave_work)
+    nband = length(params.kept_bands)
+
+    @assert size(Prj) == (N * nband, N * nband)
+
+    densitymatrix_projected_rel = zeros(ComplexF64, N, N)
+
+    norb = length(proj.spinor_set[1, 1])
+
+    Threads.@threads for g1 in 1:N
+        @inbounds for g2 in 1:N
+            acc_rel = 0.0 + 0.0im
+
+            for a1 in 1:nband, a2 in 1:nband
+                I = state_index(g1, a1, nband)
+                J = state_index(g2, a2, nband)
+
+                ov = 0.0 + 0.0im
+
+                for orb in 1:norb
+                    ov += proj.spinor_set[g1, a1][orb] *
+                          conj(proj.spinor_set[g2, a2][orb])
+                end
+
+                acc_rel += Prj[I, J] * ov
+            end
+
+            densitymatrix_projected_rel[g1, g2] = acc_rel
+        end
+    end
+
+    xrange = collect(range(0.0, stop = 1.1 * norm(params.a1m), length = 160))
+    yrange = collect(range(0.0, stop = 1.5 * norm(params.a1m), length = 160))
+
+    zvec = Densitymap_customize(
+        xrange,
+        yrange,
+        densitymatrix_projected_rel,
+        wave_work,
+        params.T1,
+        params.T2,
+    )
+
+    save_file_path = charge_density_path_from_args(
+        checkpoint_dir,
+        args,
+        step_index,
+    )
+
+    JLD2.jldsave(
+        save_file_path;
+        zvec = zvec,
+        xrange = xrange,
+        yrange = yrange,
+        densitymatrix_projected_rel = densitymatrix_projected_rel,
+        step_index = step_index,
+        Ashift = Ashift,
+        args = args,
+        kept_bands = params.kept_bands,
+    )
+
+    println("Saved charge density: ", save_file_path)
+
+    return save_file_path
 end
