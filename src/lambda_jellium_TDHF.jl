@@ -2508,63 +2508,69 @@ function save_charge_density!(
 
     @assert size(Prj) == (N * nband, N * nband)
 
-    densitymatrix_projected_rel = zeros(ComplexF64, N, N)
-
     norb = length(proj.spinor_set[1, 1])
-
-    Threads.@threads for g1 in 1:N
-        @inbounds for g2 in 1:N
-            acc_rel = 0.0 + 0.0im
-
-            for a1 in 1:nband, a2 in 1:nband
-                I = state_index(g1, a1, nband)
-                J = state_index(g2, a2, nband)
-
-                ov = 0.0 + 0.0im
-
-                for orb in 1:norb
-                    ov += proj.spinor_set[g1, a1][orb] *
-                          conj(proj.spinor_set[g2, a2][orb])
-                end
-
-                acc_rel += Prj[I, J] * ov
-            end
-
-            densitymatrix_projected_rel[g1, g2] = acc_rel
-        end
-    end
 
     xrange = collect(range(0.0, stop = 1.1 * norm(params.a1m), length = 160))
     yrange = collect(range(0.0, stop = 1.5 * norm(params.a1m), length = 160))
 
-    zvec = Densitymap_customize(
-        xrange,
-        yrange,
-        densitymatrix_projected_rel,
-        wave_work,
-        params.T1,
-        params.T2,
+    cd_dir = charge_density_dir_from_checkpoint_dir(checkpoint_dir)
+    mkpath(cd_dir)
+
+    checkpoint_name = basename(
+        checkpoint_path_from_args(checkpoint_dir, args, step_index)
     )
 
-    save_file_path = charge_density_path_from_args(
-        checkpoint_dir,
-        args,
-        step_index,
-    )
+    for orb in 1:norb
+        densitymatrix_projected_rel = zeros(ComplexF64, N, N)
 
-    JLD2.jldsave(
-        save_file_path;
-        zvec = zvec,
-        xrange = xrange,
-        yrange = yrange,
-        densitymatrix_projected_rel = densitymatrix_projected_rel,
-        step_index = step_index,
-        Ashift = Ashift,
-        args = args,
-        kept_bands = params.kept_bands,
-    )
+        Threads.@threads for g1 in 1:N
+            @inbounds for g2 in 1:N
+                acc_rel = 0.0 + 0.0im
 
-    println("Saved charge density: ", save_file_path)
+                for a1 in 1:nband, a2 in 1:nband
+                    I = state_index(g1, a1, nband)
+                    J = state_index(g2, a2, nband)
 
-    return save_file_path
+                    ov =
+                        proj.spinor_set[g1, a1][orb] *
+                        conj(proj.spinor_set[g2, a2][orb])
+
+                    acc_rel += Prj[I, J] * ov
+                end
+
+                densitymatrix_projected_rel[g1, g2] = acc_rel
+            end
+        end
+
+        zvec = Densitymap_customize(
+            xrange,
+            yrange,
+            densitymatrix_projected_rel,
+            wave_work,
+            params.T1,
+            params.T2,
+        )
+
+        save_file_path = joinpath(
+            cd_dir,
+            "CDo$(orb)" * checkpoint_name,
+        )
+
+        JLD2.jldsave(
+            save_file_path;
+            zvec = zvec,
+            xrange = xrange,
+            yrange = yrange,
+            densitymatrix_projected_rel = densitymatrix_projected_rel,
+            orbital_index = orb,
+            step_index = step_index,
+            Ashift = Ashift,
+            args = args,
+            kept_bands = params.kept_bands,
+        )
+
+        println("Saved charge density orbital $(orb): ", save_file_path)
+    end
+
+    return nothing
 end
