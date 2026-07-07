@@ -716,7 +716,7 @@ function build_S_matrix(
                 if abs(amp) > 1e-12
                     S[new_momentum_index, old_momentum_index] = amp / abs(amp)
                 else
-                    S[new_momentum_index, old_momentum_index] = 1.0 + 0.0im # This is to make the transport unitary.
+                    S[new_momentum_index, old_momentum_index] = 1.0 + 0.0im # It doesn't really matter what I put here.
                 end
             end
         end
