@@ -383,7 +383,7 @@ function main_func(args::Vector{Float64})
 
     spinor_set=st["spinor_set"]
     params=st["params"]
-    orbital_basis_orthogonal=st["orbital_basis_orthogonal"]
+    orbital_basis_orthogonal_list=st["orbital_basis_orthogonal_list"]
     overall_mag_list=st["overall_mag_list"]
     possible_config=st["possible_config"]
     vac_fac_list=st["vac_fac_list"]
@@ -423,13 +423,15 @@ function main_func(args::Vector{Float64})
     final_G_q=Dict{Tuple{Int, Int}, ComplexF64}()
 
     local_Gq_list=Matrix{Dict{Tuple{Int,Int},ComplexF64}}(undef,length(overall_mag_list),length(overall_mag_list))
-
+    print_lock = ReentrantLock()s
     Threads.@threads for ja in eachindex(overall_mag_list)
 
-       println("starting $(ja)/$(length(overall_mag_list))")
-        flush(stdout)
+    
         for  jb in eachindex(overall_mag_list)
-         
+                lock(print_lock) do
+                        println("starting $(ja)/$(length(overall_mag_list)), $(jb)/$(length(overall_mag_list))")
+                        flush(stdout)
+                    end
             Dmatrix=orbital_basis_orthogonal[ja]
             Fmatrix=orbital_basis_orthogonal[jb]
             local_Gq_list[ja,jb],_=q_resolved_pair_weight(
