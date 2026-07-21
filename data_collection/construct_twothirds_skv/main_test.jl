@@ -29,7 +29,7 @@ file_pos=Int(args[14])
 
 params,overall_mag_list,spinor_set,possible_config, vac_fac_list,orbital_Rmatrix_list,
                orbital_basis_norm_list, orbital_basis_orthogonal_list,M_eta_list,Mkkmatrix_list,N_coeff_list=big_func(flux1,flux2,NL,moiream,
-                  N1,N2,N1f,N2f,xi_00_re+im*xi_00_im,
+                  N1,N2,N1f,N2f,xi00_re+im*xi00_im,
                   grid_cutoff,topo_sec,type)
 
 
