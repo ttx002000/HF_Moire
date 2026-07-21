@@ -1,8 +1,7 @@
 using Pkg
 Pkg.activate(joinpath(@__DIR__, "../.."))
-using Plots
 using JLD2
-using CSV,DataFrames
+
 
 include("../../src/construct_twothirds_skv.jl")
 
