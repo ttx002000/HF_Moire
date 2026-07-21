@@ -409,8 +409,8 @@ function main_func(args::Vector{Float64})
     for ja in eachindex(overall_mag_list)
         for  jb in eachindex(overall_mag_list)
             coeff=overall_mag_list[ja]'*overall_mag_list[jb]
-            Dmatrix=orbital_basis_orthogonal[ja]
-            Fmatrix=orbital_basis_orthogonal[jb]
+            Dmatrix=orbital_basis_orthogonal_list[ja]
+            Fmatrix=orbital_basis_orthogonal_list[jb]
             deno+=det(Dmatrix'*Fmatrix)*coeff
 
 
@@ -432,8 +432,8 @@ function main_func(args::Vector{Float64})
                         println("starting $(ja)/$(length(overall_mag_list)), $(jb)/$(length(overall_mag_list))")
                         flush(stdout)
                     end
-            Dmatrix=orbital_basis_orthogonal[ja]
-            Fmatrix=orbital_basis_orthogonal[jb]
+            Dmatrix=orbital_basis_orthogonal_list[ja]
+            Fmatrix=orbital_basis_orthogonal_list[jb]
             local_Gq_list[ja,jb],_=q_resolved_pair_weight(
                                                     Dmatrix,
                                                     Fmatrix,
@@ -462,14 +462,14 @@ function main_func(args::Vector{Float64})
     # rho_matrix[a,b] = <Psi| c_b^dagger c_a |Psi> / <Psi|Psi>
     # ------------------------------------------------------------
 
-    M_basis = size(orbital_basis_orthogonal[1], 1)
+    M_basis = size(orbital_basis_orthogonal_list[1], 1)
     rho_num = zeros(ComplexF64, M_basis, M_basis)
   
     for ja in eachindex(overall_mag_list), jb in eachindex(overall_mag_list)
         coeff = overall_mag_list[ja]' * overall_mag_list[jb]
 
-        Dmatrix = orbital_basis_orthogonal[ja]
-        Fmatrix = orbital_basis_orthogonal[jb]
+        Dmatrix = orbital_basis_orthogonal_list[ja]
+        Fmatrix = orbital_basis_orthogonal_list[jb]
 
         rho_ij, _ = onebody_transition_rho(Dmatrix, Fmatrix)
 
