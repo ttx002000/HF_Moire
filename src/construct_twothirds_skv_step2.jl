@@ -423,7 +423,7 @@ function main_func(args::Vector{Float64})
     final_G_q=Dict{Tuple{Int, Int}, ComplexF64}()
 
     local_Gq_list=Matrix{Dict{Tuple{Int,Int},ComplexF64}}(undef,length(overall_mag_list),length(overall_mag_list))
-    print_lock = ReentrantLock()s
+    print_lock = ReentrantLock()
     Threads.@threads for ja in eachindex(overall_mag_list)
 
     
