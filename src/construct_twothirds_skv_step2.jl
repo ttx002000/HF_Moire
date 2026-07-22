@@ -417,7 +417,7 @@ function main_func(args::Vector{Float64})
         end
     end
 
-
+   println("Julia threads = ", Threads.nthreads())
 
 
     final_G_q=Dict{Tuple{Int, Int}, ComplexF64}()
@@ -426,12 +426,12 @@ function main_func(args::Vector{Float64})
     print_lock = ReentrantLock()
     Threads.@threads for ja in eachindex(overall_mag_list)
 
-    
-        for  jb in eachindex(overall_mag_list)
-                lock(print_lock) do
-                        println("starting $(ja)/$(length(overall_mag_list)), $(jb)/$(length(overall_mag_list))")
+              lock(print_lock) do
+                        println("starting $(ja)/$(length(overall_mag_list)) in Threads$(Threads.threadid()),")
                         flush(stdout)
                     end
+        for  jb in eachindex(overall_mag_list)
+      
             Dmatrix=orbital_basis_orthogonal_list[ja]
             Fmatrix=orbital_basis_orthogonal_list[jb]
             local_Gq_list[ja,jb],_=q_resolved_pair_weight(
