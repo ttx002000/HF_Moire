@@ -818,7 +818,7 @@ function do_Gq(args::Vector{Float64}
 
                         local_Gq_list=Matrix{Dict{Tuple{Int,Int},ComplexF64}}(undef,length(coeff_list),length(coeff_list))
                         print_lock = ReentrantLock()
-                        Threads.@threads for ja in eachindex(coeff_list)
+                        Threads.@threads :greedy for ja in eachindex(coeff_list)
 
                                 lock(print_lock) do
                                             println("starting $(ja)/$(length(coeff_list)) in Threads$(Threads.threadid()),")
