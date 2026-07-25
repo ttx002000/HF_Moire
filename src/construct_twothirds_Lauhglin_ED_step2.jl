@@ -5,6 +5,7 @@ using JLD2,StaticArrays
 using Combinatorics
 using SparseArrays
 using Base.Threads
+BLAS.set_num_threads(1)
 #I think I forgot to orthonormalize those state
 
 function c_dot(z1::ComplexF64,z2::ComplexF64)
