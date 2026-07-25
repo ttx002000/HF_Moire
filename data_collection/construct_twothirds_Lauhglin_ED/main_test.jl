@@ -23,7 +23,8 @@ file_pos=Int(args[9])
 
 PH_eigvector,PH_state_can,allowedq,T1,T2, 
 values_record,eig_vec_record, state_can_record, state_integer_record,
-Laughlin_state_vector,Laughlin_state_sector,Laughlin_state_can, Laughlin_state_integer=do_ED(Nx,Ny,Nparticle,
+Laughlin_state_vector,Laughlin_state_sector,Laughlin_state_can, Laughlin_state_integer,
+   a1m,a2m,g1,g2=do_ED(Nx,Ny,Nparticle,
               flux1,flux2,q1,q2,
               num_vecs)
 
@@ -47,6 +48,7 @@ state_integer_record=state_integer_record,
 Laughlin_state_vector=Laughlin_state_vector,
 Laughlin_state_sector=Laughlin_state_sector,
 Laughlin_state_can=Laughlin_state_can,
- Laughlin_state_integer= Laughlin_state_integer)
+ Laughlin_state_integer= Laughlin_state_integer,
+  a1m=a1m,a2m=a2m,g1=g1,g2=g2)
 
 

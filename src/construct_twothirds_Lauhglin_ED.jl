@@ -252,7 +252,8 @@ function do_ED(Nx::Int64,Ny::Int64,Nparticle::Int,
 
         return PH_eigvector,PH_state_can,allowedq,T1,T2, 
                values_record,eig_vec_record, state_can_record, state_integer_record,
-                Laughlin_state_vector,Laughlin_state_sector,Laughlin_state_can, Laughlin_state_integer
+                Laughlin_state_vector,Laughlin_state_sector,Laughlin_state_can, Laughlin_state_integer,
+                a1m,a2m,g1,g2
 
      
 
