@@ -937,7 +937,7 @@ function do_Gq(args::Vector{Float64}
                 LL_k_set=LL_k_set,
                 LL_k_map=LL_k_map,
                 PH_eigvector= PH_eigvector,
-                PH_eigvector=PH_state_can
+                PH_state_can=PH_state_can
                
         )
 
