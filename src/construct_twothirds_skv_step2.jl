@@ -392,7 +392,7 @@ function main_func(args::Vector{Float64})
         Vector{Vector{Matrix{ComplexF64}}}(undef, Nvec)
 
     for (s, topo_sec_s) in enumerate(topo_sectors)
-        filepath_s=joinpath(scratch_dir, "constrcut_twothirds_skv/data_output$(Int(args[13]))/$(args[1])f1$(args[2])f2$(args[3])NL$(args[4])am$(args[5])N1$(args[6])N2$(args[7])N1f$(args[8])N2f$(args[9])xir$(args[10])xii$(args[11])grid$(topo_sec_s)topo$(args[12])type.jld2")
+        filepath_s=joinpath(scratch_dir, "constrcut_twothirds_skv/data_output$(Int(args[13]))/$(args[1])f1$(args[2])f2$(args[3])NL$(args[4])am$(args[5])N1$(args[6])N2$(args[7])N1f$(args[8])N2f$(args[9])xir$(args[10])xii$(args[11])grid$(Float64.(topo_sec_s))topo$(args[12])type.jld2")
  
 
 
