@@ -365,134 +365,498 @@ function main_func(args::Vector{Float64})
     xi00_re=args[9]
     xi00_im=args[10]
     grid_cutoff=args[11]
-    topo_sec=Int(args[12])
-    type=Int(args[13])
-    file_pos=Int(args[14])
+    type=Int(args[12])
+    file_pos=Int(args[13])
 
 
     scratch_dir = ENV["SCRATCH"]
-    filepath=joinpath(scratch_dir, "constrcut_twothirds_skv/data_output$(Int(args[14]))/$(args[1])f1$(args[2])f2$(args[3])NL$(args[4])am$(args[5])N1$(args[6])N2$(args[7])N1f$(args[8])N2f$(args[9])xir$(args[10])xii$(args[11])grid$(args[12])topo$(args[13])type.jld2")
+   
+
+
+
+
+
+
+    topo_sectors = 0:2
+    Nvec = length(topo_sectors)
+
+    spinor_set_all =
+        Vector{Vector{Vector{ComplexF64}}}(undef, Nvec)
+
+    params_all = Vector{Any}(undef, Nvec)
+
+    overall_mag_list_all =
+        Vector{Vector{ComplexF64}}(undef, Nvec)
+
+    orbital_basis_orthogonal_list_all =
+        Vector{Vector{Matrix{ComplexF64}}}(undef, Nvec)
+
+    for (s, topo_sec_s) in enumerate(topo_sectors)
+        filepath_s=joinpath(scratch_dir, "constrcut_twothirds_skv/data_output$(Int(args[13]))/$(args[1])f1$(args[2])f2$(args[3])NL$(args[4])am$(args[5])N1$(args[6])N2$(args[7])N1f$(args[8])N2f$(args[9])xir$(args[10])xii$(args[11])grid$(topo_sec_s)topo$(args[12])type.jld2")
  
-    if isfile(filepath)
-        st=load(filepath)
-    else
-        error("no file exists")
+
+
+        isfile(filepath_s) || error("No file exists: $filepath_s")
+
+        st_s = load(filepath_s)
+
+        spinor_set_all[s] =
+            st_s["spinor_set"]
+
+        params_all[s] =
+            st_s["params"]
+
+        overall_mag_list_all[s] =
+            st_s["overall_mag_list"]
+
+        orbital_basis_orthogonal_list_all[s] =
+            st_s["orbital_basis_orthogonal_list"]
     end
 
 
 
-    spinor_set=st["spinor_set"]
-    params=st["params"]
-    orbital_basis_orthogonal_list=st["orbital_basis_orthogonal_list"]
-    overall_mag_list=st["overall_mag_list"]
-    possible_config=st["possible_config"]
-    vac_fac_list=st["vac_fac_list"]
-    orbital_Rmatrix_list=st["orbital_Rmatrix_list"]
-     orbital_basis_norm_list=st["orbital_basis_norm_list"]
-      orbital_basis_orthogonal_list=st["orbital_basis_orthogonal_list"]
-      M_eta_list=st["M_eta_list"]
-    Mkkmatrix_list=st["Mkkmatrix_list"]
-    N_coeff_list=st["N_coeff_list"]
+    spinor_set_ref = spinor_set_all[1]
+
+    for s in 2:Nvec
+        @assert length(spinor_set_all[s]) == length(spinor_set_ref)
+
+        for i in eachindex(spinor_set_ref)
+            @assert isapprox(
+                spinor_set_all[s][i],
+                spinor_set_ref[i];
+                atol = 1e-10,
+                rtol = 1e-10,
+            )
+        end
+    end
+
+    spinor_set = spinor_set_ref
+
+
+    for s in 2:Nvec
+    @assert params_all[s].Tgrid == params_all[1].Tgrid
+    end
+
+    Tgrid = params_all[1].Tgrid
 
 
 
-    Tgrid=params.Tgrid
+
+  
     
     precomp = QResolvedPrecomp(Tgrid, spinor_set)
 
   
   
 
-    deno=0.0+0.0*im
+        # ------------------------------------------------------------
+        # Raw transition objects in the three-state space
+        # ------------------------------------------------------------
 
+        deno_raw = zeros(ComplexF64, Nvec, Nvec)
 
-    for ja in eachindex(overall_mag_list)
-        for  jb in eachindex(overall_mag_list)
-            coeff=overall_mag_list[ja]'*overall_mag_list[jb]
-            Dmatrix=orbital_basis_orthogonal_list[ja]
-            Fmatrix=orbital_basis_orthogonal_list[jb]
-            deno+=det(Dmatrix'*Fmatrix)*coeff
+        M_basis = size(
+            orbital_basis_orthogonal_list_all[1][1],
+            1,
+        )
 
+        Nelectron = size(
+            orbital_basis_orthogonal_list_all[1][1],
+            2,
+        )
 
+        # rho_raw[m,n,a,b] = <Psi_a|c_n^dagger c_m|Psi_b>
+        rho_raw = zeros(
+            ComplexF64,
+            M_basis,
+            M_basis,
+            Nvec,
+            Nvec,
+        )
+
+        # Gq_raw[q][a,b] = <Psi_a|G(q)|Psi_b>
+        Gq_raw = Dict{
+            Tuple{Int,Int},
+            Matrix{ComplexF64}
+        }()
+
+    for s in 1:Nvec
+        @assert length(overall_mag_list_all[s]) ==
+                length(orbital_basis_orthogonal_list_all[s])
+
+        for Dmatrix in orbital_basis_orthogonal_list_all[s]
+            @assert size(Dmatrix) == (M_basis, Nelectron)
         end
+    end
+     
+
+            # ------------------------------------------------------------
+        # deno_raw[a,b] = <Psi_a|Psi_b>
+        # ------------------------------------------------------------
+
+        for a in 1:Nvec
+            coeff_a = overall_mag_list_all[a]
+            dets_a = orbital_basis_orthogonal_list_all[a]
+
+            for b in 1:Nvec
+                coeff_b = overall_mag_list_all[b]
+                dets_b = orbital_basis_orthogonal_list_all[b]
+
+                deno_ab = 0.0 + 0.0im
+
+                for ia in eachindex(coeff_a)
+                    Dmatrix = dets_a[ia]
+
+                    for ib in eachindex(coeff_b)
+                        Fmatrix = dets_b[ib]
+
+                        coeff_ab =
+                            conj(coeff_a[ia]) *
+                            coeff_b[ib]
+
+                        deno_ab +=
+                            coeff_ab *
+                            det(Dmatrix' * Fmatrix)
+                    end
+                end
+
+                deno_raw[a, b] = deno_ab
+            end
+        end
+        @assert isapprox(
+            deno_raw,
+            deno_raw';
+            atol = 1e-9,
+            rtol = 1e-9,
+        )
+        # Remove only numerical non-Hermiticity.
+        deno_raw .= (deno_raw + deno_raw') / 2
+
+        println("Raw many-body overlap matrix:")
+        display(deno_raw)
+
+
+
+
+        
+        # ------------------------------------------------------------
+        # rho_raw[:,:,a,b] = <Psi_a|c^dagger c|Psi_b>
+        # ------------------------------------------------------------
+
+        for a in 1:Nvec
+            coeff_a = overall_mag_list_all[a]
+            dets_a = orbital_basis_orthogonal_list_all[a]
+
+            for b in 1:Nvec
+                coeff_b = overall_mag_list_all[b]
+                dets_b = orbital_basis_orthogonal_list_all[b]
+
+                rho_ab =
+                    zeros(ComplexF64, M_basis, M_basis)
+
+                for ia in eachindex(coeff_a)
+                    Dmatrix = dets_a[ia]
+
+                    for ib in eachindex(coeff_b)
+                        Fmatrix = dets_b[ib]
+
+                        coeff_ab =
+                            conj(coeff_a[ia]) *
+                            coeff_b[ib]
+
+                        rho_ij, _ =
+                            onebody_transition_rho(
+                                Dmatrix,
+                                Fmatrix,
+                            )
+
+                        rho_ab .+= coeff_ab .* rho_ij
+                    end
+                end
+
+                @views rho_raw[:, :, a, b] .= rho_ab
+            end
+        end
+
+
+   for a in 1:Nvec, b in 1:Nvec
+        @assert isapprox(
+            rho_raw[:, :, a, b]',
+            rho_raw[:, :, b, a];
+            atol = 1e-9,
+            rtol = 1e-9,
+        )
     end
 
    println("Julia threads = ", Threads.nthreads())
 
 
-    final_G_q=Dict{Tuple{Int, Int}, ComplexF64}()
+        # ------------------------------------------------------------
+        # Gq_raw[q][a,b] = <Psi_a|G(q)|Psi_b>
+        # ------------------------------------------------------------
 
-    local_Gq_list=Matrix{Dict{Tuple{Int,Int},ComplexF64}}(undef,length(overall_mag_list),length(overall_mag_list))
-    print_lock = ReentrantLock()
-    Threads.@threads for ja in eachindex(overall_mag_list)
+        println("Julia threads = ", Threads.nthreads())
 
-              lock(print_lock) do
-                        println("starting $(ja)/$(length(overall_mag_list)) in Threads$(Threads.threadid()),")
+        print_lock = ReentrantLock()
+
+        for a in 1:Nvec
+            coeff_a = overall_mag_list_all[a]
+            dets_a = orbital_basis_orthogonal_list_all[a]
+
+            for b in 1:Nvec
+                coeff_b = overall_mag_list_all[b]
+                dets_b = orbital_basis_orthogonal_list_all[b]
+
+                local_Gq_list =
+                    Matrix{
+                        Dict{Tuple{Int,Int},ComplexF64}
+                    }(
+                        undef,
+                        length(coeff_a),
+                        length(coeff_b),
+                    )
+
+                Threads.@threads for ia in eachindex(coeff_a)
+                    lock(print_lock) do
+                        println(
+                            "state pair ($a,$b), determinant " *
+                            "$ia/$(length(coeff_a)), " *
+                            "thread $(Threads.threadid())",
+                        )
                         flush(stdout)
                     end
-        for  jb in eachindex(overall_mag_list)
-      
-            Dmatrix=orbital_basis_orthogonal_list[ja]
-            Fmatrix=orbital_basis_orthogonal_list[jb]
-            local_Gq_list[ja,jb],_=q_resolved_pair_weight(
-                                                    Dmatrix,
-                                                    Fmatrix,
-                                                    precomp;
-                                                    skip_q0 = false,
-                                                )
 
+                    Dmatrix = dets_a[ia]
 
+                    for ib in eachindex(coeff_b)
+                        Fmatrix = dets_b[ib]
+
+                        local_Gq_list[ia, ib], _ =
+                            q_resolved_pair_weight(
+                                Dmatrix,
+                                Fmatrix,
+                                precomp;
+                                skip_q0 = false,
+                            )
+                    end
+                end
+
+                # Sum the Slater-determinant contributions into the
+                # (a,b) entry of every q-resolved 3×3 matrix.
+                for ia in eachindex(coeff_a)
+                    for ib in eachindex(coeff_b)
+                        coeff_ab =
+                            conj(coeff_a[ia]) *
+                            coeff_b[ib]
+
+                        for (qkey, value) in local_Gq_list[ia, ib]
+                            Gmatrix = get!(
+                                Gq_raw,
+                                qkey,
+                            ) do
+                                zeros(
+                                    ComplexF64,
+                                    Nvec,
+                                    Nvec,
+                                )
+                            end
+
+                            Gmatrix[a, b] +=
+                                coeff_ab * value
+                        end
+                    end
+                end
+            end
         end
+
+
+    orthogonalize_matrix =
+        metric_gram_schmidt(deno_raw)
+
+
+    deno_orth =
+        orthogonalize_matrix' *
+        deno_raw *
+        orthogonalize_matrix
+
+    @assert isapprox(
+        deno_orth,
+        Matrix{ComplexF64}(I, Nvec, Nvec);
+        atol = 1e-10,
+        rtol = 1e-10,
+    )
+
+    println("Orthogonalization matrix:")
+    display(orthogonalize_matrix)
+
+    println("Overlap after orthogonalization:")
+    display(deno_orth)
+
+
+    # ------------------------------------------------------------
+    # Transform G(q) into the orthonormal state basis
+    # ------------------------------------------------------------
+
+    Gq_orth = Dict{
+        Tuple{Int,Int},
+        Matrix{ComplexF64}
+    }()
+
+    for (qkey, Gmatrix_raw) in Gq_raw
+        Gq_orth[qkey] =
+            orthogonalize_matrix' *
+            Gmatrix_raw *
+            orthogonalize_matrix
     end
-   
-    for ja in eachindex(overall_mag_list), jb in eachindex(overall_mag_list)
-        coeff=overall_mag_list[ja]'*overall_mag_list[jb]
-        for (qkey,vals) in local_Gq_list[ja,jb]
-                final_G_q[qkey] = (get(final_G_q, qkey, 0.0 + 0.0im) + vals*coeff/deno)
-        end
-
-    end
-
-
 
 
         # ------------------------------------------------------------
-    # One-body density matrix:
+    # Transform rho into the orthonormal many-body basis
     #
-    # rho_matrix[a,b] = <Psi| c_b^dagger c_a |Psi> / <Psi|Psi>
+    # For each fixed one-body index pair (m,n),
+    #
+    # rho_orth[m,n,:,:] =
+    #     A' * rho_raw[m,n,:,:] * A
     # ------------------------------------------------------------
 
-    M_basis = size(orbital_basis_orthogonal_list[1], 1)
-    rho_num = zeros(ComplexF64, M_basis, M_basis)
-  
-    for ja in eachindex(overall_mag_list), jb in eachindex(overall_mag_list)
-        coeff = overall_mag_list[ja]' * overall_mag_list[jb]
+    rho_orth = zeros(
+        ComplexF64,
+        M_basis,
+        M_basis,
+        Nvec,
+        Nvec,
+    )
 
-        Dmatrix = orbital_basis_orthogonal_list[ja]
-        Fmatrix = orbital_basis_orthogonal_list[jb]
+    for m in 1:M_basis
+        for n in 1:M_basis
+            rho_state_raw =
+                Matrix(@view rho_raw[m, n, :, :])
 
-        rho_ij, _ = onebody_transition_rho(Dmatrix, Fmatrix)
-
-        rho_num .+= coeff .* rho_ij
-     
+            @views rho_orth[m, n, :, :] .=
+                orthogonalize_matrix' *
+                rho_state_raw *
+                orthogonalize_matrix
+        end
     end
 
-    rho_matrix = rho_num ./ deno
 
 
 
+        for s in 1:Nvec
+        @assert isapprox(
+            tr(@view rho_orth[:, :, s, s]),
+            Nelectron;
+            atol = 1e-8,
+            rtol = 1e-8,
+        )
+       end
 
 
-    savepath=joinpath(scratch_dir, "constrcut_twothirds_skv/data_output$(Int(args[14]))/onetwobody/onetwobody_$(args[1])f1$(args[2])f2$(args[3])NL$(args[4])am$(args[5])N1$(args[6])N2$(args[7])N1f$(args[8])N2f$(args[9])xir$(args[10])xii$(args[11])grid$(args[12])topo$(args[13])type.jld2")
- 
-    jldsave(savepath,
-     final_G_q=final_G_q, rho_matrix=rho_matrix,deno=deno,
-     params=params,overall_mag_list=overall_mag_list,spinor_set=spinor_set,
-            possible_config=possible_config, vac_fac_list= vac_fac_list,orbital_Rmatrix_list=orbital_Rmatrix_list,
-               orbital_basis_norm_list=orbital_basis_norm_list, orbital_basis_orthogonal_list=orbital_basis_orthogonal_list,M_eta_list=M_eta_list,
-               Mkkmatrix_list=Mkkmatrix_list,N_coeff_list=N_coeff_list)
+        for (qkey, Gq_matrix) in Gq_orth
+        minus_qkey = (-qkey[1], -qkey[2])
+
+        if haskey(Gq_orth, minus_qkey)
+            @assert isapprox(
+                Gq_matrix',
+                Gq_orth[minus_qkey];
+                atol = 1e-8,
+                rtol = 1e-8,
+            )
+        end
+    end
+
+
+
+    savepath=joinpath(scratch_dir, "constrcut_twothirds_skv/data_output$(Int(args[13]))/onetwobody/onetwobody_$(args[1])f1$(args[2])f2$(args[3])NL$(args[4])am$(args[5])N1$(args[6])N2$(args[7])N1f$(args[8])N2f$(args[9])xir$(args[10])xii$(args[11])grid$(args[12])type.jld2")
+    jldsave(
+        savepath;
+
+        # --------------------------------------------------------
+        # Raw transition data in the original three-state basis
+        # --------------------------------------------------------
+
+        deno_raw = deno_raw,
+        rho_raw = rho_raw,
+        Gq_raw = Gq_raw,
+
+        # --------------------------------------------------------
+        # Orthogonalization matrix
+        #
+        # |Psi_orth[s]> =
+        #     sum_a |Psi_raw[a]> * orthogonalize_matrix[a,s]
+        # --------------------------------------------------------
+
+        orthogonalize_matrix = orthogonalize_matrix,
+
+        # --------------------------------------------------------
+        # Full transition data in the orthonormal three-state basis
+        # Includes both diagonal and off-diagonal matrix elements
+        # --------------------------------------------------------
+
+        deno_orth = deno_orth,
+        rho_orth = rho_orth,
+        Gq_orth = Gq_orth,
+
+        # --------------------------------------------------------
+        # Underlying state information
+        # --------------------------------------------------------
+
+        spinor_set = spinor_set,
+        params_all = params_all,
+        overall_mag_list_all = overall_mag_list_all,
+        orbital_basis_orthogonal_list_all =
+            orbital_basis_orthogonal_list_all,
+
+        topo_sectors = collect(topo_sectors),
+    )
 
   return nothing
 
 
 end
+
+
+# ------------------------------------------------------------
+# Metric Gram-Schmidt using deno_raw as the inner product
+# ------------------------------------------------------------
+
+function metric_gram_schmidt(
+    overlap::AbstractMatrix{<:Complex},
+)
+    N = size(overlap, 1)
+
+    @assert size(overlap, 2) == N
+    @assert abs(det(overlap))>10^(-8)
+
+    A = zeros(ComplexF64, N, N)
+
+    for s in 1:N
+        # Begin with raw state s.
+        v = zeros(ComplexF64, N)
+        v[s] = 1.0 + 0.0im
+
+        # Remove projections onto the previously constructed states.
+        for t in 1:s-1
+            q = @view A[:, t]
+
+            projection =
+                dot(q, overlap * v)
+
+            v .-= projection .* q
+        end
+
+        norm2 =
+            real(dot(v, overlap * v))
+
+        @assert norm2 > 0 """
+        The raw many-body states are linearly dependent.
+        Gram-Schmidt failed at state $s.
+        norm² = $norm2
+        """
+
+        A[:, s] .= v ./ sqrt(norm2)
+    end
+
+    return A
+end
+
