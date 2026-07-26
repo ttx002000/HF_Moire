@@ -21,7 +21,7 @@ ee=length(index)
 ba_size=300
 count=1
 while (count-1)*ba_size+1<=ee
-  submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*ba_size+start:min(count*ba_size+start,ee)]; time="12:00:00",cpus_per_task=16,mem=64)
+  submit_job(filepath, @__DIR__, job_prefix,index[(count-1)*ba_size+start:min(count*ba_size+start,ee)]; time="9:00:00",cpus_per_task=32,mem=64)
   println((count-1)*ba_size+start,min(count*ba_size+start,ee))
   sleep(5)
 
