@@ -766,7 +766,7 @@ function do_Gq(args::Vector{Float64}
         spinor_set=Vector{ComplexF64}[]
         for ja in eachindex(Tgrid)
             tvec=Tgrid[ja][1]*T1+Tgrid[ja][2]*T2-(Deltatheta)
-            vv=get_spinor(5,[real(tvec),imag(tvec)])
+            vv=get_spinor(NL,[real(tvec),imag(tvec)])
             push!(spinor_set,vv)
 
         end
