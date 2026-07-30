@@ -555,15 +555,15 @@ function do_Gq(args::Vector{Float64}
     PH_state_can=LL_data["PH_state_can"]
     @assert length(LL_data["PH_eigvector"])==Nvec
 
-    LL_k_set=[wrapparallel(complex_vec([LL_T1 LL_T2]*LL_allowedq[ja])/moiream,b1,b2) for ja in eachindex(LL_allowedq)]
+    LL_k_set=[complex_vec([LL_T1 LL_T2]*LL_allowedq[ja])/moiream for ja in eachindex(LL_allowedq)]
     k_set=vec([wrapparallel(n1*T1+n2*T2,b1,b2) for n1 in 1:N1, n2 in 1:N2])
 
     LL_k_map=zeros(Int,length(k_set))
     for ja in eachindex(LL_k_map)
         ccount=0
         for jb in eachindex(k_set)
-        if abs(k_set[jb]-LL_k_set[ja])<10^(-9)
-        ccount+=1
+        if abs(k_set[jb]-wrapparallel(LL_k_set[ja],b1,b2))<10^(-9)
+            ccount+=1
             LL_k_map[ja]=jb
             
         end
