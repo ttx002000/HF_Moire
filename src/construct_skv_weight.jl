@@ -674,15 +674,20 @@ function fixed_configuration_result(eta_set::Vector{ComplexF64},shift_set::Vecto
 
 
 
-    println(s1.pv * exp(s1.ev),"s1")
-    println(s2.pv * exp(s2.ev),"s2")
-        
-        if abs(s1.pv * exp(s1.ev)) ≥ 10^(-10) && abs(s2.pv * exp(s2.ev)) ≥ 10^(-10) && abs(s1.pv * exp(s1.ev)) < 10^(40) && abs(s2.pv * exp(s2.ev)) < 10^(40)
-        
-            M_eta=sigma_related(s1.pv/s2.pv,s1.ev-s2.ev)
-            break
+        mag_s1 = abs(s1.pv * exp(s1.ev))
+        mag_s2 = abs(s2.pv * exp(s2.ev))
 
-           
+        println(mag_s1, " |s1|")
+        println(mag_s2, " |s2|")
+
+        if 1e-10 <= mag_s1 < 1e40 &&
+        1e-10 <= mag_s2 < 1e40
+
+            M_eta = sigma_related(
+                s1.pv / s2.pv,
+                s1.ev - s2.ev,
+            )
+            break
         end
 
         if attempt == 10
