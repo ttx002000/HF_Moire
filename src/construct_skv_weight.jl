@@ -346,8 +346,12 @@ function evalute_determinant_part_determinant_form(z_pos::Vector{ComplexF64},kap
    end
 
    logabs, phase = logabsdet(MM)
-   log_sqrt_factorial =
-        0.5 * sum(log, 1:Nelectron)
+    Ne = length(z_pos)
+
+    @assert length(kf_set) == Ne
+
+    log_sqrt_factorial =
+        0.5 * sum(log, 1:Ne)
 
     return sigma_related(1.0+0.0*im,logabs+im*angle(phase) - log_sqrt_factorial)
 
