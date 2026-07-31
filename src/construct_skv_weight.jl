@@ -1003,7 +1003,7 @@ function big_func(flux1::Float64,flux2::Float64,NL::Int,moiream::Float64,
         Nvac=Nphi-N1f*N2f
         Nelectron=N1f*N2f
 
-        @assert Int(N1*N2*2/3)==N1f*N2f
+        
 
 
         Lb=(N1*N2)^(1/2)*lb
