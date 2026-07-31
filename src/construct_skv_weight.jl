@@ -751,7 +751,7 @@ function fixed_configuration_result(eta_set::Vector{ComplexF64},shift_set::Vecto
             while abs(wrapparallel(z_test+im*lbf^2*(k11-kappa-b1f/2-b2f/2),a1f,a2f))<abs(1/8*a1f) || abs(wrapparallel(z_test+im*lbf^2*(k22-kappa+Deltatheta-b1f/2-b2f/2),a1f,a2f))<abs(1/8*a1f) 
                 z_test=rand(ComplexF64)*abs(L1)
                 itcount+=1
-                if itcount==10
+                if itcount==30
                     error("sampling error in calculating MKK")
                 end
             end
