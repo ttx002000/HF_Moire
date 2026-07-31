@@ -288,7 +288,7 @@ end
 
 
 
-
+#=
 function F1_withSigma(Z::ComplexF64,kappa::ComplexF64,
            eta_set::Vector{ComplexF64},Nelectron::Int,xi_set::Vector{ComplexF64},
            T1::ComplexF64,T2::ComplexF64,
@@ -301,6 +301,19 @@ function F1_withSigma(Z::ComplexF64,kappa::ComplexF64,
 
     return sigma_related(ss.pv,ss.ev+im*Z*(-conj(kappa)/2+Nelectron/4*(conj(T1)+conj(T2)))+ev_Sigma)
 end
+=#
+
+function F1_noSigma(Z::ComplexF64,kappa::ComplexF64,
+           eta_set::Vector{ComplexF64},Nelectron::Int,xi_set::Vector{ComplexF64},
+           T1::ComplexF64,T2::ComplexF64,
+           L1::ComplexF64,L2::ComplexF64,
+           Lb::Float64,bigA::ComplexF64,lbf::Float64,Deltatheta::ComplexF64) # I use label kappa rather than minus kappa, I put the Sigma in here
+    zarg=Z/Lb+2*im*Lb*(-kappa/2+Nelectron/4*(T1+T2))
+    ss=torusSigma(zarg,L1,L2,Lb,bigA)
+   
+
+    return sigma_related(ss.pv,ss.ev+im*Z*(-conj(kappa)/2+Nelectron/4*(conj(T1)+conj(T2))))
+end
 
 
 
@@ -311,8 +324,31 @@ function evalute_determinant_part_product_form(z_pos::Vector{ComplexF64},kappa::
    
    
    
-    area_torus =0.5 * abs(L1 * conj(L2) - L2 * conj(L1))
-    ev_ini=-sum(z_pos.*conj(z_pos))/(4*lbf^2)+Nelectron/2 * log(area_torus)
+    #area_torus =0.5 * abs(L1 * conj(L2) - L2 * conj(L1))
+    #ev_ini=-sum(z_pos.*conj(z_pos))/(4*lbf^2)+Nelectron/2 * log(area_torus)
+    τ = L2 / L1
+    @assert imag(τ) > 0
+
+    ηD = etaDedekind(τ)
+
+    # One sigma factor for every electron pair,
+    # plus one center-of-mass sigma factor.
+    number_of_sigma_factors =
+        Nelectron * (Nelectron - 1) ÷ 2 + 1
+
+    # Rescale the typical accumulated magnitude of the torus sigma factors.
+    log_sigma_rescaling =
+        number_of_sigma_factors * (
+            0.5 * log(2π * imag(τ)) +
+            2 * log(abs(ηD))
+        )
+
+    ev_ini =
+        -sum(abs2, z_pos) / (4*lbf^2) +
+        log_sigma_rescaling
+
+
+
    pv_ini=1.0+0.0*im
    for p1 in 1:length(z_pos)
      for p2 in p1+1:length(z_pos)
@@ -323,7 +359,7 @@ function evalute_determinant_part_product_form(z_pos::Vector{ComplexF64},kappa::
     end
 
 
-    sf=F1_withSigma(sum(z_pos),kappa,eta_set,Nelectron,xi_set,T1,T2,L1,L2,Lb,bigA,lbf,Deltatheta)
+    sf=F1_noSigma(sum(z_pos),kappa,eta_set,Nelectron,xi_set,T1,T2,L1,L2,Lb,bigA,lbf,Deltatheta)
      ev_ini+=sf.ev
      pv_ini*=sf.pv
 
@@ -410,23 +446,7 @@ function evalute_phi_vac(z_pos::ComplexF64,xi_set::Vector{ComplexF64},
 
 end
 
-#=
-function testBlochF(z::ComplexF64,k1::ComplexF64,k2::ComplexF64,grid_cutoff::Float64,
-                b1f::ComplexF64,b2f::ComplexF64,lbf::Float64,Deltatheta::ComplexF64,kappa::ComplexF64,
-                b1::ComplexF64,b2::ComplexF64)
-    
-    Nmax=Int(round.(max(20,grid_cutoff*abs(b1)/abs(b1f)*2,grid_cutoff*abs(b1)/abs(b2f)*2)))
-   
-    
-    dd=0.0
-    R0=-im*lbf^2*(k2+Deltatheta-kappa)
-    for ja in -Nmax:Nmax, jb in -Nmax:Nmax
-      g=ja*b1f+jb*b2f
-      dd+=exp(im*π*ja*jb)*exp(-lbf^2/4*(g*conj(g)+2*(k1-k2-Deltatheta)*conj(g)))*exp(im*c_dot(z-R0,k1-k2+g-Deltatheta))
-    end
-    return dd
-end
-=#
+
 
 
 function testBlochF(
@@ -517,7 +537,7 @@ function evalute_full_formula_withSigma(z_pos::Vector{ComplexF64},kappa::Complex
     end
 
 
-    sf=F1_withSigma(sum(z_pos),kappa,eta_set,Nelectron,xi_set,T1,T2,L1,L2,Lb,bigA,lbf,Deltatheta)
+    sf=F1_noSigma(sum(z_pos),kappa,eta_set,Nelectron,xi_set,T1,T2,L1,L2,Lb,bigA,lbf,Deltatheta)
     ev_ini+=sf.ev
     pv_ini*=sf.pv
 
@@ -1173,8 +1193,8 @@ function big_func(flux1::Float64,flux2::Float64,NL::Int,moiream::Float64,
         M_eta_list=Vector{sigma_related}(undef,length(possible_config))
         Mkkmatrix_list=Vector{Matrix{sigma_related}}(undef,length(possible_config))
         N_coeff_list=Vector{Vector{ComplexF64}}(undef,length(possible_config))
-
-        for ja in eachindex(possible_config)
+        LinearAlgebra.BLAS.set_num_threads(1)
+        Threads.@threads :greedy for ja in eachindex(possible_config)
         
             eta_set=xi_set[possible_config[ja]]
             xi_set_partial=xi_set[setdiff(collect(1:N1*N2),possible_config[ja])]
@@ -1226,8 +1246,9 @@ function big_func(flux1::Float64,flux2::Float64,NL::Int,moiream::Float64,
         weight_list=zeros(ComplexF64,length(possible_config))
         PN_list=zeros(ComplexF64,length(possible_config))
         
+        Bloch_projector=(Bloch_states*Bloch_states')
         for ja in eachindex(possible_config)
-         weight_list[ja]=tr(orbital_basis_orthogonal_list[ja]'*(Bloch_states*Bloch_states')*orbital_basis_orthogonal_list[ja])/tr(orbital_basis_orthogonal_list[ja]'*orbital_basis_orthogonal_list[ja])
+         weight_list[ja]=tr(orbital_basis_orthogonal_list[ja]'*Bloch_projector*orbital_basis_orthogonal_list[ja])/tr(orbital_basis_orthogonal_list[ja]'*orbital_basis_orthogonal_list[ja])
          PN_list[ja]=tr(orbital_basis_orthogonal_list[ja]'*orbital_basis_orthogonal_list[ja])
         end
 
