@@ -28,7 +28,7 @@ file_pos=Int(args[15])
 
 
 
-params,overall_mag_list,spinor_set,possible_config, orbital_Rmatrix_list,
+params,spinor_set,possible_config, orbital_Rmatrix_list,
                orbital_basis_norm_list, orbital_basis_orthogonal_list,M_eta_list,Mkkmatrix_list,N_coeff_list,weight_list,PN_list=big_func(flux1,flux2,NL,moiream,
                   N1,N2,N1f,N2f,xi00_re+im*xi00_im,
                   grid_cutoff,type,sample_num)
@@ -47,7 +47,7 @@ savepath=joinpath(scratch_dir, "construct_skv_weight/data_output$(Int(args[15]))
 
 
 
-jldsave(savepath,params=params,overall_mag_list=overall_mag_list,spinor_set=spinor_set,
+jldsave(savepath,params=params,spinor_set=spinor_set,
             possible_config=possible_config,orbital_Rmatrix_list=orbital_Rmatrix_list,
                orbital_basis_norm_list=orbital_basis_norm_list, orbital_basis_orthogonal_list=orbital_basis_orthogonal_list,M_eta_list=M_eta_list,
                Mkkmatrix_list=Mkkmatrix_list,N_coeff_list=N_coeff_list,weight_list=weight_list,PN_list=PN_list)

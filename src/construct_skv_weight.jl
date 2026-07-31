@@ -753,7 +753,7 @@ function fixed_configuration_result(eta_set::Vector{ComplexF64},shift_set::Vecto
                 Deltatheta,
                 kappa,
                  )
-                println(abs(BlochF))
+               
                 @assert 10^(12)>abs(BlochF)>10^(-10)
 
                 Mkkmatrix[j1,j2]=sigma_related(ll1.pv*conj(ll2.pv),ll1.ev+conj(ll2.ev)-log(abs(BlochF))-im*angle(BlochF))
@@ -1241,7 +1241,7 @@ function big_func(flux1::Float64,flux2::Float64,NL::Int,moiream::Float64,
 
 
 
-        return params,overall_mag_list,spinor_set,possible_config,orbital_Rmatrix_list,
+        return params,spinor_set,possible_config,orbital_Rmatrix_list,
                orbital_basis_norm_list, orbital_basis_orthogonal_list,M_eta_list,Mkkmatrix_list,N_coeff_list,weight_list,PN_list
      
 
