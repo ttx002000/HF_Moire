@@ -965,16 +965,12 @@ function fixed_configuration_result(eta_set::Vector{ComplexF64},shift_set::Vecto
         orbital_Rmatrix=Matrix(F.R)
 
        
-        vacancy_factor=evalute_vacancy_part_withSigma(eta_set,xi_set,
-                    topo_sec,
-                    L1,L2,Lb,bigA,
-                    Deltatheta,lbf,
-                    Nelectron,T1,T2,type)
+    
 
 
 
 
-  return vacancy_factor,orbital_Rmatrix,orbital_basis_norm,orbital_basis_orthogonal,M_eta,Mkkmatrix,N_coeff
+  return orbital_Rmatrix,orbital_basis_norm,orbital_basis_orthogonal,M_eta,Mkkmatrix,N_coeff
 
 end
 
@@ -1258,7 +1254,7 @@ function big_func(flux1::Float64,flux2::Float64,NL::Int,moiream::Float64,
 
 
         possible_config=[randperm(N1*N2)[1:(N1*N2-N1f*N2f)] for _ in 1:sample_num]
-        vac_fac_list=Vector{sigma_related}(undef,length(possible_config))
+   
         orbital_Rmatrix_list=Vector{Matrix{ComplexF64}}(undef,length(possible_config))
         orbital_basis_norm_list=Vector{Vector{ComplexF64}}(undef,length(possible_config))
         orbital_basis_orthogonal_list=Vector{Matrix{ComplexF64}}(undef,length(possible_config))
@@ -1287,7 +1283,7 @@ function big_func(flux1::Float64,flux2::Float64,NL::Int,moiream::Float64,
 
 
 
-              vac_fac_list[ja],  orbital_Rmatrix_list[ja], orbital_basis_norm_list[ja],  orbital_basis_orthogonal_list[ja], M_eta_list[ja], Mkkmatrix_list[ja], N_coeff_list[ja]=fixed_configuration_result(eta_set,shift_set,xi_set_partial,params)
+               orbital_Rmatrix_list[ja], orbital_basis_norm_list[ja],  orbital_basis_orthogonal_list[ja], M_eta_list[ja], Mkkmatrix_list[ja], N_coeff_list[ja]=fixed_configuration_result(eta_set,shift_set,xi_set_partial,params)
 
         end
 
@@ -1333,7 +1329,7 @@ function big_func(flux1::Float64,flux2::Float64,NL::Int,moiream::Float64,
 
 
 
-        return params,overall_mag_list,spinor_set,possible_config, vac_fac_list,orbital_Rmatrix_list,
+        return params,overall_mag_list,spinor_set,possible_config,orbital_Rmatrix_list,
                orbital_basis_norm_list, orbital_basis_orthogonal_list,M_eta_list,Mkkmatrix_list,N_coeff_list,weight_list,PN_list
      
 
