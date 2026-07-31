@@ -21,7 +21,8 @@ grid_cutoff=args[11]
 topo_sec=Int(args[12])
 type=Int(args[13])
 sample_num=Int(args[14])
-file_pos=Int(args[15])
+trytime=Int(args[15])
+file_pos=Int(args[16])
 
 
 
@@ -42,7 +43,7 @@ params,overall_mag_list,spinor_set,possible_config, vac_fac_list,orbital_Rmatrix
 
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "construct_skv_weight/data_output$(Int(args[15]))/$(args[1])f1$(args[2])f2$(args[3])NL$(args[4])am$(args[5])N1$(args[6])N2$(args[7])N1f$(args[8])N2f$(args[9])xir$(args[10])xii$(args[11])grid$(args[12])topo$(args[13])type$(args[14])snum.jld2")
+savepath=joinpath(scratch_dir, "construct_skv_weight/data_output$(Int(args[16]))/$(args[1])f1$(args[2])f2$(args[3])NL$(args[4])am$(args[5])N1$(args[6])N2$(args[7])N1f$(args[8])N2f$(args[9])xir$(args[10])xii$(args[11])grid$(args[12])topo$(args[13])type$(args[14])snum$(args[15])try.jld2")
 
 
 
