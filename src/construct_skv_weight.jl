@@ -488,97 +488,6 @@ end
 
 
 
-function evalute_vacancy_part_withSigma(
-                    eta_set::Vector{ComplexF64},xi_set::Vector{ComplexF64},
-                    topo_sec::Int,
-                    L1::ComplexF64,L2::ComplexF64,Lb::Float64,bigA::ComplexF64,
-                    Deltatheta::ComplexF64,lbf::Float64,
-                    Nelectron::Int,T1::ComplexF64,T2::ComplexF64,type::Int)
-
-    @assert in(topo_sec,[0,1,2])
-                    
-
-    ev_ini=0.0+0.0*im
-    pv_ini=1.0+0.0*im
-
-
-    if type==1
-            ev_ini+=-sum(eta_set)*conj(sum(eta_set))/(2*Lb^2)
-
-            for p1 in 1:length(eta_set)
-            for p2 in p1+1:length(eta_set)
-                ss=torusSigma((eta_set[p1]-eta_set[p2])/Lb,L1,L2,Lb,bigA)
-                ev_ini+=conj(ss.ev)*2
-                pv_ini*=conj(ss.pv)^2
-        
-            end
-            end
-            
-            alphas=Lb^2/3*(Nelectron*(T1+T2)/2+topo_sec*T1)+Lb^2/3*Deltatheta
-            betas=Deltatheta/2-im*sum(xi_set)/(2*Lb^2)+3*alphas/(2*Lb^2)-Deltatheta/2
-
-            ev_ini+=im*betas*conj(sum(eta_set))
-            ev_ini-=L1/(2*Lb^2)*conj(sum(eta_set))
-            ev_ini-=im*sum(eta_set)*conj(Deltatheta)/2
-
-            for jj in 0:2
-            ll=torusSigma((sum(eta_set)-im*alphas+jj*L1/3)/Lb,L1,L2,Lb,bigA)
-            
-            ev_ini+=conj(ll.ev)
-            pv_ini*=conj(ll.pv)
-            
-            
-            end
-
-            ev_ini-=-sum(eta_set)*conj(sum(eta_set))/(4*Lb^2)+sum(conj(eta_set))/(2*Lb^2)*sum(xi_set)+sum(eta_set.*conj(eta_set))/(4*lbf^2)+Deltatheta*im/2*conj(sum(eta_set))
-            
-            
-    
-             return sigma_related(pv_ini,ev_ini)
-    elseif type==2
-            ev_ini+=-sum(eta_set.*conj.(eta_set))/(4*lbf^2)
-
-            for p1 in 1:length(eta_set)
-            for p2 in p1+1:length(eta_set)
-                ss=torusSigma((eta_set[p1]-eta_set[p2])/Lb,L1,L2,Lb,bigA)
-                ev_ini+=conj(ss.ev)*3+ss.ev
-                pv_ini*=conj(ss.pv)^3*ss.pv
-        
-            end
-            end
-            
-            alphas=Lb^2/3*(Nelectron*(T1+T2)/2+topo_sec*T1)+Lb^2/3*Deltatheta
-            betas=Deltatheta/2-im*sum(xi_set)/(2*Lb^2)+3*alphas/(2*Lb^2)-Deltatheta/2
-
-            ev_ini+=im*betas*conj(sum(eta_set))
-            ev_ini-=L1/(2*Lb^2)*conj(sum(eta_set))
-            ev_ini-=im*sum(eta_set)*conj(Deltatheta)/2
-
-            for jj in 0:2
-            ll=torusSigma((sum(eta_set)-im*alphas+jj*L1/3)/Lb,L1,L2,Lb,bigA)
-            
-            ev_ini+=conj(ll.ev)
-            pv_ini*=conj(ll.pv)
-            
-            
-            end
-
-            ev_ini-=-sum(eta_set)*conj(sum(eta_set))/(4*Lb^2)+sum(conj(eta_set))/(2*Lb^2)*sum(xi_set)+sum(eta_set.*conj(eta_set))/(4*lbf^2)+Deltatheta*im/2*conj(sum(eta_set))
-            
-            
-    
-             return sigma_related(pv_ini,ev_ini)
-
-
-    else
-
-        error("type not implemented")
-    end
-
-end
-
-
-
 
 
 
@@ -710,7 +619,6 @@ function fixed_configuration_result(eta_set::Vector{ComplexF64},shift_set::Vecto
 
                 xi_set=params.xi_set
 
-                topo_sec=params.topo_sec
                 NL=params.NL
                 grid_cutoff=  params.grid_cutoff
                 type=params.type
@@ -979,7 +887,7 @@ end
 
 function big_func(flux1::Float64,flux2::Float64,NL::Int,moiream::Float64,
                   N1::Int,N2::Int,N1f::Int,N2f::Int,xi_00::ComplexF64,
-                  grid_cutoff::Float64,topo_sec::Int,type::Int,sample_num::Int)
+                  grid_cutoff::Float64,type::Int,sample_num::Int)
 
         θ = π/3;
         
@@ -1244,7 +1152,7 @@ function big_func(flux1::Float64,flux2::Float64,NL::Int,moiream::Float64,
 
 
                 xi_set=xi_set,
-                topo_sec=topo_sec,
+        
                 NL=NL,
                 type=type
                
