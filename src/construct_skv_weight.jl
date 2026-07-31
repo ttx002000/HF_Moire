@@ -3,7 +3,7 @@ using LinearAlgebra
 using Plots
 using JLD2,StaticArrays
 using Combinatorics
-
+using Random
 
 
 function c_dot(z1::ComplexF64,z2::ComplexF64)
