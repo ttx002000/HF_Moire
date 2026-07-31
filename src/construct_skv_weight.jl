@@ -680,8 +680,8 @@ function fixed_configuration_result(eta_set::Vector{ComplexF64},shift_set::Vecto
         println(mag_s1, " |s1|")
         println(mag_s2, " |s2|")
 
-        if 1e-10 <= mag_s1 < 1e40 &&
-        1e-10 <= mag_s2 < 1e40
+        if 1e-10 <= mag_s1 < 1e30 &&
+        1e-10 <= mag_s2 < 1e30
 
             M_eta = sigma_related(
                 s1.pv / s2.pv,
