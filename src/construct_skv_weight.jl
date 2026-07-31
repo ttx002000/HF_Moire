@@ -677,7 +677,7 @@ function fixed_configuration_result(eta_set::Vector{ComplexF64},shift_set::Vecto
     println(s1.pv * exp(s1.ev),"s1")
     println(s2.pv * exp(s2.ev),"s2")
         
-        if abs(s1.pv * exp(s1.ev)) ≥ 10^(-8) && abs(s2.pv * exp(s2.ev)) ≥ 10^(-8) && abs(s1.pv * exp(s1.ev)) < 10^(18) && abs(s2.pv * exp(s2.ev)) < 10^(18)
+        if abs(s1.pv * exp(s1.ev)) ≥ 10^(-10) && abs(s2.pv * exp(s2.ev)) ≥ 10^(-10) && abs(s1.pv * exp(s1.ev)) < 10^(40) && abs(s2.pv * exp(s2.ev)) < 10^(40)
         
             M_eta=sigma_related(s1.pv/s2.pv,s1.ev-s2.ev)
             break
