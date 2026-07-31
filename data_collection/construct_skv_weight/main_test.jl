@@ -24,7 +24,7 @@ trytime=Int(args[14])
 file_pos=Int(args[15])
 
 
-
+println(args)
 
 
 
