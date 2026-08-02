@@ -11,7 +11,7 @@ args=parse.(Float64,ARGS)
 #args=[5,3,0.6,30.0*10^4,5,35.0,1,3.51,1.0,1,1.0,28.9,21.0,-0.29,5.0,0.0,1.0]
 
 
-NL=args[1]
+NL=Int(args[1])
 
 Nq=Int(args[2]);
 moiream=args[3];
