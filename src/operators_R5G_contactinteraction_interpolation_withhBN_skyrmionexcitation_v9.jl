@@ -387,8 +387,11 @@ function Construct_MBstate(Nq::Int64,Nparticle::Int64,allowedq::Vector{Vector{In
 
 
   MB_state=collect(combinations(1:Nq^2,Nparticle))
-  MB_state_can_threads = [Vector{Int64}[] for _ in 1:Threads.nthreads()]
-  MB_state_integer_threads = [Int64[] for _ in 1:Threads.nthreads()]
+  MB_state_can_threads =
+      [Vector{Int64}[] for _ in 1:Threads.maxthreadid()]
+
+  MB_state_integer_threads =
+      [Int64[] for _ in 1:Threads.maxthreadid()]
   
   
    Threads.@threads for ja in eachindex(MB_state)
