@@ -39,7 +39,7 @@ filepos=Int(args[21])
 
 
 
-overlapmatrix, wave, wave_diff,initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m, b1,b2,spinor_set=triangle_initial_Densitymatrix(Int(NL),am,Nq,gcutoff,uD,λ,enlarge_factor,V0_hBN,V1_hBN,ψ_hBN,V2_scalar,ϕ,flux1,flux2)
+overlapmatrix, wave, wave_diff,initial_DensityMatrix, single_MoirePo, single_Ham, single_eigenvalue,single_eigenvector,allowedq, T1, T2, a1m, a2m, b1,b2,spinor_set=triangle_initial_Densitymatrix(Int(NL),moiream,Nq,gcutoff,uD,λ,enlarge_factor,V0_hBN,V1_hBN,ψ_hBN,V2_scalar,ϕ,flux1,flux2)
 
 Area=Nq^2*√3/2*norm(a1m)^2
 
