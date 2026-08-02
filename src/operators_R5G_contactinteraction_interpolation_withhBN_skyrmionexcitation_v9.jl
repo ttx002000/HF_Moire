@@ -303,9 +303,9 @@ function Construct_Manybodymatrix(reduced_Vcol::Vector{ComplexF64},reduced_Vcoor
 
   
    
-  Rows = [Vector{Int64}() for _ in 1:Threads.nthreads()]
-  Cols = [Vector{Int64}() for _ in 1:Threads.nthreads()]
-  Vals = [Vector{ComplexF64}() for _ in 1:Threads.nthreads()]
+  Rows = [Vector{Int64}() for _ in 1:Threads.maxthreadid()]
+  Cols = [Vector{Int64}() for _ in 1:Threads.maxthreadid()]
+  Vals = [Vector{ComplexF64}() for _ in 1:Threads.maxthreadid()]
 
   Threads.@threads for jc in eachindex(reduced_Vcol)
     for jb in eachindex(state_can)
