@@ -55,7 +55,8 @@ chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uni
 
  values_record,eig_vec_record,  all_MB_state_can, all_MB_state_integer,Fmatrix,G_dic_record,rho_mat_record=do_ED(allowedq,wave,NL,wave_diff,
                spinor_set,HF_eigenvector,Nq,
-               gateD,ϵr,Area,constq,Nparticle)
+               gateD,ϵr,Area,constq,Nparticle,
+               single_Ham,single_MoirePo,T1,T2,b1,b2)
 
 
 

@@ -423,7 +423,8 @@ end
 
 function do_ED(allowedq::Vector{Vector{Int}},wave::Vector{Vector{Int}},NL::Int,wave_diff::Vector{Vector{Int}},
                spinor_set::Matrix{Vector{ComplexF64}},HF_eigenvector::Vector{Matrix{ComplexF64}},Nq::Int,
-               gateD::Float64,ϵr::Float64,Area::Float64,constq::Float64,Nparticle::Int)
+               gateD::Float64,ϵr::Float64,Area::Float64,constq::Float64,Nparticle::Int,
+                single_Ham,single_MoirePo,T1,T2,b1,b2)
   
       HF_eigenvector_pw=zeros(ComplexF64,length(allowedq),length(wave),2*NL)
       for ja in eachindex(allowedq), jb in eachindex(wave)
