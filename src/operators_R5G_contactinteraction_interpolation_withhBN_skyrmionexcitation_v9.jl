@@ -431,8 +431,15 @@ function do_ED(allowedq::Vector{Vector{Int}},wave::Vector{Vector{Int}},NL::Int,w
       end
 
 
-      Fmatrix=Array{ComplexF64}(undef,Nq^2,Nq^2,length(wave_diff))
-      diff_eigenvector=Array{ComplexF64}(undef,Nq^2,length(wave),2*NL,length(wave_diff))
+      Fmatrix=zeros(ComplexF64,Nq^2,Nq^2,length(wave_diff))
+
+      diff_eigenvector=zeros(
+          ComplexF64,
+          Nq^2,
+          length(wave),
+          2*NL,
+          length(wave_diff)
+      )
 
 
       for jc in 1:length(wave_diff), jd in 1:length(wave)

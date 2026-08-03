@@ -66,7 +66,7 @@ chern,Flink,chern_single,Flink_single,trace_condition,trace_condition_single,uni
 
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v9/data_output$(Int(args[21]))/$(args[1])NL$(args[2])Nq$(args[3])theta$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda$(args[10])trytime$(args[11])enlarge$(args[12])V0_hBN$(args[13])V1_hBN$(args[14])ψ_hBN$(args[15])V2_scalar$(args[16])ϕ$(args[17])gD$(args[18])f1$(args[19])f2$(args[20])Npa.jld2")
+savepath=joinpath(scratch_dir, "triangle_R5G_contact_interpolation_withhBN_skyrmionexcitation_v9/data_output$(Int(args[21]))/$(args[1])NL$(args[2])Nq$(args[3])am$(args[4])constq$(args[5])ϵr$(args[6])uD$(args[7])filling$(args[8])cutoff$(args[9])lambda$(args[10])trytime$(args[11])enlarge$(args[12])V0_hBN$(args[13])V1_hBN$(args[14])ψ_hBN$(args[15])V2_scalar$(args[16])ϕ$(args[17])gD$(args[18])f1$(args[19])f2$(args[20])Npa.jld2")
 
 
 
@@ -76,7 +76,7 @@ jldsave(savepath,single_Ham=single_Ham,single_MoirePo=single_MoirePo,
                 Flink_single=Flink_single,arguments=args,
                 densitymatrix=DIIS_input_DensityMatrix[1],energy=energy,eout=eout,
                 TC=trace_condition,TCS=trace_condition_single,
-                HFeigenvalue=HF_eigenvalue,
+                HFeigenvalue=HF_eigenvalue,Area=Area,
                 uniform=uniform,uniform_single=uniform_single,
                 HartreeMatrix=HartreeMatrix,FockMatrix=FockMatrix,HF_eigenvector=HF_eigenvector,
                 single_eigenvector=single_eigenvector,allowedq=allowedq,T1=T1,T2=T2,wave=wave,
@@ -85,6 +85,6 @@ jldsave(savepath,single_Ham=single_Ham,single_MoirePo=single_MoirePo,
                   all_MB_state_can=all_MB_state_can, all_MB_state_integer=all_MB_state_integer,
                   Fmatrix= Fmatrix,
                   G_dic_record=G_dic_record,
-                  rho_mat_record=rho_mat_record)
+                  rho_mat_record=rho_mat_record,wave_diff=wave_diff)
 
 
