@@ -684,6 +684,14 @@ function main_func(args::Vector{Float64})
             orbital_basis_orthogonal_list,
             precomp,
         )
+    for i in 1:Nconfig
+    @assert isapprox(
+        @view(first_minor_matrix[:,:,i,i]),
+        Matrix{ComplexF64}(I, Nelectron, Nelectron);
+        atol = 1e-8,
+        rtol = 1e-8,
+    )
+end
 
     # --------------------------------------------------------
     # Checks directly in the Slater-determinant basis.
