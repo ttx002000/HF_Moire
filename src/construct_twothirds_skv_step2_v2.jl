@@ -3,6 +3,11 @@ using JLD2
 
 BLAS.set_num_threads(1)
 
+struct sigma_related
+    pv::ComplexF64
+    ev::ComplexF64
+end
+
 struct GqPrecomp
     qkeys::Vector{Tuple{Int,Int}}
     qindex::Dict{Tuple{Int,Int},Int}
@@ -279,25 +284,19 @@ function calculate_all_slater_pair_Gq(
         end
     end
 
-    Npair = length(configuration_pairs)
-    Nthread = Threads.nthreads()
+        Nthread = Threads.nthreads()
+        Nworkspace = Threads.maxthreadid()
 
-    println("Nconfig = ", Nconfig)
-    println("Npair   = ", Npair)
-    println("Nq      = ", Nq)
-    println("Threads = ", Nthread)
+        println("Nconfig       = ", Nconfig)
+        println("Npair         = ", Npair)
+        println("Nq            = ", Nq)
+        println("Threads       = ", Nthread)
+        println("Max thread ID = ", Nworkspace)
 
-    # --------------------------------------------------------
-    # One workspace per Julia thread.
-    #
-    # We use :static below so threadid() stays fixed while
-    # each worker reuses its own workspace.
-    # --------------------------------------------------------
-
-    workspaces = [
-        SlaterPairWorkspace(Nelectron, Nq)
-        for _ in 1:Nthread
-    ]
+        workspaces = [
+            SlaterPairWorkspace(Nelectron, Nq)
+            for _ in 1:Nworkspace
+        ]
 
     print_lock = ReentrantLock()
 
