@@ -11,7 +11,7 @@ job_prefix = "twothirds"
 aa= parse.(Int, ARGS)
 
 scratch_dir = ENV["SCRATCH"]
-misspath=joinpath(scratch_dir, "constrcut_twothirds_skv/data_output$(Int(aa[1]))/structure_factor/missedjobs.jld2")
+misspath=joinpath(scratch_dir, "constrcut_twothirds_skv_v2/data_output$(Int(aa[1]))/structure_factor/missedjobs.jld2")
 
 st=load(misspath)
 
