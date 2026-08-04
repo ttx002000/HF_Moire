@@ -283,7 +283,7 @@ function calculate_all_slater_pair_Gq(
             push!(configuration_pairs, (i,j))
         end
     end
-
+        Npair = length(configuration_pairs)
         Nthread = Threads.nthreads()
         Nworkspace = Threads.maxthreadid()
 
