@@ -18,8 +18,8 @@ struct GqPrecomp
 
     Slaterorb_pairs::Vector{Tuple{Int,Int}}
     Slaterorb_keep::Vector{Vector{Int}}
+    Slaterorb_first_keep::Vector{Vector{Int}}
 end
-
 
 function GqPrecomp(Tgrid, spinor_set, Nelectron)
     M = length(Tgrid)
@@ -92,6 +92,11 @@ function GqPrecomp(Tgrid, spinor_set, Nelectron)
         for (p,r) in Slaterorb_pairs
     ]
 
+    Slaterorb_first_keep = [
+    [x for x in 1:Nelectron if x != p]
+    for p in 1:Nelectron]
+
+
     return GqPrecomp(
         qkeys,
         qindex,
@@ -100,8 +105,40 @@ function GqPrecomp(Tgrid, spinor_set, Nelectron)
         Ω,
         Slaterorb_pairs,
         Slaterorb_keep,
+        Slaterorb_first_keep,
     )
 end
+
+
+
+
+function Slaterorb_first_minor_matrix(
+    S::AbstractMatrix,
+    precomp::GqPrecomp,
+)
+    N = size(S, 1)
+    @assert size(S, 2) == N
+
+    keep = precomp.Slaterorb_first_keep
+
+    C = zeros(ComplexF64, N, N)
+
+    if N == 1
+        C[1,1] = 1.0 + 0.0im
+        return C
+    end
+
+    for p in 1:N, m in 1:N
+        sgn = isodd(p + m) ? -1 : 1
+        C[p,m] =
+            sgn * det(S[keep[p], keep[m]])
+    end
+
+    return C
+end
+
+
+
 
 function Slaterorb_second_minor_matrix(
     S::AbstractMatrix,
@@ -182,6 +219,7 @@ function slater_pair_Gq!(
     overlap = det(S)
 
     C = Slaterorb_second_minor_matrix(S, precomp)
+    C1 = Slaterorb_first_minor_matrix(S, precomp)
 
     build_Xq!(workspace, Dmatrix, Fmatrix, precomp)
 
@@ -230,7 +268,7 @@ function slater_pair_Gq!(
         )
     end
 
-    return overlap
+    return overlap,C1
 end
 
 function calculate_all_slater_pair_Gq(
@@ -250,6 +288,15 @@ function calculate_all_slater_pair_Gq(
 
     Gq_slater_pair =
         zeros(ComplexF64, Nconfig, Nconfig, Nq)
+    
+    first_minor_matrix =
+    zeros(
+        ComplexF64,
+        Nelectron,
+        Nelectron,
+        Nconfig,
+        Nconfig,
+    )
 
     # --------------------------------------------------------
     # Memory estimate.
@@ -309,7 +356,7 @@ function calculate_all_slater_pair_Gq(
         Dmatrix = orbital_basis_orthogonal_list[i]
         Fmatrix = orbital_basis_orthogonal_list[j]
 
-        overlap =
+        overlap,C1 =
             slater_pair_Gq!(
                 workspace,
                 Dmatrix,
@@ -322,6 +369,7 @@ function calculate_all_slater_pair_Gq(
         # ----------------------------------------------------
 
         slater_overlap_matrix[i,j] = overlap
+        @views first_minor_matrix[:,:,i,j] .= C1
 
         for iq in 1:Nq
             Gq_slater_pair[i,j,iq] = workspace.Gq[iq]
@@ -336,6 +384,7 @@ function calculate_all_slater_pair_Gq(
 
         if i != j
             slater_overlap_matrix[j,i] = conj(overlap)
+            @views first_minor_matrix[:,:,j,i] .= C1'
 
             for iq in 1:Nq
                 iminus = precomp.minus_q_index[iq]
@@ -356,8 +405,15 @@ function calculate_all_slater_pair_Gq(
         end
     end
 
-    return slater_overlap_matrix, Gq_slater_pair
+    return (
+    slater_overlap_matrix,
+    Gq_slater_pair,
+    first_minor_matrix)
 end
+
+
+
+
 
 
 function construct_manybody_Gq(
@@ -421,6 +477,61 @@ function metric_gram_schmidt(overlap)
 end
 
 
+
+function construct_manybody_rho(
+    orbital_basis_orthogonal_list,
+    first_minor_matrix,
+    overall_mag_matrix,
+)
+    Nconfig = length(orbital_basis_orthogonal_list)
+    M_basis, Nelectron = size(orbital_basis_orthogonal_list[1])
+    Nvec = size(overall_mag_matrix, 2)
+
+    U = hcat(orbital_basis_orthogonal_list...)
+    Nlarge = Nconfig * Nelectron
+
+    @assert size(U) == (M_basis, Nlarge)
+
+    rho_raw = zeros(
+        ComplexF64,
+        M_basis,
+        M_basis,
+        Nvec,
+        Nvec,
+    )
+
+    Threads.@threads :static for iab in 1:Nvec^2
+        a = (iab - 1) ÷ Nvec + 1
+        b = (iab - 1) % Nvec + 1
+
+        B = zeros(ComplexF64, Nlarge, Nlarge)
+
+        for i in 1:Nconfig
+            col_range = (i-1)*Nelectron+1:i*Nelectron
+
+            for j in 1:Nconfig
+                row_range = (j-1)*Nelectron+1:j*Nelectron
+
+                weight = conj(overall_mag_matrix[i,a]) *
+                         overall_mag_matrix[j,b]
+
+                C1 = @view first_minor_matrix[:,:,i,j]
+
+                @views B[row_range,col_range] .=
+                    weight .* transpose(C1)
+            end
+        end
+
+        rho_ab = U * B * U'
+
+        @views rho_raw[:,:,a,b] .= rho_ab
+    end
+
+    return rho_raw
+end
+
+
+
 function orthogonalize_Gq(
     Gq_raw_array,
     orthogonalize_matrix,
@@ -442,6 +553,38 @@ function orthogonalize_Gq(
     end
 
     return Gq_orth_array
+end
+
+
+function orthogonalize_rho(
+    rho_raw,
+    orthogonalize_matrix,
+)
+    M_basis, M_basis2, Nvec, Nvec2 = size(rho_raw)
+
+    @assert M_basis == M_basis2
+    @assert Nvec == Nvec2
+
+    rho_orth = zeros(
+        ComplexF64,
+        M_basis,
+        M_basis,
+        Nvec,
+        Nvec,
+    )
+
+    Threads.@threads :static for m in 1:M_basis
+        for n in 1:M_basis
+            rho_state = @view rho_raw[m,n,:,:]
+
+            @views rho_orth[m,n,:,:] .=
+                orthogonalize_matrix' *
+                rho_state *
+                orthogonalize_matrix
+        end
+    end
+
+    return rho_orth
 end
 
 
@@ -536,7 +679,7 @@ function main_func(args::Vector{Float64})
     # These are retained and saved.
     # --------------------------------------------------------
 
-    slater_overlap_matrix, Gq_slater_pair =
+    slater_overlap_matrix, Gq_slater_pair, first_minor_matrix =
         calculate_all_slater_pair_Gq(
             orbital_basis_orthogonal_list,
             precomp,
@@ -613,7 +756,13 @@ function main_func(args::Vector{Float64})
             Gq_slater_pair,
             overall_mag_matrix,
         )
+    println("Constructing rho_raw...")
 
+    rho_raw = construct_manybody_rho(
+        orbital_basis_orthogonal_list,
+        first_minor_matrix,
+        overall_mag_matrix,
+    )
     # q = 0 must satisfy
     #
     # G_raw(0) = Ne(Ne-1) deno_raw.
@@ -635,6 +784,22 @@ function main_func(args::Vector{Float64})
         )
     end
 
+    for a in 1:Nvec, b in 1:Nvec
+    @assert isapprox(
+        tr(@view rho_raw[:,:,a,b]),
+        Nelectron * deno_raw[a,b];
+        atol = 1e-7,
+        rtol = 1e-7,
+    )
+
+    @assert isapprox(
+        @view(rho_raw[:,:,a,b])',
+        @view(rho_raw[:,:,b,a]);
+        atol = 1e-8,
+        rtol = 1e-8,
+    )
+    end
+
     # --------------------------------------------------------
     # Orthonormalize the three many-body states.
     # --------------------------------------------------------
@@ -647,12 +812,28 @@ function main_func(args::Vector{Float64})
         deno_raw *
         orthogonalize_matrix
 
+    rho_orth = orthogonalize_rho(
+    rho_raw,
+    orthogonalize_matrix,
+    )
+
     @assert isapprox(
         deno_orth,
         Matrix{ComplexF64}(I, Nvec, Nvec);
         atol = 1e-10,
         rtol = 1e-10,
     )
+
+    for a in 1:Nvec, b in 1:Nvec
+        expected = a == b ? Nelectron : 0.0
+
+        @assert isapprox(
+            tr(@view rho_orth[:,:,a,b]),
+            expected;
+            atol = 1e-7,
+            rtol = 1e-7,
+        )
+    end
 
     println("Orthogonalization matrix:")
     display(orthogonalize_matrix)
@@ -720,6 +901,7 @@ function main_func(args::Vector{Float64})
         topo_sectors = topo_sectors,
         possible_config = possible_config,
         overall_mag_matrix = overall_mag_matrix,
+        orbital_basis_orthogonal_list =orbital_basis_orthogonal_list,
         spinor_set = spinor_set,
 
         qkeys = precomp.qkeys,
@@ -728,6 +910,8 @@ function main_func(args::Vector{Float64})
 
         slater_overlap_matrix = slater_overlap_matrix,
         Gq_slater_pair = Gq_slater_pair,
+        first_minor_matrix = first_minor_matrix,
+        rho_raw = rho_raw,
 
         deno_raw = deno_raw,
         Gq_raw_array = Gq_raw_array,
@@ -736,6 +920,7 @@ function main_func(args::Vector{Float64})
         orthogonalize_matrix = orthogonalize_matrix,
 
         deno_orth = deno_orth,
+        rho_orth = rho_orth,
         Gq_orth_array = Gq_orth_array,
         Gq_orth = Gq_orth,
     )
