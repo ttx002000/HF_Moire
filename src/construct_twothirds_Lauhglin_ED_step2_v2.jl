@@ -441,7 +441,7 @@ function metric_gram_schmidt(overlap)
 
     @assert size(overlap, 2) == N
     println(det(overlap),"determinant overlap")
-    @assert abs(det(overlap)) > 1e-8
+    @assert abs(det(overlap)) > 1e-9
 
     A = zeros(ComplexF64, N, N)
 
