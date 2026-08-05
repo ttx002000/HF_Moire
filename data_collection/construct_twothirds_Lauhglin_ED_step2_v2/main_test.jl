@@ -33,7 +33,7 @@ st = do_Gq(args)
 
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "constrcut_twothirds_Lauhglin_ED_v2/data_output$(Int(args[9]))/struct_fac/$(args[1])f1$(args[2])f2$(args[3])q1$(args[4])q2$(args[5])N1$(args[6])N2$(args[7])Npa$(args[8])Nvec$(args[10])gcut$(args[11])NL$(args[12])am$(args[13])gda.jld2")
+savepath=joinpath(scratch_dir, "constrcut_twothirds_Lauhglin_ED_v2/data_output$(Int(args[9]))/struct_fac/Gq_$(args[1])f1$(args[2])f2$(args[3])q1$(args[4])q2$(args[5])N1$(args[6])N2$(args[7])Npa$(args[8])Nvec$(args[10])gcut$(args[11])NL$(args[12])am$(args[13])gda.jld2")
 
 
 
