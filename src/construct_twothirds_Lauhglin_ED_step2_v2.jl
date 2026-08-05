@@ -776,7 +776,7 @@ function do_Gq(args::Vector{Float64}
 
 
     scratch_dir = ENV["SCRATCH"]
-    LL_filepath=joinpath(scratch_dir, "constrcut_twothirds_Lauhglin_ED/data_output$(Int(args[9]))/$(args[1])f1$(args[2])f2$(args[3])q1$(args[4])q2$(args[5])N1$(args[6])N2$(args[7])Npa$(args[8])Nvec.jld2")
+    LL_filepath=joinpath(scratch_dir, "constrcut_twothirds_Lauhglin_ED_v2/data_output$(Int(args[9]))/$(args[1])f1$(args[2])f2$(args[3])q1$(args[4])q2$(args[5])N1$(args[6])N2$(args[7])Npa$(args[8])Nvec.jld2")
 
 
     LL_data=load(LL_filepath)
