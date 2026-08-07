@@ -37,7 +37,7 @@ Laughlin_state_vector,Laughlin_state_sector,Laughlin_state_can, Laughlin_state_i
 
 
 scratch_dir = ENV["SCRATCH"]
-savepath=joinpath(scratch_dir, "constrcut_twothirds_Lauhglin_ED/data_output$(Int(args[9]))/$(args[1])f1$(args[2])f2$(args[3])q1$(args[4])q2$(args[5])N1$(args[6])N2$(args[7])Npa$(args[8])Nvec.jld2")
+savepath=joinpath(scratch_dir, "constrcut_twothirds_Lauhglin_ED_v2/data_output$(Int(args[9]))/$(args[1])f1$(args[2])f2$(args[3])q1$(args[4])q2$(args[5])N1$(args[6])N2$(args[7])Npa$(args[8])Nvec.jld2")
 
 
 
