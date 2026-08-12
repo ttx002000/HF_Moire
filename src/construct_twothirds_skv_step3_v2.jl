@@ -693,7 +693,10 @@ function main_func(args::Vector{Float64})
     # These are retained and saved.
     # --------------------------------------------------------
 
-    slater_overlap_matrix, Gq_slater_pair, first_minor_matrix =
+    slater_overlap_matrix,
+    Gq_slater_pair,
+    first_minor_matrix,
+    second_minor_matrix =
         calculate_all_slater_pair_Gq(
             orbital_basis_orthogonal_list,
             precomp,
