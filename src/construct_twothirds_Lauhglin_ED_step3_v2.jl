@@ -972,7 +972,7 @@ function do_Gq(args::Vector{Float64}
         possible_config = Vector{Vector{Int}}()
 
         config_start = 1
-        Norbital_pair = length(precomp.Slaterorb_pairs)
+     
 
         
 
@@ -1081,7 +1081,7 @@ function do_Gq(args::Vector{Float64}
 
         deno_raw = zeros(ComplexF64, Nvec, Nvec)
         Gq_raw_array = zeros(ComplexF64, Nvec, Nvec, Nq)
-
+        Norbital_pair = length(precomp.Slaterorb_pairs)
         second_minor_matrix = zeros(
             ComplexF64,
             Norbital_pair,
