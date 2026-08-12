@@ -13,7 +13,7 @@ scratch_dir = ENV["SCRATCH"]
 file_pos = Int(args[14])
 
 filename =
-    "Gq_" *
+    "SM_" *
     "$(args[1])f1$(args[2])f2$(args[3])NL$(args[4])am" *
     "$(args[5])N1$(args[6])N2$(args[7])N1f$(args[8])N2f" *
     "$(args[9])xir$(args[10])xii$(args[11])grid" *
