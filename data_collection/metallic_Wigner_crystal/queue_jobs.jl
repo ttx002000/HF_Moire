@@ -10,7 +10,7 @@ aa= parse.(Int, ARGS)
 
 
 filepath = joinpath(@__DIR__, "main_test.jl")
-job_prefix = "v6_$(Int(aa[1]))"
+job_prefix = "MWC_$(Int(aa[1]))"
 
 scratch_dir = ENV["SCRATCH"]
 misspath=joinpath(scratch_dir, "MWC/data_output$(Int(aa[1]))/missedjobs.jld2")
