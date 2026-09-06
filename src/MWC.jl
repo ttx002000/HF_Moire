@@ -1283,7 +1283,7 @@ function solve_hartree_fock_with_oda!(
                 current_hamiltonian_work
             )
 
-        density_residual=sum(abs2,optimal_damping_work.trial_density_difference)/momentum_count
+        density_residual=sum(abs2,optimal_damping_work.trial_density_difference)/momentum_mesh.momentum_count
 
         damping_parameter =
             optimal_damping_parameter(
