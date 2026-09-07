@@ -29,7 +29,7 @@ stacking=1
 seed_strength=1e-2
 random_seed=rand(1:typemax(Int))
 maximum_iterations=500000000
-density_tolerance=10^(-16)
+density_tolerance=10^(-14)
 energy_tolerance=1e-10
 
 
