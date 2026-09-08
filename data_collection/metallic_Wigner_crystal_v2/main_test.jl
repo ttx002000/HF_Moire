@@ -167,7 +167,7 @@ selected_folding_index=projected_basis.selected_folding_index
 wave=momentum_mesh.momenta
 occupied_count_by_k=result.filling_work.occupied_count_by_k
 scratch_dir=ENV["SCRATCH"]
-savedir=joinpath(scratch_dir,"MWC/data_output$(Int(filepos))")
+savedir=joinpath(scratch_dir,"MWC_v2/data_output$(Int(filepos))")
 mkpath(savedir)
 
 savepath=joinpath(savedir,"$(args[1])n$(args[2])dn$(args[3])m$(args[4])er$(args[5])uD$(args[6])flavor$(args[7])lattice$(args[8])theta$(args[9])d$(args[10])NL$(args[11])Nq$(args[12])Nb$(args[13])cutoff$(args[14])try$(args[15])uDsign$(args[16])band.jld2")
