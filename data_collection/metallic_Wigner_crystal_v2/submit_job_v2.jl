@@ -7,8 +7,8 @@ function submit_job(filepath, dirpath, job_prefix,args_list; nodes=1, ntasks=1, 
 
     scratch_dir = ENV["SCRATCH"]
     filepos=Int(args_list[1][17]) #ensure that all the jobs are to the same file positions
-    outpath=joinpath(scratch_dir, "MWC/data_output$(filepos)/out")
-    slurmpath=joinpath(scratch_dir, "MWC/data_output$(filepos)/slurmfiles")
+    outpath=joinpath(scratch_dir, "MWC_v2/data_output$(filepos)/out")
+    slurmpath=joinpath(scratch_dir, "MWC_v2/data_output$(filepos)/slurmfiles")
     mkpath(outpath)
     mkpath(slurmpath)
     num_jobs = length(args_list)
