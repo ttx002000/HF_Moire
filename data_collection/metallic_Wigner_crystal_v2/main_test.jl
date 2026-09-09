@@ -9,23 +9,22 @@ include("../../src/MWC_v2.jl")
 
 args=parse.(Float64,ARGS)
 
-n=args[1]                    # total density, nm^-2
-δn=args[2]                   # requested density mismatch, nm^-2
-m=Int(args[3])               # integer crystal filling
-ϵr=args[4]
-uD=args[5]
-flavor_code=Int(args[6])
-lattice_code=Int(args[7])
-θ=args[8]/180*π
-gate_distance=args[9]        # nm
-NL=Int(args[10])
-Nq=Int(args[11])
-Nb=Int(args[12])
-gcutoff=args[13]   
-trytime=Int(args[14])  
-displacement_sign_code = Int(args[15])
-band_projection_code=Int(args[16])        # 1: conduction, 2: valence
-filepos=Int(args[17])
+n=args[1]                         # signed carrier density, nm^-2
+Area=args[2]                      # crystal unit-cell area, nm^2
+ϵr=args[3]
+uD=args[4]
+flavor_code=Int(args[5])
+lattice_code=Int(args[6])
+θ=args[7]/180*π
+gate_distance=args[8]             # nm
+NL=Int(args[9])
+Nq=Int(args[10])
+Nb=Int(args[11])
+gcutoff=args[12]                  # nm^-1
+trytime=Int(args[13])
+displacement_sign_code=Int(args[14])
+band_projection_code=Int(args[15]) # 1: conduction, 2: valence
+filepos=Int(args[16])
 
 stacking=1
 seed_strength=1e-2
@@ -63,15 +62,7 @@ end
 
 
 
-ncrystal = n - δn
-
-ncrystal != 0 ||
-    error("n-δn cannot be zero")
-
-Area = m / ncrystal
-
-Area > 0 ||
-    error("m and n-δn must have the same sign")
+Area>0 || error("Area must be positive")
 
 a1,a2,b1,b2=get_lattice_vectors(lattice_code,Area,θ)
 
@@ -99,8 +90,7 @@ filling_real =
 nreal =
     signed_carrier_count / (Nk * Area)
 
-δnreal =
-    nreal - ncrystal
+
 
 
 0 < occupied_state_count < Nb * Nf * Nk ||
@@ -170,7 +160,7 @@ scratch_dir=ENV["SCRATCH"]
 savedir=joinpath(scratch_dir,"MWC_v2/data_output$(Int(filepos))")
 mkpath(savedir)
 
-savepath=joinpath(savedir,"$(args[1])n$(args[2])dn$(args[3])m$(args[4])er$(args[5])uD$(args[6])flavor$(args[7])lattice$(args[8])theta$(args[9])d$(args[10])NL$(args[11])Nq$(args[12])Nb$(args[13])cutoff$(args[14])try$(args[15])uDsign$(args[16])band.jld2")
+savepath=joinpath(savedir,"$(args[1])n$(args[2])Area$(args[3])er$(args[4])uD$(args[5])flavor$(args[6])lattice$(args[7])theta$(args[8])d$(args[9])NL$(args[10])Nq$(args[11])Nb$(args[12])cutoff$(args[13])try$(args[14])uDsign$(args[15])band.jld2")
 jldsave(savepath;single_Ham=single_Ham,single_eigenvalue=single_eigenvalue,
         single_eigenvector=single_eigenvector,arguments=args,densitymatrix=densitymatrix,
         energy=energy,eout=eout,HFeigenvalue=HFeigenvalue,HF_eigenvector=HF_eigenvector,
@@ -178,7 +168,7 @@ jldsave(savepath;single_Ham=single_Ham,single_eigenvalue=single_eigenvalue,
         selected_folding_index=selected_folding_index,wave=wave,Area=Area,
         a1=a1,a2=a2,b1=b1,b2=b2,occupied_state_count=occupied_state_count,
         signed_carrier_count=signed_carrier_count,carrier_count=carrier_count,
-        nreal=nreal,δnreal=δnreal,
+        n=n,nreal=nreal,
         filling_real=filling_real,valley_by_flavor=valley_by_flavor,occupied_count_by_k=occupied_count_by_k,
         reference_occupation=reference_occupation,
         reference_occupied_state_count=reference_occupied_state_count,
