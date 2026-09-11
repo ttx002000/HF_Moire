@@ -27,8 +27,6 @@ band_projection_code=Int(args[15]) # 1: conduction, 2: valence
 filepos=Int(args[16])
 
 stacking=1
-seed_strength=1e-2
-random_seed=rand(1:typemax(Int))
 maximum_iterations=500000000
 density_tolerance=10^(-14)
 energy_tolerance=1e-10
@@ -127,8 +125,6 @@ result = run_hartree_fock_with_oda(
     gate_distance,
     occupied_state_count;
     reference_occupation=reference_occupation,
-    seed_strength=seed_strength,
-    random_seed=random_seed,
     maximum_iterations=maximum_iterations,
     density_tolerance=density_tolerance,
     energy_tolerance=energy_tolerance,

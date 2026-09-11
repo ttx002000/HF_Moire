@@ -1,7 +1,19 @@
 using LinearAlgebra
 using Random
-#v2 enable the selection of whether we want to project to conduction or valence band. And also it enbles a flavor-dependent displacement field.
+# v3 fixes the carrier population of each flavor separately and forbids flavor coherence.
+
 # Helper
+
+function get_carrier_fraction_by_flavor(carrier_population_code::Int,
+                                        valley_by_flavor::AbstractVector{<:Integer})
+    flavor_count = length(valley_by_flavor)
+
+    carrier_population_code == 1 &&
+        return fill(1.0 / flavor_count, flavor_count)
+
+    error("carrier_population_code must currently be 1 for equal flavor populations")
+end
+
 
 function get_valley_by_flavor(flavor_code::Int)
     flavor_code==1 && return [1]
@@ -138,106 +150,182 @@ end
 
 
 struct FillingDiagnostics
-    occupied_state_count::Int
-    highest_occupied_energy::Float64
-    lowest_unoccupied_energy::Float64
-    chemical_potential::Float64
-    boundary_gap::Float64
+    occupied_state_count_by_flavor::Vector{Int}
+    highest_occupied_energy_by_flavor::Vector{Float64}
+    lowest_unoccupied_energy_by_flavor::Vector{Float64}
+    chemical_potential_by_flavor::Vector{Float64}
+    boundary_gap_by_flavor::Vector{Float64}
 end
 
 
 mutable struct HartreeFockFillingWork
+    projected_band_count::Int
+    flavor_count::Int
     eigenvalues::Matrix{Float64}
     eigenvectors::Array{ComplexF64,3}
     energy_sorted_level_indices::Vector{Int}
     occupied_count_by_k::Vector{Int}
+    occupied_count_by_k_and_flavor::Matrix{Int}
     trial_density_matrix::Array{ComplexF64,3}
 end
 
 
 function HartreeFockFillingWork(projected_band_count::Int, flavor_count::Int, momentum_count::Int)
     hartree_fock_dimension = projected_band_count * flavor_count
-    total_level_count = hartree_fock_dimension * momentum_count
+    level_count_per_flavor = projected_band_count * momentum_count
 
     eigenvalues = zeros(Float64, hartree_fock_dimension, momentum_count)
     eigenvectors = zeros(ComplexF64, hartree_fock_dimension, hartree_fock_dimension, momentum_count)
-    energy_sorted_level_indices = Vector{Int}(undef, total_level_count)
+    energy_sorted_level_indices = Vector{Int}(undef, level_count_per_flavor)
     occupied_count_by_k = zeros(Int, momentum_count)
+    occupied_count_by_k_and_flavor = zeros(Int, momentum_count, flavor_count)
     trial_density_matrix = zeros(ComplexF64, hartree_fock_dimension, hartree_fock_dimension, momentum_count)
 
-    return HartreeFockFillingWork(eigenvalues, eigenvectors, energy_sorted_level_indices,
-                                  occupied_count_by_k, trial_density_matrix)
+    return HartreeFockFillingWork(projected_band_count, flavor_count, eigenvalues, eigenvectors,
+                                  energy_sorted_level_indices, occupied_count_by_k,
+                                  occupied_count_by_k_and_flavor, trial_density_matrix)
 end
+
 
 
 function diagonalize_hartree_fock_hamiltonian!(filling_work::HartreeFockFillingWork,
                                                hartree_fock_hamiltonian::Array{ComplexF64,3})
-    hartree_fock_dimension, second_dimension, momentum_count = size(hartree_fock_hamiltonian)
+    projected_band_count = filling_work.projected_band_count
+    flavor_count = filling_work.flavor_count
+    momentum_count = size(filling_work.eigenvalues, 2)
+    hartree_fock_dimension = projected_band_count * flavor_count
 
-    second_dimension == hartree_fock_dimension ||
-        throw(DimensionMismatch("Each momentum-space Hamiltonian must be square."))
+    expected_size = (hartree_fock_dimension, hartree_fock_dimension, momentum_count)
+    size(hartree_fock_hamiltonian) == expected_size ||
+        throw(DimensionMismatch("The Hartree-Fock Hamiltonian has inconsistent dimensions."))
 
-    expected_eigenvalue_size = (hartree_fock_dimension, momentum_count)
+    fill!(filling_work.eigenvectors, 0)
 
-    size(filling_work.eigenvalues) == expected_eigenvalue_size ||
-        throw(DimensionMismatch(
-            "HartreeFockFillingWork and Hartree–Fock Hamiltonian have inconsistent dimensions."
-        ))
+    diagonalization_count = momentum_count * flavor_count
 
-    Threads.@threads :static for k_index in 1:momentum_count
-        momentum_hamiltonian = Hermitian(@view hartree_fock_hamiltonian[:, :, k_index])
-        eigen_decomposition = eigen(momentum_hamiltonian)
+    Threads.@threads :static for diagonalization_index in 1:diagonalization_count
+        k_index = mod1(diagonalization_index, momentum_count)
+        flavor_index = fld(diagonalization_index - 1, momentum_count) + 1
 
-        copyto!(@view(filling_work.eigenvalues[:, k_index]), eigen_decomposition.values)
-        copyto!(@view(filling_work.eigenvectors[:, :, k_index]), eigen_decomposition.vectors)
+        first_state_index = projected_band_flavor_index(1, flavor_index, projected_band_count)
+        last_state_index = projected_band_flavor_index(projected_band_count, flavor_index,
+                                                       projected_band_count) # This relies on the assumption that index within a flavor are close to each other. Which is delibrate, but I will keep it.
+        flavor_state_indices = first_state_index:last_state_index
+
+        flavor_hamiltonian = Hermitian(@view hartree_fock_hamiltonian[
+            flavor_state_indices, flavor_state_indices, k_index
+        ])
+        flavor_eigen_decomposition = eigen(flavor_hamiltonian)
+
+        filling_work.eigenvalues[flavor_state_indices, k_index] .=
+            flavor_eigen_decomposition.values
+
+        filling_work.eigenvectors[flavor_state_indices, flavor_state_indices, k_index] .=
+            flavor_eigen_decomposition.vectors
     end
 
     return nothing
 end
 
 
-function construct_zero_temperature_density_matrix!(filling_work::HartreeFockFillingWork,
-                                                    occupied_state_count::Int)
-    hartree_fock_dimension, momentum_count = size(filling_work.eigenvalues)
-    total_level_count = length(filling_work.eigenvalues)
 
-    1 <= occupied_state_count < total_level_count ||
-        throw(ArgumentError("occupied_state_count must satisfy 1 ≤ occupied_state_count < $total_level_count."))
 
-    flattened_eigenvalues = vec(filling_work.eigenvalues)
-    sortperm!(filling_work.energy_sorted_level_indices, flattened_eigenvalues; alg=Base.Sort.MergeSort)
+function construct_zero_temperature_density_matrix!(
+    filling_work::HartreeFockFillingWork,
+    occupied_state_count_by_flavor::AbstractVector{<:Integer}
+)
+    projected_band_count = filling_work.projected_band_count
+    flavor_count = filling_work.flavor_count
+    momentum_count = size(filling_work.eigenvalues, 2)
+    level_count_per_flavor = projected_band_count * momentum_count
+
+    length(occupied_state_count_by_flavor) == flavor_count ||
+        throw(DimensionMismatch("occupied_state_count_by_flavor must contain one entry per flavor."))
+
+    occupied_state_counts = Int.(occupied_state_count_by_flavor)
+
+    all(occupied_state_count -> 0 <= occupied_state_count <= level_count_per_flavor,
+        occupied_state_counts) ||
+        throw(ArgumentError("Each flavor occupation must lie between 0 and $level_count_per_flavor."))
 
     fill!(filling_work.occupied_count_by_k, 0)
+    fill!(filling_work.occupied_count_by_k_and_flavor, 0)
     fill!(filling_work.trial_density_matrix, 0)
 
-    for filling_index in 1:occupied_state_count
-        linear_level_index = filling_work.energy_sorted_level_indices[filling_index]
-        k_index = fld(linear_level_index - 1, hartree_fock_dimension) + 1
-        filling_work.occupied_count_by_k[k_index] += 1
-    end
+    highest_occupied_energy_by_flavor = fill(NaN, flavor_count)
+    lowest_unoccupied_energy_by_flavor = fill(NaN, flavor_count)
+    chemical_potential_by_flavor = fill(NaN, flavor_count)
+    boundary_gap_by_flavor = fill(NaN, flavor_count)
 
-    for k_index in 1:momentum_count
-        occupied_count = filling_work.occupied_count_by_k[k_index]
+    for flavor_index in 1:flavor_count
+        occupied_state_count = occupied_state_counts[flavor_index]
 
-        if occupied_count > 0
-            occupied_eigenvectors = @view filling_work.eigenvectors[:, 1:occupied_count, k_index]
-            density_matrix_block = @view filling_work.trial_density_matrix[:, :, k_index]
+        first_state_index = projected_band_flavor_index(1, flavor_index, projected_band_count)
+        last_state_index = projected_band_flavor_index(projected_band_count, flavor_index,
+                                                       projected_band_count)
+        flavor_state_indices = first_state_index:last_state_index
+
+        flattened_eigenvalues =
+            vec(@view filling_work.eigenvalues[flavor_state_indices, :])
+
+        sortperm!(filling_work.energy_sorted_level_indices, flattened_eigenvalues;
+                  alg=Base.Sort.MergeSort)
+
+        for filling_index in 1:occupied_state_count
+            linear_level_index = filling_work.energy_sorted_level_indices[filling_index]
+            k_index = fld(linear_level_index - 1, projected_band_count) + 1
+
+            filling_work.occupied_count_by_k_and_flavor[k_index, flavor_index] += 1
+            filling_work.occupied_count_by_k[k_index] += 1
+        end
+
+        for k_index in 1:momentum_count
+            occupied_count = filling_work.occupied_count_by_k_and_flavor[k_index, flavor_index]
+            occupied_count == 0 && continue
+
+            occupied_column_indices = first_state_index:(first_state_index + occupied_count - 1)
+            occupied_eigenvectors = @view filling_work.eigenvectors[
+                flavor_state_indices, occupied_column_indices, k_index
+            ]
+            density_matrix_block = @view filling_work.trial_density_matrix[
+                flavor_state_indices, flavor_state_indices, k_index
+            ]
+
             mul!(density_matrix_block, occupied_eigenvectors, adjoint(occupied_eigenvectors))
+        end
+
+        if occupied_state_count > 0
+            highest_occupied_index =
+                filling_work.energy_sorted_level_indices[occupied_state_count]
+
+            highest_occupied_energy_by_flavor[flavor_index] =
+                flattened_eigenvalues[highest_occupied_index]
+        end
+
+        if occupied_state_count < level_count_per_flavor
+            lowest_unoccupied_index =
+                filling_work.energy_sorted_level_indices[occupied_state_count + 1]
+
+            lowest_unoccupied_energy_by_flavor[flavor_index] =
+                flattened_eigenvalues[lowest_unoccupied_index]
+        end
+
+        if 0 < occupied_state_count < level_count_per_flavor
+            highest_occupied_energy = highest_occupied_energy_by_flavor[flavor_index]
+            lowest_unoccupied_energy = lowest_unoccupied_energy_by_flavor[flavor_index]
+
+            chemical_potential_by_flavor[flavor_index] =
+                (highest_occupied_energy + lowest_unoccupied_energy) / 2
+
+            boundary_gap_by_flavor[flavor_index] =
+                lowest_unoccupied_energy - highest_occupied_energy
         end
     end
 
-    highest_occupied_index = filling_work.energy_sorted_level_indices[occupied_state_count]
-    lowest_unoccupied_index = filling_work.energy_sorted_level_indices[occupied_state_count + 1]
-
-    highest_occupied_energy = flattened_eigenvalues[highest_occupied_index]
-    lowest_unoccupied_energy = flattened_eigenvalues[lowest_unoccupied_index]
-    chemical_potential = (highest_occupied_energy + lowest_unoccupied_energy) / 2
-    boundary_gap = lowest_unoccupied_energy - highest_occupied_energy
-
-    return FillingDiagnostics(occupied_state_count, highest_occupied_energy,
-                              lowest_unoccupied_energy, chemical_potential, boundary_gap)
+    return FillingDiagnostics(occupied_state_counts, highest_occupied_energy_by_flavor,
+                              lowest_unoccupied_energy_by_flavor, chemical_potential_by_flavor,
+                              boundary_gap_by_flavor)
 end
-
 
 # Piece 2: Momentum mesh
 
@@ -907,9 +995,9 @@ end
 
 
 
-function construct_fock_hamiltonian!(fock_hamiltonian,density_matrix,form_factors,
-                                     fock_thread_workspace_pool,projected_basis,momentum_mesh,
-                                     dielectric_constant,gate_distance,reference_occupation)
+function construct_fock_hamiltonian!(fock_hamiltonian, density_matrix, form_factors,
+                                     fock_thread_workspace_pool, projected_basis, momentum_mesh,
+                                     dielectric_constant, gate_distance, reference_occupation)
 
     projected_band_count, momentum_count, flavor_count = size(projected_basis.energy)
     hartree_fock_dimension = projected_band_count * flavor_count
@@ -933,55 +1021,58 @@ function construct_fock_hamiltonian!(fock_hamiltonian,density_matrix,form_factor
                                                        folding_difference[1], folding_difference[2])
 
                 coulomb_over_area =
-                    inverse_total_area * coulomb_interaction(momentum_mesh, transfer_mesh_coordinate_1,
+                    inverse_total_area * coulomb_interaction(momentum_mesh,
+                                                             transfer_mesh_coordinate_1,
                                                              transfer_mesh_coordinate_2,
                                                              dielectric_constant, gate_distance)
 
-                for f_index in 1:flavor_count
-                    alpha_gamma_pairs =
-                        thread_fock_work.form_factor_index_pairs[folding_difference_index, f_index]
+                for flavor_index in 1:flavor_count
+                    form_factor_index_pairs =
+                        thread_fock_work.form_factor_index_pairs[
+                            folding_difference_index, flavor_index
+                        ]
 
-                    isempty(alpha_gamma_pairs) && continue
+                    isempty(form_factor_index_pairs) && continue
 
-                    for g_index in 1:flavor_count
-                        delta_beta_pairs =
-                            thread_fock_work.form_factor_index_pairs[folding_difference_index, g_index]
+                    for (alpha_index, gamma_index) in form_factor_index_pairs,
+                        (delta_index, beta_index) in form_factor_index_pairs
 
-                        isempty(delta_beta_pairs) && continue
+                        alpha_f_index =
+                            projected_band_flavor_index(alpha_index, flavor_index,
+                                                        projected_band_count)
 
-                        for (alpha_index, gamma_index) in alpha_gamma_pairs,
-                            (delta_index, beta_index) in delta_beta_pairs
+                        delta_f_index =
+                            projected_band_flavor_index(delta_index, flavor_index,
+                                                        projected_band_count)
 
-                            alpha_f_index =
-                                projected_band_flavor_index(alpha_index, f_index, projected_band_count)
+                        alpha_f_index > delta_f_index && continue
 
-                            delta_g_index =
-                                projected_band_flavor_index(delta_index, g_index, projected_band_count)
+                        gamma_f_index =
+                            projected_band_flavor_index(gamma_index, flavor_index,
+                                                        projected_band_count)
 
-                            alpha_f_index > delta_g_index && continue
+                        beta_f_index =
+                            projected_band_flavor_index(beta_index, flavor_index,
+                                                        projected_band_count)
 
-                            gamma_f_index =
-                                projected_band_flavor_index(gamma_index, f_index, projected_band_count)
+                        left_form_factor =
+                            form_factors[alpha_index, gamma_index, k2_index,
+                                         k_index, flavor_index]
 
-                            beta_g_index =
-                                projected_band_flavor_index(beta_index, g_index, projected_band_count)
+                        right_form_factor =
+                            form_factors[delta_index, beta_index, k2_index,
+                                         k_index, flavor_index]
 
-                            form_factor_f =
-                                form_factors[alpha_index, gamma_index, k2_index, k_index, f_index]
+                        density_element =
+                            density_matrix[gamma_f_index, beta_f_index, k2_index]
 
-                            form_factor_g =
-                                form_factors[delta_index, beta_index, k2_index, k_index, g_index]
-
-                            density_element=density_matrix[gamma_f_index,beta_g_index,k2_index]
-
-                            if gamma_f_index==beta_g_index
-                                density_element-=reference_occupation
-                            end
-
-                            fock_hamiltonian[alpha_f_index, delta_g_index, k_index] -=
-                                coulomb_over_area * form_factor_f *
-                                density_element * conj(form_factor_g)
+                        if gamma_index == beta_index
+                            density_element -= reference_occupation
                         end
+
+                        fock_hamiltonian[alpha_f_index, delta_f_index, k_index] -=
+                            coulomb_over_area * left_form_factor *
+                            density_element * conj(right_form_factor)
                     end
                 end
             end
@@ -1147,7 +1238,7 @@ function solve_hartree_fock_with_oda!(
     momentum_mesh,
     dielectric_constant,
     gate_distance,
-    occupied_state_count;
+    occupied_state_count_by_flavor;
     reference_occupation=0,
     maximum_iterations=500,
     density_tolerance=1e-7,
@@ -1156,9 +1247,10 @@ function solve_hartree_fock_with_oda!(
 )
     maximum_iterations >= 1 ||
         throw(ArgumentError("maximum_iterations must be positive."))
-    reference_occupied_state_count=reference_occupation*length(filling_work.eigenvalues)
-    carrier_count=abs(occupied_state_count-reference_occupied_state_count)
-    carrier_count>0 || throw(ArgumentError("carrier_count must be positive."))
+    total_occupied_state_count = sum(occupied_state_count_by_flavor)
+    reference_occupied_state_count = reference_occupation * length(filling_work.eigenvalues)
+    carrier_count = abs(total_occupied_state_count - reference_occupied_state_count)
+    carrier_count > 0 || throw(ArgumentError("carrier_count must be positive."))
 
     construct_hartree_fock_hamiltonian!(
         current_hamiltonian_work,
@@ -1195,11 +1287,10 @@ function solve_hartree_fock_with_oda!(
         )
 
         filling_diagnostics =
-            construct_zero_temperature_density_matrix!(
-                filling_work,
-                occupied_state_count
-            )
-
+        construct_zero_temperature_density_matrix!(
+            filling_work,
+            occupied_state_count_by_flavor
+        )
         trial_density_matrix =
             filling_work.trial_density_matrix
 
@@ -1283,23 +1374,37 @@ end
 function initialize_density_matrix!(density_matrix::Array{ComplexF64,3},
                                     filling_work::HartreeFockFillingWork,
                                     single_particle_hamiltonian::Array{ComplexF64,3},
-                                    occupied_state_count::Int)
+                                    occupied_state_count_by_flavor::AbstractVector{<:Integer})
 
     random_initialization_hamiltonian = zeros(ComplexF64, size(single_particle_hamiltonian))
-    hartree_fock_dimension = size(single_particle_hamiltonian, 1)
+
+    projected_band_count = filling_work.projected_band_count
+    flavor_count = filling_work.flavor_count
     momentum_count = size(single_particle_hamiltonian, 3)
 
-    random_complex_matrix = zeros(ComplexF64, hartree_fock_dimension, hartree_fock_dimension)
+    random_complex_matrix = zeros(ComplexF64, projected_band_count, projected_band_count)
     random_hermitian_matrix = similar(random_complex_matrix)
 
-    for k_index in 1:momentum_count
+    for flavor_index in 1:flavor_count, k_index in 1:momentum_count
+        first_state_index =
+            projected_band_flavor_index(1, flavor_index, projected_band_count)
+
+        last_state_index =
+            projected_band_flavor_index(projected_band_count, flavor_index, projected_band_count)
+
+        flavor_state_indices = first_state_index:last_state_index
+
         randn!(random_complex_matrix)
-        random_hermitian_matrix .= 0.5 .* (random_complex_matrix .+ adjoint(random_complex_matrix))
-        @views random_initialization_hamiltonian[:, :, k_index] .= random_hermitian_matrix
+        random_hermitian_matrix .=
+            0.5 .* (random_complex_matrix .+ adjoint(random_complex_matrix))
+
+        @views random_initialization_hamiltonian[
+            flavor_state_indices, flavor_state_indices, k_index
+        ] .= random_hermitian_matrix
     end
 
     diagonalize_hartree_fock_hamiltonian!(filling_work, random_initialization_hamiltonian)
-    construct_zero_temperature_density_matrix!(filling_work, occupied_state_count)
+    construct_zero_temperature_density_matrix!(filling_work, occupied_state_count_by_flavor)
     copyto!(density_matrix, filling_work.trial_density_matrix)
 
     return nothing
@@ -1312,7 +1417,7 @@ function run_hartree_fock_with_oda(
     form_factors::Array{ComplexF64,5},
     dielectric_constant::Real,
     gate_distance::Real,
-    occupied_state_count::Int;
+    occupied_state_count_by_flavor::AbstractVector{<:Integer};
     reference_occupation::Int=0,
     maximum_iterations::Int=5000000,
     density_tolerance::Real=1e-7,
@@ -1340,12 +1445,8 @@ function run_hartree_fock_with_oda(
             momentum_count
         )
 
-    initialize_density_matrix!(
-        density_matrix,
-        filling_work,
-        single_particle_hamiltonian,
-        occupied_state_count
-    )
+   initialize_density_matrix!(density_matrix, filling_work, single_particle_hamiltonian,
+                           occupied_state_count_by_flavor)
 
     hartree_work =
         HartreeWork(
@@ -1378,7 +1479,7 @@ function run_hartree_fock_with_oda(
             momentum_mesh,
             dielectric_constant,
             gate_distance,
-            occupied_state_count;
+            occupied_state_count_by_flavor;
             reference_occupation=reference_occupation,
             maximum_iterations=maximum_iterations,
             density_tolerance=density_tolerance,
@@ -1394,7 +1495,7 @@ function run_hartree_fock_with_oda(
     final_filling_diagnostics =
         construct_zero_temperature_density_matrix!(
             filling_work,
-            occupied_state_count
+            occupied_state_count_by_flavor
         )
 
     solution =
