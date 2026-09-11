@@ -159,8 +159,29 @@ densitymatrix=result.density_matrix
 energy=result.solution.energy_per_carrier
 eout=result.solution
 
-HFeigenvalue=result.filling_work.eigenvalues
-HF_eigenvector=result.filling_work.eigenvectors
+raw_HF_eigenvalue = result.filling_work.eigenvalues
+raw_HF_eigenvector = result.filling_work.eigenvectors
+
+HFeigenvalue = similar(raw_HF_eigenvalue)
+HF_eigenvector = similar(raw_HF_eigenvector)
+HF_flavor_index = zeros(Int, size(raw_HF_eigenvalue))
+
+for k_index in axes(raw_HF_eigenvalue, 2)
+    energy_order = sortperm(@view raw_HF_eigenvalue[:, k_index])
+
+    HFeigenvalue[:, k_index] .= raw_HF_eigenvalue[energy_order, k_index]
+    HF_eigenvector[:, :, k_index] .= raw_HF_eigenvector[:, energy_order, k_index]
+    HF_flavor_index[:, k_index] .= cld.(energy_order, Nb)
+end
+
+
+
+
+
+
+
+
+
 HartreeMatrix=result.hamiltonian_work.hartree_hamiltonian
 FockMatrix=result.hamiltonian_work.fock_hamiltonian
 
@@ -182,7 +203,7 @@ jldsave(savepath;
     single_Ham=single_Ham, single_eigenvalue=single_eigenvalue,
     single_eigenvector=single_eigenvector, arguments=args,
     densitymatrix=densitymatrix, energy=energy, eout=eout,
-    HFeigenvalue=HFeigenvalue, HF_eigenvector=HF_eigenvector,
+    HFeigenvalue=HFeigenvalue, HF_eigenvector=HF_eigenvector,HF_flavor_index=HF_flavor_index,
     HartreeMatrix=HartreeMatrix, FockMatrix=FockMatrix,
     folding_coordinates=folding_coordinates,
     selected_folding_index=selected_folding_index, wave=wave,

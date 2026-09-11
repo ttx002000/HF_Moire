@@ -1318,11 +1318,10 @@ function solve_hartree_fock_with_oda!(
 
         density_residual=sum(abs2,optimal_damping_work.trial_density_difference)/momentum_mesh.momentum_count
 
-        damping_parameter =
-            optimal_damping_parameter(
-                energy_linear_coefficient,
-                energy_quadratic_coefficient
-            )
+        oda_parameter = optimal_damping_parameter(energy_linear_coefficient,
+                                                energy_quadratic_coefficient)
+
+        damping_parameter = oda_parameter < 1e-8 ? 0.02 : oda_parameter
 
         previous_energy = current_energy
 
@@ -1355,6 +1354,9 @@ function solve_hartree_fock_with_oda!(
             break
         end
     end
+
+    has_converged ||
+    error("Hartree-Fock calculation did not converge after $maximum_iterations iterations.")
 
     return (
         converged=has_converged,
