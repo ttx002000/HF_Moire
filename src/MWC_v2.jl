@@ -1,5 +1,6 @@
 using LinearAlgebra
 using Random
+using JLD2
 #v2 enable the selection of whether we want to project to conduction or valence band. And also it enbles a flavor-dependent displacement field.
 # Helper
 
@@ -1307,6 +1308,93 @@ function initialize_density_matrix!(density_matrix::Array{ComplexF64,3},
     return nothing
 end
 
+
+function initialize_density_matrix_from_seed!(density_matrix::Array{ComplexF64,3}, projected_basis::ProjectedBasis, occupied_state_count::Int, seed_folder::Union{Nothing,AbstractString}, displacement_sign_code::Int, valley_by_flavor::AbstractVector{<:Integer}; reference_occupation::Int=0)
+    seed_folder === nothing && return false
+    isdir(seed_folder) || return false
+
+    seed_paths = filter(path -> isfile(path) && endswith(lowercase(path), ".jld2"), readdir(seed_folder; join=true))
+    isempty(seed_paths) && return false
+
+    seed_path = rand(seed_paths)
+    seed_data = JLD2.load(seed_path)
+
+    seed_density_matrix = seed_data["densitymatrix"]
+    seed_spinor = seed_data["single_eigenvector"]
+    seed_selected_folding_index = seed_data["selected_folding_index"]
+    seed_folding_coordinates = seed_data["folding_coordinates"]
+
+    Int(seed_data["reference_occupation"]) == reference_occupation || error("The seed uses a different reference_occupation.")
+    Int(seed_data["displacement_sign_code"]) == displacement_sign_code || error("The seed uses a different displacement_sign_code.")
+    seed_data["valley_by_flavor"] == valley_by_flavor || error("The seed uses a different valley_by_flavor.")
+
+    seed_orbital_count, seed_band_count, seed_momentum_count, seed_flavor_count = size(seed_spinor)
+    orbital_count, projected_band_count, momentum_count, flavor_count = size(projected_basis.spinor)
+
+    seed_orbital_count == orbital_count || throw(DimensionMismatch("The seed and current runs have different NL."))
+    seed_momentum_count == momentum_count || throw(DimensionMismatch("The seed and current runs have different Nq."))
+    seed_flavor_count == flavor_count || throw(DimensionMismatch("The seed and current runs have different flavor counts."))
+
+    seed_hartree_fock_dimension = seed_band_count * flavor_count
+    hartree_fock_dimension = projected_band_count * flavor_count
+    size(seed_density_matrix) == (seed_hartree_fock_dimension, seed_hartree_fock_dimension, momentum_count) || throw(DimensionMismatch("The saved density matrix has inconsistent dimensions."))
+
+    fill!(density_matrix, 0)
+    basis_overlap = zeros(ComplexF64, hartree_fock_dimension, seed_hartree_fock_dimension)
+    current_relative_count = 0.0
+
+    for k_index in 1:momentum_count
+        fill!(basis_overlap, 0)
+
+        for flavor_index in 1:flavor_count, projected_band_index in 1:projected_band_count, seed_band_index in 1:seed_band_count
+            current_folding_index = projected_basis.selected_folding_index[projected_band_index, k_index, flavor_index]
+            seed_folding_index = seed_selected_folding_index[seed_band_index, k_index, flavor_index]
+
+            same_folding_vector = projected_basis.folding_coordinates[1, current_folding_index] == seed_folding_coordinates[1, seed_folding_index] && projected_basis.folding_coordinates[2, current_folding_index] == seed_folding_coordinates[2, seed_folding_index]
+
+            if same_folding_vector
+                current_state_index = projected_band_flavor_index(projected_band_index, flavor_index, projected_band_count)
+                seed_state_index = projected_band_flavor_index(seed_band_index, flavor_index, seed_band_count)
+                current_spinor = @view projected_basis.spinor[:, projected_band_index, k_index, flavor_index]
+                old_spinor = @view seed_spinor[:, seed_band_index, k_index, flavor_index]
+                basis_overlap[current_state_index, seed_state_index] = dot(current_spinor, old_spinor)
+            end
+        end
+
+        seed_relative_density_matrix = copy(@view seed_density_matrix[:, :, k_index])
+
+        for seed_state_index in 1:seed_hartree_fock_dimension
+            seed_relative_density_matrix[seed_state_index, seed_state_index] -= reference_occupation
+        end
+
+        mapped_relative_density_matrix = basis_overlap * seed_relative_density_matrix * adjoint(basis_overlap)
+        mapped_relative_density_matrix = 0.5 .* (mapped_relative_density_matrix + adjoint(mapped_relative_density_matrix))
+
+        @views density_matrix[:, :, k_index] .= mapped_relative_density_matrix
+        current_relative_count += real(tr(mapped_relative_density_matrix))
+    end
+
+    target_relative_count = occupied_state_count - reference_occupation * hartree_fock_dimension * momentum_count
+
+    if abs(current_relative_count) < 1e-12
+        abs(target_relative_count) < 1e-12 || return false
+        population_rescaling = 0.0
+    else
+        population_rescaling = target_relative_count / current_relative_count
+    end
+
+    density_matrix .*= population_rescaling
+
+    for k_index in 1:momentum_count, state_index in 1:hartree_fock_dimension
+        density_matrix[state_index, state_index, k_index] += reference_occupation
+    end
+
+    println("Using initialization seed: $seed_path")
+    return true
+end
+
+
+
 function run_hartree_fock_with_oda(
     projected_basis::ProjectedBasis,
     momentum_mesh::MomentumMesh,
@@ -1319,7 +1407,10 @@ function run_hartree_fock_with_oda(
     maximum_iterations::Int=5000000,
     density_tolerance::Real=1e-7,
     energy_tolerance::Real=1e-8,
-    verbose::Bool=true
+    verbose::Bool=true,
+    seed_folder::Union{Nothing,AbstractString}=nothing,
+    displacement_sign_code::Int,
+    valley_by_flavor::AbstractVector{<:Integer}
 )
     projected_band_count, momentum_count, flavor_count =
         size(projected_basis.energy)
@@ -1342,12 +1433,9 @@ function run_hartree_fock_with_oda(
             momentum_count
         )
 
-    initialize_density_matrix!(
-        density_matrix,
-        filling_work,
-        single_particle_hamiltonian,
-        occupied_state_count
-    )
+    if rand() > 0.5 || !initialize_density_matrix_from_seed!(density_matrix, projected_basis, occupied_state_count, seed_folder, displacement_sign_code, valley_by_flavor; reference_occupation=reference_occupation)
+            initialize_density_matrix!(density_matrix, filling_work, single_particle_hamiltonian, occupied_state_count)
+    end
 
     hartree_work =
         HartreeWork(
