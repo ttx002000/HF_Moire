@@ -136,12 +136,19 @@ projected_basis = get_projected_basis(
 single_Ham=get_single_particle_hamiltonian(projected_basis)
 form_factors=precompute_form_factors(projected_basis)
 
-
+scratch_dir = ENV["SCRATCH"]
+savedir = joinpath(scratch_dir, "MWC_v3/data_output$(Int(filepos))")
+seed_folder = joinpath(savedir, "seeds")
+mkpath(seed_folder)
 
 result = run_hartree_fock_with_oda(
     projected_basis, momentum_mesh, single_Ham, form_factors,
     ϵr, gate_distance, occupied_state_count_by_flavor;
     reference_occupation=reference_occupation,
+    seed_folder=seed_folder,
+    carrier_population_code=carrier_population_code,
+    displacement_sign_code=displacement_sign_code,
+    valley_by_flavor=valley_by_flavor,
     maximum_iterations=maximum_iterations,
     density_tolerance=density_tolerance,
     energy_tolerance=energy_tolerance,
