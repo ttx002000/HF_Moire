@@ -1,6 +1,8 @@
+using Pkg
+Pkg.activate(joinpath(@__DIR__,"../.."))
 using JLD2
 include("../../src/MWC_get_CNP_HF.jl")
-using LinearAlgebra,Plots
+using LinearAlgebra
 args=parse.(Float64,ARGS)
 radius=args[1]
 num_points=Int(args[2])
