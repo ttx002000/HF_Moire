@@ -1,7 +1,7 @@
 # This is basically single RMG Hartree-Fock calculation. Let's  just customize it to keep the filling at charge neutrality.
 using LinearAlgebra
 
-
+#2026 September. This needs to be fixed. Haven't done yet. We should use a layer-dependent interaction.
 
 function Coulomb(gatedis::Float64,kvec::Vector{Float64})::Float64
 
