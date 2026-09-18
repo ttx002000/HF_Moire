@@ -9,7 +9,7 @@ include("../../src/MWC_v3.jl")
 
 args=parse.(Float64,ARGS)
 n=args[1]                              # requested total signed carrier density, nm^-2
-Area=args[2]                           # crystal unit-cell area, nm^2
+intended_Area=args[2]                           # crystal unit-cell area, nm^2
 ϵr=args[3]
 uD=args[4]
 flavor_code=Int(args[5])
@@ -25,6 +25,7 @@ trytime=Int(args[14])
 displacement_sign_code=Int(args[15])
 band_projection_code=Int(args[16])     # 1: conduction, 2: valence
 filepos=Int(args[17])
+forced_seed=Int(args[18])
 
 stacking=1
 maximum_iterations=500000000
@@ -59,22 +60,32 @@ end
 
 
 
+intended_Area>0 || error("intended_Area must be positive")
+n != 0 || error("The total carrier density must be nonzero")
 
-Area>0 || error("Area must be positive")
+carrier_weight_by_flavor=get_carrier_weight_by_flavor(carrier_population_code,valley_by_flavor)
+
+length(carrier_weight_by_flavor) == Nf || error("There must be one carrier weight per flavor")
+all(carrier_weight -> carrier_weight >= 0,carrier_weight_by_flavor) || error("Carrier weights must be nonnegative")
+sum(carrier_weight_by_flavor) > 0 || error("At least one carrier weight must be positive")
+
+common_weight_divisor=foldl(gcd,carrier_weight_by_flavor)
+carrier_weight_by_flavor .÷= common_weight_divisor
+total_carrier_weight=sum(carrier_weight_by_flavor)
+
+signed_carrier_unit_count=round(Int,n*intended_Area*Nq^2/total_carrier_weight)
+signed_carrier_unit_count != 0 || error("The intended Area gives zero carriers after rounding")
+
+Area=signed_carrier_unit_count*total_carrier_weight/(n*Nq^2)
 
 a1,a2,b1,b2=get_lattice_vectors(lattice_code,Area,θ)
 
 momentum_mesh=MomentumMesh(b1,b2,Nq,Nq)
 Nk=momentum_mesh.momentum_count
 
-carrier_fraction_by_flavor =
-    get_carrier_fraction_by_flavor(carrier_population_code, valley_by_flavor)
-
-requested_carrier_density_by_flavor =
-    n .* carrier_fraction_by_flavor
-
-signed_carrier_count_by_flavor =
-    round.(Int, requested_carrier_density_by_flavor .* (Area * Nk))
+carrier_fraction_by_flavor=carrier_weight_by_flavor ./ total_carrier_weight
+requested_carrier_density_by_flavor=n .* carrier_fraction_by_flavor
+signed_carrier_count_by_flavor=signed_carrier_unit_count .* carrier_weight_by_flavor
 
 reference_occupied_state_count_by_flavor =
     fill(reference_occupation * Nb * Nk, Nf)
@@ -152,7 +163,8 @@ result = run_hartree_fock_with_oda(
     maximum_iterations=maximum_iterations,
     density_tolerance=density_tolerance,
     energy_tolerance=energy_tolerance,
-    verbose=true
+    verbose=true,
+    forced_seed=forced_seed
 )
 
 println(result.solution)
@@ -214,13 +226,13 @@ jldsave(savepath;
     HartreeMatrix=HartreeMatrix, FockMatrix=FockMatrix,
     folding_coordinates=folding_coordinates,
     selected_folding_index=selected_folding_index, wave=wave,
-    Area=Area, a1=a1, a2=a2, b1=b1, b2=b2,
+    real_Area=Area,
+    intended_Area=intended_Area, a1=a1, a2=a2, b1=b1, b2=b2,
     n=n, nreal=nreal, nreal_by_flavor=nreal_by_flavor,
     filling_real=filling_real, filling_real_by_flavor=filling_real_by_flavor,
     carrier_count=carrier_count, signed_carrier_count=signed_carrier_count,
     signed_carrier_count_by_flavor=signed_carrier_count_by_flavor,
     requested_carrier_density_by_flavor=requested_carrier_density_by_flavor,
-    carrier_fraction_by_flavor=carrier_fraction_by_flavor,
     occupied_state_count=occupied_state_count,
     occupied_state_count_by_flavor=occupied_state_count_by_flavor,
     occupied_count_by_k=occupied_count_by_k,
@@ -233,7 +245,12 @@ jldsave(savepath;
     project_to_valence=project_to_valence,
     band_projection_code=band_projection_code,
     displacement_sign_code=displacement_sign_code,
-    displacement_sign_by_flavor=displacement_sign_by_flavor
+    displacement_sign_by_flavor=displacement_sign_by_flavor,
+    carrier_weight_by_flavor=carrier_weight_by_flavor,
+    carrier_fraction_by_flavor=carrier_fraction_by_flavor,
+    total_carrier_weight=total_carrier_weight,
+    signed_carrier_unit_count=signed_carrier_unit_count,
+    forced_seed=forced_seed,
 )
 
 println("Saved to $savepath")
