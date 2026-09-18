@@ -1322,7 +1322,7 @@ function solve_hartree_fock_with_oda!(
         oda_parameter = optimal_damping_parameter(energy_linear_coefficient,
                                                 energy_quadratic_coefficient)
 
-        damping_parameter = oda_parameter < 1e-8 ? 0.02 : oda_parameter
+        damping_parameter = oda_parameter < 1e-8 ? 0.1 : oda_parameter
 
         previous_energy = current_energy
 
