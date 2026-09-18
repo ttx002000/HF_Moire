@@ -1569,7 +1569,7 @@ function run_hartree_fock_with_oda(
             momentum_count
         )
 
-if rand() > 0.5 || !initialize_density_matrix_from_seed!(density_matrix, projected_basis, occupied_state_count_by_flavor, seed_folder, carrier_population_code, displacement_sign_code, valley_by_flavor; reference_occupation=reference_occupation)
+if (rand() > -1) || !initialize_density_matrix_from_seed!(density_matrix, projected_basis, occupied_state_count_by_flavor, seed_folder, carrier_population_code, displacement_sign_code, valley_by_flavor; reference_occupation=reference_occupation)
     initialize_density_matrix!(density_matrix, filling_work, single_particle_hamiltonian, occupied_state_count_by_flavor)
 end
 
