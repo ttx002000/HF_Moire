@@ -1410,7 +1410,8 @@ function run_hartree_fock_with_oda(
     verbose::Bool=true,
     seed_folder::Union{Nothing,AbstractString}=nothing,
     displacement_sign_code::Int,
-    valley_by_flavor::AbstractVector{<:Integer}
+    valley_by_flavor::AbstractVector{<:Integer},
+    forced_seed::Int=0
 )
     projected_band_count, momentum_count, flavor_count =
         size(projected_basis.energy)
@@ -1433,8 +1434,13 @@ function run_hartree_fock_with_oda(
             momentum_count
         )
 
-    if rand() > 0.5 || !initialize_density_matrix_from_seed!(density_matrix, projected_basis, occupied_state_count, seed_folder, displacement_sign_code, valley_by_flavor; reference_occupation=reference_occupation)
-            initialize_density_matrix!(density_matrix, filling_work, single_particle_hamiltonian, occupied_state_count)
+    forced_seed in (0,1) || error("forced_seed must be either 0 or 1")
+
+    if forced_seed == 1
+        seed_loaded=initialize_density_matrix_from_seed!(density_matrix,projected_basis,occupied_state_count,seed_folder,displacement_sign_code,valley_by_flavor;reference_occupation=reference_occupation)
+        seed_loaded || error("forced_seed == 1, but no seed file was found")
+    elseif rand() > 0.5 || !initialize_density_matrix_from_seed!(density_matrix,projected_basis,occupied_state_count,seed_folder,displacement_sign_code,valley_by_flavor;reference_occupation=reference_occupation)
+        initialize_density_matrix!(density_matrix,filling_work,single_particle_hamiltonian,occupied_state_count)
     end
 
     hartree_work =

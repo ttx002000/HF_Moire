@@ -29,7 +29,7 @@ filepos=Int(args[17])
 stacking=1
 maximum_iterations=500000000
 density_tolerance=10^(-16)
-energy_tolerance=1e-11
+energy_tolerance=10^(-11)
 
 
 

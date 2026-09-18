@@ -9,27 +9,29 @@ include("../../src/MWC_v2.jl")
 
 args=parse.(Float64,ARGS)
 
-n=args[1]                         # signed carrier density, nm^-2
-Area=args[2]                      # crystal unit-cell area, nm^2
+n=args[1]
+intended_Area=args[2]
 ϵr=args[3]
 uD=args[4]
 flavor_code=Int(args[5])
 lattice_code=Int(args[6])
 θ=args[7]/180*π
-gate_distance=args[8]             # nm
+gate_distance=args[8]
 NL=Int(args[9])
 Nq=Int(args[10])
 Nb=Int(args[11])
-gcutoff=args[12]                  # nm^-1
+gcutoff=args[12]
 trytime=Int(args[13])
 displacement_sign_code=Int(args[14])
-band_projection_code=Int(args[15]) # 1: conduction, 2: valence
+band_projection_code=Int(args[15])
 filepos=Int(args[16])
+forced_seed=Int(args[17])
+
 
 stacking=1
 maximum_iterations=500000000
-density_tolerance=10^(-14)
-energy_tolerance=1e-10
+density_tolerance=10^(-16)
+energy_tolerance=10^(-11)
 
 
 
@@ -60,17 +62,21 @@ end
 
 
 
-Area>0 || error("Area must be positive")
+intended_Area > 0 || error("intended_Area must be positive")
+n != 0 || error("n must be nonzero")
+
+signed_carrier_count=round(Int,n*intended_Area*Nq^2)
+signed_carrier_count != 0 || error("The intended Area gives zero carriers after rounding")
+
+Area=signed_carrier_count/(n*Nq^2)
 
 a1,a2,b1,b2=get_lattice_vectors(lattice_code,Area,θ)
 
 momentum_mesh=MomentumMesh(b1,b2,Nq,Nq)
 Nk=momentum_mesh.momentum_count
 
-filling = n * Area
+filling=n*Area
 
-signed_carrier_count =
-    round(Int, filling * Nk)
 
 reference_occupied_state_count =
     reference_occupation * Nb * Nf * Nk
@@ -134,7 +140,8 @@ result = run_hartree_fock_with_oda(
     verbose=true,
     seed_folder=seed_folder,
     displacement_sign_code=displacement_sign_code,
-   valley_by_flavor=valley_by_flavor
+   valley_by_flavor=valley_by_flavor,
+   forced_seed=forced_seed
 )
 
 println(result.solution)
@@ -167,7 +174,8 @@ jldsave(savepath;single_Ham=single_Ham,single_eigenvalue=single_eigenvalue,
         single_eigenvector=single_eigenvector,arguments=args,densitymatrix=densitymatrix,
         energy=energy,eout=eout,HFeigenvalue=HFeigenvalue,HF_eigenvector=HF_eigenvector,
         HartreeMatrix=HartreeMatrix,FockMatrix=FockMatrix,folding_coordinates=folding_coordinates,
-        selected_folding_index=selected_folding_index,wave=wave,Area=Area,
+        selected_folding_index=selected_folding_index,wave=wave,real_Area=Area,
+        intended_Area=intended_Area,
         a1=a1,a2=a2,b1=b1,b2=b2,occupied_state_count=occupied_state_count,
         signed_carrier_count=signed_carrier_count,carrier_count=carrier_count,
         n=n,nreal=nreal,
