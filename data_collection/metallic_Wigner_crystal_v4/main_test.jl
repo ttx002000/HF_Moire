@@ -5,7 +5,7 @@ using Pkg
 Pkg.activate(joinpath(@__DIR__,"../.."))
 using JLD2
 
-include("../../src/MWC_v2.jl")
+include("../../src/MWC_v4.jl")
 
 args=parse.(Float64,ARGS)
 
@@ -26,6 +26,7 @@ displacement_sign_code=Int(args[14])
 band_projection_code=Int(args[15])
 filepos=Int(args[16])
 forced_seed=Int(args[17])
+freeze_uniform_reference = Bool(Int(args[18]))
 
 
 stacking=1
@@ -121,7 +122,7 @@ single_Ham=get_single_particle_hamiltonian(projected_basis)
 form_factors=precompute_form_factors(projected_basis)
 
 scratch_dir = ENV["SCRATCH"]
-savedir = joinpath(scratch_dir, "MWC_v2/data_output$(Int(filepos))")
+savedir = joinpath(scratch_dir, "MWC_v4/data_output$(Int(filepos))")
 seed_folder = joinpath(savedir, "seeds")
 mkpath(seed_folder)
 
@@ -134,6 +135,7 @@ result = run_hartree_fock_with_oda(
     gate_distance,
     occupied_state_count;
     reference_occupation=reference_occupation,
+    freeze_uniform_reference=freeze_uniform_reference,
     maximum_iterations=maximum_iterations,
     density_tolerance=density_tolerance,
     energy_tolerance=energy_tolerance,
@@ -166,8 +168,8 @@ selected_folding_index=projected_basis.selected_folding_index
 wave=momentum_mesh.momenta
 occupied_count_by_k=result.filling_work.occupied_count_by_k
 
+savepath=joinpath(savedir,"$(args[1])n$(args[2])Area$(args[3])er$(args[4])uD$(args[5])flavor$(args[6])lattice$(args[7])theta$(args[8])d$(args[9])NL$(args[10])Nq$(args[11])Nb$(args[12])cutoff$(args[13])try$(args[14])uDsign$(args[15])band$(Int(args[18]))ref.jld2")
 
-savepath=joinpath(savedir,"$(args[1])n$(args[2])Area$(args[3])er$(args[4])uD$(args[5])flavor$(args[6])lattice$(args[7])theta$(args[8])d$(args[9])NL$(args[10])Nq$(args[11])Nb$(args[12])cutoff$(args[13])try$(args[14])uDsign$(args[15])band.jld2")
 jldsave(savepath;single_Ham=single_Ham,single_eigenvalue=single_eigenvalue,
         single_eigenvector=single_eigenvector,arguments=args,densitymatrix=densitymatrix,
         energy=energy,eout=eout,HFeigenvalue=HFeigenvalue,HF_eigenvector=HF_eigenvector,
