@@ -6,7 +6,7 @@ using JLD2
 
 include("../../src/Xiaomeng_RMG_sus.jl")
 
-
+BLAS.set_num_threads(parse(Int, get(ENV, "SLURM_CPUS_PER_TASK", "1")))
 
 argument_names = [
     "NL", "band", "uD", "n_h",
