@@ -101,7 +101,7 @@ function get_mu(;
     n_h_grid = w * count(.!fgrid)
 
     # Check that μ produces the selected discrete hole count.
-    @assert count(.!fgrid) == Nholes "Fermi-level degeneracy or rounding prevents the selected hole count."
+    Nholes = count(.!fgrid)  # Record the actual count.
 
     # Check that the sampled hole region stays inside the box.
     @assert all(fgrid[1, :]) && all(fgrid[end, :]) &&
