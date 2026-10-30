@@ -113,33 +113,58 @@ end
 
 
 function get_pair_grid(
-    Q, μ, uD, valley, stacking, NL, band,
-    Rpair, dk_pair
+    Q_index::AbstractVector{<:Integer},
+    μ, uD, valley, stacking, NL, band,
+    Rpair, dk_pair, gridshape::Int
 )
-    @assert length(Q) == 2
+    @assert length(Q_index) == 2
     @assert Rpair > 0 && dk_pair > 0
     @assert 1 <= band <= 2NL
 
-    Qnorm = norm(Q)
-    @assert Qnorm > 0 "This calculation requires a nonzero Q."
+    radius2 = (Rpair / dk_pair)^2
 
-    eQ = Q / Qnorm
-    eperp = [-eQ[2], eQ[1]]
+    if gridshape == 1
+        b1 = [1.0, 0.0]
+        b2 = [0.5, sqrt(3)/2]
 
-    w_pair = dk_pair^2 / (2π)^2
+        N = 2*ceil(Int, 2Rpair / (sqrt(3)*dk_pair))
 
-    # Grid bounds, enlarged along Q
-    Ns = ceil(Int, (Rpair + Qnorm/2) / dk_pair)
-    Nt = ceil(Int, Rpair / dk_pair)
+        # |i*b1 + j*b2|² = i² + i*j + j²
+        ij = [
+            (i, j)
+            for j in -N:N for i in -N:N
+            if i^2 + i*j + j^2 < radius2
+        ]
 
-    sgrid = (-Ns:Ns) .* dk_pair
-    tgrid = (-Nt:Nt) .* dk_pair
+    elseif gridshape == 2
+        b1 = [1.0, 0.0]
+        b2 = [0.0, 1.0]
 
-    # Rows correspond to t; columns correspond to s.
-    kmesh = [
-        s*eQ + t*eperp - Q/2
-        for t in tgrid, s in sgrid
-    ]
+        N = 2*ceil(Int, Rpair / dk_pair)
+
+        # |i*b1 + j*b2|² = i² + j²
+        ij = [
+            (i, j)
+            for j in -N:N for i in -N:N
+            if i^2 + j^2 < radius2
+        ]
+
+    else
+        error("Unknown gridshape: $gridshape")
+    end
+
+    # Actual primitive vectors and physical Q, in nm^-1.
+    B = dk_pair * hcat(b1, b2)
+    Q = B * Q_index
+
+    @assert norm(Q) > 0 "This calculation requires a nonzero Q."
+
+    w_pair = abs(det(B)) / (2π)^2
+
+    # Origin-centered lattice with circular cutoff |k| < Rpair.
+    kmesh = [B * [i, j] for (i, j) in ij]
+
+    # No additional cutoff on k + Q.
     kQmesh = [k + Q for k in kmesh]
 
     # Band energies at both endpoints
@@ -161,28 +186,25 @@ function get_pair_grid(
     Nactive = count(active)
     @assert Nactive > 0 "No active pairs; check μ or refine dk_pair."
 
-    touches_boundary = (
-        any(active[1, :]) || any(active[end, :]) ||
-        any(active[:, 1]) || any(active[:, end])
-    )
-    @assert !touches_boundary "Increase Rpair: active pairs reach the grid boundary."
+    # Check the outermost shell, one grid spacing thick.
+    boundary = [norm(k) >= Rpair - dk_pair for k in kmesh]
+    @assert !any(active .& boundary) "Increase Rpair: active pairs approach the cutoff."
 
-    # Collect active pairs in Julia's column-major ordering.
+    # Collect active pairs.
     k_active = kmesh[active]
     kQ_active = kQmesh[active]
     D = abs.(εpairQ[active] .- εpair[active])
 
-    # Active-pair index -> full-grid linear index
-    active_index = findall(vec(active))
+    # Active-pair index -> full-grid index
+    active_index = findall(active)
 
-    # Full-grid position -> active-pair index
-    # Zero means that this grid position is inactive.
-    index_grid = zeros(Int, size(active))
+    # Full-grid index -> active-pair index; zero means inactive.
+    index_grid = zeros(Int, length(kmesh))
     index_grid[active] = 1:Nactive
 
     return (;
-        Q, eQ, eperp,
-        sgrid, tgrid, w_pair,
+        Q_index, Q, gridshape, dk_pair, b1, b2,
+        ij, w_pair,
         kmesh, kQmesh,
         εpair, εpairQ, fpair, fpairQ,
         active, active_index, index_grid,
@@ -260,23 +282,22 @@ function get_lowest_modes(
     eigQ = eigen(Hermitian(HQ), 1:nsave)
 
     eigenvalues = eigQ.values
-    modes = eigQ.vectors
+    modes = eigQ.vectors / sqrt(w_pair)
 
     normalizations = zeros(Float64, nsave)
     residuals = zeros(Float64, nsave)
     dQ = zeros(ComplexF64, nsave)
 
     for n in 1:nsave
-        v = @view modes[:, n]
+        X = @view modes[:, n]
         κ = eigenvalues[n]
 
-        normalizations[n] = sum(abs2, v)
+        normalizations[n] = w_pair * sum(abs2, X)
 
-        residuals[n] = norm(HQ*v - κ*v) / norm(v)
+        residuals[n] = norm(HQ*X - κ*X) / norm(X)
 
-        # FQ[a] = ⟨u_(k_a+Q) | u_(k_a)⟩
-        # dot conjugates FQ, giving the density-overlap convention.
-        dQ[n] = w_pair * dot(FQ, v)
+        # FQ[k] = ⟨u_(k+Q) | u_k⟩
+        dQ[n] = w_pair * dot(FQ, X)
     end
 
     @assert maximum(residuals) < residual_tol "An eigenmode residual exceeds the tolerance."

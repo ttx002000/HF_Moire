@@ -10,8 +10,9 @@ BLAS.set_num_threads(parse(Int, get(ENV, "SLURM_CPUS_PER_TASK", "1")))
 
 argument_names = [
     "NL", "band", "uD", "n_h",
-    "Qx", "Qy", "epsilon_r", "dgate",
+    "Qi", "Qj", "epsilon_r", "dgate",
     "Rpair", "dk_pair", "nmodes", "model_flag", "filepos",
+    "gridshape",
 ]
 
 @assert length(ARGS) == length(argument_names) (
@@ -25,8 +26,7 @@ NL         = Int(args[1])
 band       = Int(args[2])
 uD         = args[3]
 n_h        = args[4]
-Qx         = args[5]
-Qy         = args[6]
+Q_index = Int.(args[5:6])
 εr         = args[7]
 dgate      = args[8]
 Rpair      = args[9]
@@ -34,6 +34,7 @@ dk_pair    = args[10]
 nmodes     = Int(args[11])
 model_flag = Int(args[12])
 filepos    = Int(args[13])
+gridshape = Int(args[14])
 
 # Fixed parameters
 valley = 1
@@ -43,11 +44,11 @@ stacking = 1
 kmax = 1.0
 Nk = 501
 
-Q = [Qx, Qy]
+
 modeltype = model_flag == 1 ? :spinor : :no_spinor
 
 @assert NL >= 1 && 1 <= band <= 2NL
-@assert n_h > 0 && norm(Q) > 0
+@assert n_h > 0 && norm(Q_index) > 0
 @assert εr > 0 && dgate > 0
 @assert Rpair > 0 && dk_pair > 0
 @assert nmodes > 0
@@ -57,8 +58,10 @@ modeltype = model_flag == 1 ? :spinor : :no_spinor
 
 filename = join([
     "NL$(NL)", "v$(valley)", "s$(stacking)", "b$(band)",
-    "uD$(uD)", "nh$(n_h)", "Qx$(Qx)", "Qy$(Qy)",
-    "eps$(εr)", "gate$(dgate)", "R$(Rpair)", "dk$(dk_pair)",
+    "uD$(uD)", "nh$(n_h)",
+    "Qi$(Q_index[1])", "Qj$(Q_index[2])",
+    "eps$(εr)", "gate$(dgate)",
+    "R$(Rpair)", "dk$(dk_pair)", "grid$(gridshape)",
     "kmax$(kmax)", "Nk$(Nk)", "nm$(nmodes)", "spin$(model_flag)",
 ], "_") * ".jld2"
 
@@ -99,9 +102,15 @@ println("Sampled hole density: ", mu_data.n_h_grid)
 println("Constructing active pairs...")
 
 pair = get_pair_grid(
-    Q, μ, uD, valley, stacking, NL, band,
-    Rpair, dk_pair,
+    Q_index, μ, uD, valley, stacking, NL, band,
+    Rpair, dk_pair, gridshape,
 )
+
+Q = pair.Q
+Qx, Qy = Q
+
+println("Q integer coordinates: ", Q_index)
+println("Physical Q (nm^-1): ", Q)
 
 println("Number of active pairs: ", pair.Nactive)
 println("HQ storage alone (GiB): ", 16.0 * pair.Nactive^2 / 2.0^30)
@@ -149,9 +158,11 @@ jldsave(savepath;
     band=band,
     uD=uD,
     n_h=n_h,
+    Q_index=Q_index,
+    Q=Q,
     Qx=Qx,
     Qy=Qy,
-    Q=Q,
+    gridshape=gridshape,
     εr=εr,
     dgate=dgate,
     Rpair=Rpair,
@@ -174,10 +185,9 @@ jldsave(savepath;
     mu_Nholes=mu_data.Nholes,
 
     # Full pair grid
-    eQ=pair.eQ,
-    eperp=pair.eperp,
-    sgrid=pair.sgrid,
-    tgrid=pair.tgrid,
+    b1=pair.b1,
+    b2=pair.b2,
+    ij=pair.ij,
     w_pair=pair.w_pair,
     kmesh=pair.kmesh,
     kQmesh=pair.kQmesh,
