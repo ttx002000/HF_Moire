@@ -47,7 +47,7 @@ r_tol = 1e-10
 krylovdim = max(60, 2 * nmodes + 1)
 maxiter = 400
 
-Random.seed!(seed)
+
 
 # Chemical potential.
 mu_data = get_mu(
