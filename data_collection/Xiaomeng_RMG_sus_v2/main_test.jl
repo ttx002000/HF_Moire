@@ -12,7 +12,7 @@ BLAS.set_num_threads(
     parse(Int, get(ENV, "SLURM_CPUS_PER_TASK", "1"))
 )
 
-@assert length(ARGS) == 21
+@assert length(ARGS) == 20
 args = parse.(Float64, ARGS)
 
 NL = Int(args[1])
@@ -33,8 +33,7 @@ eig_tol = args[16]
 maxrank = Int(args[17])
 ncheck = Int(args[18])
 nscan = Int(args[19])
-seed = Int(args[20])
-leafsize = Int(args[21])
+leafsize = Int(args[20])
 
 @assert model_flag in (0, 1)
 modeltype = model_flag == 1 ? :spinor : :no_spinor
@@ -92,7 +91,7 @@ filename =
     "Qx$(Q[1])_Qy$(Q[2])_er$(εr)_it$(interaction_type)_" *
     "Nt$(Nθ)_Nr$(Nr)_nm$(nmodes)_sp$(model_flag)_R$(rmax)_" *
     "ct$(compression_tol)_et$(eig_tol)_rk$(maxrank)_" *
-    "nc$(ncheck)_ns$(nscan)_sd$(seed)_lf$(leafsize).jld2"
+    "nc$(ncheck)_ns$(nscan)_lf$(leafsize).jld2"
 
 savepath = joinpath(output_dir, filename)
 @assert !ispath(savepath) "Output already exists."
